@@ -37,5 +37,15 @@ has consumers => (
   }
 );
 
+has invoices => (
+  is   => 'ro',
+  isa  => ArrayRef[ role_type('Moonpig::Role::Invoice') ],
+  default => sub { [] },
+  traits  => [ qw(Array) ],
+  handles => {
+    'add_invoice' => 'push',
+  }
+);
+
 1;
 
