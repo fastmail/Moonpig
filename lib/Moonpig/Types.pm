@@ -1,20 +1,12 @@
 package Moonpig::Types;
-use MooseX::Types -declare => [ qw(MoneyAmount _BigFloat) ];
+use MooseX::Types -declare => [ qw(Millicents) ];
 
-use Math::BigFloat;
-use MooseX::Types::Moose qw(Num);
+use MooseX::Types::Moose qw(Int Num);
 
 use namespace::autoclean;
 
-class_type _BigFloat, { class => 'Math::BigFloat' };
-subtype MoneyAmount, as _BigFloat, where { $_->precision == -4 };
+subtype Millicents, as Int;
 
-coerce MoneyAmount,
-  from _BigFloat,
-  via { my $amt = $_->copy; $amt->precision(-4); $amt };
-
-coerce MoneyAmount,
-  from Num,
-  via { my $amt = Math::BigFloat->new($_); $amt->precision(-4); $amt };
+coerce Millicents, from Num, via { int };
 
 1;

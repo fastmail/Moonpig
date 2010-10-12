@@ -2,18 +2,12 @@ use strict;
 use warnings;
 use Test::More;
 
-use Moonpig::Types qw(MoneyAmount);
+use Moonpig::Types qw(Millicents);
 
 {
   my $val = 1.12;
-  my $amt = to_MoneyAmount($val);
-  is("$amt", "1.1200", "we can coerce dollars-and-cents to MoneyAmounts");
-}
-
-{
-  my $val = 1.12345;
-  my $amt = to_MoneyAmount($val);
-  is("$amt", "1.1234", "we can coerce over-precise values to MoneyAmounts");
+  my $amt = to_Millicents($val);
+  is("$amt", "1", "we truncate away fractional amounts");
 }
 
 done_testing;
