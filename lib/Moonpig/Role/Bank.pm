@@ -1,10 +1,10 @@
-package Moonpig::Bank;
+package Moonpig::Role::Bank;
 use Moose::Role;
 use Moonpig::Types qw(Millicents);
 
 use namespace::autoclean;
 
-has value => (
+has amount => (
   is  => 'ro',
   isa =>  Millicents,
   coerce   => 1,

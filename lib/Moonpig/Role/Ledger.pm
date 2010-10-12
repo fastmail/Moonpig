@@ -21,20 +21,20 @@ has banks => (
   is   => 'ro',
   isa  => ArrayRef[ role_type('Moonpig::Role::Bank') ],
   default => sub { [] },
-  # traits  => [ qw(Array) ],
-  # handles => {
-  #   'add_bank' => 'push',
-  # }
+  traits  => [ qw(Array) ],
+  handles => {
+    'add_bank' => 'push',
+  }
 );
 
 has consumers => (
   is   => 'ro',
   isa  => ArrayRef[ role_type('Moonpig::Role::Consumer') ],
   default => sub { [] },
-  # traits  => [ qw(Array) ],
-  # handles => {
-  #   'add_bank' => 'push',
-  # }
+  traits  => [ qw(Array) ],
+  handles => {
+    'add_consumer' => 'push',
+  }
 );
 
 1;
