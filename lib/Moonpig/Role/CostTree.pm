@@ -15,6 +15,7 @@ has _subtree_for => (
     has_subtree_for  => 'exists',
     subtree_for      => 'get',
     _set_subtree_for => 'set',
+    subtrees         => 'values',
   },
 );
 
@@ -47,10 +48,5 @@ has charges => (
   is  => 'ro',
   isa => ArrayRef[ role_type('Moonpig::Role::Charge') ],
 );
-
-sub subtrees {
-  my ($self) = shift;
-  values %{$self->_subtree_for()};
-}
 
 1;
