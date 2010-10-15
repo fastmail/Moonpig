@@ -1,8 +1,11 @@
 package Moonpig::Role::Ledger;
 use Moose::Role;
-use MooseX::SetOnce;
+with(
+  'Moonpig::Role::HasGuid',
+);
 
 use Moose::Util::TypeConstraints;
+use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;

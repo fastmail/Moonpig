@@ -19,18 +19,19 @@ my $ledger = Moonpig::Ledger::Basic->new({
   contact => $contact,
 });
 
-my $bank = Moonpig::Bank::Basic->new({
-  amount => dollars(100),
+my $consumer = Moonpig::Consumer::Basic->new({
+  ledger => $ledger,
 });
 
-my $consumer = Moonpig::Consumer::Basic->new({
+my $bank = Moonpig::Bank::Basic->new({
   amount => dollars(100),
+  ledger => $ledger,
 });
 
 $ledger->add_bank($bank);
 $ledger->add_consumer($consumer);
 
-$consumer->bank($bank);
+$consumer->_set_bank($bank);
 
 pass('hey, we lived!');
 
