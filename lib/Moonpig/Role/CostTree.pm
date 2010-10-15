@@ -25,20 +25,22 @@ has _parent => (
   predicate => '_has_parent',
 );
 
-#
-# Legal options:
-#  create - if true, create the specified path if it does not exist
-
 sub find_or_create_path {
   my ($self, $path) = @_;
   $self->path_search($path, { create => 1 });
 }
 
+#
+# Legal options:
+#   create - if true, create the specified path if it does not exist
+# To add later:
+#   replace - if supplied, replace target subtree with this one
 sub path_search {
   my ($self, $path, $opt) = @_;
   my $create = $opt->{create};
 
-  if (@$path == 1) {
+  if (@$path == 0) { return $self }
+  elsif (@$path == 1) {
     my $name = $path->[0];
     return $self->subtree_for($name) if $self->has_subtree_for($name);
     return unless $create;
@@ -52,7 +54,7 @@ sub path_search {
   }
 
   my ($head, @rest) = @$path;
-  my $next = $self->path_search($head, $opt) or return;
+  my $next = $self->path_search([$head], $opt) or return;
   return     $next->path_search(\@rest, $opt);
 }
 
