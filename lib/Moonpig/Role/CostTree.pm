@@ -48,4 +48,9 @@ has charges => (
   isa => ArrayRef[ role_type('Moonpig::Role::Charge') ],
 );
 
+sub subtrees {
+  my ($self) = shift;
+  values %{$self->_subtree_for()};
+}
+
 1;
