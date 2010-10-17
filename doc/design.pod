@@ -1,0 +1,137 @@
+
+=head1 Moonpig design
+
+=head2 Basic entities
+
+=head3 Ledger
+
+A ledger wraps up an account history.  It contains the entire history
+number of piggy banks, consumers, and invoices.  It also singles out
+the currently-active piggy banks and consumers, the current "general
+fund" piggy bank, if there is one, and the current invoice.  It also
+contains contact information for the account.
+
+=head3 Contact
+
+Email addresses, postal addresses, credit card numbers (or proxies for
+credit card numbers.)
+
+=head3 Invoice
+
+An invoice represents list of unpaid charges that the owner of the
+account will be asked to pay.  Its implementation is as the head of a
+cost tree.  An invoice can be frozen, at which time the unpaid charges
+from any outstanding invoices are inserted into its cost tree.   Then
+it can be asked to produce printable representations of itself, which
+can then be mailed out.  
+
+The printable representations may decide, at each level of the cost
+tree, to present a single subtotal item, or descend the tree to the
+next level to list the sub-items.
+
+=head3 Piggy bank
+
+A piggy bank represents a credit received by a customer, typically
+because they sent us money, but perhaps because.  A piggy bank may be
+associated with a particular consumer, or may be a "general fund", not
+associated with any consumer but available to any consumer whose
+associated piggy bank is insufficient to cover its demands.
+
+The piggy bank keeps track of its initial funds.  The latter amount is
+the amount that has already been "used up" by paying for services.
+When a new charge is created, a transfer item is created at the same
+time that records the transfer from the piggy bank.
+
+A piggy bank may be marked as refundable or non-refundable.
+Refundable credits result from cash payments; the user can ask for
+their cash back, and receives a corresponding proration of service.  A
+non-refundable credit might result from a consolation prize given to
+the user for a service failure, or might represent a service that we
+refuse to prorate, or that we cannot prorate, such as domain
+registration.  
+
+=head3 Consumer
+
+A consumer represents a service for which a consumer pays.  At present
+there appear to be three sorts: periodically assessed services;
+pay-as-you-go services, and pay-once services.  Periodically, the
+service object will decide that it needs to collect a payment.  Each
+consumer has a target piggy bank from which it draws funds.  It will
+ask the piggy bank if the bank has sufficient funds.  If so, it will
+create a charge and a transaction that transfers the correct amount of
+money from the piggy bank to the charge.  If there are not sufficient
+funds, it is responsible for issuing appropriate warnings to the use
+and eventually for cutting off service.
+
+A service such as listbox posting can ask a consumer if its banks are
+sufficiently well-funder, and can deny service if not.
+
+=head3 Charge
+
+A charge represents a certain amount of service that we have provided,
+reducing our debit to the customer by a certain amount.  It has a
+consumer (the service that required the charge) and a piggy bank (the
+prepayment from which the charged amount was taken)
+
+=head3 Cost tree
+
+Charges are assmebled into cost trees.  A cost tree node is either a
+charge or a rollup node which collects together several charges and
+cost trees.  For example, consider a user with a pobox account and
+a listbox account.  At the end of the month, their cost tree might
+look like this:
+
+     root --- pobox account ---  1 Oct 2011 charge: $ .05479 
+                            ---  2 Oct 2011 charge: $ .05479 
+                            ...
+                            --- 31 Oct 2011 charge: $ .05479 
+
+          --- listbox acct  --- Setup fee : $15.00
+                            --- mailings --- post #12345 : $17.30
+                                         --- post #7890a : $17.225
+
+
+The organization of the cost tree allows the invoice to present the
+charges the way we want:
+
+	Pobox account:
+	  October		$ 1.70
+
+	Listbox account:
+	  Setup fee		$15.00
+	    (setup credit)     ($15.00)
+
+	  Posts:                $17.30  692 deliveries, Oct 18
+                                $17.23  689 deliveries, Oct 29
+		
+	  Subtotal              $34.53
+
+	TOTAL                   $36.23
+=head3 Transaction
+
+Do we really need this?
+
+=head2 Examples
+
+At present there appear to be three sorts of consumers:
+
+=head3 Periodically assessed services
+
+For example, A Pobox account costs $20 per year.  We will assess this
+as a $20/12 payment per month.  (Or possibly a $20/365 payment per
+year?)  Each day the consumer object will receive a heartbeat event.
+It will check if it has processed a charge yet this month.  If not, it
+will try to process a charge against its piggy bank.  If the piggy
+bank is sufficiently well-funded, that is all that is needed; the
+charge is now in the right cost tree and the later invoice will inform
+the customer.
+
+If the piggy bank is not well-enough funded, the account will check to
+see if there is a general fund piggy bank from which it can draw.
+If not, it will check to see if there is 
+
+=head3 Pay-as-you-go services
+
+=head3 Pay-once services
+
+
