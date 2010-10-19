@@ -23,7 +23,7 @@ account will be asked to pay.  Its implementation is as the head of a
 cost tree.  An invoice can be frozen, at which time the unpaid charges
 from any outstanding invoices are inserted into its cost tree.   Then
 it can be asked to produce printable representations of itself, which
-can then be mailed out.  
+can then be mailed out.
 
 The printable representations may decide, at each level of the cost
 tree, to present a single subtotal item, or descend the tree to the
@@ -48,7 +48,7 @@ their cash back, and receives a corresponding proration of service.  A
 non-refundable credit might result from a consolation prize given to
 the user for a service failure, or might represent a service that we
 refuse to prorate, or that we cannot prorate, such as domain
-registration.  
+registration.
 
 =head3 Consumer
 
@@ -81,10 +81,10 @@ cost trees.  For example, consider a user with a pobox account and
 a listbox account.  At the end of the month, their cost tree might
 look like this:
 
-     root --- pobox account ---  1 Oct 2011 charge: $ .05479 
-                            ---  2 Oct 2011 charge: $ .05479 
+     root --- pobox account ---  1 Oct 2011 charge: $ .05479
+                            ---  2 Oct 2011 charge: $ .05479
                             ...
-                            --- 31 Oct 2011 charge: $ .05479 
+                            --- 31 Oct 2011 charge: $ .05479
 
           --- listbox acct  --- Setup fee : $15.00
                             --- mailings --- post #12345 : $17.30
@@ -103,7 +103,7 @@ charges the way we want:
 
 	  Posts:                $17.30  692 deliveries, Oct 18
                                 $17.23  689 deliveries, Oct 29
-		
+
 	  Subtotal              $34.53
 
 	TOTAL                   $36.23
@@ -128,7 +128,7 @@ the customer.
 
 If the piggy bank is not well-enough funded, the account will check to
 see if there is a general fund piggy bank from which it can draw.
-If not, it will check to see if there is 
+If not, it will check to see if there is
 
 =head3 Pay-as-you-go services
 
