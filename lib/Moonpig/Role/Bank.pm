@@ -4,6 +4,7 @@ with(
   'Moonpig::Role::HasGuid',
 );
 
+use List::Util qw(reduce);
 use Moonpig::Types qw(Ledger Millicents);
 
 use namespace::autoclean;
@@ -18,9 +19,13 @@ has amount => (
   required => 1,
 );
 
-sub remaining_balance {
-  # find all transactions targeting this piggy bank
-  # sum them, and deduct from the ->amount.
+sub remaining_amount {
+  my ($self) = @_;
+  my $xfers = Moonpig::Transfer->transfers_for_bank($self);
+
+  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
+
+  return $self->amount - $xfer_total;
 }
 
 has ledger => (

@@ -1,38 +1,17 @@
-use strict;
-use warnings;
-
+use Test::Routine;
 use Test::More;
+use Test::Routine::Util;
 
-use Moonpig::Ledger::Basic;
-use Moonpig::Contact::Basic;
-use Moonpig::Bank::Basic;
-use Moonpig::Consumer::Basic;
+with 't::lib::Factory::Ledger';
 
-use Moonpig::Util -all;
+test "the big exciting demo" => sub {
+  my ($self) = @_;
 
-my $contact = Moonpig::Contact::Basic->new({
-  name => 'J. Fred Bloggs',
-  email_addresses => [ 'jfred@example.com' ],
-});
+  my $ledger = $self->test_ledger;
+  my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
 
-my $ledger = Moonpig::Ledger::Basic->new({
-  contact => $contact,
-});
+  pass("everything ran to completion without dying");
+};
 
-my $consumer = Moonpig::Consumer::Basic->new({
-  ledger => $ledger,
-});
-
-my $bank = Moonpig::Bank::Basic->new({
-  amount => dollars(100),
-  ledger => $ledger,
-});
-
-$ledger->add_bank($bank);
-$ledger->add_consumer($consumer);
-
-$consumer->_set_bank($bank);
-
-pass('hey, we lived!');
-
+run_me;
 done_testing;

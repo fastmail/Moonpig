@@ -1,6 +1,10 @@
 package Moonpig::Transfer;
 use Moose;
 
+use Moonpig::Types qw(Millicents);
+
+use namespace::autoclean;
+
 my %BY_BANK;
 my %BY_CONSUMER;
 
@@ -27,7 +31,7 @@ sub _assert_no_overdraft {
   my ($self) = @_;
 
   confess "refusing to transfer funds beyond bank balance"
-    if $self->bank->remaining_balance -  $self->amount < 0;
+    if $self->bank->remaining_amount -  $self->amount < 0;
 }
 
 sub BUILD {
