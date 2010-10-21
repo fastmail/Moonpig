@@ -18,7 +18,7 @@ has amount => (
   required => 1,
 );
 
-sub outstanding_balance {
+sub remaining_balance {
   # find all transactions targeting this piggy bank
   # sum them, and deduct from the ->amount.
 }
