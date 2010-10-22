@@ -12,6 +12,8 @@ use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use namespace::autoclean;
 
+my $LONG_AGO = DateTime::Infinite::Past->new;
+
 has _subtree_for => (
   is  => 'ro',
   isa => HashRef[ role_type('Moonpig::Role::CostTree') ],
@@ -76,16 +78,15 @@ sub _contains_cost_tree {
 has last_date => (
   is   => 'rw',
   isa  => 'DateTime',
-  lazy => 1,
-  default => sub { DateTime::Infinite::Past->new },
+  default => sub { $LONG_AGO },
 );
 
 # This method recalculates the last date for the target object
 # and its ancestors.
 sub _compute_last_date {
   my ($self) = @_;
-  my $last = max(0, map $_->date->epoch, $self->charges);
-  $last = max($last, map $_->last_date->epoch, $self->subtrees);
+  my $last = _date_max($LONG_AGO, map $_->date, $self->charges);
+  $last = _date_max($last, map $_->last_date, $self->subtrees);
   # if it changed, propagate the change to the parent
   $self->_update_last_date($last);
   return $last;
@@ -104,6 +105,11 @@ sub _update_last_date {
 }
 
 sub _date_after { DateTime->compare(@_[0,1]) > 1 }
+sub _date_max {
+  my ($max, @d) = @_;
+  $max = _date_after($_, $max) ? $_ : $max for @d;
+  return $max;
+}
 
 sub find_or_create_path {
   my ($self, $path) = @_;
