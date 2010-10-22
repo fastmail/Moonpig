@@ -8,7 +8,6 @@ use Moonpig::CostTree::Basic;
 has cost_tree => (
   is   => 'ro',
   does => 'Moonpig::Role::CostTree',
-  traits => [ qw(SetOnce) ],
   default  => sub { Moonpig::CostTree::Basic->new },
 );
 
