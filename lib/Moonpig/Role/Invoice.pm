@@ -17,7 +17,7 @@ has date => (
   required => 1,
   default => sub { DateTime->now() },
   isa => 'DateTime',
-}
+);
 
 sub total_amt { confess "..."; }
 
