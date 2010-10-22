@@ -41,6 +41,9 @@ test "add some charges to a tree" => sub {
     "total food.dessert as expected",
   );
 
+  my @pie_charges = $tree->path_search('food.dessert.pie')->charges;
+  is(@pie_charges, 2, "we made two distinct charges for pie");
+
   is(
     $tree->path_search('food')->total_amount,
     dollars(18),
