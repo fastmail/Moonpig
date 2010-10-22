@@ -84,7 +84,7 @@ has last_date => (
 sub _compute_last_date {
   my ($self) = @_;
   my $last = max(0, map $_->date, $self->charges);
-  $last = max($last, map $_->last_date, $self->subtrees);
+  $last = max($last, map $_->last_date->epoch, $self->subtrees);
   # if it changed, propagate the change to the parent
   $self->_update_last_date($last);
   return $last;
