@@ -3,7 +3,7 @@ use Moose::Role;
 
 use DateTime;
 use List::MoreUtils qw(any);
-use List::Util qw(max);
+use List::Util qw(first max);
 use Moonpig::Util qw(same_object);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
@@ -34,6 +34,24 @@ sub root {
   my $this = shift;
   $this = $this->_parent while $this->_has_parent;
   return $this;
+}
+
+sub _leaf_name {
+  my ($self) = @_;
+  my @names;
+
+  my $this = $self;
+  while ($this->_has_parent and $this = $this->_parent) {
+    my $subtree_hash = $this->_subtree_for;
+    my $name = first { same_object($self, $subtree_hash->{ $_ }) }
+               keys %$subtree_hash;
+
+    confess "can't find subtree in parent" unless defined $name;
+
+    push @names, $name;
+  }
+
+  return join '.', reverse @names;
 }
 
 # Use this when adding a subtree to ensure that there are no loops
