@@ -2,6 +2,7 @@ package Moonpig::Role::CostTree;
 use Moose::Role;
 
 use DateTime;
+use DateTime::Infinite;
 use List::MoreUtils qw(any);
 use List::Util qw(first max);
 use Moonpig::Util qw(same_object);
@@ -76,14 +77,14 @@ has last_date => (
   is   => 'rw',
   isa  => 'DateTime',
   lazy => 1,
-  default => sub { $_[0]->_compute_last_date },
+  default => sub { DateTime::Infinite::Past->new },
 );
 
 # This method recalculates the last date for the target object
 # and its ancestors.
 sub _compute_last_date {
   my ($self) = @_;
-  my $last = max(0, map $_->date, $self->charges);
+  my $last = max(0, map $_->date->epoch, $self->charges);
   $last = max($last, map $_->last_date->epoch, $self->subtrees);
   # if it changed, propagate the change to the parent
   $self->_update_last_date($last);
