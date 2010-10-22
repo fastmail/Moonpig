@@ -154,4 +154,10 @@ sub add_charge {
   $self->_update_last_date($charge->date);
 }
 
+sub add_charge_at {
+  my ($self, $charge, $path) = @_;
+
+  $self->find_or_create_path($path)->add_charge($charge);
+}
+
 1;
