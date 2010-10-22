@@ -9,6 +9,7 @@ has cost_tree => (
   is   => 'ro',
   does => 'Moonpig::Role::CostTree',
   default  => sub { Moonpig::CostTree::Basic->new },
+  handles  => [ qw(add_charge_at) ],
 );
 
 # TODO: make sure that charges added to this invoice have dates that
