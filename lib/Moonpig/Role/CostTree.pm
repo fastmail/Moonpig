@@ -2,7 +2,9 @@ package Moonpig::Role::CostTree;
 use Moose::Role;
 
 use DateTime;
+use List::MoreUtils qw(any);
 use List::Util qw(max);
+use Moonpig::Util qw(same_object);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 

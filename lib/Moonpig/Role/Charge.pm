@@ -18,4 +18,10 @@ has amount => (
   required => 1,
 );
 
+has date => (
+  is      => 'ro',
+  isa     => 'DateTime',
+  default  => sub { DateTime->now() },
+}
+
 1;
