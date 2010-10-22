@@ -30,7 +30,7 @@ subtype CostPath, as ArrayRef[ CostPathPart ];
 
 subtype CostPathStr,
   as Str,
-  where { /\A (?: $path_part_re \. )* $path_part_re \z/x };
+  where { /\A (?: $path_part_re \. )* $path_part_re ? \z/x };
 
 coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
 
