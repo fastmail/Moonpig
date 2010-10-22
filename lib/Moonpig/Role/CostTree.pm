@@ -5,6 +5,7 @@ use DateTime;
 use List::MoreUtils qw(any);
 use List::Util qw(first max);
 use Moonpig::Util qw(same_object);
+use Moonpig::Types qw(CostPath CostPathPart);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
@@ -114,12 +115,20 @@ sub find_or_create_path {
 # To add later:
 #   replace - if supplied, replace target subtree with this one
 sub path_search {
-  my ($self, $path, $opt) = @_;
-  my $create = $opt->{create};
+  my ($self, $path, $arg) = @_;
+
+  $path = to_CostPath($path);
+  $self->_trusted_path_search($path, $arg);
+}
+
+sub _trusted_path_search {
+  my ($self, $path, $arg) = @_;
+  my $create = $arg->{create};
 
   if (@$path == 0) { return $self }
   elsif (@$path == 1) {
     my $name = $path->[0];
+
     return $self->subtree_for($name) if $self->has_subtree_for($name);
     return unless $create;
 
@@ -132,8 +141,8 @@ sub path_search {
   }
 
   my ($head, @rest) = @$path;
-  my $next = $self->path_search([$head], $opt) or return;
-  return     $next->path_search(\@rest, $opt);
+  my $next = $self->_trusted_path_search([$head], $arg) or return;
+  return     $next->_trusted_path_search(\@rest, $arg);
 }
 
 has _charges => (
