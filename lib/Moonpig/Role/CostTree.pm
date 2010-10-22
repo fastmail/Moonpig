@@ -170,4 +170,14 @@ sub add_charge_at {
   $self->find_or_create_path($path)->add_charge($charge);
 }
 
+sub total_amount {
+  my ($self) = @_;
+
+  my $amount = 0;
+  $amount += $_->amount for $self->charges;
+  $amount += $_->total_amount for $self->subtrees;
+
+  return $amount;
+}
+
 1;

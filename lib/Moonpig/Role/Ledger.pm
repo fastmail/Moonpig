@@ -75,7 +75,7 @@ has invoices => (
   },
 );
 
-sub _ensure_at_least_once_invoice {
+sub _ensure_at_least_one_invoice {
   my ($self) = @_;
 
   my $invoices = $self->_invoices;

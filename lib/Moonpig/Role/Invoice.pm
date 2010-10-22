@@ -3,11 +3,13 @@ use Moose::Role;
 
 use namespace::autoclean;
 
+use Moonpig::CostTree::Basic;
+
 has cost_tree => (
   is   => 'ro',
   does => 'Moonpig::Role::CostTree',
-  required => 1,
-  default  => sub { confess "we should really have a default cost tree" },
+  traits => [ qw(SetOnce) ],
+  default  => sub { Moonpig::CostTree::Basic->new },
 );
 
 # TODO: make sure that charges added to this invoice have dates that
