@@ -3,7 +3,7 @@ use warnings;
 
 use Test::More;
 
-use Moonpig::CostTree::Basic;
+BEGIN { use_ok('Moonpig::CostTree::Basic') }
 
 use Moonpig::Util -all;
 
