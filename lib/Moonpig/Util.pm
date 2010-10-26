@@ -6,13 +6,20 @@ use Scalar::Util qw(refaddr);
 
 use Moonpig::Types ();
 use Moose::Util::TypeConstraints ();
-use Sub::Exporter -setup => [ qw(dollars same_object assert_to) ];
+use Sub::Exporter -setup => [ qw(assert_to cents dollars same_object) ];
 
 sub dollars {
   my ($dollars) = @_;
   my $millicents = $dollars * 100 * 1000;
 
-  return int $millicents;
+  return int ($millicents + 0.5);
+}
+
+sub cents {
+  my ($cents) = @_;
+  my $millicents = $cents * 1000;
+
+  return int ($millicents + 0.5);
 }
 
 sub same_object {
