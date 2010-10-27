@@ -3,10 +3,14 @@ use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Millicents
 
+  EventName EventHandlerName EventHandler
+  EventHandlerMap
+
   CostPath CostPathPart CostPathStr
 ) ];
 
-use MooseX::Types::Moose qw(ArrayRef Int Num Str);
+use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
+# use MooseX::Types::Structured qw(Map);
 use Email::Address;
 
 use namespace::autoclean;
@@ -23,14 +27,21 @@ subtype Millicents, as Int;
 
 coerce Millicents, from Num, via { int };
 
-my $path_part_re = qr/[-a-z0-9]+/i;
+my $simple_str       = qr/[-a-z0-9]+/i;
+my $simple_str_chain = qr/ (?: $simple_str \. )* $simple_str ? /x;
 
-subtype CostPathPart, as Str, where { $_ =~ /\A$path_part_re\z/ };
+subtype EventName,        as Str, where { /\A$simple_str_chain\z/ };
+subtype EventHandlerName, as Str, where { /\A$simple_str_chain\z/ };
+
+role_type EventHandler, { role => 'Moonpig::Role::EventHandler' };
+
+# subtype EventHandlerMap, as Map[ EventName, ArrayRef[ EventHandler ] ];
+subtype EventHandlerMap, as HashRef[ ArrayRef[ EventHandler ] ];
+
+subtype CostPathPart, as Str, where { /\A$simple_str\z/ };
 subtype CostPath, as ArrayRef[ CostPathPart ];
 
-subtype CostPathStr,
-  as Str,
-  where { /\A (?: $path_part_re \. )* $path_part_re ? \z/x };
+subtype CostPathStr, as Str, where { /\A$simple_str_chain\z/ };
 
 coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
 
