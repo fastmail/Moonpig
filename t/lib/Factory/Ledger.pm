@@ -21,7 +21,7 @@ sub test_ledger {
   return $ledger;
 }
 
-sub add_bank_and_consumer_to {
+sub add_bank_to {
   my ($self, $ledger, $args) = @_;
 
   my $bank = Moonpig::Bank::Basic->new({
@@ -29,14 +29,30 @@ sub add_bank_and_consumer_to {
     ledger => $ledger,
   });
 
+  $ledger->add_bank($bank);
+  return $bank;
+}
+
+sub add_consumer_to {
+  my ($self, $ledger, $args) = @_;
+
   my $consumer = Moonpig::Consumer::Basic->new({
     ledger => $ledger,
   });
 
-  $ledger->add_bank($bank);
   $ledger->add_consumer($consumer);
+  $consumer->_set_bank($args->{bank})
+    if $args->{bank};
 
-  $consumer->_set_bank($bank);
+  return $consumer;
+}
+
+sub add_bank_and_consumer_to {
+  my ($self, $ledger, $args) = @_;
+  $args ||= {};
+
+  my $bank = $self->add_bank_to($ledger, $args);
+  my $consumer = $self->add_consumer_to($ledger, {%$args, bank => $bank});
 
   return ($bank, $consumer);
 }
