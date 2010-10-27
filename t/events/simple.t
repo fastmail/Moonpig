@@ -52,8 +52,6 @@ test generic_event_test => sub {
     undef,
     "receiving an unknown event is fatal",
   );
-
-  pass("everything ran to completion without dying");
 };
 
 run_me;
