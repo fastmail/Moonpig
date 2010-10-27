@@ -2,6 +2,7 @@ package Moonpig::Role::Ledger;
 use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',
+  'Moonpig::Role::HandlesEvents',
 );
 
 use Moose::Util::TypeConstraints;

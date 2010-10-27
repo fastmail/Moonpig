@@ -51,17 +51,17 @@ sub _setup_implicit_event_handlers {
 
         for my $handler (@$implicit_handlers) {
           next if $self->_event_handler_named($event_name, $handler->name);
-          $self->_register_handler($event_name, $handler);
+          $self->register_event_handler($event_name, $handler);
         }
       }
     }
   }
 }
 
-sub _register_handler {
+sub register_event_handler {
   my ($self, $event_name, $handler) = @_;
 
-  $self->_registered_events->{ $event_name } ||= {};
+  $self->_handlers_for->{ $event_name } ||= [];
   my $handler_name = $handler->name;
 
   if ($self->_event_handler_named($event_name, $handler_name)) {

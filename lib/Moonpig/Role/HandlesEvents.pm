@@ -1,6 +1,8 @@
 package Moonpig::Role::HandlesEvents;
 use Moose::Role;
 
+use Moonpig::Events::EventRegistry;
+
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use namespace::autoclean;
@@ -10,6 +12,7 @@ has _event_handler_registry => (
   isa => 'Moonpig::Events::EventRegistry',
   required => 1,
   default  => sub { Moonpig::Events::EventRegistry->new },
+  handles  => [ qw(register_event_handler) ],
 );
 
 sub handle_event {
