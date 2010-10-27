@@ -22,10 +22,10 @@ sub test_ledger {
 }
 
 sub add_bank_and_consumer_to {
-  my ($self, $ledger) = @_;
+  my ($self, $ledger, $args) = @_;
 
   my $bank = Moonpig::Bank::Basic->new({
-    amount => dollars(100),
+    amount => $args->{amount} || dollars(100),
     ledger => $ledger,
   });
 
