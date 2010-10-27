@@ -5,7 +5,7 @@ use DateTime;
 use DateTime::Infinite;
 use List::MoreUtils qw(any);
 use List::Util qw(first max);
-use Moonpig::Util qw(same_object);
+use Moonpig::Util qw(assert_to same_object);
 use Moonpig::Types qw(CostPath CostPathPart);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
@@ -124,7 +124,7 @@ sub find_or_create_path {
 sub path_search {
   my ($self, $path, $arg) = @_;
 
-  $path = to_CostPath($path);
+  $path = assert_to(CostPath => $path);
   $self->_trusted_path_search($path, $arg);
 }
 
