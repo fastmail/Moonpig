@@ -9,12 +9,15 @@ use Moonpig::Consumer::Basic;
 use Moonpig::Util -all;
 
 sub test_ledger {
+  my ($self, $class) = @_;
+  $class ||= 'Moonpig::Ledger::Basic';
+
   my $contact = Moonpig::Contact::Basic->new({
     name => 'J. Fred Bloggs',
     email_addresses => [ 'jfred@example.com' ],
   });
 
-  my $ledger = Moonpig::Ledger::Basic->new({
+  my $ledger = $class->new({
     contact => $contact,
   });
 

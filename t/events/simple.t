@@ -5,6 +5,8 @@ use Test::More;
 use Test::Fatal;
 use Test::Deep qw(cmp_deeply ignore superhashof);
 
+use t::lib::Class::Ledger::ImplicitEvents;
+
 with(
   't::lib::Factory::Ledger',
   't::lib::Factory::EventHandler',
@@ -52,6 +54,15 @@ test generic_event_test => sub {
     undef,
     "receiving an unknown event is fatal",
   );
+};
+
+test implicit_events_and_overrides => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->test_ledger('t::lib::Class::Ledger::ImplicitEvents');
+
+  pass('ok');
+
 };
 
 run_me;
