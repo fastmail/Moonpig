@@ -3,16 +3,15 @@ use warnings;
 
 use Carp qw(confess croak);
 use DateTime;
-use Test::Routine;
-use Test::More;
-use Test::Routine::Util;
 use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
+use Test::More;
+use Test::Routine;
+use Test::Routine::Util;
+use Try::Tiny;
 
 my $CLASS = "Moonpig::Consumer::ByTime";
-
-use Try::Tiny;
 
 with 't::lib::Factory::Consumers';
 

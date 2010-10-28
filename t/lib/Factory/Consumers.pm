@@ -58,7 +58,7 @@ sub test_consumer_pair {
       %reasonable_defaults,
       ledger => $ledger,
       %$args,
-      successor => $c1
+      replacement => $c1
      },
   );
 
