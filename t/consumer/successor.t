@@ -45,7 +45,7 @@ test "with_successor" => sub {
 
   my $b = Moonpig::Bank::Basic->new({
     ledger => $ld,
-    amount => dollars(31),	# One dollar per day for rest of January
+    amount => dollars(31),      # One dollar per day for rest of January
    });
 
 

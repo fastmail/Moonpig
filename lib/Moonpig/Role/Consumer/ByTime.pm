@@ -19,11 +19,11 @@ sub implicit_event_handlers {
   return {
     heartbeat => {
       low_funds_check => Moonpig::Events::Handler::Method->new(
-	method_name => 'check_for_low_funds'
+        method_name => 'check_for_low_funds'
        )},
     'low-funds' => {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
-	method_name => 'predecessor_running_out',
+        method_name => 'predecessor_running_out',
        )},
   };
 }
@@ -150,8 +150,8 @@ sub issue_complaint {
     event(
       'contact-humans',
       { why => 'your service will run out soon',
-	how_soon => $how_soon,
-	how_much => $self->cost_amount,
+        how_soon => $how_soon,
+        how_much => $self->cost_amount,
       }));
 }
 
@@ -177,8 +177,8 @@ sub check_for_low_funds {
 
     $self->replacement->handle_event(
       event('low-funds',
-	    { remaining_life => $self->remaining_life($heart_time) }
-	   ));
+            { remaining_life => $self->remaining_life($heart_time) }
+           ));
   }
 }
 
