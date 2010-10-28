@@ -1,4 +1,4 @@
-package Moonpig::Events::EventRegistry;
+package Moonpig::Events::EventHandlerRegistry;
 use Moose;
 
 use List::AllUtils qw(any first);
