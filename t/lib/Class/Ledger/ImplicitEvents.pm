@@ -6,7 +6,7 @@ with 't::lib::Factory::EventHandler';
 my $noop_h = __PACKAGE__->make_event_handler(Noop => { });
 
 my @calls;
-my $code_h = __PACKAGE__->make_event_handler(Callback => {
+my $code_h = __PACKAGE__->make_event_handler(Code => {
   code => sub {
     push @calls, [ @_ ];
   },

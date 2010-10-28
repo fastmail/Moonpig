@@ -3,6 +3,7 @@ use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Millicents
 
+  Event
   EventName EventHandlerName EventHandler
   EventHandlerMap
 
@@ -29,6 +30,8 @@ coerce Millicents, from Num, via { int };
 
 my $simple_str       = qr/[-a-z0-9]+/i;
 my $simple_str_chain = qr/ (?: $simple_str \. )* $simple_str ? /x;
+
+class_type Event, { class => 'Moonpig::Events::Event' };
 
 subtype EventName,        as Str, where { /\A$simple_str_chain\z/ };
 subtype EventHandlerName, as Str, where { /\A$simple_str_chain\z/ };

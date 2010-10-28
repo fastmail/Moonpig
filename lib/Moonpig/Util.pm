@@ -5,8 +5,20 @@ use Carp qw(croak);
 use Scalar::Util qw(refaddr);
 
 use Moonpig::Types ();
+use Moonpig::Events::Event;
+
 use Moose::Util::TypeConstraints ();
-use Sub::Exporter -setup => [ qw(assert_to cents dollars same_object) ];
+
+use Sub::Exporter -setup => [ qw(
+  assert_to
+
+  event
+
+  cents
+  dollars
+
+  same_object
+) ];
 
 sub dollars {
   my ($dollars) = @_;
@@ -20,6 +32,14 @@ sub cents {
   my $millicents = $cents * 1000;
 
   return int ($millicents + 0.5);
+}
+
+sub event {
+  my ($ident, $payload) = @_;
+  Moonpig::Events::Event->new({
+    ident   => $ident,
+    payload => $payload,
+  });
 }
 
 sub same_object {

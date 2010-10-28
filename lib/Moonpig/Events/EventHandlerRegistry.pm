@@ -4,7 +4,7 @@ use Moose;
 use List::AllUtils qw(any first);
 
 use Data::GUID qw(guid_string);
-use Moonpig::Types qw(EventHandler EventHandlerMap);
+use Moonpig::Types qw(Event EventHandler EventHandlerMap);
 use Moonpig::X;
 
 use namespace::autoclean;
@@ -91,16 +91,18 @@ sub register_event_handler {
 }
 
 sub handle_event {
-  my ($self, $receiver, $event_name, $arg) = @_;
+  my ($self, $event, $receiver) = @_;
 
-  my $handlers = $self->_handlers_for_event($event_name);
+  Event->assert_valid($event);
+
+  my $handlers = $self->_handlers_for_event($event->ident);
 
   unless (grep { defined } values %$handlers) {
     Moonpig::X->throw({
       ident   => 'unhandled event',
       message => 'no handlers registered for event %{event_name}s',
       payload => {
-        event_name => $event_name,
+        event_name => $event->ident,
       },
     });
   }
@@ -110,13 +112,14 @@ sub handle_event {
   for my $handler_name (keys %$handlers) {
     next unless my $handler = $handlers->{ $handler_name };
 
-    $handler->handle_event({
-      receiver     => $receiver,
-      handler_name => $handler_name,
-      event_guid   => $guid,
-      event_name   => $event_name,
-      parameters   => $arg,
-    });
+    $handler->handle_event(
+      $event,
+      $receiver,
+      {
+        handler_name => $handler_name,
+        event_guid   => $guid,
+      }
+    );
   }
 
   return $guid;

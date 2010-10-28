@@ -1,6 +1,7 @@
 package Moonpig::Role::HandlesEvents;
 use Moose::Role;
 
+use Moonpig::Events::Event;
 use Moonpig::Events::EventHandlerRegistry;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef);
@@ -18,8 +19,11 @@ has _event_handler_registry => (
 );
 
 sub handle_event {
-  my ($self, $event_name, $arg) = @_;
-  $self->_event_handler_registry->handle_event($self, $event_name, $arg);
+  my ($self, $event) = @_;
+
+  $event = Moonpig::Events::Event->new($event) if ! blessed $event;
+
+  $self->_event_handler_registry->handle_event($event, $self);
 }
 
 1;

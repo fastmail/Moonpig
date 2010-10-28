@@ -1,4 +1,4 @@
-package Moonpig::Events::Handler::Callback;
+package Moonpig::Events::Handler::Code;
 use Moose;
 with 'Moonpig::Role::EventHandler';
 
@@ -13,10 +13,10 @@ has code => (
 );
 
 sub handle_event {
-  my ($self, $arg) = @_;
+  my ($self, $event, $receiver, $arg) = @_;
 
   my $code = $self->code;
-  $code->($arg->{receiver}, $arg->{event_name}, $arg);
+  $code->($self, $event, $receiver, $arg);
 }
 
 1;

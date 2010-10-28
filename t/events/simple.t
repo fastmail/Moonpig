@@ -5,6 +5,8 @@ use Test::More;
 use Test::Fatal;
 use Test::Deep qw(cmp_deeply ignore superhashof);
 
+use Moonpig::Util qw(event);
+
 use t::lib::Class::Ledger::ImplicitEvents;
 
 with(
@@ -20,7 +22,7 @@ test generic_event_test => sub {
   my $noop_h = $self->make_event_handler(Noop => { });
 
   my @calls;
-  my $code_h = $self->make_event_handler(Callback => {
+  my $code_h = $self->make_event_handler(Code => {
     code => sub {
       push @calls, [ @_ ];
     },
@@ -30,22 +32,44 @@ test generic_event_test => sub {
 
   $ledger->register_event_handler('test.code', 'callback', $code_h);
 
-  $ledger->register_event_handler('test.both', 'nothing',  $noop_h);
-  $ledger->register_event_handler('test.both', 'callback', $code_h);
+  $ledger->register_event_handler('test.both', 'bothnoop',  $noop_h);
+  $ledger->register_event_handler('test.both', 'bothcode', $code_h);
 
-  $ledger->handle_event('test.noop', { foo => 1 });
+  $ledger->handle_event(event( 'test.noop', { foo => 1 }));
 
-  $ledger->handle_event('test.code', { foo => 2 });
+  $ledger->handle_event(event( 'test.code', { foo => 2 }));
 
-  $ledger->handle_event('test.both', { foo => 3 });
+  $ledger->handle_event(event( 'test.both', { foo => 3 }));
 
   cmp_deeply(
     \@calls,
     [
-      [ ignore(), 'test.code', superhashof({ parameters => { foo => 2 } }) ],
-      [ ignore(), 'test.both', superhashof({ parameters => { foo => 3 } }) ],
+      [
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
+        Test::Deep::isa('Moonpig::Events::Event'),
+        $ledger,
+        superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+      ],
+      [
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
+        Test::Deep::isa('Moonpig::Events::Event'),
+        $ledger,
+        superhashof({ event_guid => ignore(), handler_name => 'bothcode' }),
+      ],
     ],
     "event handler callback-handler called as expected",
+  );
+
+  is_deeply(
+    $calls[0][1]{payload},
+    { foo => 2 },
+    "payload for test.code event is correct"
+  );
+
+  is_deeply(
+    $calls[1][1]{payload},
+    { foo => 3 },
+    "payload for test.both event is correct"
   );
 
   isnt(
@@ -61,7 +85,7 @@ test implicit_events_and_overrides => sub {
   my $ledger = $self->test_ledger('t::lib::Class::Ledger::ImplicitEvents');
 
   my @calls;
-  my $code_h = $self->make_event_handler(Callback => {
+  my $code_h = $self->make_event_handler(Code => {
     code => sub {
       push @calls, [ @_ ];
     },
@@ -70,21 +94,50 @@ test implicit_events_and_overrides => sub {
   $ledger->register_event_handler('test.code' => 'callback' => $code_h);
 
   # this one should be handled by the one we just registered
-  $ledger->handle_event('test.code' => { foo => 1 });
+  $ledger->handle_event(event('test.code' => { foo => 1 }));
 
   # and this one should be handled by the implicit one
-  $ledger->handle_event('test.both' => { foo => 2 });
+  $ledger->handle_event(event('test.both' => { foo => 2 }));
 
   cmp_deeply(
     \@calls,
-    [ [ ignore(), 'test.code', superhashof({ parameters => { foo => 1 } }) ] ],
+    [
+      [
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
+        Test::Deep::isa('Moonpig::Events::Event'),
+        $ledger,
+        superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+      ],
+    ],
     "we can safely, effectively replace an implicit handler",
   );
 
+  is($calls[0][1]->ident, 'test.code', '...correct event ident');
+  is_deeply($calls[0][1]->payload, { foo => 1 }, '...correct event payload');
+
   cmp_deeply(
     $ledger->callback_calls,
-    [ [ ignore(), 'test.both', superhashof({ parameters => { foo => 2 } }) ] ],
+    [
+      [
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
+        Test::Deep::isa('Moonpig::Events::Event'),
+        $ledger,
+        superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+      ],
+    ],
     "the callback still handles things for which it wasn't overridden",
+  );
+
+  is(
+    $ledger->callback_calls->[0][1]->ident,
+    'test.both',
+    '...correct event ident',
+  );
+
+  is_deeply(
+    $ledger->callback_calls->[0][1]->payload,
+    { foo => 2 },
+    '...correct event payload',
   );
 
   my $error = exception {

@@ -13,10 +13,10 @@ has method_name => (
 );
 
 sub handle_event {
-  my ($self, $arg) = @_;
+  my ($self, $event, $receiver, $arg) = @_;
 
   my $method_name = $self->method_name;
-  $arg->{receiver}->$method_name($arg->{event_name}, $arg);
+  $receiver->$method_name($event, $arg);
 }
 
 1;
