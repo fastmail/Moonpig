@@ -3,6 +3,7 @@ use DateTime;
 use DateTime::Duration;
 use DateTime::Infinite;
 use Moose::Role;
+use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
 with(
@@ -20,10 +21,12 @@ has charge_frequency => (
 );
 
 # How much I cost to own, in millicents per period
+# e.g., a pobox account will have dollars(20) here, and cost_period
+# will be one year
 has cost_amount => (
   is => 'ro',
   required => 1,
-  isa => 'Num',
+  isa => Millicents,
 );
 
 #  XXX this is period in days, which is not quite right, since a
@@ -70,6 +73,11 @@ sub expire_date {
       $n_full_periods_left * $self->cost_period;
 }
 
+sub remaining_life {
+  my ($self) = @_;
+  $self->expire_date - $self->now;
+}
+
 sub next_charge_date {
   my ($self) = @_;
   if ($self->last_charge_exists) {
@@ -77,6 +85,48 @@ sub next_charge_date {
   } else {
     return $self->now;
   }
+}
+
+# This is the schedule of when to warn the owner that money is running out.
+# if the number of days of remaining life is listed on the schedule,
+# the object will queue a warning event to the ledger.  By default,
+# it does this once per week, and also the day before it dies
+has complaint_schedule => (
+  is => 'ro',
+  isa => ArrayRef [ Num ],
+  default => sub { [ 28, 21, 14, 7, 1 ] },
+);
+
+has last_complaint_date => (
+  is => 'rw',
+  isa => 'DateTime',
+  default => sub { DateTime::Infinite::Past->new },
+);
+
+sub issue_complaint_if_necessary {
+  my ($self) = @_;
+  my $remaining_life = $self->remaining_life->in_units('days');
+  if ($self->is_complaining_day($remaining_life)) {
+    $self->issue_complaint($self->remaining_life);
+  }
+}
+
+sub is_complaining_day {
+  my ($self, $days) = @_;
+  for my $d (@{$self->complaint_schedule}) {
+    return 1 if $d == $days;
+  }
+  return;
+}
+
+sub issue_complaint {
+  my ($self, $how_soon) = @_;
+  $self->ledger->receive_event(
+    'contact-humans',
+    { why => 'your service will run out soon',
+      how_soon => $how_soon,
+      how_much => $self->cost_amount,
+    });
 }
 
 1;

@@ -151,12 +151,11 @@ test "no_bank" => sub {
 
   plan tests => 1;
   my $ld = $self->test_ledger;
-  my $b = Moonpig::Bank::Basic->new({ledger => $ld, amount => dollars(3)});
 
   my $c = Moonpig::Consumer::ByTime->new({
     ledger => $self->test_ledger,
-    bank => $b,
-    %c_args,
+    cost_amount => dollars(1),
+    cost_period => DateTime::Duration->new( days => 1 ),
   });
 
   my @eq;
