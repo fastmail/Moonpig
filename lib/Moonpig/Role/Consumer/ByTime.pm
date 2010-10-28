@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer::ByTime;
 use DateTime;
 use DateTime::Duration;
 use DateTime::Infinite;
+use Moonpig::Events::Handler::Method;
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
@@ -12,6 +13,19 @@ with(
 );
 
 use Moonpig::Types qw(Millicents);
+
+sub implicit_event_handlers {
+  return {
+    heartbeat => {
+      low_funds_check => Moonpig::Events::Handler::Method->new(
+	method_name => 'check_for_low_funds'
+       )},
+    'low-funds' => {
+      low_funds_handler => Moonpig::Events::Handler::Method->new(
+	method_name => 'predecessor_running_out',
+       )},
+  };
+}
 
 # How often I charge the bank
 has charge_frequency => (
@@ -38,7 +52,16 @@ has cost_amount => (
 has cost_period => (
    is => 'ro',
    required => 1,
-   isa => 'DateTime::Duration',   # XXX in days
+   isa => 'DateTime::Duration',
+);
+
+# When the object has less than this long to live, it will
+# start posting low-balance events to its successor, or to itself if
+# it has no successor
+has old_age => (
+  is => 'ro',
+  required => 1,
+  isa => 'DateTime::Duration',
 );
 
 # Last time I charged the bank
@@ -66,16 +89,17 @@ sub now {
 
 sub expire_date {
   my ($self) = @_;
-  my $bank = $self->bank || return;
-  my $remaining = $bank->remaining_amount;
+  my $bank = $self->bank ||
+    confess "Can't calculate remaining life for unfunded consumer";
+  my $remaining = $bank->remaining_amount();
   my $n_full_periods_left = int($remaining/$self->cost_amount); # dimensionless
-  return $self->next_charge_date +
+  return $self->next_charge_date() +
       $n_full_periods_left * $self->cost_period;
 }
 
 sub remaining_life {
-  my ($self) = @_;
-  $self->expire_date - $self->now;
+  my ($self, $when) = @_;
+  $self->expire_date - $when;
 }
 
 sub next_charge_date {
@@ -83,7 +107,7 @@ sub next_charge_date {
   if ($self->last_charge_exists) {
     return $self->last_charge_date + $self->charge_frequency;
   } else {
-    return $self->now;
+    return $self->now();
   }
 }
 
@@ -104,15 +128,15 @@ has last_complaint_date => (
 );
 
 sub issue_complaint_if_necessary {
-  my ($self) = @_;
-  my $remaining_life = $self->remaining_life->in_units('days');
-  if ($self->is_complaining_day($remaining_life)) {
-    $self->issue_complaint($self->remaining_life);
+  my ($self, $remaining_life) = @_;
+  if ($self->is_complaining_day($remaining_life->in_units('days'))) {
+    $self->issue_complaint($remaining_life);
   }
 }
 
 sub is_complaining_day {
   my ($self, $days) = @_;
+  confess "undefined days" unless defined $days;
   for my $d (@{$self->complaint_schedule}) {
     return 1 if $d == $days;
   }
@@ -121,7 +145,7 @@ sub is_complaining_day {
 
 sub issue_complaint {
   my ($self, $how_soon) = @_;
-  $self->ledger->receive_event(
+  $self->ledger->handle_event(
     'contact-humans',
     { why => 'your service will run out soon',
       how_soon => $how_soon,
@@ -129,4 +153,42 @@ sub issue_complaint {
     });
 }
 
+################################################################
+#
+#
+
+sub check_for_low_funds {
+  my ($self, $event_name, $arg) = @_;
+
+  return unless $self->has_bank;
+
+  my $heart_time = $arg->{parameters}{datetime};
+  if (DateTime::Duration->compare(
+    $self->remaining_life($heart_time),
+    $self->old_age,
+    $self->now
+   ) <= 0) {
+    # This object does not have long to live
+    unless ($self->has_replacement) {
+      $self->create_replacement;  # XXX 
+    }
+
+    $self->replacement->handle_event(
+      'low-funds',
+      { remaining_life => $self->remaining_life($heart_time) }
+     );
+  }
+}
+
+sub create_replacement {
+  # not sure what to do here yet
+  confess("create replacement??");
+}
+
+# My predecessor is running out of money
+sub predecessor_running_out {
+  my ($self, $event_name, $args) = @_;
+  my $when = $args->{parameters}{remaining_life};
+  $self->issue_complaint_if_necessary($when);
+}
 1;

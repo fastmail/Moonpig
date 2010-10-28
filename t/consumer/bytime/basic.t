@@ -17,6 +17,7 @@ with 't::lib::Factory::Ledger';
 my %c_args = (
     cost_amount => dollars(1),
     cost_period => DateTime::Duration->new( days => 1 ),
+    old_age => DateTime::Duration->new( days => 0 ),
 );
 
 use Moonpig::Util -all;
@@ -76,7 +77,7 @@ test expire_date => sub {
     });
     my $exp = $c->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
-       "[dthree dollars a day expires in one day");
+       "three dollars a day expires in one day");
   }
 
   {
@@ -141,27 +142,55 @@ test "basic_event" => sub {
 };
 
 # to do:
-#  normal behavior without bank: send warnings
-#  normal behavior with bank: setup replacement
+#  normal behavior with successor: send warnings
+#  normal behavior without successor: setup replacement
 #  missed heartbeat
 #  extra heartbeat
 
-test "no_bank" => sub {
+test "with_successor" => sub {
   my ($self) = @_;
 
   plan tests => 1;
   my $ld = $self->test_ledger;
+  my @eq;
+  $ld->register_event_handler(
+    'contact-humans', 'noname', queue_handler("ld", \@eq)
+   );
 
-  my $c = Moonpig::Consumer::ByTime->new({
-    ledger => $self->test_ledger,
+  # Pretend today is 2000-01-01 for convenience
+  my $today = DateTime->new( year => 2000, month => 1, day => 1 );
+
+  my ($c0, $c1);   # $c0 is active, $c1 is successor
+
+  my $b = Moonpig::Bank::Basic->new({
+    ledger => $ld,
+    amount => dollars(31),	# One dollar per day for rest of January
+   });
+
+
+  $c0 = Moonpig::Consumer::ByTime->new({
+    ledger => $ld,
+    bank => $b,
     cost_amount => dollars(1),
     cost_period => DateTime::Duration->new( days => 1 ),
+    old_age => DateTime::Duration->new( years => 1000 ),
+    current_time => $today,
   });
 
-  my @eq;
-  $c->register_event_handler('heart', 'hearthandler', queue_handler("c", \@eq));
-  $c->handle_event('heart', { noise => 'thumpa' });
-  is_deeply(\@eq, [ [ $c, 'heart', { noise => 'thumpa' } ] ]);
+  $c1 =  Moonpig::Consumer::ByTime->new({
+    ledger => $ld,
+    cost_amount => dollars(1),
+    cost_period => DateTime::Duration->new( days => 1 ),
+    old_age => DateTime::Duration->new( years => 1000 ),
+    current_time => $today,
+  });
+  $c0->replacement($c1);
+
+  for my $day (1..31) {
+    my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
+    $c0->handle_event('heartbeat', { datetime => $beat_time });
+  }
+  is(@eq, 5, "received five warnings");
 };
 
 run_me;
