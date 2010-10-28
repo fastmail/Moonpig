@@ -25,9 +25,9 @@ sub implicit_event_handlers {
   my ($self) = @_;
 
   return {
-    'test.noop' => { 'implicit.noop' => [ $noop_h ] },
-    'test.code' => { 'implicit.code' => [ $code_h ] },
-    'test.both' => { 'implicit.both' => [ $noop_h, $code_h ] },
+    'test.noop' => [ $noop_h ],
+    'test.code' => [ $code_h ],
+    'test.both' => [ $noop_h, $code_h ],
   };
 }
 

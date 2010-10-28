@@ -29,21 +29,29 @@ sub _event_handler_named {
          @{ $self->_handlers_for_event( $event_name ) };
 }
 
+has owner => (
+  is  => 'ro',
+  isa => 'Object',
+  required => 1,
+  weak_ref => 1,
+);
+
 sub BUILD {
-  my ($self) = @_;
+  my ($self, $arg) = @_;
 
   $self->_setup_implicit_event_handlers;
 }
 
 sub _setup_implicit_event_handlers {
   my ($self) = @_;
+  my $owner = $self->owner;
 
   my $method_name = 'implicit_event_handlers';
-  if ($self->can( $method_name )) {
+  if ($owner->can( $method_name )) {
     foreach my $method (
-      Class::MOP::class_of($self)->find_all_methods_by_name( $method_name )
+      Class::MOP::class_of($owner)->find_all_methods_by_name( $method_name )
     ) {
-      my $handler_map = $method->{code}->execute($self);
+      my $handler_map = $method->{code}->execute($owner);
       EventHandlerMap->assert_valid($handler_map);
 
       for my $event_name (keys %$handler_map) {
