@@ -74,7 +74,7 @@ sub expire_date {
   my $remaining = $bank->remaining_amount;
   my $n_full_periods_left = int($remaining/$self->cost_amount); # dimensionless
   return $self->next_charge_date +
-      $n_full_periods_left * $self->charge_frequency;
+      $n_full_periods_left * $self->cost_period;
 }
 
 sub next_charge_date {

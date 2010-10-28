@@ -49,7 +49,7 @@ test "constructor" => sub {
 
 test expire_date => sub {
   my ($self) = @_;
-  plan tests => 2;
+  plan tests => 4;
   my $ledger = $self->test_ledger;
 
   my $b = Moonpig::Bank::Basic->new({
@@ -66,6 +66,30 @@ test expire_date => sub {
     my $exp = $c->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
        "stock consumer expires in three days");
+  }
+
+  {
+    my $c = Moonpig::Consumer::ByTime->new({
+      ledger => $ledger,
+      bank => $b,
+      %c_args,
+      cost_amount => dollars(3),
+    });
+    my $exp = $c->expire_date;
+    is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
+       "[dthree dollars a day expires in one day");
+  }
+
+  {
+    my $c = Moonpig::Consumer::ByTime->new({
+      ledger => $ledger,
+      bank => $b,
+      %c_args,
+      cost_period => DateTime::Duration->new( days => 7 ),
+    });
+    my $exp = $c->expire_date;
+    is($exp->ymd, DateTime->from_epoch(epoch => time() + 21 * 86_400)->ymd,
+       "a dollar a week expires in 21 days");
   }
 
   {
