@@ -1,0 +1,52 @@
+
+Large amounts of Moonpig behavior are implemented by the event system.  Events
+are sent to Moonpig objects with the C<handle_event> method:
+
+  $moonpig_entity->handle_event($event_name, \%parameters);
+
+The action that results from this message is always taken by EventHandlers and
+not by the entity itself.  Instead, some entities have implicit event handlers
+associated with them.
+
+For any given event name, an object may have any number of handlers, but each
+one must be registered under a unique name.  If an event is sent to an object
+that has no registered event handlers, it's fatal.
+
+=head2 Synchronicity
+
+Event handling is entirely synchronous.  All event handlers for an event are
+run immediately when the event is received, and will complete before the
+C<handle_event> method returns.  The event handler's job I<may queue
+asynchronous work>, but the handler itself must be synchronous.  All the event
+handlers for an event are called within a single transaction.  Event handlers
+B<must not> perform any side effects that cannot be contained by the
+transaction.  This means that any asynchronous work B<must> be queued into
+the same transactional storage used for the rest of the transaction.
+
+The order of event handlers' execution is undefined.  Since all their
+side-effects are contained in one transaction, authorization checks can fire
+after funds transfers (for example) because the exception from a failed
+authorization will prevent the transfer from being committed.  It may be
+useful in the future to add some simple ordering hints for optimization, but it
+is probably a good idea to avoid event handlers ever requiring a specific
+order.
+
+=head2 Implicit Handlers
+
+Some event handlers will be extremely common among large numbers of entities.
+For example, the Consumer class for normal Pobox accounts will almost always
+a "create replacement with parameters found at trusted URL" handler for the
+"funds running low and no replacement configured" event.  Rather than register
+this for each event, it can be made implicit on the class.
+
+This makes it easy to distinguish between common behavior and object-specific
+overrides.  It also makes it easy to fix the behavior on all objects with the
+implicit behavior just by altering the definition of the implicit events.
+
+Sometimes this behavior needs to be replaced -- for example, a customer wants
+to replace "setup and bill for replacement consumer" with "do nothing" to allow
+his account to expire silently.  In this case, a new event handlers can be
+registered for the same event I<and the same name>.  Implicit event handlers
+can be silently replaced by explicit event handlers.  (Trying to define an
+explicit event handler for an event/handler name pair that already exists is
+fatal.)
