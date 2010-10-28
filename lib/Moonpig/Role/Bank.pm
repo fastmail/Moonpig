@@ -6,6 +6,7 @@ with(
 
 use List::Util qw(reduce);
 use Moonpig::Types qw(Ledger Millicents);
+use Moonpig::Transfer;
 
 use namespace::autoclean;
 
