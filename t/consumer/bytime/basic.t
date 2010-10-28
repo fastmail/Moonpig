@@ -120,7 +120,7 @@ sub queue_handler {
   $queue ||= [];
   return Moonpig::Events::Handler::Code->new(
     code => sub {
-      my ($handler, $event, $receiver, $args) = @_;
+      my ($receiver, $event, $args, $handler) = @_;
       push @$queue, [ $receiver, $event->ident, $event->payload ];
     },
    );

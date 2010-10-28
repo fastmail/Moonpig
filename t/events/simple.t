@@ -45,16 +45,16 @@ test generic_event_test => sub {
     \@calls,
     [
       [
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
-        Test::Deep::isa('Moonpig::Events::Event'),
         $ledger,
+        Test::Deep::isa('Moonpig::Events::Event'),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
       [
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
-        Test::Deep::isa('Moonpig::Events::Event'),
         $ledger,
+        Test::Deep::isa('Moonpig::Events::Event'),
         superhashof({ event_guid => ignore(), handler_name => 'bothcode' }),
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "event handler callback-handler called as expected",
@@ -103,10 +103,10 @@ test implicit_events_and_overrides => sub {
     \@calls,
     [
       [
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
-        Test::Deep::isa('Moonpig::Events::Event'),
         $ledger,
+        Test::Deep::isa('Moonpig::Events::Event'),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "we can safely, effectively replace an implicit handler",
@@ -119,10 +119,10 @@ test implicit_events_and_overrides => sub {
     $ledger->callback_calls,
     [
       [
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
-        Test::Deep::isa('Moonpig::Events::Event'),
         $ledger,
+        Test::Deep::isa('Moonpig::Events::Event'),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
+        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "the callback still handles things for which it wasn't overridden",

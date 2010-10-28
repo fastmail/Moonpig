@@ -16,7 +16,7 @@ sub handle_event {
   my ($self, $event, $receiver, $arg) = @_;
 
   my $method_name = $self->method_name;
-  $receiver->$method_name($event, $arg);
+  $receiver->$method_name($event, $arg, $self);
 }
 
 1;
