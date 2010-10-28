@@ -1,4 +1,4 @@
-package Moonpig::Role::Invoice;
+package Moonpig::Role::Receipt;
 use Moose::Role;
 
 use namespace::autoclean;
@@ -12,7 +12,7 @@ has cost_tree => (
   handles  => [ qw(add_charge_at) ],
 );
 
-# TODO: make sure that charges added to this invoice have dates that
+# TODO: make sure that charges added to this receipt have dates that
 # precede this date. 2010-10-17 mjd@icgroup.com
 has date => (
   is  => 'ro',

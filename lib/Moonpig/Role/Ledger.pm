@@ -66,40 +66,40 @@ for my $thing (qw(bank consumer)) {
   });
 }
 
-has invoices => (
-  reader  => '_invoices',
-  isa     => ArrayRef[ role_type('Moonpig::Role::Invoice') ],
+has receipts => (
+  reader  => '_receipts',
+  isa     => ArrayRef[ role_type('Moonpig::Role::Receipt') ],
   default => sub { [] },
   traits  => [ qw(Array) ],
   handles => {
-    _push_invoice => 'push',
+    _push_receipt => 'push',
   },
 );
 
-sub _ensure_at_least_one_invoice {
+sub _ensure_at_least_one_receipt {
   my ($self) = @_;
 
-  my $invoices = $self->_invoices;
-  return if @$invoices and $invoices->[-1]->is_open;
+  my $receipts = $self->_receipts;
+  return if @$receipts and $receipts->[-1]->is_open;
 
-  require Moonpig::Invoice::Basic;
+  require Moonpig::Receipt::Basic;
   require Moonpig::CostTree::Basic;
-  my $invoice = Moonpig::Invoice::Basic->new({
+  my $receipt = Moonpig::Receipt::Basic->new({
     cost_tree => Moonpig::CostTree::Basic->new(),
   });
 
-  push @$invoices, $invoice;
+  push @$receipts, $receipt;
   return;
 }
 
-has current_open_invoice => (
+has current_receipt => (
   is   => 'ro',
-  does => role_type('Moonpig::Role::Invoice'),
+  does => role_type('Moonpig::Role::Receipt'),
   lazy => 1,
   default => sub {
     my ($self) = @_;
-    $self->_ensure_at_least_one_invoice;
-    $self->_invoices->[-1];
+    $self->_ensure_at_least_one_receipt;
+    $self->_receipts->[-1];
   }
 );
 

@@ -6,9 +6,9 @@
 =head3 Ledger
 
 A ledger wraps up an account history.  It contains the entire history
-number of piggy banks, consumers, and invoices.  It also singles out
-the currently-active piggy banks and consumers, the current "general
-fund" piggy bank, if there is one, and the current invoice.  It also
+number of piggy banks, consumers, receipts, and invoices.  It also singles out
+the currently-active piggy banks and consumers, the current "general fund"
+piggy bank, if there is one, and the current invoice.  It also
 contains contact information for the account.
 
 =head3 Contact
@@ -28,6 +28,13 @@ can then be mailed out.
 The printable representations may decide, at each level of the cost
 tree, to present a single subtotal item, or descend the tree to the
 next level to list the sub-items.
+
+=head3 Receipt
+
+A receipt represents a summary of transfers made from banks to consumers over a
+span of time.  It is represented as the head of a cost tree.  A receipt can be
+marked as closed, at which time new transfers will be recorded on a new
+receipt.
 
 =head3 Piggy bank
 
@@ -91,7 +98,7 @@ look like this:
                                          --- post #7890a : $17.225
 
 
-The organization of the cost tree allows the invoice to present the
+The organization of the cost tree allows the receipt to present the
 charges the way we want:
 
 	Pobox account:
@@ -124,7 +131,7 @@ year?)  Each day the consumer object will receive a heartbeat event.
 It will check if it has processed a charge yet this month.  If not, it
 will try to process a charge against its piggy bank.  If the piggy
 bank is sufficiently well-funded, that is all that is needed; the
-charge is now in the right cost tree and the later invoice will inform
+charge is now in the right cost tree and the later receipt will inform
 the customer.
 
 If the piggy bank is not well-enough funded, the account will check to
