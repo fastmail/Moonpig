@@ -66,41 +66,49 @@ for my $thing (qw(bank consumer)) {
   });
 }
 
-has receipts => (
-  reader  => '_receipts',
-  isa     => ArrayRef[ role_type('Moonpig::Role::Receipt') ],
-  default => sub { [] },
-  traits  => [ qw(Array) ],
-  handles => {
-    _push_receipt => 'push',
-  },
-);
+for my $thing (qw(receipt invoice)) {
+  my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
+  my $class  = sprintf "Moonpig::%s::Basic", ucfirst $thing;
+  my $plural = "${thing}s";
+  my $reader = "_$plural";
 
-sub _ensure_at_least_one_receipt {
-  my ($self) = @_;
+  has $plural => (
+    reader  => $reader,
+    isa     => ArrayRef[ role_type($role) ],
+    default => sub { [] },
+    traits  => [ qw(Array) ],
+    handles => {
+      "_push_$thing" => 'push',
+    },
+  );
 
-  my $receipts = $self->_receipts;
-  return if @$receipts and $receipts->[-1]->is_open;
-
-  require Moonpig::Receipt::Basic;
-  require Moonpig::CostTree::Basic;
-  my $receipt = Moonpig::Receipt::Basic->new({
-    cost_tree => Moonpig::CostTree::Basic->new(),
-  });
-
-  push @$receipts, $receipt;
-  return;
-}
-
-has current_receipt => (
-  is   => 'ro',
-  does => role_type('Moonpig::Role::Receipt'),
-  lazy => 1,
-  default => sub {
+  my $_ensure_one_thing = sub {
     my ($self) = @_;
-    $self->_ensure_at_least_one_receipt;
-    $self->_receipts->[-1];
-  }
-);
+
+    my $things = $self->$reader;
+    return if @$things and $things->[-1]->is_open;
+
+    Class::MOP::load_class($class);
+    require Moonpig::CostTree::Basic;
+
+    my $thing = $class->new({
+      cost_tree => Moonpig::CostTree::Basic->new(),
+    });
+
+    push @$things, $thing;
+    return;
+  };
+
+  has "current_$thing" => (
+    is   => 'ro',
+    does => role_type($role),
+    lazy => 1,
+    default => sub {
+      my ($self) = @_;
+      $self->$_ensure_one_thing;
+      $self->$reader->[-1];
+    }
+  );
+}
 
 1;
