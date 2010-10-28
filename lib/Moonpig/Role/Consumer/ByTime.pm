@@ -6,6 +6,7 @@ use namespace::autoclean;
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::HandlesEvents',
 );
 
 use Moonpig::Types qw(Millicents);
