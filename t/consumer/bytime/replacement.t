@@ -94,6 +94,11 @@ test "without_successor" => sub {
   pass();
 };
 
+test "irreplaceable" => sub {
+  # this consumer has been instructed not to generate a replacement for itself
+  pass();
+};
+
 
 run_me;
 done_testing;

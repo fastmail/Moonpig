@@ -5,6 +5,7 @@ use DateTime::Infinite;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Util qw(event);
 use Moose::Role;
+use MooseX::Clone;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
@@ -160,6 +161,23 @@ sub issue_complaint {
       }));
 }
 
+# XXX this is for testing only; when we figure out replacement semantics
+has is_replaceable => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 1,
+);
+
+sub create_replacement {
+  my ($self) = @_;
+  if ($self->is_replaceable) {
+    my $replacement = $self->clone(bank => undef);
+    $self->replacement($replacement);
+    return $replacement;
+  }
+  return;
+}
+
 ################################################################
 #
 #
@@ -187,15 +205,11 @@ sub check_for_low_funds {
   }
 }
 
-sub create_replacement {
-  # not sure what to do here yet
-  confess("create replacement??");
-}
-
 # My predecessor is running out of money
 sub predecessor_running_out {
   my ($self, $event, $args) = @_;
   my $when = $event->payload->{remaining_life};
   $self->issue_complaint_if_necessary($when);
 }
+
 1;
