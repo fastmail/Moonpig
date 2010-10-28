@@ -4,7 +4,7 @@ use Moose;
 use List::AllUtils qw(any first);
 
 use Data::GUID qw(guid_string);
-use Moonpig::Types qw(EventHandlerMap);
+use Moonpig::Types qw(EventHandler EventHandlerMap);
 use Moonpig::X;
 
 use namespace::autoclean;
@@ -19,14 +19,13 @@ has _handlers_for => (
 sub _handlers_for_event {
   my ($self, $event_name) = @_;
 
-  return $self->_handlers_for->{ $event_name } || [];
+  return $self->_handlers_for->{ $event_name } || {};
 }
 
 sub _event_handler_named {
   my ($self, $event_name, $handler_name) = @_;
 
-  return first { $_->name eq $handler_name }
-         @{ $self->_handlers_for_event( $event_name ) };
+  return $self->_handlers_for_event( $event_name )->{ $handler_name };
 }
 
 has owner => (
@@ -58,7 +57,9 @@ sub _setup_implicit_event_handlers {
         my $implicit_handlers = $handler_map->{ $event_name };
 
         for my $handler (@$implicit_handlers) {
+          warn "...";
           next if $self->_event_handler_named($event_name, $handler->name);
+          EventHandler->assert_valid($handler);
           $self->register_event_handler($event_name, $handler);
         }
       }
@@ -67,10 +68,9 @@ sub _setup_implicit_event_handlers {
 }
 
 sub register_event_handler {
-  my ($self, $event_name, $handler) = @_;
+  my ($self, $event_name, $handler_name, $handler) = @_;
 
-  $self->_handlers_for->{ $event_name } ||= [];
-  my $handler_name = $handler->name;
+  $self->_handlers_for->{ $event_name } ||= {};
 
   if ($self->_event_handler_named($event_name, $handler_name)) {
     Moonpig::X->throw({
@@ -83,8 +83,7 @@ sub register_event_handler {
     });
   }
 
-  my $handlers = $self->_handlers_for->{ $event_name };
-  push @$handlers, $handler;
+  $self->_handlers_for->{ $event_name }->{ $handler_name } = $handler;
 }
 
 sub handle_event {
@@ -92,7 +91,7 @@ sub handle_event {
 
   my $handlers = $self->_handlers_for_event($event_name);
 
-  unless (@$handlers) {
+  unless (grep { defined } values %$handlers) {
     Moonpig::X->throw({
       ident   => 'unhandled event',
       message => 'no handlers registered for event %{event_name}s',
@@ -104,12 +103,15 @@ sub handle_event {
 
   my $guid = guid_string;
 
-  for my $handler (@$handlers) {
+  for my $handler_name (keys %$handlers) {
+    next unless my $handler = $handlers->{ $handler_name };
+
     $handler->handle_event({
-      receiver   => $receiver,
-      event_guid => $guid,
-      event_name => $event_name,
-      parameters => $arg,
+      receiver     => $receiver,
+      handler_name => $handler_name,
+      event_guid   => $guid,
+      event_name   => $event_name,
+      parameters   => $arg,
     });
   }
 

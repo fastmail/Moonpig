@@ -6,7 +6,7 @@ use MooseX::Types::Moose qw(CodeRef);
 
 use namespace::autoclean;
 
-has callback => (
+has code => (
   is  => 'ro',
   isa => CodeRef,
   required => 1,
@@ -15,8 +15,8 @@ has callback => (
 sub handle_event {
   my ($self, $arg) = @_;
 
-  my $callback = $self->callback;
-  $callback->($arg->{receiver}, $arg->{event_name}, $arg);
+  my $code = $self->code;
+  $code->($arg->{receiver}, $arg->{event_name}, $arg);
 }
 
 1;

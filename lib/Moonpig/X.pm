@@ -35,7 +35,7 @@ has is_public => (
   default  => 0,
 );
 
-use namespace::autoclean;
+use namespace::clean -except => 'meta';
 
-
+use overload '""' => sub { $_[0]->dump }, fallback => 1;
 1;

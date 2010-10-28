@@ -17,22 +17,21 @@ test generic_event_test => sub {
 
   my $ledger = $self->test_ledger;
 
-  my $noop_h = $self->make_event_handler(Noop => { name => 'nothing' });
+  my $noop_h = $self->make_event_handler(Noop => { });
 
   my @calls;
   my $code_h = $self->make_event_handler(Callback => {
-    name     => 'callback-handler',
-    callback => sub {
+    code => sub {
       push @calls, [ @_ ];
     },
   });
 
-  $ledger->register_event_handler('test.noop', $noop_h);
+  $ledger->register_event_handler('test.noop', 'nothing',  $noop_h);
 
-  $ledger->register_event_handler('test.code', $code_h);
+  $ledger->register_event_handler('test.code', 'callback', $code_h);
 
-  $ledger->register_event_handler('test.both', $noop_h);
-  $ledger->register_event_handler('test.both', $code_h);
+  $ledger->register_event_handler('test.both', 'nothing',  $noop_h);
+  $ledger->register_event_handler('test.both', 'callback', $code_h);
 
   $ledger->handle_event('test.noop', { foo => 1 });
 
@@ -60,6 +59,15 @@ test implicit_events_and_overrides => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger('t::lib::Class::Ledger::ImplicitEvents');
+
+  my @calls;
+  my $code_h = $self->make_event_handler(Callback => {
+    code => sub {
+      push @calls, [ @_ ];
+    },
+  });
+
+  $ledger->register_event_handler('test.code' => 'implicit.code' => $code_h);
 
   pass('ok');
 

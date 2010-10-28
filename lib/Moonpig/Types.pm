@@ -36,7 +36,7 @@ subtype EventHandlerName, as Str, where { /\A$simple_str_chain\z/ };
 role_type EventHandler, { role => 'Moonpig::Role::EventHandler' };
 
 # subtype EventHandlerMap, as Map[ EventName, ArrayRef[ EventHandler ] ];
-subtype EventHandlerMap, as HashRef[ ArrayRef[ EventHandler ] ];
+subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
 
 subtype CostPathPart, as Str, where { /\A$simple_str\z/ };
 subtype CostPath, as ArrayRef[ CostPathPart ];

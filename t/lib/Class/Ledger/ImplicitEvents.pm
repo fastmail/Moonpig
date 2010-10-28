@@ -3,12 +3,11 @@ use Moose;
 extends 'Moonpig::Ledger::Basic';
 with 't::lib::Factory::EventHandler';
 
-my $noop_h = __PACKAGE__->make_event_handler(Noop => { name => 'nothing' });
+my $noop_h = __PACKAGE__->make_event_handler(Noop => { });
 
 my @calls;
 my $code_h = __PACKAGE__->make_event_handler(Callback => {
-  name     => 'callback-handler',
-  callback => sub {
+  code => sub {
     push @calls, [ @_ ];
   },
 });
