@@ -3,6 +3,7 @@ use DateTime;
 use DateTime::Duration;
 use DateTime::Infinite;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Util qw(event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
@@ -146,11 +147,12 @@ sub is_complaining_day {
 sub issue_complaint {
   my ($self, $how_soon) = @_;
   $self->ledger->handle_event(
-    'contact-humans',
-    { why => 'your service will run out soon',
-      how_soon => $how_soon,
-      how_much => $self->cost_amount,
-    });
+    event(
+      'contact-humans',
+      { why => 'your service will run out soon',
+	how_soon => $how_soon,
+	how_much => $self->cost_amount,
+      }));
 }
 
 ################################################################
@@ -158,11 +160,11 @@ sub issue_complaint {
 #
 
 sub check_for_low_funds {
-  my ($self, $event_name, $arg) = @_;
+  my ($self, $event, $arg) = @_;
 
   return unless $self->has_bank;
 
-  my $heart_time = $arg->{parameters}{datetime};
+  my $heart_time = $event->payload->{datetime};
   if (DateTime::Duration->compare(
     $self->remaining_life($heart_time),
     $self->old_age,
@@ -174,9 +176,9 @@ sub check_for_low_funds {
     }
 
     $self->replacement->handle_event(
-      'low-funds',
-      { remaining_life => $self->remaining_life($heart_time) }
-     );
+      event('low-funds',
+	    { remaining_life => $self->remaining_life($heart_time) }
+	   ));
   }
 }
 
@@ -187,8 +189,8 @@ sub create_replacement {
 
 # My predecessor is running out of money
 sub predecessor_running_out {
-  my ($self, $event_name, $args) = @_;
-  my $when = $args->{parameters}{remaining_life};
+  my ($self, $event, $args) = @_;
+  my $when = $event->payload->{remaining_life};
   $self->issue_complaint_if_necessary($when);
 }
 1;

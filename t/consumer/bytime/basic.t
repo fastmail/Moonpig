@@ -7,7 +7,8 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 use Moonpig::Consumer::ByTime;
-use Moonpig::Events::Handler::Callback;
+use Moonpig::Events::Handler::Code;
+use Moonpig::Util qw(event);
 
 use Try::Tiny;
 
@@ -117,10 +118,10 @@ test expire_date => sub {
 sub queue_handler {
   my ($name, $queue) = @_;
   $queue ||= [];
-  return Moonpig::Events::Handler::Callback->new(
+  return Moonpig::Events::Handler::Code->new(
     code => sub {
-      my ($target, $evname, $args) = @_;
-      push @$queue, [ $target, $evname, $args->{parameters} ];
+      my ($handler, $event, $receiver, $args) = @_;
+      push @$queue, [ $receiver, $event->ident, $event->payload ];
     },
    );
 }
@@ -137,7 +138,7 @@ test "basic_event" => sub {
 
   my @eq;
   $c->register_event_handler('heart', 'hearthandler', queue_handler("c", \@eq));
-  $c->handle_event('heart', { noise => 'thumpa' });
+  $c->handle_event(event('heart', { noise => 'thumpa' }));
   is_deeply(\@eq, [ [ $c, 'heart', { noise => 'thumpa' } ] ]);
 };
 
@@ -188,7 +189,7 @@ test "with_successor" => sub {
 
   for my $day (1..31) {
     my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
-    $c0->handle_event('heartbeat', { datetime => $beat_time });
+    $c0->handle_event(event('heartbeat', { datetime => $beat_time }));
   }
   is(@eq, 5, "received five warnings");
 };
