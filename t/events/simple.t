@@ -3,7 +3,7 @@ use Test::Routine::Util;
 
 use Test::More;
 use Test::Fatal;
-use Test::Deep qw(cmp_deeply ignore superhashof);
+use Test::Deep qw(cmp_deeply all ignore methods superhashof);
 
 use Moonpig::Util qw(event);
 
@@ -21,12 +21,7 @@ test generic_event_test => sub {
 
   my $noop_h = $self->make_event_handler(Noop => { });
 
-  my @calls;
-  my $code_h = $self->make_event_handler(Code => {
-    code => sub {
-      push @calls, [ @_ ];
-    },
-  });
+  my $code_h = $self->make_event_handler('t::Test');
 
   $ledger->register_event_handler('test.noop', 'nothing',  $noop_h);
 
@@ -42,34 +37,32 @@ test generic_event_test => sub {
   $ledger->handle_event(event( 'test.both', { foo => 3 }));
 
   cmp_deeply(
-    \@calls,
+    [ $code_h->calls ],
     [
       [
         $ledger,
-        Test::Deep::isa('Moonpig::Events::Event'),
+        all(
+          Test::Deep::isa('Moonpig::Events::Event'),
+          methods(
+            ident   => 'test.code',
+            payload => { foo => 2 },
+          ),
+        ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
       [
         $ledger,
-        Test::Deep::isa('Moonpig::Events::Event'),
+        all(
+          Test::Deep::isa('Moonpig::Events::Event'),
+          methods(
+            ident   => 'test.both',
+            payload => { foo => 3 },
+          ),
+        ),
         superhashof({ event_guid => ignore(), handler_name => 'bothcode' }),
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "event handler callback-handler called as expected",
-  );
-
-  is_deeply(
-    $calls[0][1]{payload},
-    { foo => 2 },
-    "payload for test.code event is correct"
-  );
-
-  is_deeply(
-    $calls[1][1]{payload},
-    { foo => 3 },
-    "payload for test.both event is correct"
   );
 
   isnt(
@@ -84,12 +77,7 @@ test implicit_events_and_overrides => sub {
 
   my $ledger = $self->test_ledger('t::lib::Class::Ledger::ImplicitEvents');
 
-  my @calls;
-  my $code_h = $self->make_event_handler(Code => {
-    code => sub {
-      push @calls, [ @_ ];
-    },
-  });
+  my $code_h = $self->make_event_handler('t::Test');
 
   $ledger->register_event_handler('test.code' => 'callback' => $code_h);
 
@@ -100,44 +88,39 @@ test implicit_events_and_overrides => sub {
   $ledger->handle_event(event('test.both' => { foo => 2 }));
 
   cmp_deeply(
-    \@calls,
+    [ $code_h->calls ],
     [
       [
         $ledger,
-        Test::Deep::isa('Moonpig::Events::Event'),
+        all(
+          Test::Deep::isa('Moonpig::Events::Event'),
+          methods(
+            ident   => 'test.code',
+            payload => { foo => 1 },
+          ),
+        ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "we can safely, effectively replace an implicit handler",
   );
 
-  is($calls[0][1]->ident, 'test.code', '...correct event ident');
-  is_deeply($calls[0][1]->payload, { foo => 1 }, '...correct event payload');
-
   cmp_deeply(
-    $ledger->callback_calls,
+    [ $ledger->code_h->calls ],
     [
       [
         $ledger,
-        Test::Deep::isa('Moonpig::Events::Event'),
+        all(
+          Test::Deep::isa('Moonpig::Events::Event'),
+          methods(
+            ident   => 'test.both',
+            payload => { foo => 2 },
+          ),
+        ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
-        Test::Deep::isa('Moonpig::Events::Handler::Code'),
       ],
     ],
     "the callback still handles things for which it wasn't overridden",
-  );
-
-  is(
-    $ledger->callback_calls->[0][1]->ident,
-    'test.both',
-    '...correct event ident',
-  );
-
-  is_deeply(
-    $ledger->callback_calls->[0][1]->payload,
-    { foo => 2 },
-    '...correct event payload',
   );
 
   my $error = exception {

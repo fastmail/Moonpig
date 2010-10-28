@@ -9,8 +9,9 @@ use MooseX::Types::Moose qw(ArrayRef HashRef);
 use namespace::autoclean;
 
 has _event_handler_registry => (
-  is  => 'ro',
-  isa => 'Moonpig::Events::EventHandlerRegistry',
+  is   => 'ro',
+  isa  => 'Moonpig::Events::EventHandlerRegistry',
+  lazy => 1,
   required => 1,
   default  => sub { Moonpig::Events::EventHandlerRegistry->new({
     owner => $_[0] })

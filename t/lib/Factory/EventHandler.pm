@@ -1,14 +1,23 @@
 package t::lib::Factory::EventHandler;
 use Moose::Role;
 
+use String::RewritePrefix;
+
 use namespace::autoclean;
 
 sub make_event_handler {
   my ($self, $moniker, $arg) = @_;
-  my $class = "Moonpig::Events::Handler::$moniker";
+  my $class = String::RewritePrefix->rewrite(
+    {
+      ''    => 'Moonpig::Events::Handler::',
+      '='   => '',
+      't::' => 't::lib::Class::EventHandler::',
+    },
+    $moniker,
+  );
   Class::MOP::load_class($class);
 
-  return $class->new($arg);
+  return $class->new(defined $arg ? $arg : ());
 }
 
 1;
