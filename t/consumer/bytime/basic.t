@@ -17,7 +17,6 @@ with 't::lib::Factory::Ledger';
 my %c_args = (
     cost_amount => dollars(1),
     cost_period => DateTime::Duration->new( days => 1 ),
-    min_balance => dollars(0),
 );
 
 use Moonpig::Util -all;

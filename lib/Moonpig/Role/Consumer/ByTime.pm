@@ -38,13 +38,6 @@ has cost_period => (
    isa => 'DateTime::Duration',   # XXX in days
 );
 
-# I start generating low-balance events when my bank balance falls below this much
-has min_balance => (
-  is => 'ro',
-  isa => Millicents,
-  required => 1,
-);
-
 # Last time I charged the bank
 has last_charge_date => (
   is => 'rw',
