@@ -20,13 +20,17 @@ sub implicit_stuff {
   };
 }
 
+sub callback_calls {
+  $_[0]->implicit_stuff->{calls}
+}
+
 sub implicit_event_handlers {
   my ($self) = @_;
 
   return {
-    'test.noop' => [ $noop_h ],
-    'test.code' => [ $code_h ],
-    'test.both' => [ $noop_h, $code_h ],
+    'test.noop' => { nothing  => $noop_h },
+    'test.code' => { callback => $code_h },
+    'test.both' => { nothing  => $noop_h, callback => $code_h },
   };
 }
 

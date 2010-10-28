@@ -56,11 +56,14 @@ sub _setup_implicit_event_handlers {
       for my $event_name (keys %$handler_map) {
         my $implicit_handlers = $handler_map->{ $event_name };
 
-        for my $handler (@$implicit_handlers) {
-          warn "...";
-          next if $self->_event_handler_named($event_name, $handler->name);
+        for my $handler_name (keys %$implicit_handlers) {
+          next if $self->_event_handler_named($event_name, $handler_name);
+
+          my $handler = $implicit_handlers->{ $handler_name };
           EventHandler->assert_valid($handler);
-          $self->register_event_handler($event_name, $handler);
+
+          $handler->mark_implicit;
+          $self->register_event_handler($event_name, $handler_name, $handler);
         }
       }
     }
@@ -72,7 +75,8 @@ sub register_event_handler {
 
   $self->_handlers_for->{ $event_name } ||= {};
 
-  if ($self->_event_handler_named($event_name, $handler_name)) {
+  my $old_handler = $self->_event_handler_named($event_name, $handler_name);
+  if ($old_handler and $old_handler->is_explicit) {
     Moonpig::X->throw({
       ident   => 'duplicate handler',
       message => 'handler named %{handler_name}s already registered for event %{event_name}s',

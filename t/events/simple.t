@@ -67,10 +67,39 @@ test implicit_events_and_overrides => sub {
     },
   });
 
-  $ledger->register_event_handler('test.code' => 'implicit.code' => $code_h);
+  $ledger->register_event_handler('test.code' => 'callback' => $code_h);
 
-  pass('ok');
+  # this one should be handled by the one we just registered
+  $ledger->handle_event('test.code' => { foo => 1 });
 
+  # and this one should be handled by the implicit one
+  $ledger->handle_event('test.both' => { foo => 2 });
+
+  cmp_deeply(
+    \@calls,
+    [ [ ignore(), 'test.code', superhashof({ parameters => { foo => 1 } }) ] ],
+    "we can safely, effectively replace an implicit handler",
+  );
+
+  cmp_deeply(
+    $ledger->callback_calls,
+    [ [ ignore(), 'test.both', superhashof({ parameters => { foo => 2 } }) ] ],
+    "the callback still handles things for which it wasn't overridden",
+  );
+
+  my $error = exception {
+    $ledger->register_event_handler(
+      'test.code',
+      'callback', 
+       $self->make_event_handler(Noop => { }),
+    );
+  };
+
+  is(
+    $error->ident,
+    'duplicate handler',
+    "we can't replace an explicit handler",
+  );
 };
 
 run_me;
