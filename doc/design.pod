@@ -107,6 +107,7 @@ charges the way we want:
 	  Subtotal              $34.53
 
 	TOTAL                   $36.23
+
 =head3 Transaction
 
 Do we really need this?
