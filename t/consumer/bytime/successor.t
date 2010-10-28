@@ -74,5 +74,62 @@ test "with_successor" => sub {
   is(@eq, 5, "received five warnings");
 };
 
+
+
+test "with_successor; repeated heartbeats" => sub {
+  my ($self) = @_;
+
+  plan tests => 1;
+  my $ld = $self->test_ledger;
+  my @eq;
+  $ld->register_event_handler(
+    'contact-humans', 'noname', queue_handler("ld", \@eq)
+   );
+
+  # Pretend today is 2000-01-01 for convenience
+  my $today = DateTime->new( year => 2000, month => 1, day => 1 );
+
+  my ($c0, $c1);   # $c0 is active, $c1 is successor
+
+  my $b = Moonpig::Bank::Basic->new({
+    ledger => $ld,
+    amount => dollars(31),	# One dollar per day for rest of January
+   });
+
+
+  $c0 = Moonpig::Consumer::ByTime->new({
+    ledger => $ld,
+    bank => $b,
+    cost_amount => dollars(1),
+    cost_period => DateTime::Duration->new( days => 1 ),
+    old_age => DateTime::Duration->new( years => 1000 ),
+    current_time => $today,
+  });
+
+  $c1 =  Moonpig::Consumer::ByTime->new({
+    ledger => $ld,
+    cost_amount => dollars(1),
+    cost_period => DateTime::Duration->new( days => 1 ),
+    old_age => DateTime::Duration->new( years => 1000 ),
+    current_time => $today,
+  });
+  $c0->replacement($c1);
+
+  # Now try delivering each heartbeat event twice
+  for my $day (1..31) {
+    my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
+    $c0->handle_event(event('heartbeat', { datetime => $beat_time }));
+    $c0->handle_event(event('heartbeat', { datetime => $beat_time }));
+  }
+  is(@eq, 5, "received five warnings even with repeated heartbeats");
+};
+
+test "without_successor" => sub {
+  # A consumer with no successor will create and install one,
+  # then hand off control to it
+  pass();
+};
+
+
 run_me;
 done_testing;

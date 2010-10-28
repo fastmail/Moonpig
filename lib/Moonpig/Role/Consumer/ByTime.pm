@@ -124,14 +124,19 @@ has complaint_schedule => (
 
 has last_complaint_date => (
   is => 'rw',
-  isa => 'DateTime',
-  default => sub { DateTime::Infinite::Past->new },
+  isa => 'Num',
+  predicate => 'has_complained_before',
 );
 
 sub issue_complaint_if_necessary {
   my ($self, $remaining_life) = @_;
-  if ($self->is_complaining_day($remaining_life->in_units('days'))) {
-    $self->issue_complaint($remaining_life);
+  my $remaining_days = $remaining_life->in_units('days');
+  if ($self->is_complaining_day($remaining_days)) {
+    if (! $self->has_complained_before
+          || $self->last_complaint_date > $remaining_days) {
+      $self->issue_complaint($remaining_life);
+      $self->last_complaint_date($remaining_days);
+    }
   }
 }
 
