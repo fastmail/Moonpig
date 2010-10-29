@@ -23,7 +23,7 @@ before _set_bank => sub {
 
   unless ($self->ledger->guid eq $bank->ledger->guid) {
     confess sprintf(
-      "cannot assocaite consumer from ledger %s with bank from ledger %s",
+      "cannot associate consumer from ledger %s with bank from ledger %s",
       $self->ledger->guid,
       $bank->ledger->guid,
     );

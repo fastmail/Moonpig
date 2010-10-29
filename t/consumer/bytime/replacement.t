@@ -12,12 +12,21 @@ use Test::Routine;
 
 my $CLASS = "Moonpig::Consumer::ByTime";
 
-with 't::lib::Factory::Consumers';
-
 # to do:
 #  normal behavior without successor: setup replacement
 #  missed heartbeat
 #  extra heartbeat
+
+has ledger => (
+  is => 'rw',
+  isa => 'Moonpig::Role::Ledger',
+  default => sub { $_[0]->test_ledger() },
+);
+sub ledger;  # Work around bug in Moose 'requires';
+
+with ('t::lib::Factory::Consumers',
+      't::lib::Factory::Ledger',
+     );
 
 sub queue_handler {
   my ($name, $queue) = @_;
@@ -36,8 +45,7 @@ test "with_successor" => sub {
   my @eq;
 
   plan tests => 2;
-  my $ld = $self->test_ledger;
-  $ld->register_event_handler(
+  $self->ledger->register_event_handler(
     'contact-humans', 'noname', queue_handler("ld", \@eq)
    );
 
@@ -58,13 +66,13 @@ test "with_successor" => sub {
     $n_warnings = 5 unless defined $n_warnings;
 
     my $b = Moonpig::Bank::Basic->new({
-      ledger => $ld,
+      ledger => $self->ledger,
       amount => dollars(31),	# One dollar per day for rest of January
     });
 
     my $c = $self->test_consumer_pair(
       $CLASS, {
-        ledger => $ld,
+        ledger => $self->ledger,
         bank => $b,
         old_age => DateTime::Duration->new( years => 1000 ),
         current_time => $jan1,
