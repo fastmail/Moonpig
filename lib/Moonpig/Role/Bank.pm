@@ -1,7 +1,8 @@
 package Moonpig::Role::Bank;
 use Moose::Role;
 with(
-  'Moonpig::Role::HasGuid',
+ 'Moonpig::Role::HasGuid',
+ 'Moonpig::Role::LedgerComponent',
 );
 
 use List::Util qw(reduce);
@@ -28,12 +29,6 @@ sub remaining_amount {
 
   return $self->amount - $xfer_total;
 }
-
-has ledger => (
-  is   => 'ro',
-  isa  => Ledger,
-  required => 1,
-);
 
 # mechanism to get xfers
 

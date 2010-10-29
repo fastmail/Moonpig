@@ -1,6 +1,7 @@
 package Moonpig::Role::Consumer;
 use Moose::Role;
 with(
+  'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HasGuid',
 );
 
@@ -34,12 +35,6 @@ has replacement => (
   does => 'Moonpig::Role::Consumer',
   traits    => [ qw(SetOnce) ],
   predicate => 'has_replacement',
-);
-
-has ledger => (
-  is   => 'ro',
-  isa  => Ledger,
-  required => 1,
 );
 
 # mechanism to get xfers

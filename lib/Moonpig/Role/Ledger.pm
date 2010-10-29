@@ -93,6 +93,7 @@ for my $thing (qw(journal invoice)) {
 
     my $thing = $class->new({
       cost_tree => Moonpig::CostTree::Basic->new(),
+      ledger    => $self,
     });
 
     push @$things, $thing;
