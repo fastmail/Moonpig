@@ -20,7 +20,8 @@ has closed => (
   traits  => [ 'Bool' ],
   reader  => 'is_closed',
   handles => {
-    'close' => 'set',
+    'close'   => 'set',
+    'is_open' => 'not',
   },
 );
 

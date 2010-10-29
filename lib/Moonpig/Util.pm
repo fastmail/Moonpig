@@ -38,7 +38,7 @@ sub event {
   my ($ident, $payload) = @_;
   Moonpig::Events::Event->new({
     ident   => $ident,
-    payload => $payload,
+    (@_ > 1 ? (payload => $payload) : ()),
   });
 }
 

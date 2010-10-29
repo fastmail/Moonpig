@@ -15,6 +15,7 @@ has description => (
 has amount => (
   is  => 'ro',
   isa => Millicents,
+  coerce   => 1,
   required => 1,
 );
 

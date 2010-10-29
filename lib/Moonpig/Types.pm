@@ -1,7 +1,9 @@
 package Moonpig::Types;
 use MooseX::Types -declare => [ qw(
   EmailAddresses
-  Ledger Millicents
+  Ledger
+  Millicents
+  Payment
 
   Event
   EventName EventHandlerName EventHandler
@@ -27,6 +29,8 @@ role_type Ledger, { role => 'Moonpig::Role::Ledger' };
 subtype Millicents, as Int;
 
 coerce Millicents, from Num, via { int };
+
+role_type Payment, { role => 'Moonpig::Role::Payment' };
 
 my $simple_str       = qr/[-a-z0-9]+/i;
 my $simple_str_chain = qr/ (?: $simple_str \. )* $simple_str ? /x;
