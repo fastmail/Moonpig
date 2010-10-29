@@ -6,7 +6,7 @@
 =head3 Ledger
 
 A ledger wraps up an account history.  It contains the entire history
-number of piggy banks, consumers, receipts, and invoices.  It also singles out
+number of piggy banks, consumers, journals, and invoices.  It also singles out
 the currently-active piggy banks and consumers, the current "general fund"
 piggy bank, if there is one, and the current invoice.  It also
 contains contact information for the account.
@@ -29,12 +29,12 @@ The printable representations may decide, at each level of the cost
 tree, to present a single subtotal item, or descend the tree to the
 next level to list the sub-items.
 
-=head3 Receipt
+=head3 Journal
 
-A receipt represents a summary of transfers made from banks to consumers over a
-span of time.  It is represented as the head of a cost tree.  A receipt can be
+A journal represents a summary of transfers made from banks to consumers over a
+span of time.  It is represented as the head of a cost tree.  A journal can be
 marked as closed, at which time new transfers will be recorded on a new
-receipt.
+journal.
 
 =head3 Piggy bank
 

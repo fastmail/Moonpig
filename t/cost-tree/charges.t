@@ -14,7 +14,7 @@ test "add some charges to a tree" => sub {
 
   my $ledger = $self->test_ledger;
 
-  my $tree = $ledger->current_receipt->cost_tree;
+  my $tree = $ledger->current_journal->cost_tree;
 
   my @charge_tuples = (
     [ 'food',             'menu viewing surcharge',  dollars(2) ],

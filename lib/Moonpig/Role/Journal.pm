@@ -1,4 +1,4 @@
-package Moonpig::Role::Receipt;
+package Moonpig::Role::Journal;
 use Moose::Role;
 
 with 'Moonpig::Role::CostTreeContainer';

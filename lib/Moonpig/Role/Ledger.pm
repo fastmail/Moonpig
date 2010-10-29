@@ -66,7 +66,7 @@ for my $thing (qw(bank consumer)) {
   });
 }
 
-for my $thing (qw(receipt invoice)) {
+for my $thing (qw(journal invoice)) {
   my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
   my $class  = sprintf "Moonpig::%s::Basic", ucfirst $thing;
   my $plural = "${thing}s";

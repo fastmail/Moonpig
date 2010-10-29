@@ -12,7 +12,7 @@ has cost_tree => (
   handles  => [ qw(add_charge_at total_amount) ],
 );
 
-# TODO: make sure that charges added to this receipt have dates that
+# TODO: make sure that charges added to this container have dates that
 # precede this date. 2010-10-17 mjd@icgroup.com
 has date => (
   is  => 'ro',
