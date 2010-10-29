@@ -44,13 +44,23 @@ test "with_successor" => sub {
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
 
-  for my $repeated_heartbeats (0, 1) {
+  for my $test (
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
+    [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
+## TODO TEST
+##    [ 'missed a', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+   ) {
+    my ($name, $schedule, $n_warnings) = @$test;
+
+    # Normally we get 5 warnings, when the account is 28, 21, 14, 7 ,
+    # or 1 day from termination.  (On Jan 3, 10, 17, 24, and 30.)  But
+    # if heartbeats are skipped, we might miss some
+    $n_warnings = 5 unless defined $n_warnings;
 
     my $b = Moonpig::Bank::Basic->new({
       ledger => $ld,
       amount => dollars(31),	# One dollar per day for rest of January
     });
-
 
     my $c = $self->test_consumer_pair(
       $CLASS, {
@@ -60,18 +70,15 @@ test "with_successor" => sub {
         current_time => $jan1,
       });
 
-    for my $day (1..31) {
+    for my $day (@$schedule) {
       my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
       $c->handle_event(event('heartbeat', { datetime => $beat_time }));
-      $c->handle_event(event('heartbeat', { datetime => $beat_time }))
-        if $repeated_heartbeats;
     }
-    is(@eq, 5,
-       "received five warnings (repeated heartbeats = $repeated_heartbeats");
+    is(@eq, $n_warnings,
+       "received $n_warnings warnings (schedule '$name')");
     @eq = ();
   }
 };
-
 
 test "without_successor" => sub {
   # A consumer with no successor will create and install one,
