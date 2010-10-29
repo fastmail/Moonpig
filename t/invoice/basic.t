@@ -6,7 +6,10 @@ use Moonpig::Charge::Basic;
 
 use Moonpig::Util qw(dollars);
 
-with 't::lib::Factory::Ledger';
+with(
+  't::lib::Factory::Ledger',
+  't::lib::Factory::EventHandler',
+);
 
 test charge_close_and_send => sub {
   my ($self) = @_;
@@ -33,6 +36,10 @@ test charge_close_and_send => sub {
   );
 
   is($invoice->total_amount, dollars(15), "invoice line items tally up");
+
+  my $code_h = $self->make_event_handler('t::Test');
+
+  $ledger->register_event_handler('send-invoice', 'record', $code_h);
 
   $invoice->finalize_and_send;
 

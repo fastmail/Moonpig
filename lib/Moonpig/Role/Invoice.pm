@@ -3,6 +3,8 @@ use Moose::Role;
 
 with 'Moonpig::Role::CostTreeContainer';
 
+use Moonpig::Util qw(event);
+
 use namespace::autoclean;
 
 sub finalize_and_send {
@@ -10,7 +12,7 @@ sub finalize_and_send {
 
   $self->close;
 
-  # $self->ledger->
+  $self->ledger->handle_event( event('send-invoice', { invoice => $self }) );
 }
 
 1;
