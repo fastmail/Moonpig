@@ -5,6 +5,7 @@ use Carp qw(confess croak);
 use DateTime;
 use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
+use Moonpig::URI;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
@@ -88,10 +89,58 @@ test "with_successor" => sub {
   }
 };
 
+# We'll have one consumer which, when it reaches its low funds point,
+# will create a replacement consumer, which should start hollering.
 test "without_successor" => sub {
-  # A consumer with no successor will create and install one,
-  # then hand off control to it
-  pass();
+  my ($self) = @_;
+
+  my @eq;
+
+  plan tests => 5 * 2;
+
+  $self->ledger->register_event_handler(
+    'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
+   );
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
+  my $uri = Moonpig::URI->nothing;
+
+  for my $test (
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
+    [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
+## TODO TEST
+##    [ 'missed a', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+   ) {
+    my ($name, $schedule) = @$test;
+
+    my $b = Moonpig::Bank::Basic->new({
+      ledger => $self->ledger,
+      amount => dollars(31),	# One dollar per day for rest of January
+    });
+
+    my $c = $self->test_consumer(
+      $CLASS, {
+        ledger => $self->ledger,
+        bank => $b,
+        old_age => DateTime::Duration->new( days => 20 ),
+        current_time => $jan1,
+        replacement_uri => $uri,
+      });
+
+    for my $day (@$schedule) {
+      my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
+      $c->handle_event(event('heartbeat', { datetime => $beat_time }));
+    }
+
+    is(@eq, 1, "received one request to create replacement (schedule '$name')");
+    my (undef, $ident, $payload) = @{$eq[0] || []};
+    is($ident, 'consumer-create-replacement', "event name");
+    is($payload->{source}, $c, "event payload source");
+    is($payload->{timestamp}, "2001-01-11", "event date");
+    is($payload->{uri}, $uri,  "event URI");
+    @eq = ();
+  }
 };
 
 test "irreplaceable" => sub {

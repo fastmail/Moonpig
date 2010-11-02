@@ -14,7 +14,7 @@ my %reasonable_defaults = (
     cost_amount => dollars(1),
     cost_period => DateTime::Duration->new( days => 1 ),
     old_age => DateTime::Duration->new( days => 0 ),
-    replacement_uri => Moonpig::URI->nothing(),
+    replacement_mri => Moonpig::URI->nothing(),
 );
 
 sub test_consumer {

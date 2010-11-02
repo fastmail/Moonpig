@@ -5,16 +5,16 @@ use DateTime::Infinite;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Util qw(event);
 use Moose::Role;
-use MooseX::Clone;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
 with(
   'Moonpig::Role::Consumer',
   'Moonpig::Role::HandlesEvents',
+  'MooseX::Clone',
 );
 
-use Moonpig::Types qw(Millicents);
+use Moonpig::Types qw(Millicents MRI);
 
 sub implicit_event_handlers {
   return {
@@ -25,6 +25,10 @@ sub implicit_event_handlers {
     'low-funds' => {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
         method_name => 'predecessor_running_out',
+       )},
+    'consumer-create-replacement' => {
+      create_replacement => Moonpig::Events::Handler::Method->new(
+        method_name => 'create_own_replacement',
        )},
   };
 }
@@ -77,6 +81,13 @@ sub last_charge_exists {
   my ($self) = @_;
   return defined($self->last_charge_date);
 }
+
+has replacement_mri => (
+  is => 'rw',
+  isa => MRI,
+  required => 1,
+  coerce => 1,
+);
 
 # Set this to force stop object in time
 has current_time => (
@@ -168,16 +179,6 @@ has is_replaceable => (
   default => 1,
 );
 
-sub create_replacement {
-  my ($self) = @_;
-  if ($self->is_replaceable) {
-    my $replacement = $self->clone(bank => undef);
-    $self->replacement($replacement);
-    return $replacement;
-  }
-  return;
-}
-
 ################################################################
 #
 #
@@ -188,22 +189,46 @@ sub check_for_low_funds {
   return unless $self->has_bank;
 
   my $heart_time = $event->payload->{datetime};
+
+  # if this object does not have long to live...
   if (DateTime::Duration->compare(
     $self->remaining_life($heart_time),
     $self->old_age,
     $self->now
    ) <= 0) {
-    # This object does not have long to live
-    unless ($self->has_replacement) {
-      $self->create_replacement;  # XXX 
-    }
 
-    $self->replacement->handle_event(
-      event('low-funds',
-            { remaining_life => $self->remaining_life($heart_time) }
-           ));
+    # If it has a replacement R, it should advise R that the R will
+    # need to take over soon
+    if ($self->has_replacement) {
+      $self->replacement->handle_event(
+        event('low-funds',
+              { remaining_life => $self->remaining_life($heart_time) }
+             ));
+    } else {
+      # Otherwise it should create a replacement R
+      $self->handle_event(
+        event('consumer-create-replacement',
+              { source => $self,
+                timestamp => $self->now,
+                url => $self->replacement_mri,
+              })
+       );
+    }
   }
 }
+
+sub create_own_replacement {
+  my ($self, $event, $arg) = @_;
+
+  if ($self->is_replaceable && ! $self->has_replacement) {
+    my $replacement = $self->replacement_mri->construct()  # XXX FINISH
+      or return;
+    $self->replacement($replacement);
+    return $replacement;
+  }
+  return;
+}
+
 
 # My predecessor is running out of money
 sub predecessor_running_out {
