@@ -10,11 +10,14 @@ use MooseX::Types -declare => [ qw(
   EventHandlerMap
 
   CostPath CostPathPart CostPathStr
+
+  MRI
 ) ];
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
 # use MooseX::Types::Structured qw(Map);
 use Email::Address;
+use Moonpig::URI;
 
 use namespace::autoclean;
 
@@ -50,5 +53,16 @@ subtype CostPath, as ArrayRef[ CostPathPart ];
 subtype CostPathStr, as Str, where { /\A$simple_str_chain\z/ };
 
 coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
+
+{
+  my $str_type = subtype as Str, where { /\Amoonpig:/ };
+
+  my $uri_type = subtype as (class_type '__URI_moonpig', +{ class => 'URI' }),
+    where { $_->scheme eq "moonpig" };
+
+  class_type MRI, { class => 'Moonpig::URI' };
+  coerce MRI, from $str_type, via { Moonpig::URI->new($_) },
+              from $uri_type, via { Moonpig::URI->new("$_") };
+}
 
 1;
