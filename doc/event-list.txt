@@ -3,6 +3,7 @@
 # Handler name     Event name      Who?
 low_funds_check    heartbeat       Consumer::ByTime
 low_funds_handler  heartbeat       Consumer::ByTime
+create_own_replacement consumer-create-replacement Consumer::ByTime
 
 # Incomplete entries:
 -                  contact-humans  Ledger
