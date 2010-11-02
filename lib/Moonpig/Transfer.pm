@@ -31,7 +31,7 @@ sub _assert_no_overdraft {
   my ($self) = @_;
 
   confess "refusing to transfer funds beyond bank balance"
-    if $self->bank->remaining_amount -  $self->amount < 0;
+    if $self->bank->remaining_amount  -  $self->amount < 0;
 }
 
 sub BUILD {

@@ -1,6 +1,10 @@
 package Moonpig::Role::Payment;
 use Moose::Role;
 
+with 'Moonpig::Role::HasGuid';
+
+use List::Util qw(reduce);
+
 use Moonpig::Types qw(Millicents);
 
 use namespace::autoclean;
@@ -11,18 +15,13 @@ has amount => (
   coerce => 1,
 );
 
-has applied_to => (
-  is   => 'ro',
-  does   => 'Moonpig::Role::Invoice',
-  writer    => '_apply_to',
-  predicate => 'is_applied',
-);
+sub unapplied_amount {
+  my ($self) = @_;
+  my $xfers = Moonpig::Transfer->transfers_for_bank($self);
 
-sub apply_to__ {
-  my ($self, $invoice) = @_;
+  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
 
-  Moonpig::X->throw('double payment application') if $self->is_applied;
-  $self->_apply_to($invoice);
+  return $self->amount - $xfer_total;
 }
 
 1;

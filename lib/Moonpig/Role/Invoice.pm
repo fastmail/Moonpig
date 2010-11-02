@@ -4,8 +4,11 @@ use Moose::Role;
 with(
   'Moonpig::Role::CostTreeContainer',
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::Payable',
 );
 
+use Moonpig::PaymentApplication;
 use Moonpig::Util qw(event);
 use Moonpig::Types qw(Payment);
 use Moonpig::X;
@@ -39,12 +42,12 @@ sub accept_payment {
 
   Moonpig::X->throw('payment for open invoice') if $self->is_open;
 
-  # XXX: This is only until we implement partial payment and overpayment.
-  # -- rjbs, 2010-10-29
-  Moonpig::X->throw('payment amount mismatch')
-    unless $payment->amount == $self->total_amount;
-
-  $payment->apply_to__($self);
+  # XXX: totally not good; placeholder for new application -- rjbs, 2010-11-02
+  Moonpig::PaymentApplication->new({
+    payment => $payment,
+    payable => $self,
+    amount  => $payment->amount,
+  });
 
   $self->handle_event(event('invoice-paid'));
 
