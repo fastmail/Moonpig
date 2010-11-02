@@ -1,0 +1,10 @@
+# List of all event names and handler names used so far
+#
+# Handler name     Event name      Who?
+low_funds_check    heartbeat       Consumer::ByTime
+low_funds_handler  heartbeat       Consumer::ByTime
+
+# Incomplete entries:
+-                  contact-humans  Ledger
+-                  low-funds       Consumer::ByTime
+
