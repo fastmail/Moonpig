@@ -1,5 +1,4 @@
 
-package main::test;
 use strict;
 use warnings;
 
@@ -22,9 +21,9 @@ has mri => (
 test "good coercions" => sub {
   my ($self) = @_;
   plan tests => 3 * 2;
-  for my $good ("moonpig:/consumer/id/123456",
+  for my $good ("moonpig://consumer/id/123456",
                 Moonpig::URI->nothing(),
-                URI->new("moonpig:/consumer/id/123456"),
+                URI->new("moonpig://consumer/id/123456"),
                ) {
     try {
       $self->mri($good);
@@ -55,10 +54,6 @@ test "bad coercions" => sub {
     }
   }
 };
-
-#my $mri = Moonpig::URI->new("http://blog.plover.com/");
-#      note "mri = $mri";
-#exit;
 
 run_me;
 done_testing;
