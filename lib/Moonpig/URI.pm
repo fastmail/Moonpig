@@ -1,7 +1,7 @@
 package Moonpig::URI;
 
-use URI;
-use Carp 'croak';
+use URI::Escape;
+use Carp qw(confess croak);
 use Scalar::Util 'reftype';
 use strict;
 use warnings;
@@ -10,15 +10,27 @@ sub new {
   my $class = shift;
 #  my $self = $class->SUPER::new(@_);
   my $arg = shift || return $class->nothing;
-  my ($path) = "$arg" =~ m{\A moonpig:// (.*) }xs
-    or croak "Malformed MRI '$arg'";
+  my ($path, $query) = "$arg" =~
+    m{\A moonpig://
+      ([^?]*)           # path part
+      (?: \? (.*) )?    # optional query part
+   }xs
+     or croak "Malformed MRI '$arg'";
+
   my @components = split m{/}, $path;
-  bless { c => \@components } => $class;
+
+  bless {
+    c => \@components,
+    p => $class->parse_query_string($query) || {},
+  } => $class;
 }
 
 sub as_string {
   my ($self) = @_;
-  "moonpig://" . $self->path;
+  my $s = "moonpig://" . $self->path;
+  my $qs = $self->query_string;
+  defined($qs) and $s .= "?$qs";
+  return $s;
 }
 
 sub path {
@@ -29,6 +41,42 @@ sub path {
 sub path_segments {
   my ($self) = @_;
   return wantarray ? @{$self->{c}} : $self->path;
+}
+
+sub params {
+  my ($self) = @_;
+  return wantarray ? %{$self->param_hash} : $self->param_hash;
+}
+
+sub param_hash { my %h = %{$_[0]{p}}; \%h }
+
+sub query_string {
+  my ($self) = @_;
+  my %p = $self->params;
+  my @kvp;
+  while (my($k, $v) = each %p) {
+    if (defined $v) {
+      push @kvp, join "=", uri_escape($k), uri_escape($v);
+    } else {
+      unshift @kvp, uri_escape($k);
+    }
+  }
+  return join "&", @kvp;
+}
+
+sub parse_query_string {
+  my ($self, $s) = @_;
+  my %h;
+  return if ! defined($s) || $s eq "";
+
+  for my $pair (split /&/, $s) {
+    if ($pair =~ /(.*)=(.*)/) {
+      $h{ uri_unescape($1) } = uri_unescape($2);
+    } else {
+      $h{ uri_unescape($pair) } = undef;
+    }
+  }
+  return wantarray ? %h : \%h;
 }
 
 sub nothing { $_[0]->new("moonpig://nothing") }
