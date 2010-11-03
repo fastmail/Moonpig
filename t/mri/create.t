@@ -11,6 +11,7 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 use Try::Tiny;
+use URI;
 
 has mri => (
   is => 'rw',

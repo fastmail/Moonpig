@@ -4,13 +4,25 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use DateTime::Duration;
 use Moonpig::URI;
 use Test::More;
 use Try::Tiny;
 
+use Moose;
+with 't::lib::Factory::Ledger';
+
+my $day = DateTime::Duration->new(days => 1);
 plan tests => 5;
 is(Moonpig::URI->nothing->construct, undef, "nothing => undef");
-ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')->construct,
+ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
+  ->construct({extra => {
+    old_age => $day,
+    cost_amount => 0,
+    ledger => __PACKAGE__->test_ledger(),
+    cost_period => $day,
+    replacement_mri => Moonpig::URI->nothing(),
+   }}),
    "good path Consumer::ByTime");
 
 for my $bad (qw(moonpig://foo

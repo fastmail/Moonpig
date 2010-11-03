@@ -82,10 +82,35 @@ sub parse_query_string {
 sub nothing { $_[0]->new("moonpig://nothing") }
 
 my %table = (
-  nothing => undef,
+  nothing => sub { undef },
   test => {
+    callback => sub {
+      my ($params, $extra) = @_;
+      my $code = delete $extra->{code}
+        or confess "Missing 'code' argument in moonpig://test/callback";
+      return $code->($params);
+    },
     consumer => {
-      ByTime => sub { Moonpig::Consumer::ByTime->new(@_) },
+      ByTime => sub {
+        require Moonpig::Consumer::ByTime;
+        my ($params, $extra) = @_;
+        return Moonpig::Consumer::ByTime->new({ %$params, %$extra })
+      },
+    },
+    function => sub {
+      my ($params, $extra) = @_;
+      my $func = $params->{name}
+        or confess "Missing 'name' argument in moonpig://test/function";
+      no strict 'refs';
+      return $func->($extra);
+    },
+    method => sub {
+      my ($params, $extra) = @_;
+      my $self = delete $extra->{self}
+        or confess "Missing 'self' argument in moonpig://test/method";
+      my $meth = delete $params->{method}
+        or confess "Missing 'method' argument in moonpig://test/method";
+      return $self->$meth($params);
     }
   },
 );
@@ -93,8 +118,9 @@ my %table = (
 # Replace this with some sort of more interesting and less centralized
 # dispatcher later on
 sub construct {
-  my ($self, $args, $table) = @_;
-  $table ||= \%table;
+  my ($self, $args) = @_;
+  $args ||= { };
+  my $table = $args->{table} || \%table;
   my (@path) = $self->path_segments;
   while (my $c = shift @path) {
     croak "Unknown constructor path components <@path> in MRI $self"
@@ -103,10 +129,14 @@ sub construct {
     $table = $table->{$c};
   }
 
-  if (! defined $table) { return }
-  elsif (reftype($table) eq 'HASH') {
+  if (reftype($table) eq 'HASH') {
     croak "Incomplete constructor path in MRI $self" unless defined $table;
-  } else { return $table }      # not actually a table, but a result
+  } elsif (reftype($table) eq 'CODE') {
+    # A callback; call it using the query part of the URI as arguments
+    return $table->($self->param_hash, $args->{extra} || {});
+  } else {
+    croak "Garbage value in MRI table for $self";
+  }
 }
 
 1;
