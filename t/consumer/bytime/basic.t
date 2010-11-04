@@ -13,7 +13,16 @@ use Try::Tiny;
 
 my $CLASS = "Moonpig::Consumer::ByTime";
 
-with 't::lib::Factory::Consumers';
+has ledger => (
+  is => 'rw',
+  isa => 'Moonpig::Role::Ledger',
+  default => sub { $_[0]->test_ledger() },
+);
+sub ledger;  # Work around bug in Moose 'requires';
+
+with ('t::lib::Factory::Consumers',
+      't::lib::Factory::Ledger',
+     );
 
 # todo: warning if no bank
 #       suicide

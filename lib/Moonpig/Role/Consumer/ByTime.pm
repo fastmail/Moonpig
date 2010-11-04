@@ -25,6 +25,10 @@ sub implicit_event_handlers {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
         method_name => 'predecessor_running_out',
        )},
+    'consumer-create-replacement' => {
+      create_replacement => Moonpig::Events::Handler::Method->new(
+        method_name => 'create_own_replacement',
+       )},
   };
 }
 
@@ -160,6 +164,13 @@ sub issue_complaint {
       }));
 }
 
+# XXX this is for testing only; when we figure out replacement semantics
+has is_replaceable => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 1,
+);
+
 ################################################################
 #
 #
@@ -169,27 +180,58 @@ sub check_for_low_funds {
 
   return unless $self->has_bank;
 
-  my $heart_time = $event->payload->{datetime};
+  my $tick_time = $event->payload->{datetime}
+    or confess "event payload has no timestamp";
+
+  # if this object does not have long to live...
   if (DateTime::Duration->compare(
-    $self->remaining_life($heart_time),
+    $self->remaining_life($tick_time),
     $self->old_age,
     $self->now
    ) <= 0) {
-    # This object does not have long to live
-    unless ($self->has_replacement) {
-      $self->create_replacement;  # XXX 
-    }
 
-    $self->replacement->handle_event(
-      event('low-funds',
-            { remaining_life => $self->remaining_life($heart_time) }
-           ));
+    # If it has a replacement R, it should advise R that R will need
+    # to take over soon
+    if ($self->has_replacement) {
+      $self->replacement->handle_event(
+        event('low-funds',
+              { remaining_life => $self->remaining_life($tick_time) }
+             ));
+    } else {
+      # Otherwise it should create a replacement R
+      $self->handle_event(
+        event('consumer-create-replacement',
+              { timestamp => $tick_time,
+                mri => $self->replacement_mri,
+              })
+       );
+    }
   }
 }
 
-sub create_replacement {
-  # not sure what to do here yet
-  confess("create replacement??");
+sub create_own_replacement {
+  my ($self, $event, $arg) = @_;
+
+  if ($self->is_replaceable && ! $self->has_replacement) {
+    my $replacement = $self->replacement_mri
+      ->construct({ extra => { self => $self } })
+      or return;
+    $self->replacement($replacement);
+    return $replacement;
+  }
+  return;
+}
+
+sub construct_replacement {
+  my ($self, $param) = @_;
+  my $repl = $self->new({
+    cost_amount     => $self->cost_amount(),
+    cost_period     => $self->cost_period(),
+    old_age         => $self->old_age(),
+    replacement_mri => $self->replacement_mri(),
+    ledger          => $self->ledger(),
+    %$param,
+  });
 }
 
 # My predecessor is running out of money
@@ -198,4 +240,5 @@ sub predecessor_running_out {
   my $when = $event->payload->{remaining_life};
   $self->issue_complaint_if_necessary($when);
 }
+
 1;

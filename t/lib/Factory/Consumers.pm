@@ -5,19 +5,16 @@ use Moonpig::Ledger::Basic;
 use Moonpig::Contact::Basic;
 use Moonpig::Bank::Basic;
 use Moonpig::Consumer::ByTime;
-
-with 't::lib::Factory::Ledger';
+use Moonpig::URI;
 
 use Moonpig::Util -all;
-
-sub _ledger {
-  t::lib::Factory::Ledger->test_ledger();
-}
+requires 'ledger';
 
 my %reasonable_defaults = (
     cost_amount => dollars(1),
     cost_period => DateTime::Duration->new( days => 1 ),
     old_age => DateTime::Duration->new( days => 0 ),
+    replacement_mri => Moonpig::URI->nothing(),
 );
 
 sub test_consumer {
@@ -25,11 +22,10 @@ sub test_consumer {
   $args ||= {};
   $class ||= 'Moonpig::Consumer::Basic';
   $class = "Moonpig::Consumer" . $class if $class =~ /^::/;
-  my $ledger = _ledger();
 
   my $c = $class->new({
     %reasonable_defaults,
-    ledger => $ledger,
+    ledger => $self->ledger,
     %$args,
   });
 
@@ -42,12 +38,10 @@ sub test_consumer_pair {
   my %args = %$args;
   delete $args{bank};
 
-  my $ledger = _ledger();
-
   my $c1 = $self->test_consumer(
     $class,
     { %reasonable_defaults,
-      ledger => $ledger,
+      ledger => $self->ledger,
       %args
     },
    );
@@ -56,7 +50,7 @@ sub test_consumer_pair {
     $class,
     {
       %reasonable_defaults,
-      ledger => $ledger,
+      ledger => $self->ledger,
       %$args,
       replacement => $c1
      },

@@ -5,6 +5,7 @@ use Moonpig::Ledger::Basic;
 use Moonpig::Contact::Basic;
 use Moonpig::Bank::Basic;
 use Moonpig::Consumer::Basic;
+use Moonpig::URI;
 
 use Moonpig::Util -all;
 
@@ -41,6 +42,7 @@ sub add_consumer_to {
 
   my $consumer = Moonpig::Consumer::Basic->new({
     ledger => $ledger,
+    replacement_mri => Moonpig::URI->nothing(),
   });
 
   $ledger->add_consumer($consumer);
