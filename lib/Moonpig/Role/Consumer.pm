@@ -6,7 +6,7 @@ with(
 );
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(Ledger Millicents);
+use Moonpig::Types qw(Ledger Millicents MRI);
 
 use namespace::autoclean;
 
@@ -35,6 +35,15 @@ has replacement => (
   does => 'Moonpig::Role::Consumer',
   traits    => [ qw(SetOnce) ],
   predicate => 'has_replacement',
+);
+
+# If the consumer does not yet have a replacement, it may try to
+# manufacture a replacement as described by this MRI
+has replacement_mri => (
+  is => 'rw',
+  isa => MRI,
+  required => 1,
+  coerce => 1,
 );
 
 # mechanism to get xfers

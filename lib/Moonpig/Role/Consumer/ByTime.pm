@@ -14,7 +14,7 @@ with(
   'MooseX::Clone',
 );
 
-use Moonpig::Types qw(Millicents MRI);
+use Moonpig::Types qw(Millicents);
 
 sub implicit_event_handlers {
   return {
@@ -81,13 +81,6 @@ sub last_charge_exists {
   my ($self) = @_;
   return defined($self->last_charge_date);
 }
-
-has replacement_mri => (
-  is => 'rw',
-  isa => MRI,
-  required => 1,
-  coerce => 1,
-);
 
 # Set this to force stop object in time
 has current_time => (
