@@ -11,7 +11,6 @@ use namespace::autoclean;
 with(
   'Moonpig::Role::Consumer',
   'Moonpig::Role::HandlesEvents',
-  'MooseX::Clone',
 );
 
 use Moonpig::Types qw(Millicents);
