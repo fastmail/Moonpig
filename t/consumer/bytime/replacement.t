@@ -5,6 +5,7 @@ use Carp qw(confess croak);
 use DateTime;
 use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
+use Moonpig::Events::Handler::Noop;
 use Moonpig::URI;
 use Moonpig::Util -all;
 use Test::More;
@@ -99,8 +100,9 @@ test "without_successor" => sub {
   plan tests => 5 * 2;
 
   $self->ledger->register_event_handler(
-    'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
-   );
+    'contact-humans', 'noname', Moonpig::Events::Handler::Noop->new()
+  );
+
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
@@ -128,6 +130,10 @@ test "without_successor" => sub {
         replacement_uri => $uri,
       });
 
+    my @eq;
+    $c->register_event_handler(
+      'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
+    );
     for my $day (@$schedule) {
       my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
       $c->handle_event(event('heartbeat', { datetime => $beat_time }));
@@ -139,7 +145,6 @@ test "without_successor" => sub {
     is($payload->{source}, $c, "event payload source");
     is($payload->{timestamp}, "2001-01-11", "event date");
     is($payload->{uri}, $uri,  "event URI");
-    @eq = ();
   }
 };
 
