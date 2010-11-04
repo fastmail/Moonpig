@@ -97,16 +97,16 @@ test "without_successor" => sub {
   my ($self) = @_;
 
   $self->ledger($self->test_ledger);
-  plan tests => 5 * 2;
-
   $self->ledger->register_event_handler(
     'contact-humans', 'noname', Moonpig::Events::Handler::Noop->new()
   );
 
+  plan tests => 4 * 2;
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
-  my $uri = Moonpig::URI->nothing;
+  my $mri =
+    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
@@ -127,7 +127,7 @@ test "without_successor" => sub {
         bank => $b,
         old_age => DateTime::Duration->new( days => 20 ),
         current_time => $jan1,
-        replacement_uri => $uri,
+        replacement_mri => $mri,
       });
 
     my @eq;
@@ -142,7 +142,6 @@ test "without_successor" => sub {
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
     my (undef, $ident, $payload) = @{$eq[0] || []};
     is($ident, 'consumer-create-replacement', "event name");
-    is($payload->{source}, $c, "event payload source");
     is($payload->{timestamp}, "2001-01-11", "event date");
     is($payload->{uri}, $uri,  "event URI");
   }

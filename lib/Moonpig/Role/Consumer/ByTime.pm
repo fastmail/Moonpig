@@ -208,9 +208,8 @@ sub check_for_low_funds {
       # Otherwise it should create a replacement R
       $self->handle_event(
         event('consumer-create-replacement',
-              { source => $self,
-                timestamp => $self->now,
-                url => $self->replacement_mri,
+              { timestamp => $tick_time,
+                mri => $self->replacement_mri,
               })
        );
     }
@@ -221,7 +220,8 @@ sub create_own_replacement {
   my ($self, $event, $arg) = @_;
 
   if ($self->is_replaceable && ! $self->has_replacement) {
-    my $replacement = $self->replacement_mri->construct()  # XXX FINISH
+    my $replacement = $self->replacement_mri
+      ->construct({ extra => { self => $self } })
       or return;
     $self->replacement($replacement);
     return $replacement;
@@ -229,6 +229,17 @@ sub create_own_replacement {
   return;
 }
 
+sub construct_replacement {
+  my ($self, $param) = @_;
+  my $repl = $self->new({
+    cost_amount     => $self->cost_amount(),
+    cost_period     => $self->cost_period(),
+    old_age         => $self->old_age(),
+    replacement_mri => $self->replacement_mri(),
+    ledger          => $self->ledger(),
+    %$param,
+  });
+}
 
 # My predecessor is running out of money
 sub predecessor_running_out {
