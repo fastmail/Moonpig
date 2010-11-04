@@ -46,6 +46,7 @@ test "with_successor" => sub {
   my @eq;
 
   plan tests => 2;
+  $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'noname', queue_handler("ld", \@eq)
    );
@@ -94,8 +95,7 @@ test "with_successor" => sub {
 test "without_successor" => sub {
   my ($self) = @_;
 
-  my @eq;
-
+  $self->ledger($self->test_ledger);
   plan tests => 5 * 2;
 
   $self->ledger->register_event_handler(
