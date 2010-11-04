@@ -38,7 +38,7 @@ sub queue_handler {
       my ($receiver, $event, $args, $handler) = @_;
       push @$queue, [ $receiver, $event->ident, $event->payload ];
     },
-   );
+  );
 }
 
 test "with_successor" => sub {
@@ -50,7 +50,7 @@ test "with_successor" => sub {
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'noname', queue_handler("ld", \@eq)
-   );
+  );
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
@@ -82,8 +82,8 @@ test "with_successor" => sub {
       });
 
     for my $day (@$schedule) {
-      my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
-      $c->handle_event(event('heartbeat', { datetime => $beat_time }));
+      my $tick_time = DateTime->new( year => 2000, month => 1, day => $day );
+      $c->handle_event(event('heartbeat', { datetime => $tick_time }));
     }
     is(@eq, $n_warnings,
        "received $n_warnings warnings (schedule '$name')");
@@ -135,15 +135,15 @@ test "without_successor" => sub {
       'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
     );
     for my $day (@$schedule) {
-      my $beat_time = DateTime->new( year => 2000, month => 1, day => $day );
-      $c->handle_event(event('heartbeat', { datetime => $beat_time }));
+      my $tick_time = DateTime->new( year => 2000, month => 1, day => $day );
+      $c->handle_event(event('heartbeat', { datetime => $tick_time }));
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
     my (undef, $ident, $payload) = @{$eq[0] || []};
     is($ident, 'consumer-create-replacement', "event name");
-    is($payload->{timestamp}, "2001-01-11", "event date");
-    is($payload->{uri}, $uri,  "event URI");
+    is($payload->{timestamp}->ymd, "2000-01-12", "event date");
+    is($payload->{mri}, $mri,  "event MRI");
   }
 };
 
@@ -151,7 +151,6 @@ test "irreplaceable" => sub {
   # this consumer has been instructed not to generate a replacement for itself
   pass();
 };
-
 
 run_me;
 done_testing;

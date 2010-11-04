@@ -188,21 +188,22 @@ sub check_for_low_funds {
 
   return unless $self->has_bank;
 
-  my $heart_time = $event->payload->{datetime};
+  my $tick_time = $event->payload->{datetime}
+    or confess "event payload has no timestamp";
 
   # if this object does not have long to live...
   if (DateTime::Duration->compare(
-    $self->remaining_life($heart_time),
+    $self->remaining_life($tick_time),
     $self->old_age,
     $self->now
    ) <= 0) {
 
-    # If it has a replacement R, it should advise R that the R will
-    # need to take over soon
+    # If it has a replacement R, it should advise R that R will need
+    # to take over soon
     if ($self->has_replacement) {
       $self->replacement->handle_event(
         event('low-funds',
-              { remaining_life => $self->remaining_life($heart_time) }
+              { remaining_life => $self->remaining_life($tick_time) }
              ));
     } else {
       # Otherwise it should create a replacement R
