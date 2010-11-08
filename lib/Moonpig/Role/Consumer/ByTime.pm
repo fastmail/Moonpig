@@ -1,4 +1,5 @@
 package Moonpig::Role::Consumer::ByTime;
+use Carp qw(confess croak);
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Util qw(days event);
@@ -100,6 +101,7 @@ sub expire_date {
       $n_full_periods_left * $self->cost_period;
 }
 
+# returns amount of life remaining, in seconds
 sub remaining_life {
   my ($self, $when) = @_;
   $self->expire_date - $when;
@@ -133,12 +135,24 @@ has last_complaint_date => (
 sub issue_complaint_if_necessary {
   my ($self, $remaining_life) = @_;
   my $remaining_days = $remaining_life / 86_400;
-  if ($self->is_complaining_day($remaining_days)) {
-    if (! $self->has_complained_before
-          || $self->last_complaint_date > $remaining_days) {
-      $self->issue_complaint($remaining_life);
-      $self->last_complaint_date($remaining_days);
-    }
+  my $sched = $self->complaint_schedule;
+  my $last_complaint_issued = $self->has_complained_before
+    ? $self->last_complaint_date
+      : $sched->[0] + 1;
+
+  # run through each day since the last time we issued a complaint
+  # up until now; if any of those days are complaining days,
+  # it is time to issue a new complaint.
+  my $complaint_due;
+  #  warn ">> <$self> $last_complaint_issued .. $remaining_days\n";
+  for my $n ($remaining_days .. $last_complaint_issued - 1) {
+    $complaint_due = 1, last
+      if $self->is_complaining_day($n);
+  }
+
+  if ($complaint_due) {
+    $self->issue_complaint($remaining_life);
+    $self->last_complaint_date($remaining_days);
   }
 }
 
@@ -231,8 +245,9 @@ sub construct_replacement {
 # My predecessor is running out of money
 sub predecessor_running_out {
   my ($self, $event, $args) = @_;
-  my $when = $event->payload->{remaining_life};
-  $self->issue_complaint_if_necessary($when);
+  my $remaining_life = $event->payload->{remaining_life}  # In seconds
+    or confess("predecessor didn't advise me how long it has to live");
+  $self->issue_complaint_if_necessary($remaining_life);
 }
 
 1;

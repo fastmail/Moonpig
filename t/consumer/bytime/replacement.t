@@ -14,11 +14,6 @@ use Test::Routine;
 
 my $CLASS = "Moonpig::Consumer::ByTime";
 
-# to do:
-#  normal behavior without successor: setup replacement
-#  missed heartbeat
-#  extra heartbeat
-
 has ledger => (
   is => 'rw',
   isa => 'Moonpig::Role::Ledger',
@@ -46,7 +41,7 @@ test "with_successor" => sub {
 
   my @eq;
 
-  plan tests => 2;
+  plan tests => 3;
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'noname', queue_handler("ld", \@eq)
@@ -58,8 +53,7 @@ test "with_successor" => sub {
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
-## TODO TEST
-##    [ 'missed a', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+    [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
    ) {
     my ($name, $schedule, $n_warnings) = @$test;
 
@@ -103,7 +97,7 @@ test "without_successor" => sub {
     'contact-humans', 'noname', Moonpig::Events::Handler::Noop->new()
   );
 
-  plan tests => 4 * 2;
+  plan tests => 4 * 3;
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
@@ -113,10 +107,10 @@ test "without_successor" => sub {
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
-## TODO TEST
-##    [ 'missed a', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+    [ 'missed', [ 29, 30, 31 ], "2000-01-29" ], # successor delayed until 29th
    ) {
-    my ($name, $schedule) = @$test;
+    my ($name, $schedule, $succ_creation_date) = @$test;
+    $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
 
     my $b = Moonpig::Bank::Basic->new({
       ledger => $self->ledger,
@@ -146,7 +140,7 @@ test "without_successor" => sub {
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
     my (undef, $ident, $payload) = @{$eq[0] || [undef, undef, {}]};
     is($ident, 'consumer-create-replacement', "event name");
-    is($payload->{timestamp}->ymd, "2000-01-12", "event date");
+    is($payload->{timestamp}->ymd, $succ_creation_date, "event date");
     is($payload->{mri}, $mri,  "event MRI");
   }
 };
