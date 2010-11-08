@@ -2,7 +2,6 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use DateTime;
 use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
@@ -17,7 +16,6 @@ my $CLASS = "Moonpig::Consumer::ByTime";
 has ledger => (
   is => 'rw',
   isa => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
