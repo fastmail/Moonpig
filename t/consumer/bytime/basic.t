@@ -80,7 +80,7 @@ test expire_date => sub {
       $CLASS,
       { bank => $b,
         ledger => $ledger,
-        cost_period => DateTime::Duration->new( days => 7 ),
+        cost_period => days(7),
       });
 
     my $exp = $c->expire_date;
@@ -94,13 +94,14 @@ test expire_date => sub {
       { bank => $b,
         ledger => $ledger,
         current_time =>
-          DateTime->new( year => 1969,
-                         month => 4,
-                         day => 2,
-                         hour => 2,
-                         minute => 38,
-                         second => 0,
-                        ),
+          Moonpig::DateTime->new(
+            year => 1969,
+            month => 4,
+            day => 2,
+            hour => 2,
+            minute => 38,
+            second => 0,
+          ),
       });
 
     my $exp = $c->expire_date;

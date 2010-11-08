@@ -53,7 +53,7 @@ test "with_successor" => sub {
   );
 
   # Pretend today is 2000-01-01 for convenience
-  my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
@@ -77,12 +77,14 @@ test "with_successor" => sub {
       $CLASS, {
         ledger => $self->ledger,
         bank => $b,
-        old_age => DateTime::Duration->new( years => 1000 ),
+        old_age => years(1000),
         current_time => $jan1,
       });
 
     for my $day (@$schedule) {
-      my $tick_time = DateTime->new( year => 2000, month => 1, day => $day );
+      my $tick_time = Moonpig::DateTime->new(
+        year => 2000, month => 1, day => $day
+      );
       $c->handle_event(event('heartbeat', { datetime => $tick_time }));
     }
     is(@eq, $n_warnings,
@@ -104,7 +106,7 @@ test "without_successor" => sub {
   plan tests => 4 * 2;
 
   # Pretend today is 2000-01-01 for convenience
-  my $jan1 = DateTime->new( year => 2000, month => 1, day => 1 );
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   my $mri =
     Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
 
@@ -125,7 +127,7 @@ test "without_successor" => sub {
       $CLASS, {
         ledger => $self->ledger,
         bank => $b,
-        old_age => DateTime::Duration->new( days => 20 ),
+        old_age => days(20),
         current_time => $jan1,
         replacement_mri => $mri,
       });
@@ -135,12 +137,14 @@ test "without_successor" => sub {
       'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
     );
     for my $day (@$schedule) {
-      my $tick_time = DateTime->new( year => 2000, month => 1, day => $day );
+      my $tick_time = Moonpig::DateTime->new(
+        year => 2000, month => 1, day => $day
+      );
       $c->handle_event(event('heartbeat', { datetime => $tick_time }));
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
-    my (undef, $ident, $payload) = @{$eq[0] || []};
+    my (undef, $ident, $payload) = @{$eq[0] || [undef, undef, {}]};
     is($ident, 'consumer-create-replacement', "event name");
     is($payload->{timestamp}->ymd, "2000-01-12", "event date");
     is($payload->{mri}, $mri,  "event MRI");

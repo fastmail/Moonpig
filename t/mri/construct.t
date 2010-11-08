@@ -4,15 +4,15 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use DateTime::Duration;
 use Moonpig::URI;
+use Moonpig::Util qw(days);
 use Test::More;
 use Try::Tiny;
 
 use Moose;
 with 't::lib::Factory::Ledger';
 
-my $day = DateTime::Duration->new(days => 1);
+my $day = days(1);
 plan tests => 5;
 is(Moonpig::URI->nothing->construct, undef, "nothing => undef");
 ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')

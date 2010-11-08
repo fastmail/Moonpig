@@ -14,8 +14,9 @@ use Sub::Exporter -setup => [ qw(
 
   event
 
-  cents
-  dollars
+  cents dollars
+
+  days weeks months years
 
   same_object
 ) ];
@@ -33,6 +34,11 @@ sub cents {
 
   return int ($millicents + 0.5);
 }
+
+sub days { $_[0] * 86400 } # Ignores leap seconds and DST
+sub weeks { $_[0] * 86400 * 7 }
+sub months { $_[0] * 86400 * 30 } # also ignores varying month lengths
+sub years { $_[0] * 86400 * 365.25 } # also ignores the Gregorian calendar
 
 sub event {
   my ($ident, $payload) = @_;

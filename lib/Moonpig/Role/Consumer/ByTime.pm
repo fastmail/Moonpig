@@ -1,9 +1,7 @@
 package Moonpig::Role::Consumer::ByTime;
-use DateTime;
-use DateTime::Duration;
-use DateTime::Infinite;
+use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Util qw(event);
+use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
@@ -13,7 +11,7 @@ with(
   'Moonpig::Role::HandlesEvents',
 );
 
-use Moonpig::Types qw(Millicents);
+use Moonpig::Types qw(Millicents Time TimeInterval);
 
 sub implicit_event_handlers {
   return {
@@ -35,8 +33,8 @@ sub implicit_event_handlers {
 # How often I charge the bank
 has charge_frequency => (
   is => 'ro',
-  default => sub { DateTime::Duration->new( days => 1 ) },
-  isa => 'DateTime::Duration',
+  default => sub { days(1) },
+  isa => TimeInterval,
 );
 
 # How much I cost to own, in millicents per period
@@ -57,7 +55,7 @@ has cost_amount => (
 has cost_period => (
    is => 'ro',
    required => 1,
-   isa => 'DateTime::Duration',
+   isa => TimeInterval,
 );
 
 # When the object has less than this long to live, it will
@@ -66,13 +64,13 @@ has cost_period => (
 has old_age => (
   is => 'ro',
   required => 1,
-  isa => 'DateTime::Duration',
+  isa => TimeInterval,
 );
 
 # Last time I charged the bank
 has last_charge_date => (
   is => 'rw',
-  isa => 'DateTime',
+  isa => Time,
 #  default => sub { DateTime::Infinite::Past->new },
 );
 
@@ -84,12 +82,12 @@ sub last_charge_exists {
 # Set this to force stop object in time
 has current_time => (
   is => 'ro',
-  isa => 'DateTime',
+  isa => Time,
 );
 
 sub now {
   my ($self) = @_;
-  $self->current_time || DateTime->now();
+  $self->current_time || Moonpig::DateTime->now();
 }
 
 sub expire_date {
@@ -134,7 +132,7 @@ has last_complaint_date => (
 
 sub issue_complaint_if_necessary {
   my ($self, $remaining_life) = @_;
-  my $remaining_days = $remaining_life->in_units('days');
+  my $remaining_days = $remaining_life / 86_400;
   if ($self->is_complaining_day($remaining_days)) {
     if (! $self->has_complained_before
           || $self->last_complaint_date > $remaining_days) {
@@ -184,11 +182,7 @@ sub check_for_low_funds {
     or confess "event payload has no timestamp";
 
   # if this object does not have long to live...
-  if (DateTime::Duration->compare(
-    $self->remaining_life($tick_time),
-    $self->old_age,
-    $self->now
-   ) <= 0) {
+  if ($self->remaining_life($tick_time) <= $self->old_age) {
 
     # If it has a replacement R, it should advise R that R will need
     # to take over soon

@@ -12,11 +12,16 @@ use MooseX::Types -declare => [ qw(
   CostPath CostPathPart CostPathStr
 
   MRI
+
+  Time TimeInterval
 ) ];
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
 # use MooseX::Types::Structured qw(Map);
+use DateTime;
+use DateTime::Duration;
 use Email::Address;
+use Moonpig::DateTime;
 use Moonpig::URI;
 
 use namespace::autoclean;
@@ -35,6 +40,10 @@ coerce Millicents, from Num, via { int };
 
 role_type Payment, { role => 'Moonpig::Role::Payment' };
 
+################################################################
+#
+# Events
+
 my $simple_str       = qr/[-a-z0-9]+/i;
 my $simple_str_chain = qr/ (?: $simple_str \. )* $simple_str ? /x;
 
@@ -47,6 +56,10 @@ role_type EventHandler, { role => 'Moonpig::Role::EventHandler' };
 
 subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
 
+################################################################
+#
+# CostPath
+
 subtype CostPathPart, as Str, where { /\A$simple_str\z/ };
 subtype CostPath, as ArrayRef[ CostPathPart ];
 
@@ -54,6 +67,9 @@ subtype CostPathStr, as Str, where { /\A$simple_str_chain\z/ };
 
 coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
 
+################################################################
+#
+# MRI
 {
   my $str_type = subtype as Str, where { /\Amoonpig:/ };
 
@@ -63,6 +79,27 @@ coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
   class_type MRI, { class => 'Moonpig::URI' };
   coerce MRI, from $str_type, via { Moonpig::URI->new($_) },
               from $uri_type, via { Moonpig::URI->new("$_") };
+}
+
+################################################################
+#
+# Time
+
+class_type Time, { class => 'Moonpig::DateTime' };
+coerce Time, from Num, via { Moonpig::DateTime->new_epoch($_) };
+
+# Total seconds
+subtype TimeInterval, as Num;
+
+{
+  my $dt_type = class_type '__DateTime', +{ class => 'DateTime' };
+  coerce Time, from $dt_type, via { Moonpig::DateTime->new_datetime($_) };
+}
+{
+  my $zero = DateTime->from_epoch ( epoch => 0 );
+  my $dt_type = class_type '__DateTime', +{ class => 'DateTime::Duration' };
+  coerce TimeInterval, from $dt_type,
+    via { $zero->add_duration($_)->epoch }
 }
 
 1;
