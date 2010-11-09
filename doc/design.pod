@@ -142,4 +142,39 @@ If not, it will check to see if there is
 
 =head3 Pay-once services
 
+=head2 Implementation notes
+
+=head3 Dates and times
+
+Times at which things occur are represented by the C<Time> type, which
+is implemented as a C<Moonpig::DateTime>.  This is a subclass of
+C<DateTime> which changes a small amount of behavior:
+
+=over 4
+
+=item All C<Moonpig::DateTime> values represent UTC times.
+
+=item The C<new> constructor allows a single argument, which is taken
+to be an epoch time.  (That is, C<< Moonpig::DateTime->new( $epoch )
+>> is equivalent to C<< Moonpig::DateTime->from_epoch( epoch => $epoch
+) >>.
+
+=item The overloading has been changed.  Subtracting one C<DateTime>
+from another yields a C<DateTime::Duration>.   Subtracting one
+C<Moonpig::DateTime> from another yields an ordinary number, the
+number of epoch seconds between the two dates.
+
+=item Corresponding to this, addition is overloaded for
+C<Moonpig::DateTime> objects so that adding a C<Moonpig::Datetime> to
+a number interprets the number as a number of seconds to add.  One may
+also add any object that supports an C<< ->as_seconds >> method.
+
+=item C<Moonpig::DateTime> provides C<< $a->precedes($b) >> and
+C<< $a->follows($b) >> for more readable comparisons of dates.  THe
+usual comparison operators are also overloaded.
+
+=back
+
+Time intervals are all declared as instances of a C<TimeInterval>
+type, which is a plain number, represented as a number of seconds.
 
