@@ -9,6 +9,8 @@ use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
+use Moonpig::Events::Handler::Method;
+
 use namespace::autoclean;
 
 # Should this be plural?  Or what?  Maybe it's a ContactManager subsystem...
@@ -110,6 +112,16 @@ for my $thing (qw(journal invoice)) {
       $self->$reader->[-1];
     }
   );
+}
+
+sub implicit_event_handlers {
+  my ($self) = @_;
+
+  return {
+    'process-payment' => {
+      'each-invoice' => Moonpig::Events::Handler::Method->new('_payment_proc'),
+    },
+  };
 }
 
 1;

@@ -1,8 +1,11 @@
 package Moonpig::Events::Handler::Method;
 use Moose;
-with 'Moonpig::Role::EventHandler';
-
 use MooseX::Types::Perl qw(Identifier);
+
+with(
+  'Moonpig::Role::EventHandler',
+  'MooseX::OneArgNew' => { type => Identifier, init_arg => 'method_name' },
+);
 
 use namespace::autoclean;
 
