@@ -1,0 +1,136 @@
+text	estimate
+- Moonpig Project	10w 4d 2h
+	- migration planning	
+		- by features?	
+		- or do accounts wholesale as it becomes possible?	
+	- user stories	5w 1h
+		- simplified	4w 2d 7h
+			- calendar-based billing	1w 1d 6h
+				- banks	1d
+				- consumers	1d
+				- ledgers	2h
+				- transfers	4h
+				- invoices	2d
+				- cost trees and charges	2d
+			- usage-based billing	4h
+				- holds	4h
+			- event system	2d 1h
+				- heartbeat event	2h
+				- where do we store "last did charging at X time?"	1h
+				- register pre-commit callbacks	4h
+				- register post-completion callbacks	2h
+				- register within-transaction callbacks	1d
+			- replacement setup	1d 2h
+				- identical service	4h
+				- n-long chain (for brackets of rates)	4h
+				- someone who signs up for 6 years and gets the 5th free	2h
+			- expiration of service	2d 2h
+				- ...when replacement exists	4h
+				- ...when replacement doesn't exist	4h
+				- deactivate service on preprogrammed future date	6h
+				- manual deactivation by CS	4h
+			- contact management	1d 4h
+				- contacts (per se)	4h
+				- contact updates, editing, etc.	1d
+			- send invoice	2h
+			- pay invoice	4h
+			- partial payment?	1d
+			- overpayment	4h
+			- upgrade/downgrade	2h
+				- Tricky Lizzie who cancels her extra aliases every 29th	2h
+				- with free trial period	
+					- with subsequent autodowngrade after free trial	
+					- partial free trial after partial free trial / refuse second free trial	
+			- merging accounts (what does this mean?)	3d 2h
+				- create new account and attach to existing bank	4h
+				- merge two accounts with existing banks	6h
+				- splitting accounts	2d
+					- where there was only one account before	1d
+					- where there were multiple joined accounts that must be separated	1d
+			- per-seat accounts	4h
+			- per-calendar consumer switches to per-usage	4h
+			- consumption of general funds	4h
+			- refunds (and non-refundables)	2h
+				- including when there was a volume discount	2h
+			- discounts and coupons	4h
+			- fixed monthly cost plus usage charge	2h
+			- 10% off monthly charges (non-profit discount)	2h
+		- specific	2d 2h
+			- standard pobox account	4h
+				- extra aliases, etc	2h
+				- AllMail	2h
+			- domain registration	4h
+			- listbox per-list billing	4h
+			- listbox bulk billing	2h
+			- metered pobox accounts (Convio)	4h
+	- customer service tools	1d 2h
+		- overview of ledger	1d 2h
+			- active consumers	2h
+			- general funds	1h
+			- invoice history	2h
+			- invoice drill-down	4h
+				- sensible cost tree browser	4h
+			- contact information	1h
+	- application integration API	3d
+		- portable invoice representation	4h
+		- get invoice details	2h
+		- get current balance	2h
+		- mechanism for communication of options (now I have extra aliases)	4h
+		- how many units of consumption remain?	4h
+			- sometimes, in days; sometimes in deliveries; etc	4h
+		- place hold for X units	2h
+		- place charge for X units	2h
+		- update contact information	4h
+	- credits and coupons	6h
+		- refundable or non-refundable credit	2h
+		- non-discountable charges	2h
+		- discount distribution across subtrees	2h
+	- application integration	4d 4h
+		- generic command-line browser	1d
+		- pobox	2d 1h
+			- signup	6h
+				- create ledger	2h
+				- create consumer (with trial period)	2h
+				- send first bill	2h
+			- add new account	4h
+			- cancel account	2h
+			- domain registration	5h
+				- queued event for registration	4h
+				- monitor for domain registration	1h
+		- listbox	1d 3h
+			- signup	3h
+				- create ledger	1h
+				- create consumer	1h
+				- send first bill	1h
+			- add new lists	2h
+			- deactivate lists	2h
+			- cash authorization for posting	4h
+				- success behavior	2h
+				- failure behavior	2h
+	- internal competence with KiokuDB (or something)	2d
+	- persistence to database	3d
+		- kioku objects	2d
+		- non-kioku objects (?)	1d
+	- asynchronicity event system	2d
+		- mechanism for building up URL and request from event attributes	1d
+		- means to clear or replace registered events	1d
+	- integration with external payment/etc. system	
+	- migration to moonpig	2w 2d 5h
+		- modifications to old billing systems	1w 1d 4h
+			- which old applications will survive?	
+			- reimplementation of old billing APIs	1w
+				- account expiration date method	1d
+				- contact management	2d
+				- invoice receptors	2d
+			- mark new customers as off-limits to old system	1d 4h
+				- process-chilltills	4h
+				- what else?	1d
+		- pobox	3d
+			- tool to migrate one client	2d
+			- upgrade alerts about billing problems	4h
+			- upgrade purgers to check correct paid-up status	4h
+		- listbox	3d 1h
+			- tool to migrate one freeside account	2d
+			- upgrade alerts about billing problems	4h
+			- upgrade purgers to check correct paid-up status	4h
+			- upgrade the tiered cost updater script	1h
