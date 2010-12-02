@@ -17,7 +17,7 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::Transfer->transfers_for_bank($self);
+  my $xfers = Moonpig::PaymentApplication->all_for_payment($self);
 
   my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
 

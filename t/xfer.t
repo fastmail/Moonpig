@@ -18,7 +18,7 @@ test "basics of transfer" => sub {
   my $amount = $bank->amount;
   is(
     $amount,
-    $bank->remaining_amount,
+    $bank->unapplied_amount,
     "we start with M $amount, total and remaining",
   );
 
@@ -39,7 +39,7 @@ test "basics of transfer" => sub {
     isa_ok($xfers[0], 'Moonpig::Transfer', "the 1st transfer");
 
     is(
-      $bank->remaining_amount,
+      $bank->unapplied_amount,
       $amount - 5000,
       "the transfer has affected the apparent remaining amount",
     );
@@ -58,7 +58,7 @@ test "basics of transfer" => sub {
     isa_ok($xfers[1], 'Moonpig::Transfer', "the 2nd transfer");
     
     is(
-      $bank->remaining_amount,
+      $bank->unapplied_amount,
       0,
       "we've got M 0 left in our bank",
     );
@@ -81,8 +81,8 @@ test "basics of transfer" => sub {
     };
 
     ok(! $ok, "we couldn't transfer anything from an empty bank");
-    like($err, qr{refusing to transfer}, "got the right error");
-    is($bank->remaining_amount, 0, "still have M 0 in bank");
+    like($err, qr{refusing to perform overtransfer}, "got the right error");
+    is($bank->unapplied_amount, 0, "still have M 0 in bank");
     is(@xfers, 2, "the new transfer was never registered");
   };
 };

@@ -21,9 +21,9 @@ has amount => (
   required => 1,
 );
 
-sub remaining_amount {
+sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::Transfer->transfers_for_bank($self);
+  my $xfers = Moonpig::Transfer->all_for_bank($self);
 
   my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
 
