@@ -35,23 +35,4 @@ has paid => (
   },
 );
 
-sub apply_credit {
-  my ($self, $credit) = @_;
-
-  Credit->assert_valid($credit);
-
-  Moonpig::X->throw("credit applied to open invoice") if $self->is_open;
-
-  # XXX: totally not good; placeholder for new application -- rjbs, 2010-11-02
-  Moonpig::CreditApplication->new({
-    credit  => $credit,
-    payable => $self,
-    amount  => $credit->amount,
-  });
-
-  $self->handle_event(event('invoice-paid'));
-
-  $self->mark_paid;
-}
-
 1;

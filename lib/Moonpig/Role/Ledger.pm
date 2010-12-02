@@ -10,6 +10,9 @@ use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use Moonpig::Events::Handler::Method;
+use Moonpig::Types qw(Credit);
+
+use Moonpig::Util qw(event);
 
 use namespace::autoclean;
 
@@ -42,6 +45,16 @@ has consumers => (
   handles => {
     _has_consumer => 'exists',
     _set_consumer    => 'set',
+  },
+);
+
+has credits => (
+  isa     => ArrayRef[ Credit ],
+  default => sub { [] },
+  traits  => [ qw(Array) ],
+  handles => {
+    credits    => 'elements',
+    add_credit => 'push',
   },
 );
 
@@ -112,6 +125,54 @@ for my $thing (qw(journal invoice)) {
       $self->$reader->[-1];
     }
   );
+}
+
+sub process_credits {
+  my ($self) = @_;
+
+  my @credits = $self->credits;
+
+  # XXX: These need to be processed in order. -- rjbs, 2010-12-02
+  for my $invoice (@{ $self->_invoices }) {
+    next if $invoice->is_paid;
+
+    @credits = grep { $_->unapplied_amount } @credits;
+
+    my $to_pay = $invoice->total_amount;
+
+    my @to_apply;
+
+    # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
+    CREDIT: for my $credit (@credits) {
+      my $credit_amount = $credit->unapplied_amount;
+      my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
+
+      push @to_apply, {
+        credit => $credit,
+        amount => $apply_amt,
+      };
+
+      $to_pay -= $apply_amt;
+
+      last CREDIT if $to_pay == 0;
+    }
+
+    if ($to_pay == 0) {
+      for my $to_apply (@to_apply) {
+        Moonpig::CreditApplication->new({
+          credit  => $to_apply->{credit},
+          payable => $invoice,
+          amount  => $to_apply->{amount},
+        });
+      }
+
+      $invoice->handle_event(event('invoice-paid'));
+      $invoice->mark_paid;
+    } else {
+      # We can't successfully pay this invoice, so stop processing.
+      return;
+    }
+  }
 }
 
 1;

@@ -49,7 +49,7 @@ test charge_close_and_send => sub {
     amount => $invoice->total_amount,
   });
 
-  $invoice->apply_credit($credit);
+  $ledger->process_credits;
 
   pass("everything ran to completion without dying");
 };
@@ -104,7 +104,9 @@ test create_bank_on_payment => sub {
     amount => $invoice->total_amount,
   });
 
-  $invoice->apply_credit($credit);
+  $ledger->add_credit($credit);
+
+  $ledger->process_credits;
 
   ok($consumer->has_bank, "after applying credit, consumer has bank");
 
