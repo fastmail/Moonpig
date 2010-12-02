@@ -114,14 +114,4 @@ for my $thing (qw(journal invoice)) {
   );
 }
 
-# sub implicit_event_handlers {
-#   my ($self) = @_;
-# 
-#   return {
-#     'process-payment' => {
-#       'each-invoice' => Moonpig::Events::Handler::Method->new('_payment_proc'),
-#     },
-#   };
-# }
-
 1;
