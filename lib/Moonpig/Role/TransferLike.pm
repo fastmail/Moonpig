@@ -12,6 +12,8 @@ parameter to_name   => (isa => Identifier, required => 1);
 parameter from_type => (isa => 'Moose::Meta::TypeConstraint', required => 1);
 parameter to_type   => (isa => 'Moose::Meta::TypeConstraint', required => 1);
 
+parameter allow_deletion => (isa => 'Bool', default => 0);
+
 role {
   my ($p) = @_;
 
@@ -25,6 +27,15 @@ role {
   # -- rjbs, 2010-12-02
   method "__$FROM\_$TO\_storage" => sub {
     return (\%BY_FROM, \%BY_TO);
+  };
+
+  method delete => sub {
+    my ($self) = @_;
+    Carp::croak("cannot delete immortal object $self") if ! $p->allow_deletion;
+
+    for my $store ($BY_FROM{ $self->$FROM->guid }, $BY_TO{ $self->$TO->guid }) {
+      @$store = [ grep { $_->guid ne $self->guid } @$store ];
+    }
   };
 
   has $FROM => (

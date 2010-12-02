@@ -1,17 +1,16 @@
 package Moonpig::Role::HasGuid;
 use Moose::Role;
 
-use Data::GUID qw(guid);
+use Data::GUID qw(guid_string);
 use Moose::Util::TypeConstraints;
 
 use namespace::autoclean;
 
-has guid_object => (
+has guid => (
   is  => 'ro',
-  isa => class_type('Data::GUID'),
+  isa => 'Str', # refine this -- rjbs, 2010-12-02
   init_arg => undef,
-  default  => sub { guid() },
-  handles  => { guid => 'as_string' },
+  default  => sub { guid_string },
 );
 
 1;
