@@ -3,7 +3,7 @@ use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger
   Millicents
-  Payment
+  Credit
 
   Event
   EventName EventHandlerName EventHandler
@@ -38,7 +38,7 @@ subtype Millicents, as Int;
 
 coerce Millicents, from Num, via { int };
 
-role_type Payment, { role => 'Moonpig::Role::Payment' };
+role_type Credit, { role => 'Moonpig::Role::Credit' };
 
 ################################################################
 #

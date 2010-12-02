@@ -8,9 +8,9 @@ with(
   'Moonpig::Role::Payable',
 );
 
-use Moonpig::PaymentApplication;
+use Moonpig::CreditApplication;
 use Moonpig::Util qw(event);
-use Moonpig::Types qw(Payment);
+use Moonpig::Types qw(Credit);
 use Moonpig::X;
 
 use namespace::autoclean;
@@ -35,18 +35,18 @@ has paid => (
   },
 );
 
-sub accept_payment {
-  my ($self, $payment) = @_;
+sub apply_credit {
+  my ($self, $credit) = @_;
 
-  Payment->assert_valid($payment);
+  Credit->assert_valid($credit);
 
-  Moonpig::X->throw('payment for open invoice') if $self->is_open;
+  Moonpig::X->throw("credit applied to open invoice") if $self->is_open;
 
   # XXX: totally not good; placeholder for new application -- rjbs, 2010-11-02
-  Moonpig::PaymentApplication->new({
-    payment => $payment,
+  Moonpig::CreditApplication->new({
+    credit  => $credit,
     payable => $self,
-    amount  => $payment->amount,
+    amount  => $credit->amount,
   });
 
   $self->handle_event(event('invoice-paid'));

@@ -1,4 +1,4 @@
-package Moonpig::Role::Payment;
+package Moonpig::Role::Credit;
 use Moose::Role;
 
 with 'Moonpig::Role::HasGuid';
@@ -17,7 +17,7 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::PaymentApplication->all_for_payment($self);
+  my $xfers = Moonpig::CreditApplication->all_for_credit($self);
 
   my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
 

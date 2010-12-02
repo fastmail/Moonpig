@@ -3,7 +3,7 @@ use Test::More;
 use Test::Routine::Util;
 
 use Moonpig::Charge::Basic;
-use Moonpig::Payment::Basic;
+use Moonpig::Credit::Basic;
 
 use Moonpig::Util qw(dollars);
 
@@ -45,11 +45,11 @@ test charge_close_and_send => sub {
 
   $invoice->finalize_and_send;
 
-  my $payment = Moonpig::Payment::Basic->new({
+  my $credit = Moonpig::Credit::Basic->new({
     amount => $invoice->total_amount,
   });
 
-  $invoice->accept_payment($payment);
+  $invoice->apply_credit($credit);
 
   pass("everything ran to completion without dying");
 };
@@ -100,13 +100,13 @@ test create_bank_on_payment => sub {
 
   $invoice->finalize_and_send;
 
-  my $payment = Moonpig::Payment::Basic->new({
+  my $credit = Moonpig::Credit::Basic->new({
     amount => $invoice->total_amount,
   });
 
-  $invoice->accept_payment($payment);
+  $invoice->apply_credit($credit);
 
-  ok($consumer->has_bank, "after accepting payment, consumer has bank");
+  ok($consumer->has_bank, "after applying credit, consumer has bank");
 
   my $bank = $consumer->bank;
   is(
