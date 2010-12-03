@@ -155,6 +155,13 @@ sub process_credits {
 
       $to_pay -= $apply_amt;
 
+      $Logger->log([
+        "will apply %s from credit %s; %s left to pay",
+        $apply_amt,
+        $credit->guid,
+        $to_pay,
+      ]);
+
       last CREDIT if $to_pay == 0;
     }
 
