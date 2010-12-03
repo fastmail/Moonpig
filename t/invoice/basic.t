@@ -51,10 +51,51 @@ test charge_close_and_send => sub {
     amount => $invoice->total_amount,
   });
 
+  $ledger->add_credit($credit);
+
   $ledger->process_credits;
+
+  ok($invoice->is_paid, "the invoice was marked paid");
 
   pass("everything ran to completion without dying");
 };
+
+test underpayment => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->test_ledger;
+
+  my $invoice = $ledger->current_invoice;
+
+  my $send_h = $self->make_event_handler('t::Test');
+  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+
+  my $paid_h = $self->make_event_handler('t::Test');
+  $invoice->register_event_handler('invoice-paid', 'record', $paid_h);
+
+  $invoice->add_charge_at(
+    Moonpig::Charge::Basic->new({
+      description => 'test charge (setup)',
+      amount      => dollars(10),
+    }),
+    'test.charges.setup',
+  );
+
+  is($invoice->total_amount, dollars(10), "invoice line items tally up");
+
+  $invoice->finalize_and_send;
+
+  my $credit = Moonpig::Credit::Basic->new({
+    amount => $invoice->total_amount - 1,
+  });
+
+  $ledger->process_credits;
+
+  ok(! $invoice->is_paid, "the invoice could not be paid with underpayment");
+
+  pass("everything ran to completion without dying");
+};
+
 
 test create_bank_on_payment => sub {
   my ($self) = @_;
