@@ -12,6 +12,7 @@ use MooseX::Types::Moose qw(ArrayRef HashRef);
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(Credit);
 
+use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(event);
 
 use namespace::autoclean;
@@ -166,6 +167,7 @@ sub process_credits {
         });
       }
 
+      $Logger->log([ "marking invoice %s paid", $invoice->guid ]);
       $invoice->handle_event(event('invoice-paid'));
       $invoice->mark_paid;
     } else {

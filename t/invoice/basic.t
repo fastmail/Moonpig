@@ -12,6 +12,8 @@ with(
   't::lib::Factory::EventHandler',
 );
 
+use t::lib::Logger;
+
 test charge_close_and_send => sub {
   my ($self) = @_;
 
