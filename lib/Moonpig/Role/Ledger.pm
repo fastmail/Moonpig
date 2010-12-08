@@ -9,6 +9,8 @@ use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
+use Moonpig;
+use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
 use Moonpig::Types qw(Credit);
 
@@ -188,9 +190,25 @@ sub process_credits {
 
 implicit_event_handlers {
   return {
-    'contact-humans' => { default => Moonpig::Events::Handler::Missing->new },
     'send-invoice'   => { default => Moonpig::Events::Handler::Missing->new },
+
+    'contact-humans' => {
+      default => Moonpig::Events::Handler::Method->new('_contact_humans'),
+    },
   };
 };
+
+sub _contact_humans {
+  my ($self, $event, $arg) = @_;
+  # $receiver->$method_name($event, $arg, $self);
+
+  my $to   = [ $self->contact->email_addresses ];
+  my $from = 'devnull@example.com';
+
+  Moonpig->env->handle_event(event('send-email' => {
+    email => $arg->{email},
+    env   => { to => $to, from => $from },
+  }));
+}
 
 1;

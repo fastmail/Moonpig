@@ -11,6 +11,8 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
+use Moonpig::Env::Test;
+
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
