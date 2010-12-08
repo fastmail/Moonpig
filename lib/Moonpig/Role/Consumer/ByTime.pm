@@ -12,9 +12,11 @@ with(
   'Moonpig::Role::HandlesEvents',
 );
 
+use Moonpig::Behavior::EventHandlers;
+
 use Moonpig::Types qw(Millicents Time TimeInterval);
 
-sub implicit_event_handlers {
+implicit_event_handlers {
   return {
     heartbeat => {
       low_funds_check => Moonpig::Events::Handler::Method->new(
@@ -29,7 +31,7 @@ sub implicit_event_handlers {
         method_name => 'create_own_replacement',
        )},
   };
-}
+};
 
 # How often I charge the bank
 has charge_frequency => (

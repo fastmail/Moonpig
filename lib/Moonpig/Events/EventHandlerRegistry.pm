@@ -45,27 +45,21 @@ sub _setup_implicit_event_handlers {
   my ($self) = @_;
   my $owner = $self->owner;
 
-  my $method_name = 'implicit_event_handlers';
-  if ($owner->can( $method_name )) {
-    foreach my $method (
-      Class::MOP::class_of($owner)->find_all_methods_by_name( $method_name )
-    ) {
-      my $handler_map = $method->{code}->execute($owner);
-      EventHandlerMap->assert_valid($handler_map);
+  my $handler_map = $owner->composed_implicit_event_handlers;
 
-      for my $event_name (keys %$handler_map) {
-        my $implicit_handlers = $handler_map->{ $event_name };
+  EventHandlerMap->assert_valid($handler_map);
 
-        for my $handler_name (keys %$implicit_handlers) {
-          next if $self->_event_handler_named($event_name, $handler_name);
+  for my $event_name (keys %$handler_map) {
+    my $implicit_handlers = $handler_map->{ $event_name };
 
-          my $handler = $implicit_handlers->{ $handler_name };
-          EventHandler->assert_valid($handler);
+    for my $handler_name (keys %$implicit_handlers) {
+      next if $self->_event_handler_named($event_name, $handler_name);
 
-          $handler->mark_implicit;
-          $self->register_event_handler($event_name, $handler_name, $handler);
-        }
-      }
+      my $handler = $implicit_handlers->{ $handler_name };
+      EventHandler->assert_valid($handler);
+
+      $handler->mark_implicit;
+      $self->register_event_handler($event_name, $handler_name, $handler);
     }
   }
 }

@@ -6,6 +6,8 @@ use Moonpig::Events::EventHandlerRegistry;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
+use Moonpig::Behavior::EventHandlers;
+
 use namespace::autoclean;
 
 has _event_handler_registry => (

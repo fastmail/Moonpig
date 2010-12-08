@@ -5,6 +5,8 @@ with 't::lib::Factory::EventHandler';
 
 use Moonpig::Types qw(EventHandler);
 
+use Moonpig::Behavior::EventHandlers;
+
 has noop_h => (
   is       => 'ro',
   isa      => EventHandler,
@@ -19,7 +21,7 @@ has code_h => (
   default  => sub { $_[0]->make_event_handler('t::Test'); },
 );
 
-sub implicit_event_handlers {
+implicit_event_handlers {
   my ($self) = @_;
 
   return {
@@ -27,6 +29,6 @@ sub implicit_event_handlers {
     'test.code' => { callback => $self->code_h },
     'test.both' => { nothing  => $self->noop_h, callback => $self->code_h },
   };
-}
+};
 
 1;
