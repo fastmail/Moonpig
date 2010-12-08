@@ -15,8 +15,11 @@ has name => (
 );
 
 has email_addresses => (
-  is  => 'ro',
   isa => EmailAddresses,
+  traits   => [ 'Array' ],
+  handles  => {
+    email_addresses => 'elements',
+  },
   required => 1,
 );
 

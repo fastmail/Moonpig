@@ -20,12 +20,12 @@ test charge_close_and_send => sub {
   my $ledger = $self->test_ledger;
 
   my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $invoice = $ledger->current_invoice;
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'record', $paid_h);
+  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     Moonpig::Charge::Basic->new({
@@ -70,10 +70,10 @@ test underpayment => sub {
   my $invoice = $ledger->current_invoice;
 
   my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'record', $paid_h);
+  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     Moonpig::Charge::Basic->new({
@@ -114,10 +114,10 @@ test overpayment  => sub {
   my $invoice = $ledger->current_invoice;
 
   my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'record', $paid_h);
+  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     Moonpig::Charge::Basic->new({
@@ -156,7 +156,7 @@ test create_bank_on_payment => sub {
   my $ledger = $self->test_ledger;
 
   my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $consumer = $self->add_consumer_to($ledger);
 
@@ -222,10 +222,10 @@ test payment_by_two_credits => sub {
   my $invoice = $ledger->current_invoice;
 
   my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'record', $send_h);
+  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'record', $paid_h);
+  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     Moonpig::Charge::Basic->new({

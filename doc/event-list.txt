@@ -1,11 +1,23 @@
-# List of all event names and handler names used so far
-#
-# Handler name     Event name      Who?
-low_funds_check    heartbeat       Consumer::ByTime
-low_funds_handler  heartbeat       Consumer::ByTime
-create_own_replacement consumer-create-replacement Consumer::ByTime
 
-# Incomplete entries:
--                  contact-humans  Ledger
--                  low-funds       Consumer::ByTime
+heartbeat:
+  why    : sent frequently and without cause to at least every ledger
+  args   : ?
+  sent to: all kinds of stuff
+  known handlers:
+  - low_funds_check
+  - low_funds_handler
 
+contact-humans:
+  why    : to send message to ledger's contact
+  args   : message
+  sent to: ledgers
+
+low-funds:
+  why    : available funds in a consumer's bank
+  args   : ?
+  sent to: consumers
+
+consumer-create-replacement:
+  why    : tells a consumer to set up its replacement
+  args   : ?
+  sent to: consumers

@@ -42,7 +42,7 @@ test "with_successor" => sub {
   plan tests => 3;
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
-    'contact-humans', 'noname', queue_handler("ld", \@eq)
+    'contact-humans', 'default', queue_handler("ld", \@eq)
   );
 
   # Pretend today is 2000-01-01 for convenience
@@ -92,7 +92,7 @@ test "without_successor" => sub {
 
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
-    'contact-humans', 'noname', Moonpig::Events::Handler::Noop->new()
+    'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
   );
 
   plan tests => 4 * 3;

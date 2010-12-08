@@ -9,11 +9,13 @@ use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
-use Moonpig::Events::Handler::Method;
+use Moonpig::Events::Handler::Missing;
 use Moonpig::Types qw(Credit);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(event);
+
+use Moonpig::Behavior::EventHandlers;
 
 use namespace::autoclean;
 
@@ -183,5 +185,12 @@ sub process_credits {
     }
   }
 }
+
+implicit_event_handlers {
+  return {
+    'contact-humans' => { default => Moonpig::Events::Handler::Missing->new },
+    'send-invoice'   => { default => Moonpig::Events::Handler::Missing->new },
+  };
+};
 
 1;
