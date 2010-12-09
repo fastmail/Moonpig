@@ -18,6 +18,7 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(event);
 
 use Moonpig::Behavior::EventHandlers;
+use Sub::Install ();
 
 use namespace::autoclean;
 
@@ -64,12 +65,14 @@ has credits => (
 );
 
 for my $thing (qw(bank consumer)) {
+  my $predicate = "_has_$thing";
+  my $setter = "_set_$thing";
+
   Sub::Install::install_sub({
     as   => "add_$thing",
     code => sub {
       my ($self, $value) = @_;
 
-      my $predicate = "_has_$thing";
       confess sprintf "%s with guid %s already present", $thing, $value->guid
         if $self->$predicate($value->guid);
 
@@ -80,7 +83,6 @@ for my $thing (qw(bank consumer)) {
         );
       }
 
-      my $setter = "_set_$thing";
       $self->$setter($value->guid, $value);
     },
   });
