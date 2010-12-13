@@ -45,7 +45,7 @@ implicit_event_handlers {
 after BUILD => sub {
   my ($self) = @_;
   unless ($self->has_last_charge_date) {
-    $self->last_charge_date($self->now());
+    $self->last_charge_date($self->now() - $self->charge_frequency);
   }
 };
 
