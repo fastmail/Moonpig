@@ -218,7 +218,7 @@ sub charge {
   while ($self->last_charge_date->precedes($now)) {
     last unless my $charge = $self->make_charge($now);
 
-    $self->ledger->add_charge_at(
+    $self->current_journal->add_charge_at(
       $charge,
       [$self->cost_path_prefix,
        split(/-/, $now->ymd()),

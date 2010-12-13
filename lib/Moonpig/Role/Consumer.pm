@@ -58,6 +58,10 @@ after BUILD => sub {
   ]);
 };
 
-# mechanism to get xfers
+# TODO mechanism to get xfers
+sub current_journal {
+  my ($self) = @_;
+  $self->ledger->current_journal;
+}
 
 1;
