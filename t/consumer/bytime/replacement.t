@@ -122,9 +122,10 @@ test "without_successor" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => days(20),
-        current_time => $jan1,
         replacement_mri => $mri,
       });
+    Moonpig->env->current_time($jan1);
+
 
     my @eq;
     $c->register_event_handler(

@@ -93,16 +93,15 @@ test expire_date => sub {
       $CLASS,
       { bank => $b,
         ledger => $ledger,
-        current_time =>
-          Moonpig::DateTime->new(
-            year => 1969,
-            month => 4,
-            day => 2,
-            hour => 2,
-            minute => 38,
-            second => 0,
-          ),
       });
+    Moonpig->env->current_time(Moonpig::DateTime->new(
+      year => 1969,
+      month => 4,
+      day => 2,
+      hour => 2,
+      minute => 38,
+      second => 0,
+    ));
 
     my $exp = $c->expire_date;
     is($exp->ymd, "1969-04-05",

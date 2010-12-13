@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer::ByTime;
 use Carp qw(confess croak);
+use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Util qw(days event);
@@ -32,6 +33,8 @@ implicit_event_handlers {
        )},
   };
 };
+
+sub now { Moonpig->env->now() }
 
 # How often I charge the bank
 has charge_frequency => (
@@ -80,17 +83,6 @@ has last_charge_date => (
 sub last_charge_exists {
   my ($self) = @_;
   return defined($self->last_charge_date);
-}
-
-# Set this to force stop object in time
-has current_time => (
-  is => 'ro',
-  isa => Time,
-);
-
-sub now {
-  my ($self) = @_;
-  $self->current_time || Moonpig::DateTime->now();
 }
 
 sub expire_date {
