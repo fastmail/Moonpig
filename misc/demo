@@ -1,0 +1,15 @@
+#!/usr/bin/env perl
+use lib 'lib';
+
+# 1. create ledger
+# 2. create cunsumer
+# 3. charge, finalize, send invoice
+# 4. pay and apply payment to invoice
+# 5. create and link bank to consumer
+# 6. heartbeats, until...
+# 7. consumer charges bank
+# 8. until low-funds, goto 6
+# 9. setup replacement
+# 10. funds expire
+# 11a. fail over (if replacement funded)
+# 11b. cancel account (if replacement unfunded)
