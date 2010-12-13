@@ -35,8 +35,18 @@ sub plus {
 
 sub minus {
   my ($a, $b, $rev) = @_;
-  my $res = ( $a->epoch - $b->epoch ) * ($rev ? -1 : 1);
-  return $a->interval_factory($res);
+  # if $b is a datetime, the result is an interval
+  # but if $b is an interval, the result is another datetime
+  if (blessed($b)) {
+    croak "Can't subtract X from $a when X has no 'epoch' method"
+      unless $b->can("epoch");
+    my $res = ( $a->epoch - $b->epoch ) * ($rev ? -1 : 1);
+    return $a->interval_factory($res);
+  } else { # $b is a number
+    croak "subtracting a date from a number is forbidden"
+      if $rev;
+    return $a + (-$b);
+  }
 }
 
 sub interval_factory { return $_[1] }
