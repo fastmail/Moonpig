@@ -21,4 +21,16 @@ sub handle_send_email {
   $self->email_sender->send_email($arg->{email}, $arg->{env});
 }
 
+has current_time => (
+  is => 'rw',
+  isa => 'Moonpig::DateTime',
+  predicate => 'time_stopped',
+);
+
+sub now {
+  my ($self) = @_;
+  return $self->time_stopped ? $self->current_time
+    : Moonpig::DateTime->now();
+}
+
 1;

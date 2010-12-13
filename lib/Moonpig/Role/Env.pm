@@ -5,6 +5,7 @@ use Moonpig;
 
 with(
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::TracksTime',
 );
 
 use Moonpig::Events::Handler::Method;

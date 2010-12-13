@@ -8,6 +8,8 @@ sub set_env {
   $env = $new_env;
 }
 
+sub _scrub_env { undef $env }
+
 sub env {
   Carp::croak("environment not yet configured") if ! $env;
   $env
