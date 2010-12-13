@@ -83,4 +83,9 @@ sub follows {
   return $self->compare($d) > 0;
 }
 
+sub iso {
+  my ($self) = @_;
+  return $self->strftime("%D %T");
+}
+
 1;
