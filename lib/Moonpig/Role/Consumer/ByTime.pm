@@ -220,7 +220,7 @@ sub charge {
 
     $self->current_journal->add_charge_at(
       $charge,
-      [$self->cost_path_prefix,
+      [@{$self->cost_path_prefix},
        split(/-/, $now->ymd()),
       ]);
     $self->last_charge_date($now);
