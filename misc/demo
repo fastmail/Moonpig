@@ -1,11 +1,105 @@
 #!/usr/bin/env perl
+use strict;
+use warnings;
 use lib 'lib';
 
+use Moonpig::Logger '$Logger' => { init => {
+  ident     => 'Moonpig::Demo',
+  to_stdout => 1,
+  log_pid   => 0,
+  prefix    => '* ',
+} };
+
+use Moonpig::Bank::Basic;
+use Moonpig::Charge::Basic;
+use Moonpig::Consumer::Basic;
+use Moonpig::Contact::Basic;
+use Moonpig::Credit::Basic;
+use Moonpig::Ledger::Basic;
+
+use Moonpig::Events::Handler::Code;
+use Moonpig::Events::Handler::Noop;
+
+use Moonpig::Util qw(dollars);
+
 # 1. create ledger
-# 2. create cunsumer
+
+my $contact = Moonpig::Contact::Basic->new({
+  name => 'J. Fred Bloggs',
+  email_addresses => [ 'jfred@example.com' ],
+});
+
+my $ledger = Moonpig::Ledger::Basic->new({
+  contact => $contact,
+});
+
+# 2. create consumer
+
+my $consumer = Moonpig::Consumer::Basic->new({
+  ledger => $ledger,
+  replacement_mri => Moonpig::URI->nothing(),
+});
+
+$ledger->add_consumer($consumer);
+
 # 3. charge, finalize, send invoice
+
+my $invoice = $ledger->current_invoice;
+
+# my $paid_h = $self->make_event_handler('t::Test');
+# $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
+
+$invoice->add_charge_at(
+  Moonpig::Charge::Basic->new({
+    description => 'test charge (setup)',
+    amount      => dollars(10),
+  }),
+  'test.charges.setup',
+);
+
+# XXX: USE AN IMPLICIT EVENT INSTEAD -- rjbs, 2010-12-13:
+$ledger->register_event_handler(
+  'send-invoice',
+  'default',
+  Moonpig::Events::Handler::Code->new({ code => sub {
+    my ($receiver, $event, $arg) = @_;
+    $Logger->log([ "sending invoice %s" , $event->payload->{invoice}->guid ]);
+  } })
+);
+
+my $make_bank_h = Moonpig::Events::Handler::Code->new({
+  code => sub {
+    my ($invoice, $event, $arg) = @_;
+
+    my $bank = Moonpig::Bank::Basic->new({
+      amount => $invoice->total_amount,
+      ledger => $invoice->ledger,
+    });
+
+    $ledger->add_bank($bank);
+
+    $consumer->_set_bank($bank);
+  },
+});
+
+$invoice->register_event_handler('invoice-paid', 'bank-it', $make_bank_h);
+
+$invoice->finalize_and_send;
+
 # 4. pay and apply payment to invoice
+
+my $credit = Moonpig::Credit::Basic->new({
+  amount => $invoice->total_amount,
+});
+
+$ledger->add_credit($credit);
+
+$ledger->process_credits;
+
 # 5. create and link bank to consumer
+
+  # implicit in combination of invoice's handler and credit processing
+
 # 6. heartbeats, until...
 # 7. consumer charges bank
 # 8. until low-funds, goto 6

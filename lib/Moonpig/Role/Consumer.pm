@@ -3,10 +3,13 @@ use Moose::Role;
 with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HasGuid',
+  'Moonpig::Role::StubBuild',
 );
 
 use MooseX::SetOnce;
 use Moonpig::Types qw(Ledger Millicents MRI);
+
+use Moonpig::Logger '$Logger';
 
 use namespace::autoclean;
 
@@ -45,6 +48,15 @@ has replacement_mri => (
   required => 1,
   coerce => 1,
 );
+
+after BUILD => sub {
+  my ($self) = @_;
+  $Logger->log([
+    'created new consumer %s (%s)',
+    $self->guid,
+    $self->meta->name,
+  ]);
+};
 
 # mechanism to get xfers
 

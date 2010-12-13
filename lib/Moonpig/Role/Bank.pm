@@ -3,9 +3,11 @@ use Moose::Role;
 with(
  'Moonpig::Role::HasGuid',
  'Moonpig::Role::LedgerComponent',
+ 'Moonpig::Role::StubBuild',
 );
 
 use List::Util qw(reduce);
+use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Ledger Millicents);
 use Moonpig::Transfer;
 
@@ -29,6 +31,15 @@ sub unapplied_amount {
 
   return $self->amount - $xfer_total;
 }
+
+after BUILD => sub {
+  my ($self) = @_;
+  $Logger->log([
+    'created new bank %s (%s)',
+    $self->guid,
+    $self->meta->name,
+  ]);
+};
 
 # mechanism to get xfers
 

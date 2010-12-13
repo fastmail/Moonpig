@@ -3,7 +3,10 @@ use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::StubBuild',
 );
+
+use Moonpig::Logger '$Logger';
 
 use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
@@ -212,5 +215,14 @@ sub _contact_humans {
     env   => { to => $to, from => $from },
   }));
 }
+
+after BUILD => sub {
+  my ($self) = @_;
+  $Logger->log([
+    'created new ledger %s (%s)',
+    $self->guid,
+    $self->meta->name,
+  ]);
+};
 
 1;

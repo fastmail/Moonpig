@@ -164,9 +164,6 @@ test create_bank_on_payment => sub {
     code => sub {
       my ($invoice, $event, $arg) = @_;
 
-      # XXX: We can only assume invoice->total_amount because of current
-      # restrictions in our invoice/payment implementation that require that
-      # invoice and payment amount are equal.  -- rjbs, 2010-10-29
       my $bank = Moonpig::Bank::Basic->new({
         amount => $invoice->total_amount,
         ledger => $invoice->ledger,
