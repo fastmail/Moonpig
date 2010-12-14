@@ -5,6 +5,7 @@ with 'Moonpig::Role::Env';
 Moonpig->set_env( __PACKAGE__->new );
 
 use Email::Sender::Transport::Test;
+use Moonpig::X;
 use Moonpig::Events::Handler::Code;
 
 has email_sender => (
@@ -22,10 +23,22 @@ sub handle_send_email {
 }
 
 has current_time => (
-  is => 'rw',
+  is  => 'rw',
   isa => 'Moonpig::DateTime',
   predicate => 'time_stopped',
 );
+
+sub elapse_time {
+  my ($self, $duration) = @_;
+
+  $duration = DateTime::Duration->new(seconds => $duration)
+    unless ref $duration;
+
+  Moonpig::X->throw("tried to elapse negative time")
+    if $duration->is_negative;
+
+  $self->current_time( $self->now->add_duration( $duration ) );
+}
 
 sub now {
   my ($self) = @_;
