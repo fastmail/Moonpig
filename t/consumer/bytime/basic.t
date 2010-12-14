@@ -6,6 +6,7 @@ use DateTime;
 use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
+use Test::Deep qw(cmp_deeply);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -132,7 +133,10 @@ test "basic_event" => sub {
   my @eq;
   $c->register_event_handler('heart', 'hearthandler', queue_handler("c", \@eq));
   $c->handle_event(event('heart', { noise => 'thumpa' }));
-  is_deeply(\@eq, [ [ $c, 'heart', { noise => 'thumpa' } ] ]);
+  cmp_deeply(\@eq, [ [ $c, 'heart',
+                       { noise => 'thumpa',
+                         timestamp => Test::Deep::isa('DateTime'),
+                        } ] ]);
 };
 
 run_me;

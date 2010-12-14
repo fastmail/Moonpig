@@ -45,7 +45,7 @@ test generic_event_test => sub {
           Test::Deep::isa('Moonpig::Events::Event'),
           methods(
             ident   => 'test.code',
-            payload => { foo => 2 },
+            payload => { foo => 2, timestamp => Test::Deep::isa('DateTime') },
           ),
         ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
@@ -56,7 +56,7 @@ test generic_event_test => sub {
           Test::Deep::isa('Moonpig::Events::Event'),
           methods(
             ident   => 'test.both',
-            payload => { foo => 3 },
+            payload => { foo => 3, timestamp => Test::Deep::isa('DateTime') },
           ),
         ),
         superhashof({ event_guid => ignore(), handler_name => 'bothcode' }),
@@ -96,7 +96,7 @@ test implicit_events_and_overrides => sub {
           Test::Deep::isa('Moonpig::Events::Event'),
           methods(
             ident   => 'test.code',
-            payload => { foo => 1 },
+            payload => { foo => 1, timestamp => Test::Deep::isa('DateTime') },
           ),
         ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),
@@ -114,7 +114,7 @@ test implicit_events_and_overrides => sub {
           Test::Deep::isa('Moonpig::Events::Event'),
           methods(
             ident   => 'test.both',
-            payload => { foo => 2 },
+            payload => { foo => 2, timestamp => Test::Deep::isa('DateTime') },
           ),
         ),
         superhashof({ event_guid => ignore(), handler_name => 'callback' }),

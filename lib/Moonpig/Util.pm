@@ -4,6 +4,7 @@ use warnings;
 use Carp qw(croak);
 use Scalar::Util qw(refaddr);
 
+use Moonpig;
 use Moonpig::Types ();
 use Moonpig::Events::Event;
 
@@ -39,12 +40,17 @@ sub days { $_[0] * 86400 } # Ignores leap seconds and DST
 sub weeks { $_[0] * 86400 * 7 }
 sub months { $_[0] * 86400 * 30 } # also ignores varying month lengths
 sub years { $_[0] * 86400 * 365.25 } # also ignores the Gregorian calendar
+                                     # Hail Caesar!
 
 sub event {
   my ($ident, $payload) = @_;
+
+  $payload ||= {};
+  $payload->{timestamp} ||= Moonpig->env->now();
+
   Moonpig::Events::Event->new({
     ident   => $ident,
-    (@_ > 1 ? (payload => $payload) : ()),
+    payload => $payload,
   });
 }
 
