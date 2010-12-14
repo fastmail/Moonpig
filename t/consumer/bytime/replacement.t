@@ -149,8 +149,44 @@ test "without_successor" => sub {
 };
 
 test "irreplaceable" => sub {
-  # this consumer has been instructed not to generate a replacement for itself
-  pass();
+  my ($self) = @_;
+  $self->ledger($self->test_ledger);
+  plan tests => 3;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+
+  for my $test (
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
+    [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
+    [ 'missed', [ 29, 30, 31 ] ], # successor delayed until 29th
+   ) {
+    my ($name, $schedule) = @$test;
+    note("testing schedule '$name'");
+
+    my $b = Moonpig::Bank::Basic->new({
+      ledger => $self->ledger,
+      amount => dollars(10),	# Not enough to pay out the month
+    });
+
+    my $c = $self->test_consumer(
+      $CLASS, {
+        is_replaceable => 0,
+        ledger => $self->ledger,
+        bank => $b,
+        old_age => days(20),
+        current_time => $jan1,
+        replacement_mri => Moonpig::URI->nothing(),
+      });
+
+    for my $day (@$schedule) {
+      my $tick_time = Moonpig::DateTime->new(
+        year => 2000, month => 1, day => $day
+      );
+      $c->handle_event(event('heartbeat', { datetime => $tick_time }));
+    }
+    pass();
+  }
 };
 
 run_me;
