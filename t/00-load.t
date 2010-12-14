@@ -3,6 +3,8 @@ use warnings;
 
 use Test::More;
 
+require_ok 'Moonpig' or BAIL_OUT "compilation failures";
+
 my @files = grep { /\.pm$/ } `find lib -type f`;
 
 chomp @files;
