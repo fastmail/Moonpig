@@ -31,6 +31,8 @@ sub test_consumer {
     %$args,
   });
 
+  $self->ledger->add_consumer($c);
+
   return $c;
 }
 
@@ -46,7 +48,7 @@ sub test_consumer_pair {
       ledger => $self->ledger,
       %args
     },
-   );
+  );
 
   my $c0 = $self->test_consumer(
     $class,
