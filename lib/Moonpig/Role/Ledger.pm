@@ -214,7 +214,7 @@ sub _reheartbeat {
   my ($self, $event) = @_;
 
   for my $target (
-    $self->contact,
+    # $self->contact,
     $self->banks,
     $self->consumers,
     $self->invoices,
