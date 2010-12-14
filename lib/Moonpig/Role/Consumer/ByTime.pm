@@ -1,8 +1,11 @@
 package Moonpig::Role::Consumer::ByTime;
+
 use Carp qw(confess croak);
 use Moonpig;
+use Moonpig::Charge::Basic;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Types qw(CostPath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
@@ -13,6 +16,7 @@ use Moonpig::Logger '$Logger';
 with(
   'Moonpig::Role::Consumer',
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::StubBuild',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -23,7 +27,9 @@ implicit_event_handlers {
   return {
     heartbeat => {
       low_funds_check => Moonpig::Events::Handler::Method->new(
-        method_name => 'check_for_low_funds'
+        method_name => 'check_for_low_funds'),
+      charge => Moonpig::Events::Handler::Method->new(
+        method_name => 'charge'
        )},
     'low-funds' => {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
@@ -36,6 +42,13 @@ implicit_event_handlers {
   };
 };
 
+after BUILD => sub {
+  my ($self) = @_;
+  unless ($self->has_last_charge_date) {
+    $self->last_charge_date($self->now());
+  }
+};
+
 sub now { Moonpig->env->now() }
 
 # How often I charge the bank
@@ -43,6 +56,13 @@ has charge_frequency => (
   is => 'ro',
   default => sub { days(1) },
   isa => TimeInterval,
+);
+
+# Description for charge.  You will probably want to override this method
+has charge_description => (
+  is => 'ro',
+  isa => 'Str',
+  required => 1,
 );
 
 # How much I cost to own, in millicents per period
@@ -66,6 +86,14 @@ has cost_period => (
    isa => TimeInterval,
 );
 
+# the date is appended to this to make the cost path
+# for this consumer's charges
+has cost_path_prefix => (
+  is => 'ro',
+  isa => CostPath,
+  required => 1,
+);
+
 # When the object has less than this long to live, it will
 # start posting low-balance events to its successor, or to itself if
 # it has no successor
@@ -79,7 +107,7 @@ has old_age => (
 has last_charge_date => (
   is => 'rw',
   isa => Time,
-#  default => sub { DateTime::Infinite::Past->new },
+  predicate => 'has_last_charge_date',
 );
 
 sub last_charge_exists {
@@ -105,11 +133,7 @@ sub remaining_life {
 
 sub next_charge_date {
   my ($self) = @_;
-  if ($self->last_charge_exists) {
-    return $self->last_charge_date + $self->charge_frequency;
-  } else {
-    return $self->now();
-  }
+  return $self->last_charge_date + $self->charge_frequency;
 }
 
 # This is the schedule of when to warn the owner that money is running out.
@@ -182,6 +206,53 @@ has is_replaceable => (
 ################################################################
 #
 #
+
+sub charge {
+  my ($self, $event, $arg) = @_;
+
+  return unless $self->has_bank;
+
+  my $now = $event->payload->{datetime}
+    or confess "event payload has no timestamp";
+
+  while ($self->last_charge_date->precedes($now)) {
+    last unless my $charge = $self->make_charge($now);
+
+    $self->ledger->add_charge_at(
+      $charge,
+      [$self->cost_path_prefix,
+       split(/-/, $now->ymd()),
+      ]);
+    $self->last_charge_date($now);
+  }
+}
+
+# returns undef if no charge should be made for specified date
+sub make_charge {
+  my ($self, $when) = @_;
+  return if $self->next_charge_date->follows($when);
+
+  return $self->charge_factory->new({
+    description => $self->charge_description(),
+    amount => $self->cost_per_charge(),
+    date => $when,
+  });
+}
+
+sub charge_factory {
+  return "Moonpig::Charge::Basic";
+}
+
+sub cost_per_charge {
+  my ($self) = @_;
+
+  # Number of cost periods included in each charge
+  # (For example, if costs are $10 per 30 days, and we charge daily,
+  # there are 1/30 cost periods per day, each costing $10 * 1/30 = $0.33.
+  my $n_periods = $self->cost_period / $self->charge_frequency;
+
+  return $self->cost_amount / $n_periods;
+}
 
 sub check_for_low_funds {
   my ($self, $event, $arg) = @_;

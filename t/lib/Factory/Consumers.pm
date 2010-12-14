@@ -13,10 +13,13 @@ use Moonpig::Util -all;
 requires 'ledger';
 
 my %reasonable_defaults = (
-  cost_amount => dollars(1),
-  cost_period => days(1),
-  old_age     => days(0),
-  replacement_mri => Moonpig::URI->nothing(),
+    cost_amount => dollars(1),
+    cost_period => days(1),
+    old_age => days(0),
+    replacement_mri => Moonpig::URI->nothing(),
+    description => "test consumer",
+    charge_description => "test charge",
+    cost_path_prefix => [ "test" ],
 );
 
 sub test_consumer {
