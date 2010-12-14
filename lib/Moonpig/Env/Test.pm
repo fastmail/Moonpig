@@ -28,6 +28,22 @@ has current_time => (
   predicate => 'time_stopped',
 );
 
+before current_time => sub {
+  my $self = shift;
+  return unless @_;
+
+  Moonpig::X->throw("can't reverse time")
+    if $self->time_stopped and $_[0] < $self->current_time;
+};
+
+sub stop_time {
+  my ($self) = @_;
+
+  Moonpig::X->throw("can't stop time twice") if $self->time_stopped;
+
+  $self->current_time( Moonpig::DateTime->new );
+}
+
 sub elapse_time {
   my ($self, $duration) = @_;
 
