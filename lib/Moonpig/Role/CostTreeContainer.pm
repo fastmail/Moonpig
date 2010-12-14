@@ -5,6 +5,7 @@ with 'Moonpig::Role::LedgerComponent';
 
 use namespace::autoclean;
 
+use Moonpig;
 use Moonpig::CostTree::Basic;
 
 has cost_tree => (
@@ -30,7 +31,7 @@ has closed => (
 has date => (
   is  => 'ro',
   required => 1,
-  default => sub { DateTime->now() },
+  default => sub { Moonpig->env->now() },
   isa => 'DateTime',
 );
 

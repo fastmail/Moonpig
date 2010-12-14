@@ -2,6 +2,7 @@ package Moonpig::Role::Charge;
 use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);
+use Moonpig;
 use Moonpig::Types qw(Millicents);
 
 use namespace::autoclean;
@@ -22,7 +23,7 @@ has amount => (
 has date => (
   is      => 'ro',
   isa     => 'DateTime',
-  default  => sub { DateTime->now() },
+  default  => sub { Moonpig->env->now() },
 );
 
 1;
