@@ -287,10 +287,12 @@ sub check_for_low_funds {
 sub create_own_replacement {
   my ($self, $event, $arg) = @_;
 
+  my $replacement_mri = $event->payload->{mri};
+
   if ($self->is_replaceable && ! $self->has_replacement) {
-    my $replacement = $self->replacement_mri
-      ->construct({ extra => { self => $self } })
-      or return;
+    my $replacement = $replacement_mri->construct(
+      { extra => { self => $self } }
+     ) or return;
     $self->replacement($replacement);
     return $replacement;
   }
