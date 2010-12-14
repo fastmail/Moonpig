@@ -10,6 +10,8 @@ use Moonpig::Logger '$Logger' => { init => {
   prefix    => '* ',
 } };
 
+use Moonpig::Env::Test;
+
 use Moonpig::Bank::Basic;
 use Moonpig::Charge::Basic;
 use Moonpig::Consumer::Basic;
