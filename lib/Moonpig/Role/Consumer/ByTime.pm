@@ -8,6 +8,8 @@ use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
+use Moonpig::Logger '$Logger';
+
 with(
   'Moonpig::Role::Consumer',
   'Moonpig::Role::HandlesEvents',
@@ -183,6 +185,8 @@ has is_replaceable => (
 
 sub check_for_low_funds {
   my ($self, $event, $arg) = @_;
+
+  $Logger->log("checking for low funds");
 
   return unless $self->has_bank;
 
