@@ -41,8 +41,9 @@ has banks => (
   default => sub { {} },
   traits  => [ qw(Hash) ],
   handles => {
+    banks     => 'values',
     _has_bank => 'exists',
-    _set_bank    => 'set',
+    _set_bank => 'set',
   },
 );
 
@@ -52,8 +53,9 @@ has consumers => (
   default => sub { {} },
   traits  => [ qw(Hash) ],
   handles => {
+    consumers     => 'values',
     _has_consumer => 'exists',
-    _set_consumer    => 'set',
+    _set_consumer => 'set',
   },
 );
 
@@ -103,6 +105,7 @@ for my $thing (qw(journal invoice)) {
     default => sub { [] },
     traits  => [ qw(Array) ],
     handles => {
+      $plural        => 'elements',
       "_push_$thing" => 'push',
     },
   );
@@ -195,6 +198,10 @@ sub process_credits {
 
 implicit_event_handlers {
   return {
+    'heartbeat' => {
+      redistribute => Moonpig::Events::Handler::Method->new('_reheartbeat'),
+    },
+
     'send-invoice'   => { default => Moonpig::Events::Handler::Missing->new },
 
     'contact-humans' => {
@@ -203,9 +210,22 @@ implicit_event_handlers {
   };
 };
 
+sub _reheartbeat {
+  my ($self, $event) = @_;
+
+  for my $target (
+    $self->contact,
+    $self->banks,
+    $self->consumers,
+    $self->invoices,
+    $self->journals,
+  ) {
+    $target->handle_event($event);
+  }
+}
+
 sub _contact_humans {
   my ($self, $event, $arg) = @_;
-  # $receiver->$method_name($event, $arg, $self);
 
   my $to   = [ $self->contact->email_addresses ];
   my $from = 'devnull@example.com';
