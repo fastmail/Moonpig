@@ -3,6 +3,7 @@ use Moose::Role;
 
 use Moonpig::Events::Event;
 use Moonpig::Events::EventHandlerRegistry;
+use Moonpig::Events::Handler::Noop;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
@@ -28,5 +29,9 @@ sub handle_event {
 
   $self->_event_handler_registry->handle_event($event, $self);
 }
+
+implicit_event_handlers {
+  return { heartbeat => { noop => Moonpig::Events::Handler::Noop->new } };
+};
 
 1;
