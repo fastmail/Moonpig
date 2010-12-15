@@ -4,6 +4,7 @@ use Moose;
 with(
   'Throwable',
   'Moonpig::Role::Happening',
+  'StackTrace::Auto',
 );
 
 has is_public => (
@@ -13,7 +14,18 @@ has is_public => (
   default  => 0,
 );
 
+use Data::Dumper ();
+
 use namespace::clean -except => 'meta';
 
-use overload '""' => sub { $_[0]->dump }, fallback => 1;
+use overload
+  '""' => sub {
+    my ($self) = @_;
+    my %dump = %$self;
+    delete $dump{stack_trace};
+    Data::Dumper->Dump([ \%dump ], [ 'Exception' ]) . "\n-------\n" .
+    $_[0]->stack_trace->as_string
+  },
+  fallback => 1;
+
 1;
