@@ -2,7 +2,6 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Charge::Basic;
 use Moonpig::Credit::Basic;
 
 use Moonpig::Util qw(dollars);
@@ -28,18 +27,18 @@ test charge_close_and_send => sub {
   $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (setup)',
       amount      => dollars(10),
-    }),
+    },
     'test.charges.setup',
   );
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (maintenance)',
       amount      => dollars(5),
-    }),
+    },
     'test.charges.maintenance',
   );
 
@@ -76,10 +75,10 @@ test underpayment => sub {
   $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (setup)',
       amount      => dollars(10),
-    }),
+    },
     'test.charges.setup',
   );
 
@@ -120,10 +119,10 @@ test overpayment  => sub {
   $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (setup)',
       amount      => dollars(10),
-    }),
+    },
     'test.charges.setup',
   );
 
@@ -184,10 +183,10 @@ test create_bank_on_payment => sub {
   $invoice->register_event_handler('invoice-paid', 'bank-it', $make_bank_h);
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (maintenance)',
       amount      => dollars(5),
-    }),
+    },
     'test.charges.maintenance',
   );
 
@@ -225,10 +224,10 @@ test payment_by_two_credits => sub {
   $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    Moonpig::Charge::Basic->new({
+    {
       description => 'test charge (setup)',
       amount      => dollars(10),
-    }),
+    },
     'test.charges.setup',
   );
 

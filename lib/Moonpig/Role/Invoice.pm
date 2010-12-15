@@ -2,7 +2,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::CostTreeContainer',
+  'Moonpig::Role::CostTreeContainer' => { charges_handle_events => 1 },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
