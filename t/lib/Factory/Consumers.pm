@@ -25,13 +25,15 @@ sub test_consumer {
   $class ||= 'Moonpig::Consumer::Basic';
   $class = "Moonpig::Consumer" . $class if $class =~ /^::/;
 
-  my $c = $class->new({
+  my %arg = (
     %reasonable_defaults,
     ledger => $self->ledger,
     %$args,
-  });
+  );
 
-  $self->ledger->add_consumer($c);
+  my $c = $class->new({ %arg });
+
+  $arg{ledger}->add_consumer($c);
 
   return $c;
 }
