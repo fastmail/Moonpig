@@ -51,6 +51,7 @@ test "with_successor" => sub {
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->current_time($jan1);
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
@@ -74,7 +75,6 @@ test "with_successor" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => years(1000),
-        current_time => $jan1,
       });
 
     for my $day (@$schedule) {

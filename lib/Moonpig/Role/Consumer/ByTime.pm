@@ -134,7 +134,7 @@ sub issue_complaint_if_necessary {
   my $sched = $self->complaint_schedule;
   my $last_complaint_issued = $self->has_complained_before
     ? $self->last_complaint_date
-      : $sched->[0] + 1;
+    : $sched->[0] + 1;
 
   # run through each day since the last time we issued a complaint
   # up until now; if any of those days are complaining days,
@@ -185,8 +185,6 @@ has is_replaceable => (
 
 sub check_for_low_funds {
   my ($self, $event, $arg) = @_;
-
-  $Logger->log("checking for low funds");
 
   return unless $self->has_bank;
 
