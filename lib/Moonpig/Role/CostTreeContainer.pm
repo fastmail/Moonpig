@@ -45,6 +45,8 @@ role {
       if $handles xor $p->charges_handle_events;
 
     $self->$orig($charge, $path);
+
+    return $charge;
   };
 
   has closed => (

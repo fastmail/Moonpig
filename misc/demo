@@ -51,11 +51,11 @@ my $invoice = $ledger->current_invoice;
 # my $paid_h = $self->make_event_handler('t::Test');
 # $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
 
-$invoice->add_charge_at(
-  Moonpig::Charge::Basic->new({
+my $charge = $invoice->add_charge_at(
+  {
     description => 'test charge (setup)',
     amount      => dollars(10),
-  }),
+  },
   'test.charges.setup',
 );
 
@@ -71,11 +71,11 @@ $ledger->register_event_handler(
 
 my $make_bank_h = Moonpig::Events::Handler::Code->new({
   code => sub {
-    my ($invoice, $event, $arg) = @_;
+    my ($charge, $event, $arg) = @_;
 
     my $bank = Moonpig::Bank::Basic->new({
-      amount => $invoice->total_amount,
-      ledger => $invoice->ledger,
+      amount => $charge->amount,
+      ledger => $ledger,
     });
 
     $ledger->add_bank($bank);
@@ -84,7 +84,7 @@ my $make_bank_h = Moonpig::Events::Handler::Code->new({
   },
 });
 
-$invoice->register_event_handler('invoice-paid', 'bank-it', $make_bank_h);
+$charge->register_event_handler('paid', 'bank-it', $make_bank_h);
 
 $invoice->finalize_and_send;
 
