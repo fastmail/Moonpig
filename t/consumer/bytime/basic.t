@@ -7,6 +7,7 @@ use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
+use Test::Fatal;
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -35,12 +36,12 @@ test "constructor" => sub {
   plan tests => 2;
   my $ld = $self->test_ledger;
 
-  try {
-    # Missing attributes
-    Moonpig::Consumer::ByTime->new({ledger => $self->test_ledger});
-  } finally {
-    ok(@_, "missing attrs");
-  };
+  ok(
+    exception {
+      Moonpig::Consumer::ByTime->new({ledger => $self->test_ledger});
+    },
+    "missing attrs",
+  );
 
   my $c = $self->test_consumer($CLASS);
   ok($c);
