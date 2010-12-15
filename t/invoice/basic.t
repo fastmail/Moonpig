@@ -24,7 +24,7 @@ test charge_close_and_send => sub {
   my $invoice = $ledger->current_invoice;
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
+  $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     {
@@ -72,7 +72,7 @@ test underpayment => sub {
   $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
+  $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     {
@@ -116,7 +116,7 @@ test overpayment  => sub {
   $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
+  $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     {
@@ -161,11 +161,15 @@ test create_bank_on_payment => sub {
 
   my $make_bank_h = $self->make_event_handler(Code => {
     code => sub {
-      my ($invoice, $event, $arg) = @_;
+      my ($charge, $event, $arg) = @_;
 
+      # XXX: This will not stand.  We're closing over ledger and consumer, but
+      # this should almost certainly become a method handler in the future --
+      # but if that happens, we have no path back from the charge to the
+      # consumer/bank/ledger at the moment. -- rjbs, 2010-12-15
       my $bank = Moonpig::Bank::Basic->new({
-        amount => $invoice->total_amount,
-        ledger => $invoice->ledger,
+        amount => $charge->amount,
+        ledger => $ledger,
       });
 
       $ledger->add_bank($bank);
@@ -179,16 +183,14 @@ test create_bank_on_payment => sub {
 
   my $invoice = $ledger->current_invoice;
 
-  my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'bank-it', $make_bank_h);
+  my $charge = Moonpig::Charge::Basic::HandlesEvents->new({
+    description => 'test charge (maintenance)',
+    amount      => dollars(5),
+  });
 
-  $invoice->add_charge_at(
-    {
-      description => 'test charge (maintenance)',
-      amount      => dollars(5),
-    },
-    'test.charges.maintenance',
-  );
+  $charge->register_event_handler('paid', 'bank-it', $make_bank_h);
+
+  $invoice->add_charge_at($charge, 'test.charges.maintenance');
 
   $invoice->finalize_and_send;
 
@@ -221,7 +223,7 @@ test payment_by_two_credits => sub {
   $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
-  $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
+  $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
     {

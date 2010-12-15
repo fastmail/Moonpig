@@ -9,6 +9,8 @@ with(
   'Moonpig::Role::Payable',
 );
 
+use Moonpig::Behavior::EventHandlers;
+
 use Moonpig::CreditApplication;
 use Moonpig::Util qw(event);
 use Moonpig::Types qw(Credit);
@@ -35,5 +37,19 @@ has paid => (
     is_unpaid => 'not',
   },
 );
+
+implicit_event_handlers {
+  return {
+    'paid' => {
+      redistribute => Moonpig::Events::Handler::Method->new('_pay_charges'),
+    }
+  };
+};
+
+sub _pay_charges {
+  my ($self, $event) = @_;
+
+  $self->cost_tree->apply_to_all_charges(sub { $_->handle_event($event) });
+}
 
 1;

@@ -187,7 +187,7 @@ sub process_credits {
       }
 
       $Logger->log([ "marking invoice %s paid", $invoice->guid ]);
-      $invoice->handle_event(event('invoice-paid'));
+      $invoice->handle_event(event('paid'));
       $invoice->mark_paid;
     } else {
       # We can't successfully pay this invoice, so stop processing.

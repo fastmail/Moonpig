@@ -186,4 +186,13 @@ sub total_amount {
   return $amount;
 }
 
+sub apply_to_all_charges {
+  my ($self, $code) = @_;
+
+  $code->() for $self->charges;
+  for my $tree ($self->subtrees) {
+    $tree->apply_to_all_charges( $code );
+  }
+}
+
 1;
