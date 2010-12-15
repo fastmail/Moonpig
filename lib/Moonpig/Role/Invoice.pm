@@ -3,6 +3,7 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::CostTreeContainer',
+  'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::Payable',

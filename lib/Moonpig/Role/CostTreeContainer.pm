@@ -1,8 +1,6 @@
 package Moonpig::Role::CostTreeContainer;
 use Moose::Role;
 
-with 'Moonpig::Role::LedgerComponent';
-
 use namespace::autoclean;
 
 use Moonpig;
