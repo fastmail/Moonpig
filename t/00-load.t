@@ -18,7 +18,7 @@ if (keys %failed) {
     diag $failed{$key};
   }
 
-  BAIL_OUT "compilation failures";
+  BAIL_OUT "compilation failures: @{[sort keys %failed]}";
 } else {
   pass("all libraries loaded");
 }
