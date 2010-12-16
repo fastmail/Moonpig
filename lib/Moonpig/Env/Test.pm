@@ -35,7 +35,10 @@ sub handle_send_email {
 
   my $sender = $self->email_sender;
 
-  $self->email_sender->send_email($arg->{email}, $arg->{env});
+  $self->email_sender->send_email(
+    $event->payload->{email},
+    $event->payload->{env},
+  );
 }
 
 has current_time => (

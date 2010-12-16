@@ -13,6 +13,10 @@ with(
 
 use t::lib::Logger;
 
+before run_test => sub {
+  Moonpig->env->email_sender->clear_deliveries;
+};
+
 test charge_close_and_send => sub {
   my ($self) = @_;
 
@@ -42,6 +46,15 @@ test charge_close_and_send => sub {
   is($invoice->total_amount, dollars(15), "invoice line items tally up");
 
   $invoice->finalize_and_send;
+
+  my @deliveries = Moonpig->env->email_sender->deliveries;
+  is(@deliveries, 1, "we went the invoice to the customer");
+  my $email = $deliveries[0]->{email};
+  like(
+    $email->header('subject'),
+    qr{invoice \S+ is due}i,
+    "the email we went is an invoice email",
+  );
 
   my $credit = class(qw(Credit))->new({
     amount => $invoice->total_amount,
