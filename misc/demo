@@ -22,7 +22,7 @@ use Moonpig::Ledger::Basic;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 
-use Moonpig::Util qw(dollars);
+use Moonpig::Util qw(class dollars);
 
 # 1. create ledger
 
@@ -48,14 +48,12 @@ $ledger->add_consumer($consumer);
 
 my $invoice = $ledger->current_invoice;
 
-# my $paid_h = $self->make_event_handler('t::Test');
-# $invoice->register_event_handler('invoice-paid', 'default', $paid_h);
-
 my $charge = $invoice->add_charge_at(
-  {
+  class('Charge::Bankable')->new({
     description => 'test charge (setup)',
     amount      => dollars(10),
-  },
+    consumer    => $consumer,
+  }),
   'test.charges.setup',
 );
 
@@ -68,23 +66,6 @@ $ledger->register_event_handler(
     $Logger->log([ "sending invoice %s" , $event->payload->{invoice}->guid ]);
   } })
 );
-
-my $make_bank_h = Moonpig::Events::Handler::Code->new({
-  code => sub {
-    my ($charge, $event, $arg) = @_;
-
-    my $bank = Moonpig::Bank::Basic->new({
-      amount => $charge->amount,
-      ledger => $ledger,
-    });
-
-    $ledger->add_bank($bank);
-
-    $consumer->_set_bank($bank);
-  },
-});
-
-$charge->register_event_handler('paid', 'bank-it', $make_bank_h);
 
 $invoice->finalize_and_send;
 
