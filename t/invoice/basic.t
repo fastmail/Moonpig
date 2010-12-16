@@ -18,9 +18,6 @@ test charge_close_and_send => sub {
 
   my $ledger = $self->test_ledger;
 
-  my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'default', $send_h);
-
   my $invoice = $ledger->current_invoice;
 
   my $paid_h = $self->make_event_handler('t::Test');
@@ -68,9 +65,6 @@ test underpayment => sub {
 
   my $invoice = $ledger->current_invoice;
 
-  my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'default', $send_h);
-
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
@@ -112,9 +106,6 @@ test overpayment  => sub {
 
   my $invoice = $ledger->current_invoice;
 
-  my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'default', $send_h);
-
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
@@ -153,9 +144,6 @@ test create_bank_on_payment => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger;
-
-  my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $consumer = $self->add_consumer_to($ledger);
 
@@ -198,9 +186,6 @@ test payment_by_two_credits => sub {
   my $ledger = $self->test_ledger;
 
   my $invoice = $ledger->current_invoice;
-
-  my $send_h = $self->make_event_handler('t::Test');
-  $ledger->register_event_handler('send-invoice', 'default', $send_h);
 
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);

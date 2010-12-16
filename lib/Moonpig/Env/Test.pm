@@ -2,7 +2,21 @@ package Moonpig::Env::Test;
 use Moose;
 with 'Moonpig::Role::Env';
 
-Moonpig->set_env( __PACKAGE__->new );
+# BEGIN HUGE AWFUL HACK -- rjbs, 2010-12-16
+$ENV{MOONPIG_MKITS_DIR} = 'share/kit';
+use File::ShareDir;
+BEGIN {
+  my $orig = File::ShareDir->can('dist_dir');
+  Sub::Install::reinstall_sub({
+    into => 'File::ShareDir',
+    as   => 'dist_dir',
+    code => sub {
+      return 'share' if $_[0] eq 'Moonpig';
+      return $orig->(@_);
+    },
+  });
+}
+# END HUGE AWFUL HACK -- rjbs, 2010-12-16
 
 use Email::Sender::Transport::Test;
 use Moonpig::X;
@@ -18,6 +32,8 @@ sub handle_send_email {
   my ($self, $event, $arg) = @_;
 
   # XXX: validate email -- rjbs, 2010-12-08
+
+  my $sender = $self->email_sender;
 
   $self->email_sender->send_email($arg->{email}, $arg->{env});
 }
@@ -61,5 +77,7 @@ sub now {
   return $self->time_stopped ? $self->current_time
     : Moonpig::DateTime->now();
 }
+
+Moonpig->set_env( __PACKAGE__->new );
 
 1;

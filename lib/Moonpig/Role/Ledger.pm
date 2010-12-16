@@ -6,8 +6,6 @@ with(
   'Moonpig::Role::StubBuild',
 );
 
-use Moonpig::Logger '$Logger';
-
 use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
@@ -18,6 +16,7 @@ use Moonpig::Events::Handler::Missing;
 use Moonpig::Types qw(Credit);
 
 use Moonpig::Logger '$Logger';
+use Moonpig::MKits;
 use Moonpig::Util qw(event);
 
 use Moonpig::Behavior::EventHandlers;
@@ -202,13 +201,37 @@ implicit_event_handlers {
       redistribute => Moonpig::Events::Handler::Method->new('_reheartbeat'),
     },
 
-    'send-invoice'   => { default => Moonpig::Events::Handler::Missing->new },
+    'send-invoice' => {
+      default => Moonpig::Events::Handler::Method->new('_send_invoice'),
+    },
+
+    'send-mkit' => {
+      default => Moonpig::Events::Handler::Method->new('_send_mkit'),
+    },
 
     'contact-humans' => {
-      default => Moonpig::Events::Handler::Method->new('_contact_humans'),
+      default => Moonpig::Events::Handler::Missing->new,
     },
   };
 };
+
+sub _send_invoice {
+  my ($self, $event) = @_;
+
+  my $invoice = $event->payload->{invoice};
+
+  $self->handle_event(event('send-mkit', {
+    kit => 'generic',
+    arg => {
+      subject => sprintf("INVOICE %s IS DUE", $invoice->guid),
+      body    => sprintf("YOU OWE US %s\n", $invoice->total_amount),
+
+      # This should get names with addresses, unlike the contact-humans
+      # handler, which wants envelope recipients.
+      to_addresses => [ $self->contact->email_addresses ],
+    },
+  }));
+}
 
 sub _reheartbeat {
   my ($self, $event) = @_;
@@ -224,14 +247,18 @@ sub _reheartbeat {
   }
 }
 
-sub _contact_humans {
+sub _send_mkit {
   my ($self, $event, $arg) = @_;
 
   my $to   = [ $self->contact->email_addresses ];
   my $from = 'devnull@example.com';
 
+  my $email = Moonpig::MKits->kit($event->payload->{kit})->assemble(
+    $event->payload->{arg},
+  );
+
   Moonpig->env->handle_event(event('send-email' => {
-    email => $arg->{email},
+    email => $email,
     env   => { to => $to, from => $from },
   }));
 }
