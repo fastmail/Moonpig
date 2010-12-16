@@ -11,8 +11,6 @@ use Moonpig::Events::Event;
 use Moose::Util::TypeConstraints ();
 
 use Sub::Exporter -setup => [ qw(
-  assert_to
-
   event
 
   cents dollars
@@ -63,20 +61,6 @@ sub same_object {
   defined($rb) or croak("arg 2 to $me was not a reference");
 
   $ra == $rb;
-}
-
-# I really don't want to put this here, but I also really do not like the
-# MooseX::Types to_Foo behavior of returning false on failure.  Until we get an
-# assertive to, I will use this.
-sub assert_to {
-  my ($type, $value) = @_;
-  my $tc = Moose::Util::TypeConstraints::find_type_constraint(
-    'Moonpig::Types::' . $type
-  );
-  my $new_value = $tc->coerce($value);
-
-  $tc->assert_valid($new_value);
-  return $new_value;
 }
 
 1;
