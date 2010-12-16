@@ -1,14 +1,17 @@
 package Moonpig::Util;
 use strict;
 use warnings;
-use Carp qw(croak);
-use Scalar::Util qw(refaddr);
 
 use Moonpig;
 use Moonpig::Types ();
 use Moonpig::Events::Event;
 
 use Moose::Util::TypeConstraints ();
+
+use Carp qw(croak);
+use Memoize;
+use Scalar::Util qw(refaddr);
+use String::RewritePrefix;
 
 use Sub::Exporter -setup => [ qw(
   class
@@ -21,6 +24,26 @@ use Sub::Exporter -setup => [ qw(
 
   same_object
 ) ];
+
+memoize(class => (NORMALIZER => sub { join $;, sort @_ }));
+
+sub class {
+  my ($main, @rest) = @_;
+
+  my $name = join q{::}, 'Moonpig::Class', $main, @rest;
+
+  my @roles = String::RewritePrefix->rewrite(
+    { '' => 'Moonpig::Role::' },
+    $main, @rest,
+  );
+
+  my $class = Moose::Meta::Class->create( $name => (
+    superclasses => [ 'Moose::Object' ],
+    roles        => \@roles,
+  ));
+
+  return $class->name;
+}
 
 sub event {
   my ($ident, $payload) = @_;

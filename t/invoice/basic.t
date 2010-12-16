@@ -4,7 +4,7 @@ use Test::Routine::Util;
 
 use Moonpig::Credit::Basic;
 
-use Moonpig::Util qw(dollars);
+use Moonpig::Util qw(class dollars);
 
 with(
   't::lib::Factory::Ledger',
@@ -46,7 +46,7 @@ test charge_close_and_send => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = Moonpig::Credit::Basic->new({
+  my $credit = class(qw(Credit))->new({
     amount => $invoice->total_amount,
   });
 
@@ -86,7 +86,7 @@ test underpayment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = Moonpig::Credit::Basic->new({
+  my $credit = class(qw(Credit))->new({
     amount => $invoice->total_amount - 1,
   });
 
@@ -130,7 +130,7 @@ test overpayment  => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = Moonpig::Credit::Basic->new({
+  my $credit = class(qw(Credit))->new({
     amount => $invoice->total_amount + 1,
   });
 
@@ -167,7 +167,7 @@ test create_bank_on_payment => sub {
       # this should almost certainly become a method handler in the future --
       # but if that happens, we have no path back from the charge to the
       # consumer/bank/ledger at the moment. -- rjbs, 2010-12-15
-      my $bank = Moonpig::Bank::Basic->new({
+      my $bank = class(qw(Bank))->new({
         amount => $charge->amount,
         ledger => $ledger,
       });
@@ -183,7 +183,7 @@ test create_bank_on_payment => sub {
 
   my $invoice = $ledger->current_invoice;
 
-  my $charge = Moonpig::Charge::Basic::HandlesEvents->new({
+  my $charge = class(qw(Charge HandlesEvents))->new({
     description => 'test charge (maintenance)',
     amount      => dollars(5),
   });
@@ -194,7 +194,7 @@ test create_bank_on_payment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = Moonpig::Credit::Basic->new({
+  my $credit = class(qw(Credit))->new({
     amount => $invoice->total_amount,
   });
 
@@ -237,7 +237,7 @@ test payment_by_two_credits => sub {
 
   $invoice->finalize_and_send;
 
-  my @credits = map {; Moonpig::Credit::Basic->new({ amount => dollars(7) }) }
+  my @credits = map {; class(qw(Credit))->new({ amount => dollars(7) }) }
                 (0, 1);
 
   $ledger->add_credit($_) for @credits;
