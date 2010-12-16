@@ -215,32 +215,19 @@ sub charge {
   my $now = $event->payload->{datetime}
     or confess "event payload has no timestamp";
 
-  while ($self->last_charge_date->precedes($now)) {
-    last unless my $charge = $self->make_charge($now);
-
-    $self->current_journal->add_charge_at(
-      $charge,
-      [@{$self->cost_path_prefix},
-       split(/-/, $now->ymd()),
-      ]);
-    $self->last_charge_date($now);
+  until ($self->next_charge_date->follows($now)) {
+    $self->ledger->current_journal->charge({
+      desc => $self->charge_description(),
+      from => $self->bank,
+      to => $self,
+      amount => $self->cost_per_charge(),
+      date => $self->next_charge_date(),
+      cost_path =>
+        [@{$self->cost_path_prefix},
+         split(/-/, $now->ymd()),
+        ],
+    }) and $self->last_charge_date($self->next_charge_date());
   }
-}
-
-# returns undef if no charge should be made for specified date
-sub make_charge {
-  my ($self, $when) = @_;
-  return if $self->next_charge_date->follows($when);
-
-  return $self->charge_factory->new({
-    description => $self->charge_description(),
-    amount => $self->cost_per_charge(),
-    date => $when,
-  });
-}
-
-sub charge_factory {
-  return "Moonpig::Charge::Basic";
 }
 
 sub cost_per_charge {
