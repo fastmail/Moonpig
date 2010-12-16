@@ -22,6 +22,8 @@ ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
     ledger => __PACKAGE__->test_ledger(),
     cost_period => $day,
     replacement_mri => Moonpig::URI->nothing(),
+    charge_description => "blah",
+    cost_path_prefix => [],
    }}),
    "good path Consumer::ByTime");
 

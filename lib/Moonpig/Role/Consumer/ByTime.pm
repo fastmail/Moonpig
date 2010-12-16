@@ -289,11 +289,13 @@ sub create_own_replacement {
 sub construct_replacement {
   my ($self, $param) = @_;
   my $repl = $self->new({
-    cost_amount     => $self->cost_amount(),
-    cost_period     => $self->cost_period(),
-    old_age         => $self->old_age(),
-    replacement_mri => $self->replacement_mri(),
-    ledger          => $self->ledger(),
+    cost_amount        => $self->cost_amount(),
+    cost_period        => $self->cost_period(),
+    old_age            => $self->old_age(),
+    replacement_mri    => $self->replacement_mri(),
+    ledger             => $self->ledger(),
+    charge_description => $self->charge_description(),
+    cost_path_prefix   => $self->cost_path_prefix(),
     %$param,
   });
 }
