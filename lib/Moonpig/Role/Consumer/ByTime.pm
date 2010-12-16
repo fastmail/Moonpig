@@ -212,7 +212,7 @@ sub charge {
 
   return unless $self->has_bank;
 
-  my $now = $event->payload->{datetime}
+  my $now = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
 
   until ($self->next_charge_date->follows($now)) {
@@ -246,7 +246,7 @@ sub check_for_low_funds {
 
   return unless $self->has_bank;
 
-  my $tick_time = $event->payload->{datetime}
+  my $tick_time = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
 
   # if this object does not have long to live...

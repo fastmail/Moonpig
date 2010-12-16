@@ -81,7 +81,7 @@ test "with_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { datetime => $tick_time }));
+      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
     is(@eq, $n_warnings,
        "received $n_warnings warnings (schedule '$name')");
@@ -137,7 +137,7 @@ test "without_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { datetime => $tick_time }));
+      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
@@ -183,7 +183,7 @@ test "irreplaceable" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $c->handle_event(event('heartbeat', { datetime => $tick_time }));
+      $c->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
     pass();
   }
