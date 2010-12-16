@@ -159,36 +159,16 @@ test create_bank_on_payment => sub {
 
   my $consumer = $self->add_consumer_to($ledger);
 
-  my $make_bank_h = $self->make_event_handler(Code => {
-    code => sub {
-      my ($charge, $event, $arg) = @_;
-
-      # XXX: This will not stand.  We're closing over ledger and consumer, but
-      # this should almost certainly become a method handler in the future --
-      # but if that happens, we have no path back from the charge to the
-      # consumer/bank/ledger at the moment. -- rjbs, 2010-12-15
-      my $bank = class(qw(Bank))->new({
-        amount => $charge->amount,
-        ledger => $ledger,
-      });
-
-      $ledger->add_bank($bank);
-
-      $consumer->_set_bank($bank);
-    },
-  });
-
   is_deeply($ledger->_banks, {}, "there are no banks on our ledger yet");
   ok(! $consumer->has_bank, "...nor on our consumer");
 
   my $invoice = $ledger->current_invoice;
 
-  my $charge = class(qw(Charge HandlesEvents))->new({
+  my $charge = class(qw(Charge::Bankable))->new({
     description => 'test charge (maintenance)',
+    consumer    => $consumer,
     amount      => dollars(5),
   });
-
-  $charge->register_event_handler('paid', 'bank-it', $make_bank_h);
 
   $invoice->add_charge_at($charge, 'test.charges.maintenance');
 
