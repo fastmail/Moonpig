@@ -57,16 +57,6 @@ my $charge = $invoice->add_charge_at(
   'test.charges.setup',
 );
 
-# XXX: USE AN IMPLICIT EVENT INSTEAD -- rjbs, 2010-12-13:
-$ledger->register_event_handler(
-  'send-invoice',
-  'default',
-  Moonpig::Events::Handler::Code->new({ code => sub {
-    my ($receiver, $event, $arg) = @_;
-    $Logger->log([ "sending invoice %s" , $event->payload->{invoice}->guid ]);
-  } })
-);
-
 $invoice->finalize_and_send;
 
 # 4. pay and apply payment to invoice

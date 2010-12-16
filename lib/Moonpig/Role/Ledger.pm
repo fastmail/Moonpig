@@ -220,6 +220,12 @@ sub _send_invoice {
 
   my $invoice = $event->payload->{invoice};
 
+  $Logger->log([
+    "sending invoice %s to contacts of ledger %s",
+    $invoice->guid,
+    $self->guid,
+  ]);
+
   $self->handle_event(event('send-mkit', {
     kit => 'generic',
     arg => {
