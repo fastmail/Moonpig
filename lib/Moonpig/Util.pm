@@ -11,6 +11,8 @@ use Moonpig::Events::Event;
 use Moose::Util::TypeConstraints ();
 
 use Sub::Exporter -setup => [ qw(
+  class
+
   event
 
   cents dollars
@@ -19,26 +21,6 @@ use Sub::Exporter -setup => [ qw(
 
   same_object
 ) ];
-
-sub dollars {
-  my ($dollars) = @_;
-  my $millicents = $dollars * 100 * 1000;
-
-  return int ($millicents + 0.5);
-}
-
-sub cents {
-  my ($cents) = @_;
-  my $millicents = $cents * 1000;
-
-  return int ($millicents + 0.5);
-}
-
-sub days { $_[0] * 86400 } # Ignores leap seconds and DST
-sub weeks { $_[0] * 86400 * 7 }
-sub months { $_[0] * 86400 * 30 } # also ignores varying month lengths
-sub years { $_[0] * 86400 * 365.25 } # also ignores the Gregorian calendar
-                                     # Hail Caesar!
 
 sub event {
   my ($ident, $payload) = @_;
@@ -51,6 +33,26 @@ sub event {
     payload => $payload,
   });
 }
+
+sub cents {
+  my ($cents) = @_;
+  my $millicents = $cents * 1000;
+
+  return int ($millicents + 0.5);
+}
+
+sub dollars {
+  my ($dollars) = @_;
+  my $millicents = $dollars * 100 * 1000;
+
+  return int ($millicents + 0.5);
+}
+
+sub days { $_[0] * 86400 } # Ignores leap seconds and DST
+sub weeks { $_[0] * 86400 * 7 }
+sub months { $_[0] * 86400 * 30 } # also ignores varying month lengths
+sub years { $_[0] * 86400 * 365.25 } # also ignores the Gregorian calendar
+                                     # Hail Caesar!
 
 sub same_object {
   my ($a, $b) = @_;
