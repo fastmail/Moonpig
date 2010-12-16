@@ -43,6 +43,10 @@ test "with_successor" => sub {
 
   my @eq;
 
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->current_time($jan1);
+
   plan tests => 3;
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
@@ -81,6 +85,8 @@ test "with_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
+
+      Moonpig->env->current_time($tick_time);
       $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
     is(@eq, $n_warnings,
@@ -94,6 +100,10 @@ test "with_successor" => sub {
 test "without_successor" => sub {
   my ($self) = @_;
 
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->current_time($jan1);
+
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
@@ -101,8 +111,6 @@ test "without_successor" => sub {
 
   plan tests => 4 * 3;
 
-  # Pretend today is 2000-01-01 for convenience
-  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   my $mri =
     Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
 
@@ -113,6 +121,7 @@ test "without_successor" => sub {
    ) {
     my ($name, $schedule, $succ_creation_date) = @$test;
     $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
+    Moonpig->env->current_time($jan1);
 
     my $b = Moonpig::Bank::Basic->new({
       ledger => $self->ledger,
@@ -126,7 +135,6 @@ test "without_successor" => sub {
         old_age => days(20),
         replacement_mri => $mri,
       });
-    Moonpig->env->current_time($jan1);
 
 
     my @eq;
@@ -137,6 +145,7 @@ test "without_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
+      Moonpig->env->current_time($tick_time);
       $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
 
@@ -175,7 +184,6 @@ test "irreplaceable" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => days(20),
-        current_time => $jan1,
         replacement_mri => Moonpig::URI->nothing(),
       });
 
