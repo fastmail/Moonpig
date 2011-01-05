@@ -2,8 +2,6 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Credit::Basic;
-
 use Moonpig::Util qw(class dollars);
 
 with(
@@ -56,7 +54,7 @@ test charge_close_and_send => sub {
     "the email we went is an invoice email",
   );
 
-  my $credit = class(qw(Credit))->new({
+  my $credit = class(qw(Credit::Simulated))->new({
     amount => $invoice->total_amount,
   });
 
@@ -93,7 +91,7 @@ test underpayment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit))->new({
+  my $credit = class(qw(Credit::Simulated))->new({
     amount => $invoice->total_amount - 1,
   });
 
@@ -134,7 +132,7 @@ test overpayment  => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit))->new({
+  my $credit = class(qw(Credit::Simulated))->new({
     amount => $invoice->total_amount + 1,
   });
 
@@ -175,7 +173,7 @@ test create_bank_on_payment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit))->new({
+  my $credit = class(qw(Credit::Simulated))->new({
     amount => $invoice->total_amount,
   });
 
@@ -215,8 +213,9 @@ test payment_by_two_credits => sub {
 
   $invoice->finalize_and_send;
 
-  my @credits = map {; class(qw(Credit))->new({ amount => dollars(7) }) }
-                (0, 1);
+  my @credits =
+    map {; class(qw(Credit::Simulated))->new({ amount => dollars(7) }) }
+    (0, 1);
 
   $ledger->add_credit($_) for @credits;
 

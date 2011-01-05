@@ -16,7 +16,6 @@ use Moonpig::Bank::Basic;
 use Moonpig::Charge::Basic;
 use Moonpig::Consumer::Basic;
 use Moonpig::Contact::Basic;
-use Moonpig::Credit::Basic;
 use Moonpig::Ledger::Basic;
 
 use Moonpig::Events::Handler::Code;
@@ -61,8 +60,9 @@ $invoice->finalize_and_send;
 
 # 4. pay and apply payment to invoice
 
-my $credit = Moonpig::Credit::Basic->new({
+my $credit = class(qw(Credit::Courtesy))->new({
   amount => $invoice->total_amount,
+  reason => 'simulated payment',
 });
 
 $ledger->add_credit($credit);
