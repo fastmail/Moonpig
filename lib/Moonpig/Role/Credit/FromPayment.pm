@@ -10,13 +10,6 @@ with(
   'Moonpig::Role::Refundable',
 );
 
-has payment => (
-  is   => 'ro',
-  does => 'Moonpig::Role::Payment',
-  handles  => 'Moonpig::Role::Refundable',
-  required => 1,
-);
-
 before issue_refund => sub {
   my ($self) = @_;
 
