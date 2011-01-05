@@ -30,10 +30,16 @@ memoize(class => (NORMALIZER => sub { join $;, sort @_ }));
 sub class {
   my ($main, @rest) = @_;
 
-  my $name = join q{::}, 'Moonpig::Class', $main, @rest;
+  my @name_bits = @rest;
+  s/::/_/g for @name_bits;
+
+  my $name = join q{::}, 'Moonpig::Class', $main, @name_bits;
 
   my @roles = String::RewritePrefix->rewrite(
-    { '' => 'Moonpig::Role::' },
+    {
+      ''    => 'Moonpig::Role::',
+      't::' => 't::lib::Role::',
+    },
     $main, @rest,
   );
 

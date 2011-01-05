@@ -5,6 +5,7 @@ with 'Moonpig::Role::HasGuid';
 
 use List::Util qw(reduce);
 
+use Moonpig::CreditApplication;
 use Moonpig::Types qw(Millicents);
 
 use namespace::autoclean;
