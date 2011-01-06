@@ -36,12 +36,12 @@ my $ledger = Moonpig::Ledger::Basic->new({
 
 # 2. create consumer
 
-my $consumer = Moonpig::Consumer::Basic->new({
-  ledger => $ledger,
-  replacement_mri => Moonpig::URI->nothing(),
-});
-
-$ledger->add_consumer($consumer);
+my $consumer = $ledger->add_consumer(
+  class(qw(Consumer)),
+  {
+    replacement_mri => Moonpig::URI->nothing(),
+  },
+);
 
 # 3. charge, finalize, send invoice
 

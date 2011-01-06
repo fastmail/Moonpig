@@ -7,6 +7,7 @@ with(
 );
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Util qw(class);
 
 use namespace::autoclean;
 
@@ -20,12 +21,12 @@ has consumer => (
 sub _bank_credit {
   my ($self, $event) = @_;
 
-  my $bank = Moonpig::Bank::Basic->new({
-    amount => $self->amount,
-    ledger => $self->ledger,
-  });
-
-  $self->ledger->add_bank($bank);
+  my $bank = $self->ledger->add_bank(
+    class(qw(Bank)),
+    {
+      amount => $self->amount,
+    },
+  );
 
   $self->consumer->_set_bank($bank);
 }

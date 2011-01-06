@@ -86,17 +86,15 @@ for my $thing (qw(bank consumer)) {
   Sub::Install::install_sub({
     as   => "add_$thing",
     code => sub {
-      my ($self, $value) = @_;
+      my ($self, $class, $arg) = @_;
+      $arg ||= {};
+
+      local $arg->{ledger} = $self;
+
+      my $value = $class->new($arg);
 
       confess sprintf "%s with guid %s already present", $thing, $value->guid
         if $self->$predicate($value->guid);
-
-      if ($value->ledger->guid ne $self->guid) {
-        confess(sprintf "can't add $thing for ledger %s to ledger %s",
-          $value->ledger->guid,
-          $self->guid
-        );
-      }
 
       $self->$setter($value->guid, $value);
     },

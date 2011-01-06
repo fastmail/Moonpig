@@ -22,7 +22,7 @@ my %reasonable_defaults = (
 sub test_consumer {
   my ($self, $class, $args) = @_;
   $args ||= {};
-  $class ||= 'Moonpig::Consumer::Basic';
+  $class ||= class(qw(Consumer));
   $class = "Moonpig::Consumer" . $class if $class =~ /^::/;
 
   my %arg = (
@@ -31,9 +31,7 @@ sub test_consumer {
     %$args,
   );
 
-  my $c = $class->new({ %arg });
-
-  $arg{ledger}->add_consumer($c);
+  my $c = $arg{ledger}->add_consumer($class, \%arg);
 
   return $c;
 }

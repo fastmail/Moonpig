@@ -11,6 +11,8 @@ use Moonpig::URI;
 
 use Moonpig::Util -all;
 
+use namespace::autoclean;
+
 sub test_ledger {
   my ($self, $class) = @_;
   $class ||= 'Moonpig::Ledger::Basic';
@@ -30,24 +32,26 @@ sub test_ledger {
 sub add_bank_to {
   my ($self, $ledger, $args) = @_;
 
-  my $bank = Moonpig::Bank::Basic->new({
-    amount => $args->{amount} || dollars(100),
-    ledger => $ledger,
-  });
+  my $bank = $ledger->add_bank(
+    class(qw(Bank)),
+    {
+      amount => $args->{amount} || dollars(100),
+    }
+  );
 
-  $ledger->add_bank($bank);
   return $bank;
 }
 
 sub add_consumer_to {
   my ($self, $ledger, $args) = @_;
 
-  my $consumer = Moonpig::Consumer::Basic->new({
-    ledger => $ledger,
-    replacement_mri => Moonpig::URI->nothing(),
-  });
+  my $consumer = $ledger->add_consumer(
+    class(qw(Consumer)),
+    {
+      replacement_mri => Moonpig::URI->nothing(),
+    },
+  );
 
-  $ledger->add_consumer($consumer);
   $consumer->_set_bank($args->{bank})
     if $args->{bank};
 
