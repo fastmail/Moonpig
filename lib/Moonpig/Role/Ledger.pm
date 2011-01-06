@@ -34,30 +34,6 @@ has contact => (
   required => 1,
 );
 
-has banks => (
-  reader  => '_banks',
-  isa     => HashRef[ role_type('Moonpig::Role::Bank') ],
-  default => sub { {} },
-  traits  => [ qw(Hash) ],
-  handles => {
-    banks     => 'values',
-    _has_bank => 'exists',
-    _set_bank => 'set',
-  },
-);
-
-has consumers => (
-  reader  => '_consumers',
-  isa     => HashRef[ role_type('Moonpig::Role::Consumer') ],
-  default => sub { {} },
-  traits  => [ qw(Hash) ],
-  handles => {
-    consumers     => 'values',
-    _has_consumer => 'exists',
-    _set_consumer => 'set',
-  },
-);
-
 has credits => (
   isa     => ArrayRef[ Credit ],
   default => sub { [] },
@@ -79,9 +55,21 @@ sub add_credit {
   return $credit;
 }
 
-for my $thing (qw(bank consumer)) {
+for my $thing (qw(bank consumer refund)) {
   my $predicate = "_has_$thing";
   my $setter = "_set_$thing";
+
+  has $thing => (
+    reader  => "_${thing}s",
+    isa     => HashRef[ role_type('Moonpig::Role::' . ucfirst $thing) ],
+    default => sub { {} },
+    traits  => [ qw(Hash) ],
+    handles => {
+      "${thing}s"   => 'values',
+      "_has_$thing" => 'exists',
+      "_set_$thing" => 'set',
+    },
+  );
 
   Sub::Install::install_sub({
     as   => "add_$thing",

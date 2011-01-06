@@ -14,9 +14,12 @@ sub issue_refund {
 
   $Logger->log("REFUND ISSUED");
 
-  my $refund = class(qw(Refund))->new({
-    ledger => $self->ledger,
-  });
+  my $refund = $self->ledger->add_refund(
+    class(qw(Refund)),
+    {
+      ledger => $self->ledger,
+    },
+  );
 
   Moonpig::CreditApplication->new({
     credit  => $self,
