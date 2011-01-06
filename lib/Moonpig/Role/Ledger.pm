@@ -64,9 +64,20 @@ has credits => (
   traits  => [ qw(Array) ],
   handles => {
     credits    => 'elements',
-    add_credit => 'push',
+    _add_credit => 'push',
   },
 );
+
+sub add_credit {
+  my ($self, $class, $arg) = @_;
+  $arg ||= {};
+
+  local $arg->{ledger} = $self;
+  my $credit = $class->new($arg);
+  $self->_add_credit($credit);
+
+  return $credit;
+}
 
 for my $thing (qw(bank consumer)) {
   my $predicate = "_has_$thing";

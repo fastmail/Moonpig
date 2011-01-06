@@ -1,7 +1,10 @@
 package Moonpig::Role::Credit;
 use Moose::Role;
 
-with 'Moonpig::Role::HasGuid';
+with(
+  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::LedgerComponent',
+);
 
 use List::Util qw(reduce);
 

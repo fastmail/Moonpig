@@ -60,12 +60,10 @@ $invoice->finalize_and_send;
 
 # 4. pay and apply payment to invoice
 
-my $credit = class(qw(Credit::Courtesy))->new({
-  amount => $invoice->total_amount,
-  reason => 'simulated payment',
-});
-
-$ledger->add_credit($credit);
+$ledger->add_credit(
+  class(qw(Credit::Simulated)),
+  { amount => $invoice->total_amount },
+);
 
 $ledger->process_credits;
 

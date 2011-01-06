@@ -10,12 +10,12 @@ with(
 );
 
 sub issue_refund {
-  my ($self, $__temp__ledger) = @_;
+  my ($self) = @_;
 
   $Logger->log("REFUND ISSUED");
 
   my $refund = class(qw(Refund))->new({
-    ledger => $__temp__ledger,
+    ledger => $self->ledger,
   });
 
   Moonpig::CreditApplication->new({

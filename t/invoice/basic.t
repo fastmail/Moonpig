@@ -54,11 +54,12 @@ test charge_close_and_send => sub {
     "the email we went is an invoice email",
   );
 
-  my $credit = class(qw(Credit::Simulated))->new({
-    amount => $invoice->total_amount,
-  });
-
-  $ledger->add_credit($credit);
+  my $credit = $ledger->add_credit(
+    class(qw(Credit::Simulated)),
+    {
+      amount => $invoice->total_amount,
+    },
+  );
 
   $ledger->process_credits;
 
@@ -91,11 +92,12 @@ test underpayment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit::Simulated))->new({
-    amount => $invoice->total_amount - 1,
-  });
-
-  $ledger->add_credit($credit);
+  my $credit = $ledger->add_credit(
+    class(qw(Credit::Simulated)),
+    {
+      amount => $invoice->total_amount - 1,
+    },
+  );
 
   $ledger->process_credits;
 
@@ -132,11 +134,12 @@ test overpayment  => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit::Simulated))->new({
-    amount => $invoice->total_amount + 1,
-  });
-
-  $ledger->add_credit($credit);
+  my $credit = $ledger->add_credit(
+    class(qw(Credit::Simulated)),
+    {
+      amount => $invoice->total_amount + 1,
+    },
+  );
 
   $ledger->process_credits;
 
@@ -173,11 +176,12 @@ test create_bank_on_payment => sub {
 
   $invoice->finalize_and_send;
 
-  my $credit = class(qw(Credit::Simulated))->new({
-    amount => $invoice->total_amount,
-  });
-
-  $ledger->add_credit($credit);
+  my $credit = $ledger->add_credit(
+    class(qw(Credit::Simulated)),
+    {
+      amount => $invoice->total_amount,
+    },
+  );
 
   $ledger->process_credits;
 
@@ -213,11 +217,12 @@ test payment_by_two_credits => sub {
 
   $invoice->finalize_and_send;
 
-  my @credits =
-    map {; class(qw(Credit::Simulated))->new({ amount => dollars(7) }) }
-    (0, 1);
-
-  $ledger->add_credit($_) for @credits;
+  my @credits = map {;
+    $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => dollars(7) }
+    );
+  } (0, 1);
 
   $ledger->process_credits;
 
