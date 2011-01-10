@@ -6,7 +6,7 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
 
 with(
-  'Moonpig::Role::Refundable',
+  'Moonpig::Role::Credit::Refundable',
 );
 
 sub issue_refund {

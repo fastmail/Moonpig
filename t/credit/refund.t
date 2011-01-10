@@ -21,7 +21,7 @@ test pay_and_get_refund => sub {
   );
 
   ok(
-    $credit->DOES('Moonpig::Role::Refundable'),
+    $credit->DOES('Moonpig::Role::Credit::Refundable'),
     "this simulated payment is refundable",
   );
 

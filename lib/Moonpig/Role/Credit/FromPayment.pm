@@ -8,7 +8,7 @@ use namespace::autoclean;
 
 with(
   'Moonpig::Role::Credit',
-  'Moonpig::Role::Refundable',
+  'Moonpig::Role::Credit::Refundable',
 );
 
 before issue_refund => sub {
