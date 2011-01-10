@@ -1,4 +1,6 @@
 package Moonpig::Role::Ledger;
+# ABSTRACT: the fundamental hub of a billable account
+
 use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',

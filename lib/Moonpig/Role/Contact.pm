@@ -1,4 +1,5 @@
 package Moonpig::Role::Contact;
+# ABSTRACT: a human you can contact with ledger communications
 use Moose::Role;
 
 use Moonpig::Types qw(EmailAddresses);
@@ -38,6 +39,5 @@ after BUILD => sub {
     $self->meta->name,
   ]);
 };
-
 
 1;

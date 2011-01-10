@@ -1,4 +1,5 @@
 package Moonpig::Role::CostTreeContainer;
+# ABSTRACT: something that acts as the head of a cost tree
 use MooseX::Role::Parameterized;
 
 use namespace::autoclean;

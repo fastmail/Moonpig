@@ -1,4 +1,7 @@
+use strict;
+use warnings;
 package Moonpig;
+# ABSTRACT: a flexible billing system
 
 my $env;
 
