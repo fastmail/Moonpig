@@ -3,12 +3,10 @@ use warnings;
 
 use Test::More;
 
-use Moonpig::CostTree::Basic;
-
 use Moonpig::Util -all;
 
 my @ct;
-push @ct, Moonpig::CostTree::Basic->new() for 0..5;
+push @ct, class('CostTree')->new() for 0..5;
 
 note q{                 ,--.  };
 note q{ 0 -> 1 -> 2    /    \ };

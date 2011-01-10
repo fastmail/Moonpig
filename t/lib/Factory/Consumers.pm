@@ -3,9 +3,6 @@ use Moose::Role;
 
 use Moonpig::Env::Test;
 
-use Moonpig::Ledger::Basic;
-use Moonpig::Contact::Basic;
-use Moonpig::Bank::Basic;
 use Moonpig::Consumer::ByTime;
 use Moonpig::URI;
 

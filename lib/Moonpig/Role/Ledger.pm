@@ -17,7 +17,7 @@ use Moonpig::Types qw(Credit);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(event);
+use Moonpig::Util qw(class event);
 
 use Moonpig::Behavior::EventHandlers;
 use Sub::Install ();
@@ -91,7 +91,7 @@ for my $thing (qw(bank consumer refund)) {
 
 for my $thing (qw(journal invoice)) {
   my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
-  my $class  = sprintf "Moonpig::%s::Basic", ucfirst $thing;
+  my $class  = class(ucfirst $thing);
   my $plural = "${thing}s";
   my $reader = "_$plural";
 
@@ -113,10 +113,9 @@ for my $thing (qw(journal invoice)) {
     return if @$things and $things->[-1]->is_open;
 
     Class::MOP::load_class($class);
-    require Moonpig::CostTree::Basic;
 
     my $thing = $class->new({
-      cost_tree => Moonpig::CostTree::Basic->new(),
+      cost_tree => class('CostTree')->new,
       ledger    => $self,
     });
 

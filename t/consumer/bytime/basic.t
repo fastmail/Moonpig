@@ -13,11 +13,13 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
+use Moonpig::Bank::Basic;
+
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
   is => 'rw',
-  isa => 'Moonpig::Role::Ledger',
+  does    => 'Moonpig::Role::Ledger',
   default => sub { $_[0]->test_ledger() },
 );
 sub ledger;  # Work around bug in Moose 'requires';

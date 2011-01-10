@@ -3,12 +3,10 @@ use warnings;
 
 use Test::More;
 
-BEGIN { use_ok('Moonpig::CostTree::Basic') }
-
 use Moonpig::Util -all;
 
-my $ct0 = Moonpig::CostTree::Basic->new();
-my $ct1 = Moonpig::CostTree::Basic->new(_subtree_for => { zero => $ct0 });
+my $ct0 = class('CostTree')->new();
+my $ct1 = class('CostTree')->new(_subtree_for => { zero => $ct0 });
 
 
 { my @st = $ct0->subtrees;

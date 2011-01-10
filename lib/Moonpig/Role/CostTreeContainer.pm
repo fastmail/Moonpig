@@ -4,10 +4,8 @@ use MooseX::Role::Parameterized;
 use namespace::autoclean;
 
 use Moonpig;
-use Moonpig::CostTree::Basic;
 
-require Moonpig::Charge::Basic::HandlesEvents;
-require Moonpig::Charge::Basic;
+use Moonpig::Util qw(class);
 
 parameter charges_handle_events => (
   isa      => 'Bool',
@@ -20,7 +18,7 @@ role {
   has cost_tree => (
     is   => 'ro',
     does => 'Moonpig::Role::CostTree',
-    default  => sub { Moonpig::CostTree::Basic->new },
+    default  => sub { class('CostTree')->new },
     handles  => [ qw(add_charge_at total_amount) ],
   );
 
@@ -29,8 +27,8 @@ role {
     return $input if blessed $input;
 
     my $class = $p->charges_handle_events
-              ? 'Moonpig::Charge::Basic::HandlesEvents'
-              : 'Moonpig::Charge::Basic';
+              ? class('Charge::HandlesEvents')
+              : class('Charge');
     $class->new($input);
   };
 

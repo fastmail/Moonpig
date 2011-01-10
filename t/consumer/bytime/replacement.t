@@ -15,11 +15,13 @@ use t::lib::Logger;
 
 use Moonpig::Env::Test;
 
+use Moonpig::Bank::Basic;
+
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
-  is => 'rw',
-  isa => 'Moonpig::Role::Ledger',
+  is   => 'rw',
+  does => 'Moonpig::Role::Ledger',
 );
 sub ledger;  # Work around bug in Moose 'requires';
 

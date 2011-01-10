@@ -1,7 +1,10 @@
 package t::lib::Class::Ledger::ImplicitEvents;
 use Moose;
-extends 'Moonpig::Ledger::Basic';
-with 't::lib::Factory::EventHandler';
+
+with(
+  'Moonpig::Role::Ledger',
+  't::lib::Factory::EventHandler',
+);
 
 use Moonpig::Types qw(EventHandler);
 

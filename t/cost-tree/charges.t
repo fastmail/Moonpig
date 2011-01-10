@@ -5,9 +5,7 @@ use Test::Routine::Util;
 with 't::lib::Factory::Ledger';
 
 use List::Util qw(sum);
-use Moonpig::CostTree::Basic;
-use Moonpig::Charge::Basic;
-use Moonpig::Util qw(dollars);
+use Moonpig::Util qw(class dollars);
 
 test "add some charges to a tree" => sub {
   my ($self) = @_;
@@ -24,7 +22,7 @@ test "add some charges to a tree" => sub {
   );
 
   for my $charge_data (@charge_tuples) {
-    my $charge = Moonpig::Charge::Basic->new({
+    my $charge = class('Charge')->new({
       description => $charge_data->[1],
       amount      => $charge_data->[2],
     });

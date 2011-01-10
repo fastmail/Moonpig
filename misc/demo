@@ -12,12 +12,6 @@ use Moonpig::Logger '$Logger' => { init => {
 
 use Moonpig::Env::Test;
 
-use Moonpig::Bank::Basic;
-use Moonpig::Charge::Basic;
-use Moonpig::Consumer::Basic;
-use Moonpig::Contact::Basic;
-use Moonpig::Ledger::Basic;
-
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 
@@ -25,12 +19,12 @@ use Moonpig::Util qw(class dollars);
 
 # 1. create ledger
 
-my $contact = Moonpig::Contact::Basic->new({
+my $contact = class('Contact')->new({
   name => 'J. Fred Bloggs',
   email_addresses => [ 'jfred@example.com' ],
 });
 
-my $ledger = Moonpig::Ledger::Basic->new({
+my $ledger = class('Ledger')->new({
   contact => $contact,
 });
 
