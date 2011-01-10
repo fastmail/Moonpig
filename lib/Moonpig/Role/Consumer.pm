@@ -1,4 +1,5 @@
 package Moonpig::Role::Consumer;
+# ABSTRACT: something that uses up money stored in a bank
 use Moose::Role;
 with(
   'Moonpig::Role::LedgerComponent',

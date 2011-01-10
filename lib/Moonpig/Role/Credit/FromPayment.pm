@@ -1,4 +1,5 @@
 package Moonpig::Role::Credit::FromPayment;
+# ABSTRACT: a credit created because a customer paid us
 use Moose::Role;
 
 use Moonpig::X;

@@ -1,4 +1,5 @@
 package Moonpig::Role::HasGuid;
+# ABSTRACT: something with a GUID (nearly everything)
 use Moose::Role;
 
 use Data::GUID qw(guid_string);

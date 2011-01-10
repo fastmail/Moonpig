@@ -1,8 +1,12 @@
 package Moonpig::Env::Normal;
-use Moonpig::DateTime;
+# ABSTRACT: a standard, production environment for Moonpig
 use Moose;
+
+use Moonpig::DateTime;
 use Carp qw(confess);
 with 'Moonpig::Role::Env';
+
+use namespace::autoclean;
 
 Moonpig->set_env( __PACKAGE__->new );
 

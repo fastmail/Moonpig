@@ -1,4 +1,5 @@
 package Moonpig::Role::Invoice;
+# ABSTRACT: a collection of charges to be paid by the customer
 use Moose::Role;
 
 with(

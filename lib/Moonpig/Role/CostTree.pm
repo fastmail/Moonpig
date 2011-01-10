@@ -1,4 +1,5 @@
 package Moonpig::Role::CostTree;
+# ABSTRACT: a hierarchy of charges
 use Moose::Role;
 
 use DateTime;

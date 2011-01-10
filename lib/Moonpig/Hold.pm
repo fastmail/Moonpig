@@ -1,4 +1,5 @@
 package Moonpig::Hold;
+# ABSTRACT: a hold on funds, making them unavailable
 use Moose;
 
 use Moonpig::Types qw(Millicents);

@@ -1,6 +1,7 @@
-package Moonpig::Util;
 use strict;
 use warnings;
+package Moonpig::Util;
+# ABSTRACT: essential extra helper functions for Moonpig
 
 use Moonpig;
 use Moonpig::Types ();

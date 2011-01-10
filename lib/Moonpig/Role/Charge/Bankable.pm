@@ -1,4 +1,5 @@
 package Moonpig::Role::Charge::Bankable;
+# ABSTRACT: a charge that, when paid, creates a bank for the paid amount
 use Moose::Role;
 
 with(

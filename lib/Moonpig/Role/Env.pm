@@ -1,4 +1,5 @@
 package Moonpig::Role::Env;
+# ABSTRACT: an environment of globally-available behavior for all of Moonpig
 use Moose::Role;
 
 use Moonpig;

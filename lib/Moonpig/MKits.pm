@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::MKits;
+# ABSTRACT: the access point for Moonpig's message kits
 
 use File::ShareDir;
 use File::Spec;

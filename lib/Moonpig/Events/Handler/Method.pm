@@ -1,4 +1,5 @@
 package Moonpig::Events::Handler::Method;
+# ABSTRACT: an event handler that just calls a method on the event receiver
 use Moose;
 use MooseX::Types::Perl qw(Identifier);
 

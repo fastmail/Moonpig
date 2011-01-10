@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::Behavior::EventHandlers;
+# ABSTRACT: MooseX::ComposedBehavior for implicit_event_handlers
 
 use Moonpig::X;
 

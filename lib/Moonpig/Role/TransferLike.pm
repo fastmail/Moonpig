@@ -1,4 +1,5 @@
 package Moonpig::Role::TransferLike;
+# ABSTRACT: something that transfers money from one thing to another
 use MooseX::Role::Parameterized;
 
 use Moonpig::Types qw(Millicents);

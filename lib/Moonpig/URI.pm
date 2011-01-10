@@ -1,10 +1,11 @@
+use strict;
+use warnings;
 package Moonpig::URI;
+# ABSTRACT: a URI used inside of Moonpig
 
 use URI::Escape;
 use Carp qw(confess croak);
 use Scalar::Util 'reftype';
-use strict;
-use warnings;
 
 sub new {
   my $class = shift;

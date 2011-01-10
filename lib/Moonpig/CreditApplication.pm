@@ -1,4 +1,5 @@
 package Moonpig::CreditApplication;
+# ABSTRACT: the application of a credit to a payable
 use Moose;
 
 use Moonpig::Types qw(Millicents);

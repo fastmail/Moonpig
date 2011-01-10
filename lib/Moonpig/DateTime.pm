@@ -1,15 +1,19 @@
+use strict;
+use warnings;
 package Moonpig::DateTime;
+# ABSTRACT: a DateTime object with different math
 
 use base 'DateTime';
 use Carp qw(confess croak);
-use strict;
-use warnings;
 use overload
   '+' => \&plus,
   '-' => \&minus,
   '<=>' => \&compare,
 ;
 use Scalar::Util qw(blessed reftype);
+
+# XXX: When I enable this, Moonpig::Env::Test dies.  WTH? -- rjbs, 2011-01-10
+# use namespace::autoclean;
 
 sub new {
   my ($base, @arg) = @_;

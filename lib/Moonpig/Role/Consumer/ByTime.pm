@@ -1,4 +1,6 @@
 package Moonpig::Role::Consumer::ByTime;
+# ABSTRACT: a consumer that charges steadily as time passes
+
 use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::DateTime;
@@ -18,6 +20,8 @@ with(
 use Moonpig::Behavior::EventHandlers;
 
 use Moonpig::Types qw(Millicents Time TimeInterval);
+
+use namespace::autoclean;
 
 implicit_event_handlers {
   return {

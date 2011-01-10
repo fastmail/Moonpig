@@ -1,4 +1,5 @@
 package Moonpig::X;
+# ABSTRACT: an exception thrown in Moonpig
 use Moose;
 
 with(

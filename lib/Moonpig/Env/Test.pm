@@ -1,6 +1,10 @@
 package Moonpig::Env::Test;
+# ABSTRACT: a testing environment for Moonpig
+
 use Moose;
 with 'Moonpig::Role::Env';
+
+use namespace::autoclean;
 
 # BEGIN HUGE AWFUL HACK -- rjbs, 2010-12-16
 $ENV{MOONPIG_MKITS_DIR} = 'share/kit';
@@ -20,6 +24,7 @@ BEGIN {
 
 use Email::Sender::Transport::Test;
 use Moonpig::X;
+use Moonpig::DateTime;
 use Moonpig::Events::Handler::Code;
 
 has email_sender => (

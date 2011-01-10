@@ -1,4 +1,5 @@
 package Moonpig::Events::Handler::Code;
+# ABSTRACT: an event handler that just calls a coderef
 use Moose;
 with 'Moonpig::Role::EventHandler';
 

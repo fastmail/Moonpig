@@ -1,4 +1,5 @@
 package Moonpig::Role::Journal;
+# ABSTRACT: a journal of charges made by consumers against banks
 use Moose::Role;
 
 with(

@@ -1,4 +1,5 @@
 package Moonpig::Role::Credit::Simulated;
+# ABSTRACT: a simulated credit used during testing
 use Moose::Role;
 
 use namespace::autoclean;

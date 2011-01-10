@@ -1,4 +1,5 @@
 package Moonpig::Role::Bank;
+# ABSTRACT: a bunch of money held by a ledger and used up by consumers
 use Moose::Role;
 with(
  'Moonpig::Role::HasGuid',

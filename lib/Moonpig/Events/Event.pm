@@ -1,4 +1,5 @@
 package Moonpig::Events::Event;
+# ABSTRACT: an event fired by one object for another to consume
 use Moose;
 
 use Moonpig::Types qw(EventName);

@@ -1,4 +1,5 @@
 package Moonpig::Role::Happening;
+# ABSTRACT: something that can happen, like an exception or event
 use Moose::Role;
 
 use namespace::autoclean;

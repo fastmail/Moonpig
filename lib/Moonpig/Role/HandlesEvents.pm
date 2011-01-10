@@ -1,4 +1,5 @@
 package Moonpig::Role::HandlesEvents;
+# ABSTRACT: something that can receive and dispatch events to handlers on itself
 use Moose::Role;
 
 use Moonpig::Events::Event;

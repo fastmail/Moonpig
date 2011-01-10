@@ -1,4 +1,5 @@
 package Moonpig::Transfer;
+# ABSTRACT: a transfer of money from a bank to a consumer
 use Moose;
 
 use Moonpig::Types qw(Millicents);
