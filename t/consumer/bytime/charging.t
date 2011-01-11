@@ -2,7 +2,9 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use Moonpig;
 use Moonpig::Consumer::ByTime;
+use Moonpig::Env::Test;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
@@ -36,6 +38,7 @@ test "charge" => sub {
     [ 'double', [ 1, 1, 2, 2, 3 ], ],
     [ 'missed', [ 2, 5 ], ],
    ) {
+    Moonpig->env->current_time($jan1);
     my ($name, $schedule) = @$test;
     note("testing with heartbeat schedule '$name'");
 
@@ -49,19 +52,18 @@ test "charge" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => years(1000),
-        current_time => $jan1,
       });
 
     for my $day (@$schedule) {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $c->handle_event(event('heartbeat', { datetime => $tick_time }));
+
+      $c->handle_event(event('heartbeat', { timestamp => $tick_time }));
       is($b->unapplied_amount, dollars(10 - $day));
     }
   }
 };
-
 
 run_me;
 done_testing;
