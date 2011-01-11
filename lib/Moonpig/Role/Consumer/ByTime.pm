@@ -128,6 +128,7 @@ sub expire_date {
 # returns amount of life remaining, in seconds
 sub remaining_life {
   my ($self, $when) = @_;
+  $when ||= $self->now();
   $self->expire_date - $when;
 }
 
