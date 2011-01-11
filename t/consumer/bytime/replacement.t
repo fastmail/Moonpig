@@ -41,27 +41,24 @@ sub queue_handler {
 test "with_successor" => sub {
   my ($self) = @_;
 
-  my @eq;
-
-  # Pretend today is 2000-01-01 for convenience
-  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-  Moonpig->env->current_time($jan1);
-
   plan tests => 3;
-  $self->ledger($self->test_ledger);
-  $self->ledger->register_event_handler(
-    'contact-humans', 'default', queue_handler("ld", \@eq)
-  );
-
-  # Pretend today is 2000-01-01 for convenience
-  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-  Moonpig->env->current_time($jan1);
 
   for my $test (
-    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
     [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
    ) {
+
+    # Pretend today is 2000-01-01 for convenience
+    my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+    Moonpig->env->current_time($jan1);
+
+    my @eq;
+    $self->ledger($self->test_ledger);
+    $self->ledger->register_event_handler(
+      'contact-humans', 'default', queue_handler("ld", \@eq)
+     );
+
     my ($name, $schedule, $n_warnings) = @$test;
 
     # Normally we get 5 warnings, when the account is 28, 21, 14, 7 ,

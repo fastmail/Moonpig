@@ -6,6 +6,7 @@ use Moose::Role;
 with(
   'Moonpig::Role::CostTreeContainer' => { charges_handle_events => 0 },
   'Moonpig::Role::LedgerComponent',
+  'Moonpig::Role::HandlesEvents',
 );
 
 use namespace::autoclean;
