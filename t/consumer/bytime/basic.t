@@ -17,7 +17,7 @@ my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
   is => 'rw',
-  isa => 'Moonpig::Role::Ledger',
+  does => 'Moonpig::Role::Ledger',
   default => sub { $_[0]->test_ledger() },
 );
 sub ledger;  # Work around bug in Moose 'requires';
@@ -53,7 +53,7 @@ test expire_date => sub {
   plan tests => 4;
   my $ledger = $self->test_ledger;
 
-  my $b = Moonpig::Bank::Basic->new({
+  my $b = class('Bank')->new({
     ledger => $ledger,
     amount => dollars(3)
    });

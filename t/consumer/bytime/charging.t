@@ -14,7 +14,7 @@ my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
   is => 'rw',
-  isa => 'Moonpig::Role::Ledger',
+  does => 'Moonpig::Role::Ledger',
   default => sub { $_[0]->test_ledger() },
 );
 sub ledger;  # Work around bug in Moose 'requires';
@@ -42,7 +42,7 @@ test "charge" => sub {
     my ($name, $schedule) = @$test;
     note("testing with heartbeat schedule '$name'");
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(10),	# One dollar per day for rest of January
     });

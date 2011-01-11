@@ -19,7 +19,7 @@ my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
   is => 'rw',
-  isa => 'Moonpig::Role::Ledger',
+  does => 'Moonpig::Role::Ledger',
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
@@ -66,7 +66,7 @@ test "with_successor" => sub {
     # if heartbeats are skipped, we might miss some
     $n_warnings = 5 unless defined $n_warnings;
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(31),	# One dollar per day for rest of January
     });
@@ -120,7 +120,7 @@ test "without_successor" => sub {
     $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
     Moonpig->env->current_time($jan1);
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(31),	# One dollar per day for rest of January
     });
@@ -170,7 +170,7 @@ test "irreplaceable" => sub {
     my ($name, $schedule) = @$test;
     note("testing schedule '$name'");
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(10),	# Not enough to pay out the month
     });
