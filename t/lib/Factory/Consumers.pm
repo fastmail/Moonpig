@@ -1,12 +1,8 @@
 package t::lib::Factory::Consumers;
 use Moose::Role;
 
-use Moonpig::Env::Test;
-
-use Moonpig::Ledger::Basic;
-use Moonpig::Contact::Basic;
-use Moonpig::Bank::Basic;
 use Moonpig::Consumer::ByTime;
+use Moonpig::Env::Test;
 use Moonpig::URI;
 
 use Moonpig::Util -all;

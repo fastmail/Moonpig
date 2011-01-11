@@ -2,22 +2,16 @@ package t::lib::Factory::Ledger;
 use Moose::Role;
 
 use Moonpig::Env::Test;
-
-use Moonpig::Ledger::Basic;
-use Moonpig::Contact::Basic;
-use Moonpig::Bank::Basic;
-use Moonpig::Consumer::Basic;
 use Moonpig::URI;
-
 use Moonpig::Util -all;
 
 use namespace::autoclean;
 
 sub test_ledger {
   my ($self, $class) = @_;
-  $class ||= 'Moonpig::Ledger::Basic';
+  $class ||= class('Ledger');
 
-  my $contact = Moonpig::Contact::Basic->new({
+  my $contact = class('Contact')->new({
     name => 'J. Fred Bloggs',
     email_addresses => [ 'jfred@example.com' ],
   });
