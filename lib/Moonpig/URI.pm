@@ -95,7 +95,10 @@ my %table = (
       ByTime => sub {
         my ($params, $extra) = @_;
         require Moonpig::Util;
-        return Moonpig::Util::class('Consumer::ByTime')->new({ %$params, %$extra })
+        return Moonpig::Util::class('Consumer::ByTime')->new({
+          %$params,
+          %$extra,
+        })
       },
     },
     function => sub {
