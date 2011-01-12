@@ -57,7 +57,7 @@ sub stop_time {
 
   Moonpig::X->throw("can't stop time twice") if $self->time_stopped;
 
-  $self->current_time( Moonpig::DateTime->new );
+  $self->current_time( Moonpig::DateTime->now );
 }
 
 sub elapse_time {
