@@ -3,6 +3,7 @@ package Moonpig::Role::Journal;
 
 use Carp qw(croak);
 use Moonpig::Transfer;
+use Moonpig::Util qw(class);
 use Moose::Role;
 
 with(
@@ -56,7 +57,7 @@ sub transfer_factory {
 }
 
 sub charge_factory {
-  "Moonpig::Charge::Basic";
+  class('Charge');
 }
 
 1;

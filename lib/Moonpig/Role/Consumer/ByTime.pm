@@ -3,7 +3,6 @@ package Moonpig::Role::Consumer::ByTime;
 
 use Carp qw(confess croak);
 use Moonpig;
-use Moonpig::Charge::Basic;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(CostPath);

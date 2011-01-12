@@ -15,8 +15,6 @@ use t::lib::Logger;
 
 use Moonpig::Env::Test;
 
-use Moonpig::Bank::Basic;
-
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (

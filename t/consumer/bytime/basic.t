@@ -13,8 +13,6 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-use Moonpig::Bank::Basic;
-
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
