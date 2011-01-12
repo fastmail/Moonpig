@@ -51,7 +51,11 @@ sub charge {
     $charge, $args->{cost_path},
   );
 
-  $Logger->log([ "adding charge: %s", $args ]);
+  $Logger->log([
+    "adding charge at %s for %s",
+    join(q{.}, @{ $args->{cost_path} }),
+    $charge->amount,
+  ]);
 
   return $charge;
 }

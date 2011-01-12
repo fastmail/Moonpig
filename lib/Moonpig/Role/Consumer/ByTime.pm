@@ -284,6 +284,8 @@ sub create_own_replacement {
 
   my $replacement_mri = $event->payload->{mri};
 
+  $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
+
   if ($self->is_replaceable && ! $self->has_replacement) {
     my $replacement = $replacement_mri->construct(
       { extra => { self => $self } }
