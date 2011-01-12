@@ -92,4 +92,6 @@ sub iso {
   return $self->strftime("%D %T");
 }
 
+sub TO_JSON { "$_[0]" }
+
 1;

@@ -14,4 +14,13 @@ has guid => (
   default  => sub { guid_string },
 );
 
+sub TO_JSON {
+  my ($self) = @_;
+
+  return {
+    class => $self->meta->name,
+    guid  => $self->guid,
+  }
+}
+
 1;
