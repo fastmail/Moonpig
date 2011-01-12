@@ -58,7 +58,10 @@ test "charge" => sub {
         year => 2000, month => 1, day => $day
       );
 
-      $c->handle_event(event('heartbeat', { timestamp => $tick_time }));
+      $self->ledger->handle_event(
+        event('heartbeat', { timestamp => $tick_time })
+      );
+
       is($b->unapplied_amount, dollars(10 - $day));
     }
   }

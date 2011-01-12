@@ -131,9 +131,9 @@ test "basic_event" => sub {
     $CLASS, { ledger => $self->test_ledger });
 
   my @eq;
-  $c->register_event_handler('heart', 'hearthandler', queue_handler("c", \@eq));
-  $c->handle_event(event('heart', { noise => 'thumpa' }));
-  cmp_deeply(\@eq, [ [ $c, 'heart',
+  $c->register_event_handler('test', 'testhandler', queue_handler("c", \@eq));
+  $c->handle_event(event('test', { noise => 'thumpa' }));
+  cmp_deeply(\@eq, [ [ $c, 'test',
                        { noise => 'thumpa',
                          timestamp => Test::Deep::isa('DateTime'),
                         } ] ]);
