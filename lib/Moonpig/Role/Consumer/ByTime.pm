@@ -93,6 +93,7 @@ has cost_period => (
 has cost_path_prefix => (
   is => 'ro',
   isa => CostPath,
+  coerce => 1,
   required => 1,
 );
 
