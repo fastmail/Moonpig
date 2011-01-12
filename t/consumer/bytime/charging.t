@@ -37,7 +37,7 @@ test "charge" => sub {
     [ 'normal', [ 1, 2, 3, 4 ], ],
     [ 'double', [ 1, 1, 2, 2, 3 ], ],
     [ 'missed', [ 2, 5 ], ],
-   ) {
+  ) {
     Moonpig->env->current_time($jan1);
     my ($name, $schedule) = @$test;
     note("testing with heartbeat schedule '$name'");
