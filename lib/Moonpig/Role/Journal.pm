@@ -6,6 +6,8 @@ use Moonpig::Transfer;
 use Moonpig::Util qw(class);
 use Moose::Role;
 
+use Moonpig::Logger '$Logger';
+
 with(
   'Moonpig::Role::CostTreeContainer' => { charges_handle_events => 0 },
   'Moonpig::Role::LedgerComponent',
@@ -48,6 +50,8 @@ sub charge {
   $self->add_charge_at(
     $charge, $args->{cost_path},
   );
+
+  $Logger->log([ "adding charge: %s", $args ]);
 
   return $charge;
 }
