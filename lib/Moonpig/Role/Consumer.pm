@@ -59,6 +59,4 @@ after BUILD => sub {
   ]);
 };
 
-# mechanism to get xfers
-
 1;

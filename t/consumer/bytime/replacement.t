@@ -43,23 +43,24 @@ sub queue_handler {
 test "with_successor" => sub {
   my ($self) = @_;
 
-  my @eq;
-
   plan tests => 3;
-  $self->ledger($self->test_ledger);
-  $self->ledger->register_event_handler(
-    'contact-humans', 'default', queue_handler("ld", \@eq)
-  );
-
-  # Pretend today is 2000-01-01 for convenience
-  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-  Moonpig->env->current_time($jan1);
 
   for my $test (
-    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
     [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
    ) {
+
+    # Pretend today is 2000-01-01 for convenience
+    my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+    Moonpig->env->current_time($jan1);
+
+    my @eq;
+    $self->ledger($self->test_ledger);
+    $self->ledger->register_event_handler(
+      'contact-humans', 'default', queue_handler("ld", \@eq)
+     );
+
     my ($name, $schedule, $n_warnings) = @$test;
 
     # Normally we get 5 warnings, when the account is 28, 21, 14, 7 ,
@@ -67,7 +68,7 @@ test "with_successor" => sub {
     # if heartbeats are skipped, we might miss some
     $n_warnings = 5 unless defined $n_warnings;
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(31),	# One dollar per day for rest of January
     });
@@ -83,7 +84,9 @@ test "with_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { datetime => $tick_time }));
+
+      Moonpig->env->current_time($tick_time);
+      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
     is(@eq, $n_warnings,
        "received $n_warnings warnings (schedule '$name')");
@@ -96,6 +99,10 @@ test "with_successor" => sub {
 test "without_successor" => sub {
   my ($self) = @_;
 
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->current_time($jan1);
+
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
@@ -103,8 +110,6 @@ test "without_successor" => sub {
 
   plan tests => 4 * 3;
 
-  # Pretend today is 2000-01-01 for convenience
-  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   my $mri =
     Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
 
@@ -115,8 +120,9 @@ test "without_successor" => sub {
    ) {
     my ($name, $schedule, $succ_creation_date) = @$test;
     $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
+    Moonpig->env->current_time($jan1);
 
-    my $b = Moonpig::Bank::Basic->new({
+    my $b = class('Bank')->new({
       ledger => $self->ledger,
       amount => dollars(31),	# One dollar per day for rest of January
     });
@@ -128,7 +134,6 @@ test "without_successor" => sub {
         old_age => days(20),
         replacement_mri => $mri,
       });
-    Moonpig->env->current_time($jan1);
 
 
     my @eq;
@@ -139,7 +144,8 @@ test "without_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { datetime => $tick_time }));
+      Moonpig->env->current_time($tick_time);
+      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
@@ -151,8 +157,43 @@ test "without_successor" => sub {
 };
 
 test "irreplaceable" => sub {
-  # this consumer has been instructed not to generate a replacement for itself
-  pass();
+  my ($self) = @_;
+  $self->ledger($self->test_ledger);
+  plan tests => 3;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+
+  for my $test (
+    [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
+    [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
+    [ 'missed', [ 29, 30, 31 ] ], # successor delayed until 29th
+   ) {
+    my ($name, $schedule) = @$test;
+    note("testing schedule '$name'");
+
+    my $b = class('Bank')->new({
+      ledger => $self->ledger,
+      amount => dollars(10),	# Not enough to pay out the month
+    });
+
+    my $c = $self->test_consumer(
+      $CLASS, {
+        is_replaceable => 0,
+        ledger => $self->ledger,
+        bank => $b,
+        old_age => days(20),
+        replacement_mri => Moonpig::URI->nothing(),
+      });
+
+    for my $day (@$schedule) {
+      my $tick_time = Moonpig::DateTime->new(
+        year => 2000, month => 1, day => $day
+      );
+      $c->handle_event(event('heartbeat', { timestamp => $tick_time }));
+    }
+    pass();
+  }
 };
 
 run_me;

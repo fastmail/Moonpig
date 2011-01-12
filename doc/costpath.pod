@@ -1,0 +1,3 @@
+
+Moonpig::Role::Consumer::ByTime creates its charges at
+    account / recurring / year / mo / dy

@@ -18,8 +18,8 @@ use Moonpig::Bank::Basic;
 my $CLASS = "Moonpig::Consumer::ByTime";
 
 has ledger => (
-  is => 'rw',
-  does    => 'Moonpig::Role::Ledger',
+  is   => 'rw',
+  does => 'Moonpig::Role::Ledger',
   default => sub { $_[0]->test_ledger() },
 );
 sub ledger;  # Work around bug in Moose 'requires';
@@ -55,7 +55,7 @@ test expire_date => sub {
   plan tests => 4;
   my $ledger = $self->test_ledger;
 
-  my $b = Moonpig::Bank::Basic->new({
+  my $b = class('Bank')->new({
     ledger => $ledger,
     amount => dollars(3)
    });
@@ -93,11 +93,6 @@ test expire_date => sub {
   }
 
   {
-    my $c = $self->test_consumer(
-      $CLASS,
-      { bank => $b,
-        ledger => $ledger,
-      });
     Moonpig->env->current_time(Moonpig::DateTime->new(
       year => 1969,
       month => 4,
@@ -106,6 +101,11 @@ test expire_date => sub {
       minute => 38,
       second => 0,
     ));
+    my $c = $self->test_consumer(
+      $CLASS,
+      { bank => $b,
+        ledger => $ledger,
+      });
 
     my $exp = $c->expire_date;
     is($exp->ymd, "1969-04-05",

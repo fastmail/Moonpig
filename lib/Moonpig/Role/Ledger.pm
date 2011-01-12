@@ -72,7 +72,6 @@ for my $thing (qw(bank consumer refund)) {
       "_set_$thing" => 'set',
     },
   );
-
   Sub::Install::install_sub({
     as   => "add_$thing",
     code => sub {
