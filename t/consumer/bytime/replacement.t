@@ -52,11 +52,7 @@ test "with_successor" => sub {
     my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
     Moonpig->env->current_time($jan1);
 
-    my @eq;
     $self->ledger($self->test_ledger);
-    $self->ledger->register_event_handler(
-      'contact-humans', 'default', queue_handler("ld", \@eq)
-     );
 
     my ($name, $schedule, $n_warnings) = @$test;
 
@@ -85,9 +81,11 @@ test "with_successor" => sub {
       Moonpig->env->current_time($tick_time);
       $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
-    is(@eq, $n_warnings,
+
+    my @deliveries = Moonpig->env->email_sender->deliveries;
+    is(@deliveries, $n_warnings,
        "received $n_warnings warnings (schedule '$name')");
-    @eq = ();
+    Moonpig->env->email_sender->clear_deliveries;
   }
 };
 
