@@ -219,16 +219,20 @@ sub charge {
   my $now = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
 
+  # Keep making charges until the next one is supposed to be charged at a time
+  # later than now. -- rjbs, 2011-01-12
   until ($self->next_charge_date->follows($now)) {
+    my $next_charge_date = $self->next_charge_date;
+
     $self->ledger->current_journal->charge({
       desc => $self->charge_description(),
       from => $self->bank,
       to => $self,
       amount => $self->cost_per_charge(),
-      date => $self->next_charge_date(),
+      date => $next_charge_date,
       cost_path =>
         [@{$self->cost_path_prefix},
-         split(/-/, $now->ymd()),
+         split(/-/, $next_charge_date->ymd),
         ],
     }) and $self->last_charge_date($self->next_charge_date());
   }
