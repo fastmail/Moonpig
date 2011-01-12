@@ -15,7 +15,9 @@ use Moonpig::Env::Test;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 
-use Moonpig::Util qw(class dollars);
+use Moonpig::Util qw(class dollars event);
+
+Moonpig->env->stop_time;
 
 # 1. create ledger
 
@@ -31,8 +33,14 @@ my $ledger = class('Ledger')->new({
 # 2. create consumer
 
 my $consumer = $ledger->add_consumer(
-  class(qw(Consumer)),
+  class(qw(Consumer::ByTime)),
   {
+    cost_amount        => dollars(50),
+    cost_period        => 364 * 86400,
+    charge_frequency   =>   7 * 86400, # less frequent to make logs simpler
+    charge_description => 'yoyodyne service',
+    old_age            =>  30 * 86400,
+    cost_path_prefix   => 'yoyodyne.basic',
     replacement_mri => Moonpig::URI->nothing(),
   },
 );
@@ -43,8 +51,8 @@ my $invoice = $ledger->current_invoice;
 
 my $charge = $invoice->add_charge_at(
   class('Charge::Bankable')->new({
-    description => 'test charge (setup)',
-    amount      => dollars(10),
+    description => 'yoyodyne setup',
+    amount      => $consumer->cost_amount,
     consumer    => $consumer,
   }),
   'test.charges.setup',
@@ -66,6 +74,17 @@ $ledger->process_credits;
   # implicit in combination of invoice's handler and credit processing
 
 # 6. heartbeats, until...
+
+for (1 .. 24) {
+  $ledger->handle_event( event('heartbeat') );
+
+  $Logger->log([
+    "bank still has %s in it", $consumer->bank->unapplied_amount,
+  ]);
+
+  Moonpig->env->elapse_time(30 * 86400);
+}
+
 # 7. consumer charges bank
 # 8. until low-funds, goto 6
 # 9. setup replacement
