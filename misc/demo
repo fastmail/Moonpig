@@ -41,7 +41,11 @@ my $consumer = $ledger->add_consumer(
     charge_description => 'yoyodyne service',
     old_age            =>  30 * 86400,
     cost_path_prefix   => 'yoyodyne.basic',
-    replacement_mri => Moonpig::URI->nothing(),
+
+    # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
+    replacement_mri    => Moonpig::URI->new(
+      "moonpig://test/method?method=construct_replacement"
+    ),
   },
 );
 
