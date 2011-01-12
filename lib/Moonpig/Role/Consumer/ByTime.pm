@@ -123,7 +123,12 @@ sub expire_date {
   my $bank = $self->bank ||
     confess "Can't calculate remaining life for unfunded consumer";
   my $remaining = $bank->unapplied_amount();
-  my $n_full_periods_left = int($remaining/$self->cost_amount); # dimensionless
+
+  # dimensionless
+  my $n_full_periods_left = int(
+    $remaining / ($self->cost_amount / $self->cost_period)
+  );
+
   return $self->next_charge_date() +
       $n_full_periods_left * $self->cost_period;
 }
