@@ -93,9 +93,9 @@ my %table = (
     },
     consumer => {
       ByTime => sub {
-        require Moonpig::Consumer::ByTime;
         my ($params, $extra) = @_;
-        return Moonpig::Consumer::ByTime->new({ %$params, %$extra })
+        require Moonpig::Util;
+        return Moonpig::Util::class('Consumer::ByTime')->new({ %$params, %$extra })
       },
     },
     function => sub {

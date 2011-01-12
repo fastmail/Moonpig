@@ -3,7 +3,6 @@ use warnings;
 
 use Carp qw(confess croak);
 use DateTime;
-use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
@@ -13,7 +12,7 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-my $CLASS = "Moonpig::Consumer::ByTime";
+my $CLASS = class('Consumer::ByTime');
 
 has ledger => (
   is   => 'rw',

@@ -1,7 +1,6 @@
 package t::lib::Factory::Consumers;
 use Moose::Role;
 
-use Moonpig::Consumer::ByTime;
 use Moonpig::Env::Test;
 use Moonpig::URI;
 

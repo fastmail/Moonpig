@@ -3,14 +3,13 @@ use warnings;
 
 use Carp qw(confess croak);
 use Moonpig;
-use Moonpig::Consumer::ByTime;
 use Moonpig::Env::Test;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
-my $CLASS = "Moonpig::Consumer::ByTime";
+my $CLASS = class('Consumer::ByTime');
 
 has ledger => (
   is => 'rw',

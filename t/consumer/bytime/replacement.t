@@ -2,7 +2,6 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Consumer::ByTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 use Moonpig::URI;
@@ -15,7 +14,7 @@ use t::lib::Logger;
 
 use Moonpig::Env::Test;
 
-my $CLASS = "Moonpig::Consumer::ByTime";
+my $CLASS = class('Consumer::ByTime');
 
 has ledger => (
   is   => 'rw',
