@@ -28,19 +28,20 @@ use namespace::autoclean;
 implicit_event_handlers {
   return {
     heartbeat => {
-      low_funds_check => Moonpig::Events::Handler::Method->new(
-        method_name => 'check_for_low_funds'),
       charge => Moonpig::Events::Handler::Method->new(
         method_name => 'charge'
-       )},
+      ),
+    },
     'low-funds' => {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
         method_name => 'predecessor_running_out',
-       )},
+      ),
+    },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
         method_name => 'create_own_replacement',
-       )},
+      ),
+    },
   };
 };
 
@@ -125,12 +126,15 @@ sub expire_date {
   my $remaining = $bank->unapplied_amount();
 
   # dimensionless
-  my $n_full_periods_left = int(
-    $remaining / ($self->cost_amount / $self->cost_period)
-  );
+  my $n_full_periods_left = int($remaining / $self->cost_per_charge);
 
   return $self->next_charge_date() +
       $n_full_periods_left * $self->cost_period;
+}
+
+sub expire {
+  my ($self) = @_;
+  $Logger->log([ 'expiring bank: %s', $self->TO_JSON ]);
 }
 
 # returns amount of life remaining, in seconds
@@ -196,13 +200,18 @@ sub is_complaining_day {
 
 sub issue_complaint {
   my ($self, $how_soon) = @_;
-  $self->ledger->handle_event(
-    event(
-      'contact-humans',
-      { why => 'your service will run out soon',
-        how_soon => $how_soon,
-        how_much => $self->cost_amount,
-      }));
+
+  $self->ledger->handle_event(event('send-mkit', {
+    kit => 'generic',
+    arg => {
+      subject => sprintf("YOUR SERVICE RUNS OUT SOON: %s", $self->guid),
+      body    => sprintf("YOU OWE US %s\n", $self->cost_amount),
+
+      # This should get names with addresses, unlike the contact-humans
+      # handler, which wants envelope recipients.
+      to_addresses => [ $self->ledger->contact->email_addresses ],
+    },
+  }));
 }
 
 # XXX this is for testing only; when we figure out replacement semantics
@@ -226,20 +235,29 @@ sub charge {
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
-  until ($self->next_charge_date->follows($now)) {
+  CHARGE: until ($self->next_charge_date->follows($now)) {
+    $self->consider_making_replacement;
+
+    unless ($self->can_make_next_payment) {
+      $self->expire;
+      return;
+    }
+
     my $next_charge_date = $self->next_charge_date;
 
     $self->ledger->current_journal->charge({
       desc => $self->charge_description(),
       from => $self->bank,
-      to => $self,
-      amount => $self->cost_per_charge(),
+      to   => $self,
       date => $next_charge_date,
-      cost_path =>
-        [@{$self->cost_path_prefix},
-         split(/-/, $next_charge_date->ymd),
-        ],
-    }) and $self->last_charge_date($self->next_charge_date());
+      amount    => $self->cost_per_charge(),
+      cost_path => [
+        @{$self->cost_path_prefix},
+        split(/-/, $next_charge_date->ymd),
+      ],
+    });
+
+    $self->last_charge_date($self->next_charge_date());
   }
 }
 
@@ -254,13 +272,13 @@ sub cost_per_charge {
   return $self->cost_amount / $n_periods;
 }
 
-sub check_for_low_funds {
-  my ($self, $event, $arg) = @_;
+sub consider_making_replacement {
+  my ($self, $tick_time) = @_;
 
   return unless $self->has_bank;
 
-  my $tick_time = $event->payload->{timestamp}
-    or confess "event payload has no timestamp";
+  # XXX: noise while testing
+  # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
   if ($self->remaining_life($tick_time) <= $self->old_age) {
@@ -282,6 +300,11 @@ sub check_for_low_funds {
        );
     }
   }
+}
+
+sub can_make_next_payment {
+  my ($self) = @_;
+  return $self->bank->unapplied_amount >= $self->cost_per_charge;
 }
 
 sub create_own_replacement {
