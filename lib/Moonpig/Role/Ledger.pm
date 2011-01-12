@@ -241,7 +241,7 @@ sub _reheartbeat {
 
   for my $target (
     # $self->contact,
-    $self->banks,
+    # $self->banks,
     $self->consumers,
     $self->invoices,
     $self->journals,
