@@ -314,7 +314,7 @@ sub reflect_on_mortality {
 
 sub can_make_next_payment {
   my ($self) = @_;
-  return $self->bank->unapplied_amount >= $self->cost_per_charge;
+  return $self->unapplied_amount >= $self->cost_per_charge;
 }
 
 sub create_own_replacement {
