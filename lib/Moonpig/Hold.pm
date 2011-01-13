@@ -18,4 +18,6 @@ with(
   },
 );
 
+# also allow_deletion => 1
+
 1;
