@@ -237,8 +237,6 @@ has is_replaceable => (
 sub charge {
   my ($self, $event, $arg) = @_;
 
-  return unless $self->has_bank;
-
   my $now = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
 
@@ -247,7 +245,7 @@ sub charge {
   CHARGE: until ($self->next_charge_date->follows($now)) {
     $self->consider_making_replacement;
 
-    unless ($self->can_make_next_payment) {
+    unless ($self->has_bank and $self->can_make_next_payment) {
       $self->expire;
       return;
     }
@@ -326,7 +324,7 @@ sub create_own_replacement {
   if ($self->is_replaceable && ! $self->has_replacement) {
     my $replacement = $replacement_mri->construct(
       { extra => { self => $self } }
-     ) or return;
+    ) or return;
     $self->replacement($replacement);
     return $replacement;
   }
