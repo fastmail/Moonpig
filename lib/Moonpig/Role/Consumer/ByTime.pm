@@ -134,7 +134,16 @@ sub expire_date {
 
 after expire => sub {
   my ($self) = @_;
-  $Logger->log([ 'expiring bank: %s', $self->TO_JSON ]);
+
+  $Logger->log([
+    'expiring consumer: %s, %s; %s',
+    $self->charge_description,
+    $self->ident,
+    $self->has_replacement
+      ? 'replacement will take over: ' .  $self->replacement->ident
+      : 'no replacement exists'
+  ]);
+
 };
 
 # returns amount of life remaining, in seconds
