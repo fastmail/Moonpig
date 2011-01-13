@@ -51,4 +51,9 @@ has replacement_mri => (
   coerce => 1,
 );
 
+sub unapplied_amount {
+  my ($self) = @_;
+  return $self->has_bank ? $self->bank->unapplied_amount : 0;
+}
+
 1;
