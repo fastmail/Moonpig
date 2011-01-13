@@ -12,7 +12,6 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
 use Moonpig::Logger '$Logger';
-use POSIX 'ceil';
 
 with(
   'Moonpig::Role::Consumer',
