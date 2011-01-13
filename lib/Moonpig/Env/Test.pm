@@ -78,6 +78,20 @@ sub now {
     : Moonpig::DateTime->now();
 }
 
+has _guid_serial_number_registry => (
+  is  => 'ro',
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+my $i = 1;
+
+sub format_guid {
+  my ($self, $guid) = @_;
+  my $reg = $self->_guid_serial_number_registry;
+  return ($reg->{ $guid } ||= $i++)
+}
+
 Moonpig->set_env( __PACKAGE__->new );
 
 1;

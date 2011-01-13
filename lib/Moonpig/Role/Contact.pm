@@ -31,13 +31,4 @@ has email_addresses => (
   required => 1,
 );
 
-after BUILD => sub {
-  my ($self) = @_;
-  $Logger->log([
-    'created new contact %s (%s)',
-    $self->guid,
-    $self->meta->name,
-  ]);
-};
-
 1;

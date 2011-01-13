@@ -15,6 +15,8 @@ use Moonpig::Behavior::EventHandlers;
 
 requires 'handle_send_email';
 
+sub format_guid { return $_[1] }
+
 implicit_event_handlers {
   return {
     'send-email' => {

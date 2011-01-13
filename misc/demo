@@ -83,7 +83,9 @@ for (1 .. 24) {
   $ledger->handle_event( event('heartbeat') );
 
   $Logger->log([
-    "bank still has %s in it", $consumer->bank->unapplied_amount,
+    "%s still has %s in it",
+    $consumer->bank->ident,
+    $consumer->bank->unapplied_amount,
   ]);
 
   Moonpig->env->elapse_time(30 * 86400);

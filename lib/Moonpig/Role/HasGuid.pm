@@ -5,7 +5,11 @@ use Moose::Role;
 use Data::GUID qw(guid_string);
 use Moose::Util::TypeConstraints;
 
+use Moonpig::Logger '$Logger';
+
 use namespace::autoclean;
+
+with 'Moonpig::Role::StubBuild';
 
 has guid => (
   is  => 'ro',
@@ -14,13 +18,19 @@ has guid => (
   default  => sub { guid_string },
 );
 
-sub TO_JSON {
+sub ident {
   my ($self) = @_;
 
-  return {
-    class => $self->meta->name,
-    guid  => $self->guid,
-  }
+  return sprintf '%s<%s>',
+    $self->meta->name,
+    Moonpig->env->format_guid( $self->guid );
 }
+
+sub TO_JSON { $_[0]->ident }
+
+after BUILD => sub {
+  my ($self) = @_;
+  $Logger->log([ 'created %s', $self->ident ]);
+};
 
 1;

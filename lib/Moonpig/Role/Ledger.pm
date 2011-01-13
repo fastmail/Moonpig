@@ -266,13 +266,4 @@ sub _send_mkit {
   }));
 }
 
-after BUILD => sub {
-  my ($self) = @_;
-  $Logger->log([
-    'created new ledger %s (%s)',
-    $self->guid,
-    $self->meta->name,
-  ]);
-};
-
 1;

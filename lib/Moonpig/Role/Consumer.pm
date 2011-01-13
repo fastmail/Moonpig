@@ -28,9 +28,9 @@ before _set_bank => sub {
 
   unless ($self->ledger->guid eq $bank->ledger->guid) {
     confess sprintf(
-      "cannot associate consumer from ledger %s with bank from ledger %s",
-      $self->ledger->guid,
-      $bank->ledger->guid,
+      "cannot associate consumer from %s with bank from %s",
+      $self->ledger->ident,
+      $bank->ledger->ident,
     );
   }
 };
@@ -50,14 +50,5 @@ has replacement_mri => (
   required => 1,
   coerce => 1,
 );
-
-after BUILD => sub {
-  my ($self) = @_;
-  $Logger->log([
-    'created new consumer %s (%s)',
-    $self->guid,
-    $self->meta->name,
-  ]);
-};
 
 1;

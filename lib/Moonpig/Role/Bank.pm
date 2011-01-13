@@ -33,15 +33,6 @@ sub unapplied_amount {
   return $self->amount - $xfer_total;
 }
 
-after BUILD => sub {
-  my ($self) = @_;
-  $Logger->log([
-    'created new bank %s (%s)',
-    $self->guid,
-    $self->meta->name,
-  ]);
-};
-
 # mechanism to get xfers
 
 1;
