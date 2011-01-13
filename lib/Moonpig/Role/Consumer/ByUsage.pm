@@ -25,22 +25,26 @@ use namespace::autoclean;
 implicit_event_handlers {
   return {
     heartbeat => { },
-    low_funds_check => Moonpig::Events::Handler::Method->new(
+    'low-water' => Moonpig::Events::Handler::Method->new(
       method_name => 'check_low_funds'
-    ),
+     ),
   };
 };
 
-has low_water_line => (
+has cost_per_unit => (
   is => 'ro',
-  isa => Num,
+  isa => Millicents,
+  required => 1,
 );
 
-has rate_schedule => (
+# create a replacement when the available funds are no longer enough
+# to purchase this many of the commodity
+# (if omitted, create replacement when not enough funds remain to buy
+# another batch of the same size as the last batch bought)
+has low_water_mark => (
   is => 'ro',
-  does => 'Moonpig::Role::RateSchedule',
-  required => 1,
-  handles => { cost => 'cost_of' },
+  isa => Num,
+  predicate => 'has_low_water_mark',
 );
 
 # Return hold object on success, false on insuficient funds
@@ -57,12 +61,26 @@ sub create_hold_for_amount {
     amount => $amount,
   );
 
+  {
+    my $not_much_left;
+    if ($self->has_low_water_mark) {
+      $not_much_left = $self->n_units_remaining <= $self->low_water_mark;
+    } else {
+      $not_much_left = $self->n_unapplied_amount <= $amount;
+    }
+    $not_much_left and $self->handle_event(event('low-water'));
+  }
+
   return $hold;
 }
 
 sub create_hold_for_units {
   my ($self, $n_units) = @_;
-  $self->create_hold_for_amount($self->cost($n_units));
+  $self->create_hold_for_amount($self->cost_per_unit * $n_units);
+}
+
+sub units_remaining {
+  int($self->unapplied_amount / $self->cost_per_unit);
 }
 
 1;
