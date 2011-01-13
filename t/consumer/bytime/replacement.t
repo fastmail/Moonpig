@@ -26,6 +26,10 @@ with ('t::lib::Factory::Consumers',
       't::lib::Factory::Ledger',
      );
 
+before run_test => sub {
+  Moonpig->env->email_sender->clear_deliveries;
+};
+
 sub queue_handler {
   my ($name, $queue) = @_;
   $queue ||= [];
