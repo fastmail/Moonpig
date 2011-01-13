@@ -5,6 +5,7 @@ with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::StubBuild',
+  'Moonpig::Role::CanExpire',
 );
 
 use MooseX::SetOnce;

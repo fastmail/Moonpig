@@ -26,6 +26,8 @@ has _event_handler_registry => (
 sub handle_event {
   my ($self, $event) = @_;
 
+  return if $self->does('Moonpig::Role::CanExpire') and $self->is_expired;
+
   $event = Moonpig::Events::Event->new($event) if ! blessed $event;
 
   $self->_event_handler_registry->handle_event($event, $self);

@@ -132,10 +132,10 @@ sub expire_date {
       $n_full_periods_left * $self->cost_period;
 }
 
-sub expire {
+after expire => sub {
   my ($self) = @_;
   $Logger->log([ 'expiring bank: %s', $self->TO_JSON ]);
-}
+};
 
 # returns amount of life remaining, in seconds
 sub remaining_life {
