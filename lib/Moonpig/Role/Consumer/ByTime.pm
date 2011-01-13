@@ -12,6 +12,7 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
 
 use Moonpig::Logger '$Logger';
+use POSIX 'ceil';
 
 with(
   'Moonpig::Role::Consumer',
@@ -125,11 +126,10 @@ sub expire_date {
     confess "Can't calculate remaining life for unfunded consumer";
   my $remaining = $bank->unapplied_amount();
 
-  # dimensionless
-  my $n_full_periods_left = int($remaining / $self->cost_per_charge);
+  my $n_charge_periods_left = int($remaining / $self->cost_per_charge);
 
   return $self->next_charge_date() +
-      $n_full_periods_left * $self->cost_period;
+      $n_charge_periods_left * $self->charge_frequency;
 }
 
 after expire => sub {
