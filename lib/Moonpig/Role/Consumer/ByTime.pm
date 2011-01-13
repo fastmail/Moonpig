@@ -120,6 +120,8 @@ sub last_charge_exists {
   return defined($self->last_charge_date);
 }
 
+# For a detailed explanation of the logic here, please see the log
+# message for 1780fc0a39313eef5adb9936d76dc994f6fa90cd - 2011-01-13 mjd
 sub expire_date {
   my ($self) = @_;
   my $bank = $self->bank ||
