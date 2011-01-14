@@ -45,6 +45,7 @@ has low_water_mark => (
 );
 
 # Return hold object on success, false on insuficient funds
+# XXX when does the charge get created??
 sub create_hold_for_amount {
   my ($self, $amount) = @_;
 
@@ -78,6 +79,21 @@ sub create_hold_for_units {
 
 sub units_remaining {
   int($self->unapplied_amount / $self->cost_per_unit);
+}
+
+sub construct_replacement {
+  my ($self, $param) = @_;
+
+  my $repl = $self->ledger->add_consumer(
+    $self->meta->name,
+    {
+      cost_per_unit      => $self->cost_per_unit(),
+      low_water_mark     => $self->low_water_mark(),
+      replacement_mri    => $self->replacement_mri(),
+      ledger             => $self->ledger(),
+      cost_path_prefix   => $self->cost_path_prefix(),
+      %$param,
+  });
 }
 
 1;
