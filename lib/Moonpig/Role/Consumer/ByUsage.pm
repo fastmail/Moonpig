@@ -25,9 +25,6 @@ use namespace::autoclean;
 implicit_event_handlers {
   return {
     heartbeat => { },
-    'low-water' => Moonpig::Events::Handler::Method->new(
-      method_name => 'check_low_funds'
-     ),
   };
 };
 
@@ -68,7 +65,7 @@ sub create_hold_for_amount {
     } else {
       $not_much_left = $self->n_unapplied_amount <= $amount;
     }
-    $not_much_left and $self->handle_event(event('low-water'));
+    $not_much_left and $self->handle_event(event('consumer-create-replacement'));
   }
 
   return $hold;

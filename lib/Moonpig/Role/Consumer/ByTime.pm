@@ -15,7 +15,6 @@ use Moonpig::Logger '$Logger';
 
 with(
   'Moonpig::Role::Consumer',
-  'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );
 
@@ -35,11 +34,6 @@ implicit_event_handlers {
     'low-funds' => {
       low_funds_handler => Moonpig::Events::Handler::Method->new(
         method_name => 'predecessor_running_out',
-      ),
-    },
-    'consumer-create-replacement' => {
-      create_replacement => Moonpig::Events::Handler::Method->new(
-        method_name => 'create_own_replacement',
       ),
     },
   };

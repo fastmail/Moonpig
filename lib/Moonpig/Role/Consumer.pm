@@ -2,11 +2,23 @@ package Moonpig::Role::Consumer;
 # ABSTRACT: something that uses up money stored in a bank
 use Moose::Role;
 with(
-  'Moonpig::Role::LedgerComponent',
-  'Moonpig::Role::HasGuid',
-  'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanExpire',
+  'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::LedgerComponent',
+  'Moonpig::Role::StubBuild',
 );
+
+use Moonpig::Behavior::EventHandlers;
+implicit_event_handlers {
+  return {
+    'consumer-create-replacement' => {
+      create_replacement => Moonpig::Events::Handler::Method->new(
+        method_name => 'create_own_replacement',
+      ),
+    },
+  };
+};
 
 use MooseX::SetOnce;
 use Moonpig::Types qw(Ledger Millicents MRI);
