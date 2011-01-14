@@ -15,13 +15,6 @@ use Moonpig::Logger '$Logger';
 
 use namespace::autoclean;
 
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-);
-
 has bank => (
   reader => 'bank',
   writer => '_set_bank',
@@ -42,6 +35,11 @@ before _set_bank => sub {
   }
 };
 
+sub unapplied_amount {
+  my ($self) = @_;
+  return $self->has_bank ? $self->bank->unapplied_amount : 0;
+}
+
 has replacement => (
   is   => 'rw',
   does => 'Moonpig::Role::Consumer',
@@ -58,9 +56,28 @@ has replacement_mri => (
   coerce => 1,
 );
 
-sub unapplied_amount {
-  my ($self) = @_;
-  return $self->has_bank ? $self->bank->unapplied_amount : 0;
+# XXX this is for testing only; when we figure out replacement semantics
+has is_replaceable => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 1,
+);
+
+sub create_own_replacement {
+  my ($self, $event, $arg) = @_;
+
+  my $replacement_mri = $event->payload->{mri};
+
+  $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
+
+  if ($self->is_replaceable && ! $self->has_replacement) {
+    my $replacement = $replacement_mri->construct(
+      { extra => { self => $self } }
+     ) or return;
+    $self->replacement($replacement);
+    return $replacement;
+  }
+  return;
 }
 
 1;

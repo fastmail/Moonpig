@@ -310,23 +310,6 @@ sub can_make_next_payment {
   return $self->unapplied_amount >= $self->cost_per_charge;
 }
 
-sub create_own_replacement {
-  my ($self, $event, $arg) = @_;
-
-  my $replacement_mri = $event->payload->{mri};
-
-  $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
-
-  if ($self->is_replaceable && ! $self->has_replacement) {
-    my $replacement = $replacement_mri->construct(
-      { extra => { self => $self } }
-     ) or return;
-    $self->replacement($replacement);
-    return $replacement;
-  }
-  return;
-}
-
 sub construct_replacement {
   my ($self, $param) = @_;
 
