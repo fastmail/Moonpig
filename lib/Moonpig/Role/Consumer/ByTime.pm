@@ -83,15 +83,6 @@ has cost_period => (
    isa => TimeInterval,
 );
 
-# the date is appended to this to make the cost path
-# for this consumer's charges
-has cost_path_prefix => (
-  is => 'ro',
-  isa => CostPath,
-  coerce => 1,
-  required => 1,
-);
-
 # When the object has less than this long to live, it will
 # start posting low-balance events to its successor, or to itself if
 # it has no successor

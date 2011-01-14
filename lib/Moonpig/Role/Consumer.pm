@@ -96,4 +96,13 @@ sub create_own_replacement {
   return;
 }
 
+# the date is appended to this to make the cost path
+# for this consumer's charges
+has cost_path_prefix => (
+  is => 'ro',
+  isa => CostPath,
+  coerce => 1,
+  required => 1,
+);
+
 1;
