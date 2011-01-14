@@ -15,6 +15,13 @@ use Moonpig::Logger '$Logger';
 
 use namespace::autoclean;
 
+# XXX this is for testing only; when we figure out replacement semantics
+has is_replaceable => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 1,
+);
+
 has bank => (
   reader => 'bank',
   writer => '_set_bank',

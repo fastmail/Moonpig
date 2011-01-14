@@ -224,13 +224,6 @@ sub issue_complaint {
   }));
 }
 
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-);
-
 ################################################################
 #
 #
