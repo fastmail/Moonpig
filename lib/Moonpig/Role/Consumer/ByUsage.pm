@@ -45,36 +45,58 @@ has low_water_mark => (
 );
 
 # Return hold object on success, false on insuficient funds
-# XXX when does the charge get created??
-sub create_hold_for_amount {
-  my ($self, $amount) = @_;
+#
+sub _create_hold_for_amount {
+  my ($self, $amount, $subsidiary_hold) = @_;
 
   confess "Hold amount $amount < 0" if $amount < 0;
-  return unless $self->has_bank && $amount <= $self->unapplied_amount;
+  confess "insufficient funds to satisfy $amount"
+    unless $self->has_bank && $amount <= $self->unapplied_amount;
 
   my $hold = class('Hold')->new(
     bank => $self->bank,
     consumer => $self,
     allow_deletion => 1,
     amount => $amount,
+    subsidiary_hold => $subsidiary_hold,
   );
-
-  {
-    my $not_much_left;
-    if ($self->has_low_water_mark) {
-      $not_much_left = $self->n_units_remaining <= $self->low_water_mark;
-    } else {
-      $not_much_left = $self->n_unapplied_amount <= $amount;
-    }
-    $not_much_left and $self->handle_event(event('consumer-create-replacement'));
-  }
 
   return $hold;
 }
 
 sub create_hold_for_units {
-  my ($self, $n_units) = @_;
-  $self->create_hold_for_amount($self->cost_per_unit * $n_units);
+  my ($self, $units_requested) = @_;
+  my $units_to_get = $units_requested;
+  my $units_remaining = $self->n_units_remaining;
+
+  my $subsidiary_hold = do {
+    if ($units_requested < $units_remaining && $self->has_replacement) {
+      $self->replacement->create_hold_for_units(
+        $units_requested - $units_remaining
+      ) or return;
+      $units_to_get = $units_remaining;
+    }
+  };
+
+  my $hold = $self->_create_hold_for_amount(
+    $self->cost_per_unit * $n_units,
+    $subsidiary_hold,
+  );
+
+  unless ($hold) {
+    $subsidiary_hold->delete_hold() if $subsidiary_hold;
+    return;
+  }
+
+  {
+    my $low_water_mark =
+      $self->has_low_water_mark ? $self->low_water_mark : $units_requested;
+    if ($self->n_units_remaining <= $low_water_mark) {
+      $self->handle_event(event('consumer-create-replacement'));
+    }
+  }
+
+  return $hold;
 }
 
 sub units_remaining {
