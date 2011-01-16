@@ -36,4 +36,11 @@ before delete => sub {
   $self->subsidiary_hold->delete if $self->has_subsidiary_hold;
 };
 
+sub commit {
+  my ($self) = @_;
+  $self->consumer->create_charge_for_hold($self);
+  $self->subsidiary_hold->commit() if $self->has_subsidiary_hold;
+  $self->delete;
+}
+
 1;

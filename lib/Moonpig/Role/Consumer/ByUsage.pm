@@ -118,4 +118,19 @@ sub construct_replacement {
   });
 }
 
+sub create_charge_for_hold {
+  my ($self, $hold) = @_;
+
+  $self->ledger->current_journal->charge({
+    desc => $hold->charge_description(),  # XXX
+    from => $hold->bank,
+    to   => $self,
+    date => $now,
+    amount    => $hold->amount,
+    cost_path => [
+      @{$self->cost_path_prefix}, split(/-/, $now->ymd),
+     ],
+  });
+}
+
 1;
