@@ -9,7 +9,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::CostTreeContainer' => { charges_handle_events => 0 },
+  'Moonpig::Role::ChargeTreeContainer' => { charges_handle_events => 0 },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',

@@ -116,8 +116,8 @@ for my $thing (qw(journal invoice)) {
     Class::MOP::load_class($class);
 
     my $thing = $class->new({
-      cost_tree => class('CostTree')->new,
-      ledger    => $self,
+      charge_tree => class('ChargeTree')->new,
+      ledger      => $self,
     });
 
     push @$things, $thing;

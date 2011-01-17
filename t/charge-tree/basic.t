@@ -5,8 +5,8 @@ use Test::More;
 
 use Moonpig::Util -all;
 
-my $ct0 = class('CostTree')->new();
-my $ct1 = class('CostTree')->new(_subtree_for => { zero => $ct0 });
+my $ct0 = class('ChargeTree')->new();
+my $ct1 = class('ChargeTree')->new(_subtree_for => { zero => $ct0 });
 
 
 { my @st = $ct0->subtrees;
