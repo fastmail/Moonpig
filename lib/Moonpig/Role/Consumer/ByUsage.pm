@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer::ByUsage;
 # ABSTRACT: a consumer that charges when told to
 
 use Carp qw(confess croak);
+use List::Util qw(sum);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(CostPath);
@@ -139,6 +140,27 @@ sub create_charge_for_hold {
       @{$self->cost_path_prefix}, split(/-/, $now->ymd),
      ],
   });
+}
+
+# Total amount of money consumed by me in the past $max_age seconds
+sub recent_usage {
+  my ($self, $max_age) = @_;
+  my $transfers = class('Transfer')->all_for_consumer($self);
+  my $total_usage = sum(
+    map $_->amount,
+      grep Moonpig->env->now() - $_->date < $max_age,
+        @$transfers
+  );
+  return $total_usage;
+}
+
+# based on the last $days days of transfers, how long might we expect
+# the current bank to last, in days?
+sub estimated_lifetime {
+  my ($self) = @_;
+  my $days = 30;
+  my $recent_daily_usage = $self->recent_usage($days * 86_400) / $days;
+  return $self->unapplied_amount / $recent_daily_usage;
 }
 
 1;
