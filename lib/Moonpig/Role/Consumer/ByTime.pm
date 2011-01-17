@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(CostPath);
+use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
@@ -89,11 +89,11 @@ has cost_period => (
    isa => TimeInterval,
 );
 
-# the date is appended to this to make the cost path
+# the date is appended to this to make the charge path
 # for this consumer's charges
-has cost_path_prefix => (
+has charge_path_prefix => (
   is => 'ro',
-  isa => CostPath,
+  isa => ChargePath,
   coerce => 1,
   required => 1,
 );
@@ -261,8 +261,8 @@ sub charge {
       to   => $self,
       date => $next_charge_date,
       amount    => $self->cost_per_charge(),
-      cost_path => [
-        @{$self->cost_path_prefix},
+      charge_path => [
+        @{$self->charge_path_prefix},
         split(/-/, $next_charge_date->ymd),
       ],
     });
@@ -346,7 +346,7 @@ sub construct_replacement {
       replacement_mri    => $self->replacement_mri(),
       ledger             => $self->ledger(),
       charge_description => $self->charge_description(),
-      cost_path_prefix   => $self->cost_path_prefix(),
+      charge_path_prefix => $self->charge_path_prefix(),
       %$param,
   });
 }

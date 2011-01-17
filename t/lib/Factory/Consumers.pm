@@ -14,7 +14,7 @@ my %reasonable_defaults = (
     replacement_mri => Moonpig::URI->nothing(),
     description => "test consumer",
     charge_description => "test charge",
-    cost_path_prefix => [ "test" ],
+    charge_path_prefix => [ "test" ],
 );
 
 sub test_consumer {

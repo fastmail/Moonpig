@@ -10,7 +10,7 @@ use MooseX::Types -declare => [ qw(
   EventName EventHandlerName EventHandler
   EventHandlerMap
 
-  CostPath CostPathPart CostPathStr
+  ChargePath ChargePathPart ChargePathStr
 
   MRI
 
@@ -59,14 +59,14 @@ subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
 
 ################################################################
 #
-# CostPath
+# ChargePath
 
-subtype CostPathPart, as Str, where { /\A$simple_str\z/ };
-subtype CostPath, as ArrayRef[ CostPathPart ];
+subtype ChargePathPart, as Str, where { /\A$simple_str\z/ };
+subtype ChargePath, as ArrayRef[ ChargePathPart ];
 
-subtype CostPathStr, as Str, where { /\A$simple_str_chain\z/ };
+subtype ChargePathStr, as Str, where { /\A$simple_str_chain\z/ };
 
-coerce CostPath, from CostPathStr, via { [ split /\./, $_ ] };
+coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
 
 ################################################################
 #

@@ -22,13 +22,13 @@ use namespace::autoclean;
 # to: destination of money transfer
 # amount: amount of transfer
 # desc: charge descriptiopn
-# cost_path: path in current journal cost tree to add charge
+# charge_path: path in current journal cost tree to add charge
 # when: when to record charge (optional)
 sub charge {
   my ($self, $args) = @_;
 
   { my $FAIL = "";
-    for my $reqd (qw(from to amount desc cost_path)) {
+    for my $reqd (qw(from to amount desc charge_path)) {
       $FAIL .= __PACKAGE__ . "::charge missing required '$reqd' argument"
         unless $args->{$reqd};
     }
@@ -49,12 +49,12 @@ sub charge {
   });
 
   $self->add_charge_at(
-    $charge, $args->{cost_path},
+    $charge, $args->{charge_path},
   );
 
   $Logger->log([
     "adding charge at %s for %s",
-    join(q{.}, @{ $args->{cost_path} }),
+    join(q{.}, @{ $args->{charge_path} }),
     $charge->amount,
   ]);
 
