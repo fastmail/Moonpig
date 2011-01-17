@@ -164,9 +164,9 @@ sub process_credits {
       $to_pay -= $apply_amt;
 
       $Logger->log([
-        "will apply %s from credit %s; %s left to pay",
+        "will apply %s from %s; %s left to pay",
         $apply_amt,
-        $credit->guid,
+        $credit->ident,
         $to_pay,
       ]);
 
@@ -182,7 +182,7 @@ sub process_credits {
         });
       }
 
-      $Logger->log([ "marking invoice %s paid", $invoice->guid ]);
+      $Logger->log([ "marking %s paid", $invoice->ident ]);
       $invoice->handle_event(event('paid'));
       $invoice->mark_paid;
     } else {
@@ -218,9 +218,9 @@ sub _send_invoice {
   my $invoice = $event->payload->{invoice};
 
   $Logger->log([
-    "sending invoice %s to contacts of ledger %s",
-    $invoice->guid,
-    $self->guid,
+    "sending %s to contacts of %s",
+    $invoice->ident,
+    $self->ident,
   ]);
 
   $self->handle_event(event('send-mkit', {
