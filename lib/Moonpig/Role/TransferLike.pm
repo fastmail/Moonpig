@@ -2,7 +2,8 @@ package Moonpig::Role::TransferLike;
 # ABSTRACT: something that transfers money from one thing to another
 use MooseX::Role::Parameterized;
 
-use Moonpig::Types qw(Millicents);
+use Moonpig;
+use Moonpig::Types qw(Millicents Time);
 use MooseX::Types::Perl qw(Identifier);
 
 use namespace::autoclean;
@@ -74,6 +75,12 @@ role {
     isa =>  Millicents,
     coerce   => 1,
     required => 1,
+  );
+
+  has date => (
+    is => 'ro',
+    isa => Time,
+    default => sub { Moonpig->env->now() },
   );
 
   my $assert_no_overtransfer = sub {
