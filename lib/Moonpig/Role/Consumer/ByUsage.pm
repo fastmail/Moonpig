@@ -79,7 +79,7 @@ sub create_hold_for_units {
   };
 
   my $hold = $self->_create_hold_for_amount(
-    $self->cost_per_unit * $n_units,
+    $self->cost_per_unit * $units_requested,
     $subsidiary_hold,
   );
 
@@ -100,6 +100,7 @@ sub create_hold_for_units {
 }
 
 sub units_remaining {
+  my ($self) = @_;
   int($self->unapplied_amount / $self->cost_per_unit);
 }
 
@@ -125,6 +126,8 @@ sub create_charge_for_hold {
     or confess "misdirected hold";
   $self->has_bank
     or confess "charge committed on bankless consumer";
+
+  my $now = Moonpig->env->now;
 
   $self->ledger->current_journal->charge({
     desc => $hold->charge_description(),  # XXX
