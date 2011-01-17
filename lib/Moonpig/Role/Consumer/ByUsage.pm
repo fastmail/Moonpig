@@ -127,6 +127,7 @@ sub construct_replacement {
       cost_path_prefix   => $self->cost_path_prefix(),
       %$param,
   });
+  $self->replacement($repl);
 }
 
 sub create_charge_for_hold {
