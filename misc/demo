@@ -78,6 +78,12 @@ $ledger->process_credits;
   # implicit in combination of invoice's handler and credit processing
 
 # 6. heartbeats, until...
+# 7. consumer charges bank
+# 8. until low-funds, goto 6
+# 9. setup replacement
+# 10. funds expire
+# 11a. fail over (if replacement funded)
+# 11b. cancel account (if replacement unfunded)
 
 for (1 .. 24) {
   $ledger->handle_event( event('heartbeat') );
@@ -91,9 +97,3 @@ for (1 .. 24) {
   Moonpig->env->elapse_time(30 * 86400);
 }
 
-# 7. consumer charges bank
-# 8. until low-funds, goto 6
-# 9. setup replacement
-# 10. funds expire
-# 11a. fail over (if replacement funded)
-# 11b. cancel account (if replacement unfunded)
