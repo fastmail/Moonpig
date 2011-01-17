@@ -92,8 +92,17 @@ sub create_hold_for_units {
   {
     my $low_water_mark =
       $self->has_low_water_mark ? $self->low_water_mark : $units_requested;
-    if ($self->n_units_remaining <= $low_water_mark) {
-      $self->handle_event(event('consumer-create-replacement'));
+    if ($self->n_units_remaining <= $low_water_mark ||
+          $self->estimated_lifetime <= $self->old_age) {
+      # XXX code duplicated between ByTime and here
+      if ($self->has_replacement) {
+        $self->replacement->handle_event(
+          event('low-funds',
+                { remaining_life => $self->estimated_lifetime }
+               ));
+      } else {
+        $self->handle_event(event('consumer-create-replacement'));
+      }
     }
   }
 
@@ -155,14 +164,14 @@ sub recent_usage {
 }
 
 # based on the last $days days of transfers, how long might we expect
-# the current bank to last, in days?
-# If no estimate is possible, return $default
+# the current bank to last, in seconds?
+# If no estimate is possible, return 365d
 sub estimated_lifetime {
-  my ($self, $default) = @_;
+  my ($self) = @_;
   my $days = 30;
   my $recent_daily_usage = $self->recent_usage($days * 86_400) / $days;
-  return $default if $recent_daily_usage == 0;
-  return $self->unapplied_amount / $recent_daily_usage;
+  return 86_400 * 365 if $recent_daily_usage == 0;
+  return 86_400 * $self->unapplied_amount / $recent_daily_usage;
 }
 
 1;
