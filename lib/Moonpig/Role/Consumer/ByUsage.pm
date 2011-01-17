@@ -121,6 +121,11 @@ sub construct_replacement {
 sub create_charge_for_hold {
   my ($self, $hold) = @_;
 
+  $hold->consumer->guid eq $self->guid
+    or confess "misdirected hold";
+  $self->has_bank
+    or confess "charge committed on bankless consumer";
+
   $self->ledger->current_journal->charge({
     desc => $hold->charge_description(),  # XXX
     from => $hold->bank,
