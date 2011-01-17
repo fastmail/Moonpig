@@ -156,10 +156,12 @@ sub recent_usage {
 
 # based on the last $days days of transfers, how long might we expect
 # the current bank to last, in days?
+# If no estimate is possible, return $default
 sub estimated_lifetime {
-  my ($self) = @_;
+  my ($self, $default) = @_;
   my $days = 30;
   my $recent_daily_usage = $self->recent_usage($days * 86_400) / $days;
+  return $default if $recent_daily_usage == 0;
   return $self->unapplied_amount / $recent_daily_usage;
 }
 
