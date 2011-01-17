@@ -105,4 +105,13 @@ has cost_path_prefix => (
   required => 1,
 );
 
+# When the object has less than this long to live, it will
+# start posting low-balance events to its successor, or to itself if
+# it has no successor
+has old_age => (
+  is => 'ro',
+  required => 1,
+  isa => TimeInterval,
+);
+
 1;

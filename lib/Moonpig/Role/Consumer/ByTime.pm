@@ -83,15 +83,6 @@ has cost_period => (
    isa => TimeInterval,
 );
 
-# When the object has less than this long to live, it will
-# start posting low-balance events to its successor, or to itself if
-# it has no successor
-has old_age => (
-  is => 'ro',
-  required => 1,
-  isa => TimeInterval,
-);
-
 # Last time I charged the bank
 has last_charge_date => (
   is => 'rw',
