@@ -246,7 +246,7 @@ sub charge {
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
   CHARGE: until ($self->next_charge_date->follows($now)) {
-    $self->consider_making_replacement;
+    $self->reflect_on_mortality;
 
     unless ($self->can_make_next_payment) {
       $self->expire;
@@ -282,7 +282,7 @@ sub cost_per_charge {
   return $self->cost_amount / $n_periods;
 }
 
-sub consider_making_replacement {
+sub reflect_on_mortality {
   my ($self, $tick_time) = @_;
 
   return unless $self->has_bank;
