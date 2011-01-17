@@ -176,14 +176,16 @@ has is_replaceable => (
 sub charge {
   my ($self, $event, $arg) = @_;
 
-  return unless $self->has_bank;
-
   my $now = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
+
+  return if $self->in_grace_period;
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
   CHARGE: until ($self->next_charge_date->follows($now)) {
+    # maybe make a replacement, maybe tell it that it will soon inherit the
+    # kingdom, maybe do nothing -- rjbs, 2011-01-17
     $self->reflect_on_mortality;
 
     unless ($self->can_make_next_payment) {
@@ -209,12 +211,14 @@ sub charge {
   }
 }
 
+sub in_grace_period {
+  return;
+}
+
+# how much do we charge each time we issue a new charge?
 sub cost_per_charge {
   my ($self) = @_;
 
-  # Number of cost periods included in each charge
-  # (For example, if costs are $10 per 30 days, and we charge daily,
-  # there are 1/30 cost periods per day, each costing $10 * 1/30 = $0.33.
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
   return $self->cost_amount / $n_periods;
