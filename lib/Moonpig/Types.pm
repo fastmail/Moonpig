@@ -6,6 +6,8 @@ use MooseX::Types -declare => [ qw(
   Millicents
   Credit
 
+  Invoice
+
   Event
   EventName EventHandlerName EventHandler
   EventHandlerMap
@@ -37,6 +39,8 @@ subtype EmailAddresses, as ArrayRef, where {
 };
 
 role_type Ledger, { role => 'Moonpig::Role::Ledger' };
+
+role_type Invoice, { role => 'Moonpig::Role::Invoice' };
 
 subtype Millicents, as Int;
 

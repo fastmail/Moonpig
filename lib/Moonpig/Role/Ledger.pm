@@ -136,6 +136,17 @@ for my $thing (qw(journal invoice)) {
   );
 }
 
+sub latest_invoice {
+  my ($self) = @_;
+  my $latest = (
+    sort { $b->created_at <=> $a->created_at
+        || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
+         } $self->invoices
+  )[0];
+
+  return $latest;
+}
+
 sub process_credits {
   my ($self) = @_;
 

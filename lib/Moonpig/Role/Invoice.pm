@@ -14,10 +14,16 @@ use Moonpig::Behavior::EventHandlers;
 
 use Moonpig::CreditApplication;
 use Moonpig::Util qw(event);
-use Moonpig::Types qw(Credit);
+use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
 use namespace::autoclean;
+
+has created_at => (
+  is   => 'ro',
+  isa  => Time,
+  default => sub { Moonpig->env->now },
+);
 
 sub finalize_and_send {
   my ($self) = @_;
