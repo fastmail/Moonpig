@@ -40,9 +40,11 @@ sub add_consumer_to {
   my ($self, $ledger, $args) = @_;
 
   my $consumer = $ledger->add_consumer(
-    class(qw(Consumer)),
+    class(qw(Consumer::Dummy)),
     {
       replacement_mri => Moonpig::URI->nothing(),
+      cost_path_prefix => [ "dummy-consumer" ],
+      old_age => 30,
     },
   );
 
