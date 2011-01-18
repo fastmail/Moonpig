@@ -6,6 +6,7 @@ use Data::GUID qw(guid_string);
 use Moose::Util::TypeConstraints;
 
 use Moonpig::Logger '$Logger';
+use Moonpig::Types qw(GUID);
 
 use namespace::autoclean;
 
@@ -13,7 +14,7 @@ with 'Moonpig::Role::StubBuild';
 
 has guid => (
   is  => 'ro',
-  isa => 'Str', # refine this -- rjbs, 2010-12-02
+  isa => GUID,
   init_arg => undef,
   default  => sub { guid_string },
 );

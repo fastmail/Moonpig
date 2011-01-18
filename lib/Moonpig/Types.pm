@@ -12,6 +12,8 @@ use MooseX::Types -declare => [ qw(
 
   ChargePath ChargePathPart ChargePathStr
 
+  GUID
+
   MRI
 
   Time TimeInterval
@@ -19,6 +21,7 @@ use MooseX::Types -declare => [ qw(
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
 # use MooseX::Types::Structured qw(Map);
+use Data::GUID 0.046 ();
 use DateTime;
 use DateTime::Duration;
 use Email::Address;
@@ -67,6 +70,12 @@ subtype ChargePath, as ArrayRef[ ChargePathPart ];
 subtype ChargePathStr, as Str, where { /\A$simple_str_chain\z/ };
 
 coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
+
+################################################################
+#
+# GUID
+
+subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
 
 ################################################################
 #
