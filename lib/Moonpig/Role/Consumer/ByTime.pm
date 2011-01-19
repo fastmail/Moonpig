@@ -173,6 +173,20 @@ has is_replaceable => (
 #
 #
 
+has grace_until => (
+  is  => 'rw',
+  isa => Time,
+  clearer   => 'clear_grace_until',
+  predicate => 'has_grace_until',
+);
+
+sub in_grace_period {
+  my ($self) = @_;
+  return unless $self->has_grace_until;
+
+  return $self->grace_until >= Moonpig->env->now;
+}
+
 sub charge {
   my ($self, $event, $arg) = @_;
 
@@ -209,10 +223,6 @@ sub charge {
 
     $self->last_charge_date($self->next_charge_date());
   }
-}
-
-sub in_grace_period {
-  return;
 }
 
 # how much do we charge each time we issue a new charge?
