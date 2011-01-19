@@ -15,7 +15,8 @@ use Moonpig::Env::Test;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 
-use Moonpig::Util qw(class dollars event);
+use List::Util qw(sum);
+use Moonpig::Util qw(class days dollars event);
 
 Moonpig->env->stop_time;
 
@@ -41,6 +42,7 @@ my $consumer = $ledger->add_consumer(
     charge_description => 'yoyodyne service',
     old_age            =>  30 * 86400,
     charge_path_prefix => 'yoyodyne.basic',
+    grace_until        => Moonpig->env->now + days(3),
 
     # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
     replacement_mri    => Moonpig::URI->new(
@@ -51,24 +53,20 @@ my $consumer = $ledger->add_consumer(
 
 # 3. charge, finalize, send invoice
 
-my $invoice = $ledger->current_invoice;
+  # We send a heartbeat, which lets the invoice perform dunning, picking up the
+  # invoice that was charged by virtue of the ByTime consumer's creation.
 
-my $charge = $invoice->add_charge_at(
-  class('Charge::Bankable')->new({
-    description => 'yoyodyne setup',
-    amount      => $consumer->cost_amount,
-    consumer    => $consumer,
-  }),
-  'test.charges.setup',
-);
+$ledger->handle_event( event('heartbeat') );
 
-$invoice->finalize_and_send;
+my $last_rfp = $ledger->last_request_for_payment;
 
 # 4. pay and apply payment to invoice
 
+my $total   = sum map { $_->total_amount } $last_rfp->invoices;
+
 $ledger->add_credit(
   class(qw(Credit::Simulated)),
-  { amount => $invoice->total_amount },
+  { amount => $total },
 );
 
 $ledger->process_credits;
