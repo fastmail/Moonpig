@@ -182,6 +182,7 @@ has grace_until => (
 
 sub in_grace_period {
   my ($self) = @_;
+
   return unless $self->has_grace_until;
 
   return $self->grace_until >= Moonpig->env->now;
