@@ -6,7 +6,7 @@ use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(ChargePath);
-use Moonpig::Util qw(days event);
+use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
@@ -318,10 +318,11 @@ sub _invoice {
   my $invoice = $self->ledger->current_invoice;
 
   $invoice->add_charge_at(
-    {
+    class('Charge::Bankable')->new({
       description => $self->charge_description, # really? -- rjbs, 2011-01-18
       amount      => $self->cost_amount,
-    },
+      consumer    => $self,
+    }),
     $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
   );
 }
