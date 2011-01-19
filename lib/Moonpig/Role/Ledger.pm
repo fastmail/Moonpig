@@ -6,6 +6,7 @@ with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
+  'Moonpig::Role::Dunner',
 );
 
 use Moose::Util::TypeConstraints;
@@ -209,10 +210,6 @@ implicit_event_handlers {
       redistribute => Moonpig::Events::Handler::Method->new('_reheartbeat'),
     },
 
-    'send-invoice' => {
-      default => Moonpig::Events::Handler::Method->new('_send_invoice'),
-    },
-
     'send-mkit' => {
       default => Moonpig::Events::Handler::Method->new('_send_mkit'),
     },
@@ -222,30 +219,6 @@ implicit_event_handlers {
     },
   };
 };
-
-sub _send_invoice {
-  my ($self, $event) = @_;
-
-  my $invoice = $event->payload->{invoice};
-
-  $Logger->log([
-    "sending %s to contacts of %s",
-    $invoice->ident,
-    $self->ident,
-  ]);
-
-  $self->handle_event(event('send-mkit', {
-    kit => 'generic',
-    arg => {
-      subject => sprintf("INVOICE %s IS DUE", $invoice->guid),
-      body    => sprintf("YOU OWE US %s\n", $invoice->total_amount),
-
-      # This should get names with addresses, unlike the contact-humans
-      # handler, which wants envelope recipients.
-      to_addresses => [ $self->contact->email_addresses ],
-    },
-  }));
-}
 
 sub _reheartbeat {
   my ($self, $event) = @_;
@@ -259,6 +232,8 @@ sub _reheartbeat {
   ) {
     $target->handle_event($event);
   }
+
+  $self->perform_dunning;
 }
 
 sub _send_mkit {

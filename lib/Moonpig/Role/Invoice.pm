@@ -25,14 +25,6 @@ has created_at => (
   default => sub { Moonpig->env->now },
 );
 
-sub finalize_and_send {
-  my ($self) = @_;
-
-  $self->close;
-
-  $self->ledger->handle_event( event('send-invoice', { invoice => $self }) );
-}
-
 has paid => (
   isa => 'Bool',
   init_arg => undef,

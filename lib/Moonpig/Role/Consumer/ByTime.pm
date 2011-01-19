@@ -15,8 +15,6 @@ use Moonpig::Logger '$Logger';
 
 with(
   'Moonpig::Role::Consumer',
-  'Moonpig::Role::HandlesEvents',
-  'Moonpig::Role::StubBuild',
 );
 
 use Moonpig::Behavior::EventHandlers;

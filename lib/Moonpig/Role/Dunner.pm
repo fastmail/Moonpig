@@ -3,6 +3,9 @@ package Moonpig::Role::Dunner;
 use Moose::Role;
 
 use Moonpig::Logger '$Logger';
+use Moonpig::Util qw(event);
+
+use namespace::autoclean;
 
 has last_request_for_payment => (
   does      => 'Moonpig::Role::RequestForPayment',
@@ -39,6 +42,8 @@ sub perform_dunning {
 
 sub _send_request_for_payment {
   my ($self, $invoices) = @_;
+
+  $_->close for grep { $_->is_open } @$invoices;
 
   $Logger->log([
     "sending invoices %s to contacts of %s",

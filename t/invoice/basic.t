@@ -2,7 +2,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Util qw(class dollars);
+use Moonpig::Util qw(class dollars event);
 
 with(
   't::lib::Factory::Ledger',
@@ -43,14 +43,14 @@ test charge_close_and_send => sub {
 
   is($invoice->total_amount, dollars(15), "invoice line items tally up");
 
-  $invoice->finalize_and_send;
+  $ledger->handle_event( event('heartbeat') );
 
   my @deliveries = Moonpig->env->email_sender->deliveries;
   is(@deliveries, 1, "we went the invoice to the customer");
   my $email = $deliveries[0]->{email};
   like(
     $email->header('subject'),
-    qr{invoice \S+ is due}i,
+    qr{payment is due}i,
     "the email we went is an invoice email",
   );
 
@@ -90,7 +90,7 @@ test underpayment => sub {
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
-  $invoice->finalize_and_send;
+  $ledger->handle_event( event('heartbeat') );
 
   my $credit = $ledger->add_credit(
     class(qw(Credit::Simulated)),
@@ -132,7 +132,7 @@ test overpayment  => sub {
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
-  $invoice->finalize_and_send;
+  $ledger->handle_event( event('heartbeat') );
 
   my $credit = $ledger->add_credit(
     class(qw(Credit::Simulated)),
@@ -174,7 +174,7 @@ test create_bank_on_payment => sub {
 
   $invoice->add_charge_at($charge, 'test.charges.maintenance');
 
-  $invoice->finalize_and_send;
+  $ledger->handle_event( event('heartbeat') );
 
   my $credit = $ledger->add_credit(
     class(qw(Credit::Simulated)),
@@ -215,7 +215,7 @@ test payment_by_two_credits => sub {
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
-  $invoice->finalize_and_send;
+  $ledger->handle_event( event('heartbeat') );
 
   my @credits = map {;
     $ledger->add_credit(
