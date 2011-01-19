@@ -1,6 +1,8 @@
 package t::lib::Factory::Ledger;
 use Moose::Role;
 
+use Data::GUID qw(guid_string);
+
 use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util -all;
@@ -42,6 +44,7 @@ sub add_consumer_to {
   my $consumer = $ledger->add_consumer(
     class(qw(Consumer)),
     {
+      service_uri     => 'urn:uuid:' . guid_string,
       replacement_mri => Moonpig::URI->nothing(),
     },
   );

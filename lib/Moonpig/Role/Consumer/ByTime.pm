@@ -283,7 +283,7 @@ sub construct_replacement {
       cost_period        => $self->cost_period(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
-      ledger             => $self->ledger(),
+      service_uri        => $self->service_uri,
       charge_description => $self->charge_description(),
       charge_path_prefix => $self->charge_path_prefix(),
       grace_until        => Moonpig->env->now  +  days(3),

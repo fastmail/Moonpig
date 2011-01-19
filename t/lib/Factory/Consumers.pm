@@ -4,6 +4,7 @@ use Moose::Role;
 use Moonpig::Env::Test;
 use Moonpig::URI;
 
+use Data::GUID qw(guid_string);
 use Moonpig::Util -all;
 requires 'ledger';
 
@@ -25,7 +26,8 @@ sub test_consumer {
 
   my %arg = (
     %reasonable_defaults,
-    ledger => $self->ledger,
+    service_uri => 'urn:uuid:' . guid_string,
+    ledger      => $self->ledger,
     %$args,
   );
 

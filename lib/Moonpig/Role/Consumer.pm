@@ -74,6 +74,12 @@ sub unapplied_amount {
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
 }
 
+has service_uri => (
+  is  => 'ro',
+  isa => 'Str',
+  required => 1,
+);
+
 before expire => sub {
   my ($self) = @_;
 
