@@ -300,6 +300,7 @@ sub construct_replacement {
       ledger             => $self->ledger(),
       charge_description => $self->charge_description(),
       charge_path_prefix => $self->charge_path_prefix(),
+      grace_until        => Moonpig->env->now  +  days(3),
       %$param,
   });
 }
