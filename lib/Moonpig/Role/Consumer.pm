@@ -10,10 +10,28 @@ with(
 
 use MooseX::SetOnce;
 use Moonpig::Types qw(Ledger Millicents MRI);
+use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
 
+use Moonpig::Behavior::EventHandlers;
+
 use namespace::autoclean;
+
+implicit_event_handlers {
+  return {
+    'terminate-service' => {
+      default => Moonpig::Events::Handler::Method->new(
+        method_name => 'terminate_service',
+      ),
+    },
+    'fail-over' => {
+      default => Moonpig::Events::Handler::Method->new(
+        method_name => 'failover',
+      ),
+    },
+  };
+};
 
 has bank => (
   reader => 'bank',
@@ -54,6 +72,32 @@ has replacement_mri => (
 sub unapplied_amount {
   my ($self) = @_;
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
+}
+
+before expire => sub {
+  my ($self) = @_;
+
+  $self->handle_event(
+    $self->has_replacement
+    ? event('fail-over')
+    : event('terminate-service')
+  );
+};
+
+sub failover {
+  my ($self) = @_;
+
+  $Logger->log("XXX: failing over");
+}
+
+sub terminate_service {
+  my ($self) = @_;
+
+  $Logger->log([
+    'terminating service: %s, %s',
+    $self->charge_description,
+    $self->ident,
+  ]);
 }
 
 1;

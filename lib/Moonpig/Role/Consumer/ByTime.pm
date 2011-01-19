@@ -136,20 +136,6 @@ sub expire_date {
       $n_charge_periods_left * $self->charge_frequency;
 }
 
-after expire => sub {
-  my ($self) = @_;
-
-  $Logger->log([
-    'expiring consumer: %s, %s; %s',
-    $self->charge_description,
-    $self->ident,
-    $self->has_replacement
-      ? 'replacement will take over: ' .  $self->replacement->ident
-      : 'no replacement exists'
-  ]);
-
-};
-
 # returns amount of life remaining, in seconds
 sub remaining_life {
   my ($self, $when) = @_;
