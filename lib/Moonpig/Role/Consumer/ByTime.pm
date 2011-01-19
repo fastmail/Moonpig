@@ -27,7 +27,12 @@ implicit_event_handlers {
   return {
     heartbeat => {
       charge => Moonpig::Events::Handler::Method->new(
-        method_name => 'charge'
+        method_name => 'charge',
+      ),
+    },
+    created => {
+      'initial-invoice' => Moonpig::Events::Handler::Method->new(
+        method_name => '_invoice',
       ),
     },
     'low-funds' => {
@@ -155,71 +160,6 @@ sub remaining_life {
 sub next_charge_date {
   my ($self) = @_;
   return $self->last_charge_date + $self->charge_frequency;
-}
-
-# This is the schedule of when to warn the owner that money is running out.
-# if the number of days of remaining life is listed on the schedule,
-# the object will queue a warning event to the ledger.  By default,
-# it does this once per week, and also the day before it dies
-has complaint_schedule => (
-  is => 'ro',
-  isa => ArrayRef [ Num ],
-  default => sub { [ 28, 21, 14, 7, 1 ] },
-);
-
-has last_complaint_date => (
-  is => 'rw',
-  isa => 'Num',
-  predicate => 'has_complained_before',
-);
-
-sub issue_complaint_if_necessary {
-  my ($self, $remaining_life) = @_;
-  my $remaining_days = $remaining_life / 86_400;
-  my $sched = $self->complaint_schedule;
-  my $last_complaint_issued = $self->has_complained_before
-    ? $self->last_complaint_date
-    : $sched->[0] + 1;
-
-  # run through each day since the last time we issued a complaint
-  # up until now; if any of those days are complaining days,
-  # it is time to issue a new complaint.
-  my $complaint_due;
-  #  warn ">> <$self> $last_complaint_issued .. $remaining_days\n";
-  for my $n ($remaining_days .. $last_complaint_issued - 1) {
-    $complaint_due = 1, last
-      if $self->is_complaining_day($n);
-  }
-
-  if ($complaint_due) {
-    $self->issue_complaint($remaining_life);
-    $self->last_complaint_date($remaining_days);
-  }
-}
-
-sub is_complaining_day {
-  my ($self, $days) = @_;
-  confess "undefined days" unless defined $days;
-  for my $d (@{$self->complaint_schedule}) {
-    return 1 if $d == $days;
-  }
-  return;
-}
-
-sub issue_complaint {
-  my ($self, $how_soon) = @_;
-
-  $self->ledger->handle_event(event('send-mkit', {
-    kit => 'generic',
-    arg => {
-      subject => sprintf("YOUR SERVICE RUNS OUT SOON: %s", $self->guid),
-      body    => sprintf("YOU OWE US %s\n", $self->cost_amount),
-
-      # This should get names with addresses, unlike the contact-humans
-      # handler, which wants envelope recipients.
-      to_addresses => [ $self->ledger->contact->email_addresses ],
-    },
-  }));
 }
 
 # XXX this is for testing only; when we figure out replacement semantics
@@ -354,7 +294,20 @@ sub predecessor_running_out {
   my ($self, $event, $args) = @_;
   my $remaining_life = $event->payload->{remaining_life}  # In seconds
     or confess("predecessor didn't advise me how long it has to live");
-  $self->issue_complaint_if_necessary($remaining_life);
+}
+
+sub _invoice {
+  my ($self) = @_;
+
+  my $invoice = $self->ledger->current_invoice;
+
+  $invoice->add_charge_at(
+    {
+      description => $self->charge_description, # really? -- rjbs, 2011-01-18
+      amount      => $self->cost_amount,
+    },
+    $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
+  );
 }
 
 1;

@@ -87,6 +87,10 @@ for my $thing (qw(bank consumer refund)) {
         if $self->$predicate($value->guid);
 
       $self->$setter($value->guid, $value);
+
+      $value->handle_event(event('created'));
+
+      return $value;
     },
   });
 }
@@ -225,7 +229,7 @@ sub _reheartbeat {
 
   for my $target (
     # $self->contact,
-    # $self->banks,
+    $self->banks,
     $self->consumers,
     $self->invoices,
     $self->journals,

@@ -3,13 +3,14 @@ package Moonpig::Role::Dunner;
 use Moose::Role;
 
 use Moonpig::Logger '$Logger';
-use Moonpig::Util qw(event);
+use Moonpig::Util qw(class event);
 
 use namespace::autoclean;
 
 has last_request_for_payment => (
   does      => 'Moonpig::Role::RequestForPayment',
   init_arg  => undef, # must be set by the RFP sender -- rjbs, 2011-01-18
+  reader    => 'last_request_for_payment',
   writer    => '_set_last_request_for_payment',
   predicate => 'has_last_request_for_payment',
 );
@@ -17,7 +18,7 @@ has last_request_for_payment => (
 sub dunning_frequency { 3 * 86400 }
 
 sub perform_dunning {
-  my ($self) = @_;
+  my ($self, $time) = @_;
 
   my @invoices =
     sort { $b->created_at <=> $a->created_at
@@ -31,7 +32,7 @@ sub perform_dunning {
     my $rfp = $self->last_request_for_payment;
     
     if ($rfp->latest_invoice->guid eq $invoices[0]->guid) {
-      my $ago = Moonpig->env->current_time - $invoices[0]->created_at;
+      my $ago = Moonpig->env->current_time - $rfp->sent_at;
 
       return unless $ago > $self->dunning_frequency;
     }
@@ -50,6 +51,12 @@ sub _send_request_for_payment {
     [ map {; $_->ident } @$invoices ],
     $self->ident,
   ]);
+
+  my $rfp = class(qw(RequestForPayment))->new({
+    invoices => $invoices,
+  });
+
+  $self->_set_last_request_for_payment($rfp);
 
   $self->handle_event(event('send-mkit', {
     kit => 'generic',

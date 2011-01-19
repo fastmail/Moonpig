@@ -4,7 +4,6 @@ use Moose::Role;
 with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HasGuid',
-  'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanExpire',
 );

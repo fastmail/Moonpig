@@ -44,13 +44,13 @@ sub queue_handler {
 test "with_successor" => sub {
   my ($self) = @_;
 
-  plan tests => 3;
+  plan tests => 9;
 
   for my $test (
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
     [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
-   ) {
+  ) {
 
     # Pretend today is 2000-01-01 for convenience
     my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
@@ -60,10 +60,11 @@ test "with_successor" => sub {
 
     my ($name, $schedule, $n_warnings) = @$test;
 
-    # Normally we get 5 warnings, when the account is 28, 21, 14, 7 ,
-    # or 1 day from termination.  (On Jan 3, 10, 17, 24, and 30.)  But
-    # if heartbeats are skipped, we might miss some
-    $n_warnings = 5 unless defined $n_warnings;
+    # XXX THIS WILL CHANGE AS DUNNING / GRACE BEHAVIOR IS REFINED
+    # Normally we get 8 requests for payment:
+    #  * 1 when the consumer is first created
+    #  * 1 every 4 days thereafter: the 4th, 8th, 12th, 16th, 20th, 24th, 28th
+    $n_warnings = 8 unless defined $n_warnings;
 
     my $b = class('Bank')->new({
       ledger => $self->ledger,
@@ -71,11 +72,25 @@ test "with_successor" => sub {
     });
 
     my $c = $self->test_consumer_pair(
-      $CLASS, {
-        ledger => $self->ledger,
-        bank => $b,
+      $CLASS,
+      {
+        ledger  => $self->ledger,
+        bank    => $b,
         old_age => years(1000),
-      });
+      },
+    );
+
+    {
+      my @deliveries = Moonpig->env->email_sender->deliveries;
+      is(@deliveries, 0, "no notices sent yet");
+    }
+
+    $self->ledger->handle_event(event('heartbeat'));
+
+    {
+      my @deliveries = Moonpig->env->email_sender->deliveries;
+      is(@deliveries, 1, "initial invoice sent");
+    }
 
     for my $day (@$schedule) {
       my $tick_time = Moonpig::DateTime->new(
@@ -83,7 +98,7 @@ test "with_successor" => sub {
       );
 
       Moonpig->env->current_time($tick_time);
-      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
+      $self->ledger->handle_event(event('heartbeat'));
     }
 
     my @deliveries = Moonpig->env->email_sender->deliveries;
