@@ -6,7 +6,7 @@ use Test::More;
 use Moonpig::Util -all;
 
 my @ct;
-push @ct, class('CostTree')->new() for 0..5;
+push @ct, class('ChargeTree')->new() for 0..5;
 
 note q{   a    b              };
 note q{ 0 -> 1 -> 2           };

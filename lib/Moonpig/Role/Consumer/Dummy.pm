@@ -4,7 +4,7 @@ package Moonpig::Role::Consumer::Dummy;
 use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(CostPath);
+use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);
@@ -34,7 +34,7 @@ sub construct_replacement {
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
     {
-      cost_path_prefix   => $self->cost_path_prefix(),
+      charge_path_prefix => $self->charge_path_prefix(),
       ledger             => $self->ledger(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),

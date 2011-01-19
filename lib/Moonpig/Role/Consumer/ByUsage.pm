@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use List::Util qw(sum);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(CostPath);
+use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);
@@ -124,7 +124,7 @@ sub construct_replacement {
       low_water_mark     => $self->low_water_mark(),
       replacement_mri    => $self->replacement_mri(),
       ledger             => $self->ledger(),
-      cost_path_prefix   => $self->cost_path_prefix(),
+      charge_path_prefix => $self->charge_path_prefix(),
       %$param,
   });
   $self->replacement($repl);
@@ -146,8 +146,8 @@ sub create_charge_for_hold {
     to   => $self,
     date => $now,
     amount    => $hold->amount,
-    cost_path => [
-      @{$self->cost_path_prefix}, split(/-/, $now->ymd),
+    charge_path => [
+      @{$self->charge_path_prefix}, split(/-/, $now->ymd),
      ],
   });
 }

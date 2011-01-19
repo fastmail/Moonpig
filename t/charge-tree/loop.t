@@ -6,7 +6,7 @@ use Test::More;
 use Moonpig::Util -all;
 
 my @ct;
-push @ct, class('CostTree')->new() for 0..5;
+push @ct, class('ChargeTree')->new() for 0..5;
 
 note q{                 ,--.  };
 note q{ 0 -> 1 -> 2    /    \ };
@@ -36,7 +36,7 @@ my %contains = map { $_ => 1 }
 
 for my $x (0..5) {
   for my $y (0..5) {
-    is($ct[$x]->_contains_cost_tree($ct[$y]), $contains{"$x$y"} || 0,
+    is($ct[$x]->_contains_charge_tree($ct[$y]), $contains{"$x$y"} || 0,
        "$x contains $y? ");
   }
 }

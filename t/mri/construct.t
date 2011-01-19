@@ -23,7 +23,7 @@ ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
     cost_period => $day,
     replacement_mri => Moonpig::URI->nothing(),
     charge_description => "blah",
-    cost_path_prefix => [],
+    charge_path_prefix => [],
    }}),
    "good path Consumer::ByTime");
 

@@ -20,7 +20,7 @@ credit card numbers.)
 
 An invoice represents list of unpaid charges that the owner of the
 account will be asked to pay.  Its implementation is as the head of a
-cost tree.
+charge tree.
 
 An invoice can be asked to provide a printable representation of itself, which
 will include summaries of prior open invoices as line items.  The printable

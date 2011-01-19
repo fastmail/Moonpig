@@ -3,7 +3,7 @@ use warnings;
 
 use Test::More;
 
-use Moonpig::Types qw(CostPath Millicents);
+use Moonpig::Types qw(ChargePath Millicents);
 
 {
   my $val = 1.12;
@@ -12,13 +12,13 @@ use Moonpig::Types qw(CostPath Millicents);
 }
 
 is_deeply(
-  CostPath->assert_coerce('foo.bar.baz'),
+  ChargePath->assert_coerce('foo.bar.baz'),
   [ qw(foo bar baz) ],
   "can convert dotted-string to cost path array",
 );
 
 is_deeply(
-  CostPath->assert_coerce(''),
+  ChargePath->assert_coerce(''),
   [ ],
   "can convert empty-tring to (empty) cost path array",
 );

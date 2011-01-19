@@ -1,5 +1,5 @@
 package Moonpig::Role::Charge;
-# ABSTRACT: a charge in a cost tree
+# ABSTRACT: a charge in a charge tree
 use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);

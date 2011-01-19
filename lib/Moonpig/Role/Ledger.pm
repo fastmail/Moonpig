@@ -116,8 +116,8 @@ for my $thing (qw(journal invoice)) {
     Class::MOP::load_class($class);
 
     my $thing = $class->new({
-      cost_tree => class('CostTree')->new,
-      ledger    => $self,
+      charge_tree => class('ChargeTree')->new,
+      ledger      => $self,
     });
 
     push @$things, $thing;
@@ -134,6 +134,17 @@ for my $thing (qw(journal invoice)) {
       $self->$reader->[-1];
     }
   );
+}
+
+sub latest_invoice {
+  my ($self) = @_;
+  my $latest = (
+    sort { $b->created_at <=> $a->created_at
+        || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
+         } $self->invoices
+  )[0];
+
+  return $latest;
 }
 
 sub process_credits {
@@ -164,9 +175,9 @@ sub process_credits {
       $to_pay -= $apply_amt;
 
       $Logger->log([
-        "will apply %s from credit %s; %s left to pay",
+        "will apply %s from %s; %s left to pay",
         $apply_amt,
-        $credit->guid,
+        $credit->ident,
         $to_pay,
       ]);
 
@@ -182,7 +193,7 @@ sub process_credits {
         });
       }
 
-      $Logger->log([ "marking invoice %s paid", $invoice->guid ]);
+      $Logger->log([ "marking %s paid", $invoice->ident ]);
       $invoice->handle_event(event('paid'));
       $invoice->mark_paid;
     } else {
@@ -218,9 +229,9 @@ sub _send_invoice {
   my $invoice = $event->payload->{invoice};
 
   $Logger->log([
-    "sending invoice %s to contacts of ledger %s",
-    $invoice->guid,
-    $self->guid,
+    "sending %s to contacts of %s",
+    $invoice->ident,
+    $self->ident,
   ]);
 
   $self->handle_event(event('send-mkit', {

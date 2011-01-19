@@ -1,5 +1,5 @@
 package Moonpig::Role::Charge::HandlesEvents;
-# ABSTRACT: a charge on a cost tree that can get events from its container
+# ABSTRACT: a charge on a charge tree that can get events from its container
 use Moose::Role;
 with(
   'Moonpig::Role::Charge',

@@ -21,7 +21,7 @@ implicit_event_handlers {
 };
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(CostPath Ledger Millicents MRI TimeInterval);
+use Moonpig::Types qw(ChargePath Ledger Millicents MRI TimeInterval);
 
 use Moonpig::Logger '$Logger';
 
@@ -98,9 +98,9 @@ sub create_own_replacement {
 
 # the date is appended to this to make the cost path
 # for this consumer's charges
-has cost_path_prefix => (
+has charge_path_prefix => (
   is => 'ro',
-  isa => CostPath,
+  isa => ChargePath,
   coerce => 1,
   required => 1,
 );
@@ -113,5 +113,10 @@ has old_age => (
   required => 1,
   isa => TimeInterval,
 );
+
+sub amount_in_bank {
+  my ($self) = @_;
+  return $self->has_bank ? $self->bank->unapplied_amount : 0;
+}
 
 1;

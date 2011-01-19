@@ -1,4 +1,4 @@
-package Moonpig::Role::CostTreeContainer;
+package Moonpig::Role::ChargeTreeContainer;
 # ABSTRACT: something that acts as the head of a cost tree
 use MooseX::Role::Parameterized;
 
@@ -16,10 +16,10 @@ parameter charges_handle_events => (
 role {
   my $p = shift;
 
-  has cost_tree => (
+  has charge_tree => (
     is   => 'ro',
-    does => 'Moonpig::Role::CostTree',
-    default  => sub { class('CostTree')->new },
+    does => 'Moonpig::Role::ChargeTree',
+    default  => sub { class('ChargeTree')->new },
     handles  => [ qw(add_charge_at total_amount) ],
   );
 

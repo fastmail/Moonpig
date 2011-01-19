@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::CostTreeContainer' => { charges_handle_events => 1 },
+  'Moonpig::Role::ChargeTreeContainer' => { charges_handle_events => 1 },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
@@ -14,10 +14,16 @@ use Moonpig::Behavior::EventHandlers;
 
 use Moonpig::CreditApplication;
 use Moonpig::Util qw(event);
-use Moonpig::Types qw(Credit);
+use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
 use namespace::autoclean;
+
+has created_at => (
+  is   => 'ro',
+  isa  => Time,
+  default => sub { Moonpig->env->now },
+);
 
 sub finalize_and_send {
   my ($self) = @_;
@@ -50,7 +56,7 @@ implicit_event_handlers {
 sub _pay_charges {
   my ($self, $event) = @_;
 
-  $self->cost_tree->apply_to_all_charges(sub { $_->handle_event($event) });
+  $self->charge_tree->apply_to_all_charges(sub { $_->handle_event($event) });
 }
 
 1;

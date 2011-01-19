@@ -43,7 +43,7 @@ sub add_consumer_to {
     class(qw(Consumer::Dummy)),
     {
       replacement_mri => Moonpig::URI->nothing(),
-      cost_path_prefix => [ "dummy-consumer" ],
+      charge_path_prefix => [ "dummy-consumer" ],
       old_age => 30,
     },
   );

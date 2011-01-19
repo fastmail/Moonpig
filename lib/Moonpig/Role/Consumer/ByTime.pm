@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(CostPath);
+use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
@@ -215,7 +215,7 @@ sub charge {
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
   CHARGE: until ($self->next_charge_date->follows($now)) {
-    $self->consider_making_replacement;
+    $self->reflect_on_mortality;
 
     unless ($self->can_make_next_payment) {
       $self->expire;
@@ -230,8 +230,8 @@ sub charge {
       to   => $self,
       date => $next_charge_date,
       amount    => $self->cost_per_charge(),
-      cost_path => [
-        @{$self->cost_path_prefix},
+      charge_path => [
+        @{$self->charge_path_prefix},
         split(/-/, $next_charge_date->ymd),
       ],
     });
@@ -251,7 +251,7 @@ sub cost_per_charge {
   return $self->cost_amount / $n_periods;
 }
 
-sub consider_making_replacement {
+sub reflect_on_mortality {
   my ($self, $tick_time) = @_;
 
   return unless $self->has_bank;
@@ -283,7 +283,7 @@ sub consider_making_replacement {
 
 sub can_make_next_payment {
   my ($self) = @_;
-  return $self->unapplied_amount >= $self->cost_per_charge;
+  return $self->amount_in_bank >= $self->cost_per_charge;
 }
 
 sub construct_replacement {
@@ -298,7 +298,7 @@ sub construct_replacement {
       replacement_mri    => $self->replacement_mri(),
       ledger             => $self->ledger(),
       charge_description => $self->charge_description(),
-      cost_path_prefix   => $self->cost_path_prefix(),
+      charge_path_prefix => $self->charge_path_prefix(),
       %$param,
   });
 }

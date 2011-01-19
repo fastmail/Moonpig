@@ -1,4 +1,4 @@
-package Moonpig::Role::CostTree;
+package Moonpig::Role::ChargeTree;
 # ABSTRACT: a hierarchy of charges
 use Moose::Role;
 
@@ -7,7 +7,7 @@ use DateTime::Infinite;
 use List::MoreUtils qw(any);
 use List::Util qw(first max);
 use Moonpig::Util qw(same_object);
-use Moonpig::Types qw(CostPath CostPathPart);
+use Moonpig::Types qw(ChargePath ChargePathPart);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
@@ -17,7 +17,7 @@ my $LONG_AGO = DateTime::Infinite::Past->new;
 
 has _subtree_for => (
   is  => 'ro',
-  isa => HashRef[ role_type('Moonpig::Role::CostTree') ],
+  isa => HashRef[ role_type('Moonpig::Role::ChargeTree') ],
   default => sub {  {}  },
   traits  => [ 'Hash' ],
   handles => {
@@ -30,7 +30,7 @@ has _subtree_for => (
 
 has _parent => (
   is   => 'ro',
-  does => 'Moonpig::Role::CostTree',
+  does => 'Moonpig::Role::ChargeTree',
   predicate => '_has_parent',
 );
 
@@ -61,13 +61,13 @@ sub _leaf_name {
 
 # Use this when adding a subtree to ensure that there are no loops
 # in the cost tree graph.
-sub _contains_cost_tree {
-  my ($self, $cost_tree, $seen) = @_;
+sub _contains_charge_tree {
+  my ($self, $charge_tree, $seen) = @_;
   return 0 if $seen->{$self}++;
 
-  return 1 if same_object($self, $cost_tree);
-  if (any { same_object($_, $cost_tree)
-              || $_->_contains_cost_tree($cost_tree, $seen) }
+  return 1 if same_object($self, $charge_tree);
+  if (any { same_object($_, $charge_tree)
+              || $_->_contains_charge_tree($charge_tree, $seen) }
       $self->subtrees) {
     return 1;
   } else {
@@ -125,7 +125,7 @@ sub find_or_create_path {
 sub path_search {
   my ($self, $path, $arg) = @_;
 
-  $path = CostPath->assert_coerce($path);
+  $path = ChargePath->assert_coerce($path);
   $self->_trusted_path_search($path, $arg);
 }
 
