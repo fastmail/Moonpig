@@ -94,6 +94,7 @@ sub failover {
   my ($self) = @_;
 
   $Logger->log("XXX: failing over");
+  $self->ledger->replace_active_consumer__($self);
 }
 
 sub terminate_service {
@@ -104,6 +105,8 @@ sub terminate_service {
     $self->charge_description,
     $self->ident,
   ]);
+
+  $self->ledger->mark_consumer_inactive__($self);
 }
 
 1;

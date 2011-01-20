@@ -256,4 +256,54 @@ sub _send_mkit {
   }));
 }
 
+# {
+#   service_uri => [ consumer_guid, ... ],
+#   ...
+# }
+has _active_service_consumers => (
+  is  => 'ro',
+  isa => HashRef,
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+sub mark_consumer_active__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  $reg->{ $consumer->service_uri }{ $consumer->guid } = 1;
+
+  return;
+}
+
+sub mark_consumer_inactive__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  return unless $reg->{ $consumer->service_uri };
+
+  delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  return;
+}
+
+sub failover_active_consumer__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  Moonpig::X->throw("can't failover inactive service")
+    unless delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  $reg->{ $consumer->service_uri }{ $consumer->replacement->guid } = 1;
+
+  return;
+}
+
 1;
