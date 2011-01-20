@@ -16,6 +16,7 @@ my %reasonable_defaults = (
   description        => "test consumer",
   charge_description => "test charge",
   charge_path_prefix => ["test"],
+  service_active     => 1,
 );
 
 sub test_consumer {

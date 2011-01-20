@@ -45,6 +45,7 @@ sub add_consumer_to {
     class(qw(Consumer)),
     {
       service_uri     => 'urn:uuid:' . guid_string,
+      service_active  => 1,
       replacement_mri => Moonpig::URI->nothing(),
     },
   );

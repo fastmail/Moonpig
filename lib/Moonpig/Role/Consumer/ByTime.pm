@@ -174,6 +174,7 @@ sub charge {
     or confess "event payload has no timestamp";
 
   return if $self->in_grace_period;
+  return unless $self->is_active;
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
