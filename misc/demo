@@ -13,10 +13,19 @@ use Moonpig::Logger '$Logger' => { init => {
 use Moonpig::Env::Test;
 
 use Moonpig::Events::Handler::Code;
-use Moonpig::Events::Handler::Noop;
 
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);
+
+Moonpig->env->register_event_handler(
+  'send-email',
+  'log-email',
+  Moonpig::Events::Handler::Code->new({
+    code => sub {
+      $Logger->log("sent email");
+    },
+  }),
+);
 
 Moonpig->env->stop_time;
 
