@@ -95,15 +95,19 @@ $ledger->process_credits;
 # 11a. fail over (if replacement funded)
 # 11b. cancel account (if replacement unfunded)
 
-for (1 .. 24) {
+for (1 .. 730) {
+  $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $_ % 30 == 0;
+
   $ledger->handle_event( event('heartbeat') );
 
-  $Logger->log([
-    "%s still has %s in it",
-    $consumer->bank->ident,
-    $consumer->bank->unapplied_amount,
-  ]);
+  if ($_ % 30 == 0) {
+    $Logger->log([
+      "%s still has %s in it",
+      $consumer->bank->ident,
+      $consumer->bank->unapplied_amount,
+    ]);
+  }
 
-  Moonpig->env->elapse_time(30 * 86400);
+  Moonpig->env->elapse_time(86400);
 }
 
