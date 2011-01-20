@@ -129,16 +129,14 @@ for my $thing (qw(journal invoice)) {
     return;
   };
 
-  has "current_$thing" => (
-    is   => 'ro',
-    does => role_type($role),
-    lazy => 1,
-    default => sub {
+  Sub::Install::install_sub({
+    as   => "current_$thing",
+    code => sub {
       my ($self) = @_;
       $self->$_ensure_one_thing;
       $self->$reader->[-1];
     }
-  );
+  });
 }
 
 sub latest_invoice {
