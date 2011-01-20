@@ -48,20 +48,13 @@ implicit_event_handlers {
   };
 };
 
-after BUILD => sub {
-  my ($self) = @_;
-  unless ($self->has_last_charge_date) {
-    $self->last_charge_date($self->now() - $self->charge_frequency);
-  }
-};
-
 sub now { Moonpig->env->now() }
 
 # How often I charge the bank
 has charge_frequency => (
   is => 'ro',
+  isa     => TimeInterval,
   default => sub { days(1) },
-  isa => TimeInterval,
 );
 
 # Description for charge.  You will probably want to override this method
@@ -112,10 +105,28 @@ has old_age => (
 
 # Last time I charged the bank
 has last_charge_date => (
-  is => 'rw',
-  isa => Time,
+  is   => 'rw',
+  isa  => Time,
   predicate => 'has_last_charge_date',
 );
+
+after become_active => sub {
+  my ($self) = @_;
+
+  $self->grace_until( Moonpig->env->now  +  days(3) );
+
+  unless ($self->has_last_charge_date) {
+    $self->last_charge_date( $self->now() - $self->charge_frequency );
+  }
+
+  $Logger->log([
+    '%s: %s became active; grace until %s, last charge date %s',
+    q{} . Moonpig->env->now,
+    $self->ident,
+    q{} . $self->grace_until,
+    q{} . $self->last_charge_date,
+  ]);
+};
 
 sub last_charge_exists {
   my ($self) = @_;
@@ -136,20 +147,6 @@ sub expire_date {
       $n_charge_periods_left * $self->charge_frequency;
 }
 
-after expire => sub {
-  my ($self) = @_;
-
-  $Logger->log([
-    'expiring consumer: %s, %s; %s',
-    $self->charge_description,
-    $self->ident,
-    $self->has_replacement
-      ? 'replacement will take over: ' .  $self->replacement->ident
-      : 'no replacement exists'
-  ]);
-
-};
-
 # returns amount of life remaining, in seconds
 sub remaining_life {
   my ($self, $when) = @_;
@@ -161,13 +158,6 @@ sub next_charge_date {
   my ($self) = @_;
   return $self->last_charge_date + $self->charge_frequency;
 }
-
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-);
 
 ################################################################
 #
@@ -195,6 +185,7 @@ sub charge {
     or confess "event payload has no timestamp";
 
   return if $self->in_grace_period;
+  return unless $self->is_active;
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
@@ -244,11 +235,13 @@ sub reflect_on_mortality {
   # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
-  if ($self->remaining_life($tick_time) <= $self->old_age) {
+  my $remaining_life = $self->remaining_life($tick_time);
+
+  if ($remaining_life <= $self->old_age) {
 
     # If it has a replacement R, it should advise R that R will need
     # to take over soon
-    if ($self->has_replacement) {
+    if ($self->has_replacement and $remaining_life) {
       $self->replacement->handle_event(
         event('low-funds',
               { remaining_life => $self->remaining_life($tick_time) }
@@ -275,9 +268,9 @@ sub create_own_replacement {
 
   my $replacement_mri = $event->payload->{mri};
 
-  $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
+  if (! $self->has_replacement) {
+    $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
-  if ($self->is_replaceable && ! $self->has_replacement) {
     my $replacement = $replacement_mri->construct(
       { extra => { self => $self } }
      ) or return;
@@ -297,7 +290,7 @@ sub construct_replacement {
       cost_period        => $self->cost_period(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
-      ledger             => $self->ledger(),
+      service_uri        => $self->service_uri,
       charge_description => $self->charge_description(),
       charge_path_prefix => $self->charge_path_prefix(),
       grace_until        => Moonpig->env->now  +  days(3),

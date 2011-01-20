@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use Data::GUID qw(guid_string);
 use Moonpig::URI;
 use Moonpig::Util qw(days);
 use Test::More;
@@ -21,6 +22,7 @@ ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
     cost_amount => 0,
     ledger => __PACKAGE__->test_ledger(),
     cost_period => $day,
+    service_uri => 'urn:uuid:' . guid_string,
     replacement_mri => Moonpig::URI->nothing(),
     charge_description => "blah",
     charge_path_prefix => [],

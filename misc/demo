@@ -13,10 +13,19 @@ use Moonpig::Logger '$Logger' => { init => {
 use Moonpig::Env::Test;
 
 use Moonpig::Events::Handler::Code;
-use Moonpig::Events::Handler::Noop;
 
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);
+
+Moonpig->env->register_event_handler(
+  'send-email',
+  'log-email',
+  Moonpig::Events::Handler::Code->new({
+    code => sub {
+      $Logger->log("sent email");
+    },
+  }),
+);
 
 Moonpig->env->stop_time;
 
@@ -43,6 +52,9 @@ my $consumer = $ledger->add_consumer(
     old_age            =>  30 * 86400,
     charge_path_prefix => 'yoyodyne.basic',
     grace_until        => Moonpig->env->now + days(3),
+
+    service_uri        => 'yoyodyne://account/1234',
+    service_active     => 1,
 
     # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
     replacement_mri    => Moonpig::URI->new(
@@ -83,15 +95,19 @@ $ledger->process_credits;
 # 11a. fail over (if replacement funded)
 # 11b. cancel account (if replacement unfunded)
 
-for (1 .. 24) {
+for (1 .. 730) {
+  $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $_ % 30 == 0;
+
   $ledger->handle_event( event('heartbeat') );
 
-  $Logger->log([
-    "%s still has %s in it",
-    $consumer->bank->ident,
-    $consumer->bank->unapplied_amount,
-  ]);
+  if ($_ % 30 == 0) {
+    $Logger->log([
+      "%s still has %s in it",
+      $consumer->bank->ident,
+      $consumer->bank->unapplied_amount,
+    ]);
+  }
 
-  Moonpig->env->elapse_time(30 * 86400);
+  Moonpig->env->elapse_time(86400);
 }
 

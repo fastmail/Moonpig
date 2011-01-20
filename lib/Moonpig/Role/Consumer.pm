@@ -10,10 +10,28 @@ with(
 
 use MooseX::SetOnce;
 use Moonpig::Types qw(Ledger Millicents MRI);
+use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
 
+use Moonpig::Behavior::EventHandlers;
+
 use namespace::autoclean;
+
+implicit_event_handlers {
+  return {
+    'terminate-service' => {
+      default => Moonpig::Events::Handler::Method->new(
+        method_name => 'terminate_service',
+      ),
+    },
+    'fail-over' => {
+      default => Moonpig::Events::Handler::Method->new(
+        method_name => 'failover',
+      ),
+    },
+  };
+};
 
 has bank => (
   reader => 'bank',
@@ -54,6 +72,59 @@ has replacement_mri => (
 sub amount_in_bank {
   my ($self) = @_;
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
+}
+
+has service_uri => (
+  is  => 'ro',
+  isa => 'Str',
+  required => 1,
+);
+
+before expire => sub {
+  my ($self) = @_;
+
+  $self->handle_event(
+    $self->has_replacement
+    ? event('fail-over')
+    : event('terminate-service')
+  );
+};
+
+after BUILD => sub {
+  my ($self, $arg) = @_;
+
+  $self->become_active if delete $arg->{service_active};
+};
+
+sub is_active {
+  my ($self) = @_;
+
+  $self->ledger->_is_consumer_active($self);
+}
+
+sub become_active {
+  my ($self) = @_;
+
+  $self->ledger->mark_consumer_active__($self);
+}
+
+sub failover {
+  my ($self) = @_;
+
+  $Logger->log("XXX: failing over");
+  $self->ledger->failover_active_consumer__($self);
+}
+
+sub terminate_service {
+  my ($self) = @_;
+
+  $Logger->log([
+    'terminating service: %s, %s',
+    $self->charge_description,
+    $self->ident,
+  ]);
+
+  $self->ledger->mark_consumer_inactive__($self);
 }
 
 1;

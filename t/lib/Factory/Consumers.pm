@@ -4,17 +4,19 @@ use Moose::Role;
 use Moonpig::Env::Test;
 use Moonpig::URI;
 
+use Data::GUID qw(guid_string);
 use Moonpig::Util -all;
 requires 'ledger';
 
 my %reasonable_defaults = (
-    cost_amount => dollars(1),
-    cost_period => days(1),
-    old_age => days(0),
-    replacement_mri => Moonpig::URI->nothing(),
-    description => "test consumer",
-    charge_description => "test charge",
-    charge_path_prefix => [ "test" ],
+  cost_amount        => dollars(1),
+  cost_period        => days(1),
+  old_age            => days(0),
+  replacement_mri    => Moonpig::URI->nothing(),
+  description        => "test consumer",
+  charge_description => "test charge",
+  charge_path_prefix => ["test"],
+  service_active     => 1,
 );
 
 sub test_consumer {
@@ -25,7 +27,8 @@ sub test_consumer {
 
   my %arg = (
     %reasonable_defaults,
-    ledger => $self->ledger,
+    service_uri => 'urn:uuid:' . guid_string,
+    ledger      => $self->ledger,
     %$args,
   );
 

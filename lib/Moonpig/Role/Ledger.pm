@@ -129,16 +129,14 @@ for my $thing (qw(journal invoice)) {
     return;
   };
 
-  has "current_$thing" => (
-    is   => 'ro',
-    does => role_type($role),
-    lazy => 1,
-    default => sub {
+  Sub::Install::install_sub({
+    as   => "current_$thing",
+    code => sub {
       my ($self) = @_;
       $self->$_ensure_one_thing;
       $self->$reader->[-1];
     }
-  );
+  });
 }
 
 sub latest_invoice {
@@ -254,6 +252,65 @@ sub _send_mkit {
     email => $email,
     env   => { to => $to, from => $from },
   }));
+}
+
+# {
+#   service_uri => [ consumer_guid, ... ],
+#   ...
+# }
+has _active_service_consumers => (
+  is  => 'ro',
+  isa => HashRef,
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+sub _is_consumer_active {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+  return unless my $svc = $reg->{ $consumer->service_uri };
+
+  return $svc->{ $consumer->guid };
+}
+
+sub mark_consumer_active__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  $reg->{ $consumer->service_uri }{ $consumer->guid } = 1;
+
+  return;
+}
+
+sub mark_consumer_inactive__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  return unless $reg->{ $consumer->service_uri };
+
+  delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  return;
+}
+
+sub failover_active_consumer__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  Moonpig::X->throw("can't failover inactive service")
+    unless delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  $consumer->replacement->become_active;
+
+  return;
 }
 
 1;

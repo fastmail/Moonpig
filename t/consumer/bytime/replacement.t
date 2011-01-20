@@ -193,7 +193,6 @@ test "irreplaceable" => sub {
 
     my $c = $self->test_consumer(
       $CLASS, {
-        is_replaceable => 0,
         ledger => $self->ledger,
         bank => $b,
         old_age => days(20),
@@ -204,7 +203,9 @@ test "irreplaceable" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
+
+      Moonpig->env->current_time($tick_time);
+      $self->ledger->handle_event(event('heartbeat'));
     }
     pass();
   }
