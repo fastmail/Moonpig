@@ -148,13 +148,6 @@ sub next_charge_date {
   return $self->last_charge_date + $self->charge_frequency;
 }
 
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-);
-
 ################################################################
 #
 #
@@ -263,7 +256,7 @@ sub create_own_replacement {
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
-  if ($self->is_replaceable && ! $self->has_replacement) {
+  if (! $self->has_replacement) {
     my $replacement = $replacement_mri->construct(
       { extra => { self => $self } }
      ) or return;

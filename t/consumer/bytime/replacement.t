@@ -193,7 +193,6 @@ test "irreplaceable" => sub {
 
     my $c = $self->test_consumer(
       $CLASS, {
-        is_replaceable => 0,
         ledger => $self->ledger,
         bank => $b,
         old_age => days(20),
