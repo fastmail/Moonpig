@@ -48,20 +48,14 @@ implicit_event_handlers {
   };
 };
 
-after BUILD => sub {
-  my ($self) = @_;
-  unless ($self->has_last_charge_date) {
-    $self->last_charge_date($self->now() - $self->charge_frequency);
-  }
-};
-
 sub now { Moonpig->env->now() }
 
 # How often I charge the bank
 has charge_frequency => (
   is => 'ro',
+  isa     => TimeInterval,
+  lazy    => 1, # so that last_charge_date can also be lazy -- rjbs, 2011-01-20
   default => sub { days(1) },
-  isa => TimeInterval,
 );
 
 # Description for charge.  You will probably want to override this method
@@ -112,10 +106,19 @@ has old_age => (
 
 # Last time I charged the bank
 has last_charge_date => (
-  is => 'rw',
-  isa => Time,
-  predicate => 'has_last_charge_date',
+  is   => 'rw',
+  isa  => Time,
+  lazy => 1,
+  default => sub {
+    my ($self) = @_;
+    return $self->now() - $self->charge_frequency;
+  },
 );
+
+after BUILD => sub {
+  my ($self) = @_;
+  $self->last_charge_date; # "eager" lazy attribute
+};
 
 sub last_charge_exists {
   my ($self) = @_;
