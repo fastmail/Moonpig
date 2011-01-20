@@ -54,7 +54,6 @@ sub now { Moonpig->env->now() }
 has charge_frequency => (
   is => 'ro',
   isa     => TimeInterval,
-  lazy    => 1, # so that last_charge_date can also be lazy -- rjbs, 2011-01-20
   default => sub { days(1) },
 );
 
@@ -108,16 +107,15 @@ has old_age => (
 has last_charge_date => (
   is   => 'rw',
   isa  => Time,
-  lazy => 1,
-  default => sub {
-    my ($self) = @_;
-    return $self->now() - $self->charge_frequency;
-  },
+  predicate => 'has_last_charge_date',
 );
 
-after BUILD => sub {
+after become_active => sub {
   my ($self) = @_;
-  $self->last_charge_date; # "eager" lazy attribute
+
+  unless ($self->has_last_charge_date) {
+    $self->last_charge_date( $self->now() - $self->charge_frequency );
+  }
 };
 
 sub last_charge_exists {
