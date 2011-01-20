@@ -28,6 +28,17 @@ has invoices => (
   },
 );
 
+sub latest_invoice {
+  my ($self) = @_;
+  my $latest = (
+    sort { $b->created_at <=> $a->created_at
+        || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
+         } $self->invoices
+  )[0];
+
+  return $latest;
+}
+
 after BUILD => sub {
   my ($self) = @_;
   confess "can't send a RequestForPayment with 0 invoices"

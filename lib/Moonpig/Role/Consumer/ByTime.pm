@@ -6,7 +6,7 @@ use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(ChargePath);
-use Moonpig::Util qw(days event);
+use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 use namespace::autoclean;
@@ -28,7 +28,12 @@ implicit_event_handlers {
   return {
     heartbeat => {
       charge => Moonpig::Events::Handler::Method->new(
-        method_name => 'charge'
+        method_name => 'charge',
+      ),
+    },
+    created => {
+      'initial-invoice' => Moonpig::Events::Handler::Method->new(
+        method_name => '_invoice',
       ),
     },
     'low-funds' => {
@@ -39,20 +44,13 @@ implicit_event_handlers {
   };
 };
 
-after BUILD => sub {
-  my ($self) = @_;
-  unless ($self->has_last_charge_date) {
-    $self->last_charge_date($self->now() - $self->charge_frequency);
-  }
-};
-
 sub now { Moonpig->env->now() }
 
 # How often I charge the bank
 has charge_frequency => (
   is => 'ro',
+  isa     => TimeInterval,
   default => sub { days(1) },
-  isa => TimeInterval,
 );
 
 # Description for charge.  You will probably want to override this method
@@ -85,10 +83,28 @@ has cost_period => (
 
 # Last time I charged the bank
 has last_charge_date => (
-  is => 'rw',
-  isa => Time,
+  is   => 'rw',
+  isa  => Time,
   predicate => 'has_last_charge_date',
 );
+
+after become_active => sub {
+  my ($self) = @_;
+
+  $self->grace_until( Moonpig->env->now  +  days(3) );
+
+  unless ($self->has_last_charge_date) {
+    $self->last_charge_date( $self->now() - $self->charge_frequency );
+  }
+
+  $Logger->log([
+    '%s: %s became active; grace until %s, last charge date %s',
+    q{} . Moonpig->env->now,
+    $self->ident,
+    q{} . $self->grace_until,
+    q{} . $self->last_charge_date,
+  ]);
+};
 
 sub last_charge_exists {
   my ($self) = @_;
@@ -109,20 +125,6 @@ sub expire_date {
       $n_charge_periods_left * $self->charge_frequency;
 }
 
-after expire => sub {
-  my ($self) = @_;
-
-  $Logger->log([
-    'expiring consumer: %s, %s; %s',
-    $self->charge_description,
-    $self->ident,
-    $self->has_replacement
-      ? 'replacement will take over: ' .  $self->replacement->ident
-      : 'no replacement exists'
-  ]);
-
-};
-
 # returns amount of life remaining, in seconds
 sub remaining_life {
   my ($self, $when) = @_;
@@ -135,69 +137,23 @@ sub next_charge_date {
   return $self->last_charge_date + $self->charge_frequency;
 }
 
-# This is the schedule of when to warn the owner that money is running out.
-# if the number of days of remaining life is listed on the schedule,
-# the object will queue a warning event to the ledger.  By default,
-# it does this once per week, and also the day before it dies
-has complaint_schedule => (
-  is => 'ro',
-  isa => ArrayRef [ Num ],
-  default => sub { [ 28, 21, 14, 7, 1 ] },
+################################################################
+#
+#
+
+has grace_until => (
+  is  => 'rw',
+  isa => Time,
+  clearer   => 'clear_grace_until',
+  predicate => 'has_grace_until',
 );
 
-has last_complaint_date => (
-  is => 'rw',
-  isa => 'Num',
-  predicate => 'has_complained_before',
-);
+sub in_grace_period {
+  my ($self) = @_;
 
-sub issue_complaint_if_necessary {
-  my ($self, $remaining_life) = @_;
-  my $remaining_days = $remaining_life / 86_400;
-  my $sched = $self->complaint_schedule;
-  my $last_complaint_issued = $self->has_complained_before
-    ? $self->last_complaint_date
-    : $sched->[0] + 1;
+  return unless $self->has_grace_until;
 
-  # run through each day since the last time we issued a complaint
-  # up until now; if any of those days are complaining days,
-  # it is time to issue a new complaint.
-  my $complaint_due;
-  #  warn ">> <$self> $last_complaint_issued .. $remaining_days\n";
-  for my $n ($remaining_days .. $last_complaint_issued - 1) {
-    $complaint_due = 1, last
-      if $self->is_complaining_day($n);
-  }
-
-  if ($complaint_due) {
-    $self->issue_complaint($remaining_life);
-    $self->last_complaint_date($remaining_days);
-  }
-}
-
-sub is_complaining_day {
-  my ($self, $days) = @_;
-  confess "undefined days" unless defined $days;
-  for my $d (@{$self->complaint_schedule}) {
-    return 1 if $d == $days;
-  }
-  return;
-}
-
-sub issue_complaint {
-  my ($self, $how_soon) = @_;
-
-  $self->ledger->handle_event(event('send-mkit', {
-    kit => 'generic',
-    arg => {
-      subject => sprintf("YOUR SERVICE RUNS OUT SOON: %s", $self->guid),
-      body    => sprintf("YOU OWE US %s\n", $self->cost_amount),
-
-      # This should get names with addresses, unlike the contact-humans
-      # handler, which wants envelope recipients.
-      to_addresses => [ $self->ledger->contact->email_addresses ],
-    },
-  }));
+  return $self->grace_until >= Moonpig->env->now;
 }
 
 ################################################################
@@ -207,14 +163,17 @@ sub issue_complaint {
 sub charge {
   my ($self, $event, $arg) = @_;
 
-  return unless $self->has_bank;
-
   my $now = $event->payload->{timestamp}
     or confess "event payload has no timestamp";
+
+  return if $self->in_grace_period;
+  return unless $self->is_active;
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
   CHARGE: until ($self->next_charge_date->follows($now)) {
+    # maybe make a replacement, maybe tell it that it will soon inherit the
+    # kingdom, maybe do nothing -- rjbs, 2011-01-17
     $self->reflect_on_mortality;
 
     unless ($self->can_make_next_payment) {
@@ -240,12 +199,10 @@ sub charge {
   }
 }
 
+# how much do we charge each time we issue a new charge?
 sub cost_per_charge {
   my ($self) = @_;
 
-  # Number of cost periods included in each charge
-  # (For example, if costs are $10 per 30 days, and we charge daily,
-  # there are 1/30 cost periods per day, each costing $10 * 1/30 = $0.33.
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
   return $self->cost_amount / $n_periods;
@@ -260,11 +217,13 @@ sub reflect_on_mortality {
   # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
-  if ($self->remaining_life($tick_time) <= $self->old_age) {
+  my $remaining_life = $self->remaining_life($tick_time);
+
+  if ($remaining_life <= $self->old_age) {
 
     # If it has a replacement R, it should advise R that R will need
     # to take over soon
-    if ($self->has_replacement) {
+    if ($self->has_replacement and $remaining_life) {
       $self->replacement->handle_event(
         event('low-funds',
               { remaining_life => $self->remaining_life($tick_time) }
@@ -296,9 +255,10 @@ sub construct_replacement {
       cost_period        => $self->cost_period(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
-      ledger             => $self->ledger(),
+      service_uri        => $self->service_uri,
       charge_description => $self->charge_description(),
       charge_path_prefix => $self->charge_path_prefix(),
+      grace_until        => Moonpig->env->now  +  days(3),
       %$param,
   });
 }
@@ -308,7 +268,21 @@ sub predecessor_running_out {
   my ($self, $event, $args) = @_;
   my $remaining_life = $event->payload->{remaining_life}  # In seconds
     or confess("predecessor didn't advise me how long it has to live");
-  $self->issue_complaint_if_necessary($remaining_life);
+}
+
+sub _invoice {
+  my ($self) = @_;
+
+  my $invoice = $self->ledger->current_invoice;
+
+  $invoice->add_charge_at(
+    class('Charge::Bankable')->new({
+      description => $self->charge_description, # really? -- rjbs, 2011-01-18
+      amount      => $self->cost_amount,
+      consumer    => $self,
+    }),
+    $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
+  );
 }
 
 1;

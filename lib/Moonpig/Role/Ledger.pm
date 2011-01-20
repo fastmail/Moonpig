@@ -6,6 +6,7 @@ with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
+  'Moonpig::Role::Dunner',
 );
 
 use Moose::Util::TypeConstraints;
@@ -86,6 +87,10 @@ for my $thing (qw(bank consumer refund)) {
         if $self->$predicate($value->guid);
 
       $self->$setter($value->guid, $value);
+
+      $value->handle_event(event('created'));
+
+      return $value;
     },
   });
 }
@@ -124,16 +129,14 @@ for my $thing (qw(journal invoice)) {
     return;
   };
 
-  has "current_$thing" => (
-    is   => 'ro',
-    does => role_type($role),
-    lazy => 1,
-    default => sub {
+  Sub::Install::install_sub({
+    as   => "current_$thing",
+    code => sub {
       my ($self) = @_;
       $self->$_ensure_one_thing;
       $self->$reader->[-1];
     }
-  );
+  });
 }
 
 sub latest_invoice {
@@ -209,10 +212,6 @@ implicit_event_handlers {
       redistribute => Moonpig::Events::Handler::Method->new('_reheartbeat'),
     },
 
-    'send-invoice' => {
-      default => Moonpig::Events::Handler::Method->new('_send_invoice'),
-    },
-
     'send-mkit' => {
       default => Moonpig::Events::Handler::Method->new('_send_mkit'),
     },
@@ -223,42 +222,20 @@ implicit_event_handlers {
   };
 };
 
-sub _send_invoice {
-  my ($self, $event) = @_;
-
-  my $invoice = $event->payload->{invoice};
-
-  $Logger->log([
-    "sending %s to contacts of %s",
-    $invoice->ident,
-    $self->ident,
-  ]);
-
-  $self->handle_event(event('send-mkit', {
-    kit => 'generic',
-    arg => {
-      subject => sprintf("INVOICE %s IS DUE", $invoice->guid),
-      body    => sprintf("YOU OWE US %s\n", $invoice->total_amount),
-
-      # This should get names with addresses, unlike the contact-humans
-      # handler, which wants envelope recipients.
-      to_addresses => [ $self->contact->email_addresses ],
-    },
-  }));
-}
-
 sub _reheartbeat {
   my ($self, $event) = @_;
 
   for my $target (
     # $self->contact,
-    # $self->banks,
+    $self->banks,
     $self->consumers,
     $self->invoices,
     $self->journals,
   ) {
     $target->handle_event($event);
   }
+
+  $self->perform_dunning;
 }
 
 sub _send_mkit {
@@ -275,6 +252,65 @@ sub _send_mkit {
     email => $email,
     env   => { to => $to, from => $from },
   }));
+}
+
+# {
+#   service_uri => [ consumer_guid, ... ],
+#   ...
+# }
+has _active_service_consumers => (
+  is  => 'ro',
+  isa => HashRef,
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+sub _is_consumer_active {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+  return unless my $svc = $reg->{ $consumer->service_uri };
+
+  return $svc->{ $consumer->guid };
+}
+
+sub mark_consumer_active__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  $reg->{ $consumer->service_uri }{ $consumer->guid } = 1;
+
+  return;
+}
+
+sub mark_consumer_inactive__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  return unless $reg->{ $consumer->service_uri };
+
+  delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  return;
+}
+
+sub failover_active_consumer__ {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+
+  $reg->{ $consumer->service_uri } ||= {};
+
+  Moonpig::X->throw("can't failover inactive service")
+    unless delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+
+  $consumer->replacement->become_active;
+
+  return;
 }
 
 1;

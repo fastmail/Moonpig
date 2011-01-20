@@ -9,6 +9,8 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
+use t::lib::Logger;
+
 my $CLASS = class('Consumer::ByTime');
 
 has ledger => (
@@ -51,19 +53,69 @@ test "charge" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => years(1000),
-      });
+    });
+
+    $c->clear_grace_until;
 
     for my $day (@$schedule) {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
 
-      $self->ledger->handle_event(
-        event('heartbeat', { timestamp => $tick_time })
-      );
+      Moonpig->env->current_time($tick_time);
+
+      $self->ledger->handle_event(event('heartbeat'));
 
       is($b->unapplied_amount, dollars(10 - $day));
     }
+  }
+};
+
+test grace_period => sub {
+  my ($self) = @_;
+
+  for my $pair (
+    # X,Y: expires after X days, set grace_until to Y
+    [ 1, undef ],
+    [ 2, Moonpig::DateTime->new( year => 2000, month => 1, day => 1 ) ],
+    [ 3, Moonpig::DateTime->new( year => 2000, month => 1, day => 2 ) ],
+  ) {
+    my ($days, $until) = @$pair;
+
+    subtest((defined $until ? "grace through $until" : "no grace") => sub {
+      my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+      Moonpig->env->current_time($jan1);
+
+      $self->ledger( $self->test_ledger );
+
+      my $c = $self->test_consumer($CLASS);
+
+      if (defined $until) {
+        $c->grace_until($until);
+      } else {
+        $c->clear_grace_until;
+      }
+
+      for my $day (1 .. $days) {
+        ok(
+          ! $c->is_expired,
+          sprintf("as of %s, consumer is not expired", q{} . Moonpig->env->now),
+        );
+
+        my $tick_time = Moonpig::DateTime->new(
+          year => 2000, month => 1, day => $day
+        );
+
+        Moonpig->env->current_time($tick_time);
+
+        $self->ledger->handle_event(event('heartbeat'));
+      }
+
+      ok(
+        $c->is_expired,
+        sprintf("as of %s, consumer is expired", q{} . Moonpig->env->now),
+      );
+    });
   }
 };
 

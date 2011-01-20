@@ -59,6 +59,7 @@ test expire_date => sub {
 
   {
     my $c = $self->test_consumer($CLASS, { bank => $b, ledger => $ledger });
+
     my $exp = $c->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
        "stock consumer expires in three days");
