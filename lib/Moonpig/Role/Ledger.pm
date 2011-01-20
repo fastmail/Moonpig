@@ -310,7 +310,7 @@ sub failover_active_consumer__ {
   Moonpig::X->throw("can't failover inactive service")
     unless delete $reg->{ $consumer->service_uri }{ $consumer->guid };
 
-  $reg->{ $consumer->service_uri }{ $consumer->replacement->guid } = 1;
+  $consumer->replacement->become_active;
 
   return;
 }

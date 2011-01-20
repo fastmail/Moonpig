@@ -113,9 +113,19 @@ has last_charge_date => (
 after become_active => sub {
   my ($self) = @_;
 
+  $self->grace_until( Moonpig->env->now  +  days(3) );
+
   unless ($self->has_last_charge_date) {
     $self->last_charge_date( $self->now() - $self->charge_frequency );
   }
+
+  $Logger->log([
+    '%s: %s became active; grace until %s, last charge date %s',
+    q{} . Moonpig->env->now,
+    $self->ident,
+    q{} . $self->grace_until,
+    q{} . $self->last_charge_date,
+  ]);
 };
 
 sub last_charge_exists {
