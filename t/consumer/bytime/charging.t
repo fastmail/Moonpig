@@ -53,7 +53,9 @@ test "charge" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => years(1000),
-      });
+    });
+
+    $c->clear_grace_until;
 
     for my $day (@$schedule) {
       my $tick_time = Moonpig::DateTime->new(
@@ -88,7 +90,11 @@ test grace_period => sub {
 
       my $c = $self->test_consumer($CLASS);
 
-      $c->grace_until($until) if defined $until;
+      if (defined $until) {
+        $c->grace_until($until);
+      } else {
+        $c->clear_grace_until;
+      }
 
       for my $day (1 .. $days) {
         ok(
