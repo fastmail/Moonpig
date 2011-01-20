@@ -90,6 +90,18 @@ before expire => sub {
   );
 };
 
+after BUILD => sub {
+  my ($self, $arg) = @_;
+
+  $self->become_active if delete $arg->{service_active};
+};
+
+sub is_active {
+  my ($self) = @_;
+
+  $self->ledger->_is_consumer_active($self);
+}
+
 sub become_active {
   my ($self) = @_;
 

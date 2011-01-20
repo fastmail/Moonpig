@@ -45,6 +45,7 @@ my $consumer = $ledger->add_consumer(
     grace_until        => Moonpig->env->now + days(3),
 
     service_uri        => 'yoyodyne://account/1234',
+    service_active     => 1,
 
     # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
     replacement_mri    => Moonpig::URI->new(
@@ -52,8 +53,6 @@ my $consumer = $ledger->add_consumer(
     ),
   },
 );
-
-$consumer->become_active;
 
 # 3. charge, finalize, send invoice
 

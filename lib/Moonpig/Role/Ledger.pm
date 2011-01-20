@@ -267,6 +267,15 @@ has _active_service_consumers => (
   default  => sub {  {}  },
 );
 
+sub _is_consumer_active {
+  my ($self, $consumer) = @_;
+
+  my $reg = $self->_active_service_consumers;
+  return unless my $svc = $reg->{ $consumer->service_uri };
+
+  return $svc->{ $consumer->guid };
+}
+
 sub mark_consumer_active__ {
   my ($self, $consumer) = @_;
 
