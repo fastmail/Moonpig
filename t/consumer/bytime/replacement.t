@@ -204,7 +204,9 @@ test "irreplaceable" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
+
+      Moonpig->env->current_time($tick_time);
+      $self->ledger->handle_event(event('heartbeat'));
     }
     pass();
   }
