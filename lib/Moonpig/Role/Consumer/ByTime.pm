@@ -235,11 +235,13 @@ sub reflect_on_mortality {
   # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
-  if ($self->remaining_life($tick_time) <= $self->old_age) {
+  my $remaining_life = $self->remaining_life($tick_time);
+
+  if ($remaining_life <= $self->old_age) {
 
     # If it has a replacement R, it should advise R that R will need
     # to take over soon
-    if ($self->has_replacement) {
+    if ($self->has_replacement and $remaining_life) {
       $self->replacement->handle_event(
         event('low-funds',
               { remaining_life => $self->remaining_life($tick_time) }
@@ -266,9 +268,9 @@ sub create_own_replacement {
 
   my $replacement_mri = $event->payload->{mri};
 
-  $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
-
   if (! $self->has_replacement) {
+    $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
+
     my $replacement = $replacement_mri->construct(
       { extra => { self => $self } }
      ) or return;
