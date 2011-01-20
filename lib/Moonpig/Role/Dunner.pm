@@ -18,7 +18,7 @@ has last_request_for_payment => (
 sub dunning_frequency { 3 * 86400 }
 
 sub perform_dunning {
-  my ($self, $time) = @_;
+  my ($self) = @_;
 
   my @invoices =
     sort { $b->created_at <=> $a->created_at
@@ -30,9 +30,9 @@ sub perform_dunning {
 
   if ($self->has_last_request_for_payment) {
     my $rfp = $self->last_request_for_payment;
-    
+
     if ($rfp->latest_invoice->guid eq $invoices[0]->guid) {
-      my $ago = Moonpig->env->current_time - $rfp->sent_at;
+      my $ago = Moonpig->env->now - $rfp->sent_at;
 
       return unless $ago > $self->dunning_frequency;
     }

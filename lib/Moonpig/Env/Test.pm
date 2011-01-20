@@ -46,7 +46,7 @@ sub handle_send_email {
   );
 }
 
-has current_time => (
+has _current_time => (
   is  => 'rw',
   isa => 'Moonpig::DateTime',
   predicate => 'time_stopped',
@@ -57,7 +57,7 @@ sub stop_time {
 
   Moonpig::X->throw("can't stop time twice") if $self->time_stopped;
 
-  $self->current_time( Moonpig::DateTime->now );
+  $self->_current_time( Moonpig::DateTime->now );
 }
 
 sub elapse_time {
@@ -69,13 +69,18 @@ sub elapse_time {
   Moonpig::X->throw("tried to elapse negative time")
     if $duration->is_negative;
 
-  $self->current_time( $self->now->add_duration( $duration ) );
+  $self->_current_time( $self->now->add_duration( $duration ) );
 }
 
 sub now {
   my ($self) = @_;
-  return $self->time_stopped ? $self->current_time
+  return $self->time_stopped ? $self->_current_time
     : Moonpig::DateTime->now();
+}
+
+sub current_time {
+  my ($self, $new) = @_;
+  return @_ > 1 ? $self->_current_time($new) : $self->now();
 }
 
 has _guid_serial_number_registry => (
