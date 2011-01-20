@@ -44,12 +44,16 @@ my $consumer = $ledger->add_consumer(
     charge_path_prefix => 'yoyodyne.basic',
     grace_until        => Moonpig->env->now + days(3),
 
+    service_uri        => 'yoyodyne://account/1234',
+
     # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
     replacement_mri    => Moonpig::URI->new(
       "moonpig://test/method?method=construct_replacement"
     ),
   },
 );
+
+$consumer->become_active;
 
 # 3. charge, finalize, send invoice
 

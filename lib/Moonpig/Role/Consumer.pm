@@ -90,11 +90,17 @@ before expire => sub {
   );
 };
 
+sub become_active {
+  my ($self) = @_;
+
+  $self->ledger->mark_consumer_active__($self);
+}
+
 sub failover {
   my ($self) = @_;
 
   $Logger->log("XXX: failing over");
-  $self->ledger->replace_active_consumer__($self);
+  $self->ledger->failover_active_consumer__($self);
 }
 
 sub terminate_service {
