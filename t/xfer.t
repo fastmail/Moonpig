@@ -5,6 +5,7 @@ use Test::Routine::Util;
 use Carp::Assert;
 use Moonpig::Hold;
 use Moonpig::Transfer;
+use Moonpig::Hold;
 use Moonpig::Util qw(dollars);
 use Try::Tiny;
 
@@ -91,7 +92,7 @@ test "basics of transfer" => sub {
 
 test "multiple transfer types" => sub {
   my ($self) = @_;
-  plan tests => 2;
+  plan tests => 3;
   my $ledger = $self->test_ledger;
   my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
   my $amt = $bank->amount;
@@ -109,6 +110,9 @@ test "multiple transfer types" => sub {
     amount => dollars(2),
   });
   is($bank->unapplied_amount, $amt - dollars(3), "transfer of \$2");
+
+  $h->delete();
+  is($bank->unapplied_amount, $amt - dollars(2), "deleted hold");
 };
 
 run_me;

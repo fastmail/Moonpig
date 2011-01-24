@@ -15,6 +15,8 @@ with(
 
     to_name   => 'consumer',
     to_type   => role_type('Moonpig::Role::Consumer'),
+
+    allow_deletion => 1,
   },
 );
 
