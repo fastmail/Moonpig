@@ -1,0 +1,14 @@
+#!/icg/bin/perl
+
+use lib 'lib';
+use Moonpig::Util 'class';
+usage() unless @ARGV;
+
+for my $name (@ARGV) {
+  my $class = class($name);
+  print defined($class) ? $class : "-", "\n";
+}
+
+sub usage {
+  print STDERR "$0 abbreviations...\n";
+}
