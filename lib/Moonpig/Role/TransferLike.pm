@@ -28,6 +28,8 @@ role {
   my $BY_FROM = $MASTER_FROM{$FROM} ||= {};
   my $BY_TO   = $MASTER_TO{$TO}     ||= {};
 
+  with ('Moonpig::Role::HasGuid');
+
   # We will need this method for deleting holds, for example.
   # -- rjbs, 2010-12-02
   method "__$FROM\_$TO\_storage" => sub {
@@ -40,7 +42,7 @@ role {
 
     for my $store ($BY_FROM->{ $self->$FROM->guid },
                    $BY_TO->{ $self->$TO->guid }) {
-      @$store = [ grep { $_->guid ne $self->guid } @$store ];
+      @$store = grep { $_->guid ne $self->guid } @$store;
     }
   };
 
