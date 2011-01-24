@@ -37,8 +37,8 @@ has cost_per_unit => (
 
 # create a replacement when the available funds are no longer enough
 # to purchase this many of the commodity
-# (if omitted, create replacement when not enough funds remain to buy
-# another batch of the same size as the last batch bought)
+# (if omitted, create replacement when estimated running-out time
+# is less than old_age)
 has low_water_mark => (
   is => 'ro',
   isa => Num,
