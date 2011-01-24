@@ -16,26 +16,30 @@ parameter to_type   => (isa => 'Moose::Meta::TypeConstraint', required => 1);
 
 parameter allow_deletion => (isa => 'Bool', default => 0);
 
+my %MASTER_FROM;
+my %MASTER_TO;
+
 role {
   my ($p) = @_;
 
   my $FROM = $p->from_name;
   my $TO   = $p->to_name;
 
-  my %BY_FROM;
-  my %BY_TO;
+  my $BY_FROM = $MASTER_FROM{$FROM} ||= {};
+  my $BY_TO   = $MASTER_TO{$TO}     ||= {};
 
   # We will need this method for deleting holds, for example.
   # -- rjbs, 2010-12-02
   method "__$FROM\_$TO\_storage" => sub {
-    return (\%BY_FROM, \%BY_TO);
+    return ($BY_FROM, $BY_TO);
   };
 
   method delete => sub {
     my ($self) = @_;
     Carp::croak("cannot delete immortal object $self") if ! $p->allow_deletion;
 
-    for my $store ($BY_FROM{ $self->$FROM->guid }, $BY_TO{ $self->$TO->guid }) {
+    for my $store ($BY_FROM->{ $self->$FROM->guid },
+                   $BY_TO->{ $self->$TO->guid }) {
       @$store = [ grep { $_->guid ne $self->guid } @$store ];
     }
   };
@@ -57,7 +61,7 @@ role {
     my ($class, $from_item) = @_;
 
     my $from_id = $from_item->guid;
-    my $ref = $BY_FROM{ $from_id } || [];
+    my $ref = $BY_FROM->{ $from_id } || [];
     return [ @$ref ];
   };
 
@@ -66,7 +70,7 @@ role {
     my ($class, $to_item) = @_;
 
     my $to_id = $to_item->guid;
-    my $ref = $BY_TO{ $to_id } || [];
+    my $ref = $BY_TO->{ $to_id } || [];
     return [ @$ref ];
   };
 
@@ -96,12 +100,12 @@ role {
     $self->$assert_no_overtransfer;
 
     my $from_id = $self->$FROM->guid;
-    $BY_FROM{ $from_id } ||= [];
-    push @{ $BY_FROM{ $from_id } }, $self;
+    $BY_FROM->{ $from_id } ||= [];
+    push @{ $BY_FROM->{ $from_id } }, $self;
 
     my $to_id = $self->$TO->guid;
-    $BY_TO{ $to_id } ||= [];
-    push @{ $BY_TO{ $to_id } }, $self;
+    $BY_TO->{ $to_id } ||= [];
+    push @{ $BY_TO->{ $to_id } }, $self;
   };
 };
 

@@ -3,7 +3,9 @@ use Test::More;
 use Test::Routine::Util;
 
 use Carp::Assert;
+use Moonpig::Hold;
 use Moonpig::Transfer;
+use Moonpig::Util qw(dollars);
 use Try::Tiny;
 
 with 't::lib::Factory::Ledger';
@@ -56,7 +58,7 @@ test "basics of transfer" => sub {
 
     is(@xfers, 2, "we made a transfer");
     isa_ok($xfers[1], 'Moonpig::Transfer', "the 2nd transfer");
-    
+
     is(
       $bank->unapplied_amount,
       0,
@@ -85,6 +87,28 @@ test "basics of transfer" => sub {
     is($bank->unapplied_amount, 0, "still have M 0 in bank");
     is(@xfers, 2, "the new transfer was never registered");
   };
+};
+
+test "multiple transfer types" => sub {
+  my ($self) = @_;
+  plan tests => 2;
+  my $ledger = $self->test_ledger;
+  my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
+  my $amt = $bank->amount;
+
+  my $h = Moonpig::Hold->new({
+    consumer => $consumer,
+    bank => $bank,
+    amount => dollars(1),
+  });
+  is($bank->unapplied_amount, $amt - dollars(1), "hold for \$1");
+
+  my $t = Moonpig::Transfer->new({
+    consumer => $consumer,
+    bank => $bank,
+    amount => dollars(2),
+  });
+  is($bank->unapplied_amount, $amt - dollars(3), "transfer of \$2");
 };
 
 run_me;
