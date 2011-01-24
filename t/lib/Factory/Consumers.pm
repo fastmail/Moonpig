@@ -22,8 +22,11 @@ my %reasonable_defaults = (
 sub test_consumer {
   my ($self, $class, $args) = @_;
   $args ||= {};
-  $class ||= class(qw(Consumer));
-  $class = "Moonpig::Consumer" . $class if $class =~ /^::/;
+  $class ||= class(qw(Consumer::Dummy));
+  unless ($class =~ /^Moonpig::/) {
+    $class = "Consumer::$class" unless $class =~ /^Consumer::/;
+    $class = class($class);
+  }
 
   my %arg = (
     %reasonable_defaults,
