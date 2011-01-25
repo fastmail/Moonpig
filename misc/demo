@@ -42,6 +42,8 @@ my $ledger = class('Ledger')->new({
 
 # 2. create consumer
 
+my $service_uri = 'yoyodyne://account/1234';
+
 my $consumer = $ledger->add_consumer(
   class(qw(Consumer::ByTime)),
   {
@@ -53,7 +55,7 @@ my $consumer = $ledger->add_consumer(
     charge_path_prefix => 'yoyodyne.basic',
     grace_until        => Moonpig->env->now + days(3),
 
-    service_uri        => 'yoyodyne://account/1234',
+    service_uri        => $service_uri,
     service_active     => 1,
 
     # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
@@ -74,7 +76,7 @@ my $last_rfp = $ledger->last_request_for_payment;
 
 # 4. pay and apply payment to invoice
 
-my $total   = sum map { $_->total_amount } $last_rfp->invoices;
+my $total = sum map { $_->total_amount } $last_rfp->invoices;
 
 $ledger->add_credit(
   class(qw(Credit::Simulated)),
@@ -95,17 +97,53 @@ $ledger->process_credits;
 # 11a. fail over (if replacement funded)
 # 11b. cancel account (if replacement unfunded)
 
+my $invoices_to_pay = 1;
+
 for (1 .. 730) {
   $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $_ % 30 == 0;
 
   $ledger->handle_event( event('heartbeat') );
 
   if ($_ % 30 == 0) {
-    $Logger->log([
-      "%s still has %s in it",
-      $consumer->bank->ident,
-      $consumer->bank->unapplied_amount,
-    ]);
+    my @consumers = $ledger->active_consumers_for_service($service_uri);
+    
+    die "multiple consumers!?!?" if @consumers > 1;
+
+    if (my $bank = $consumer->bank) {
+      $Logger->log([
+        "%s still has %s in it",
+        $consumer->bank->ident,
+        $consumer->bank->unapplied_amount,
+      ]);
+    } else {
+      $Logger->log([
+        "%s is still without a bank",
+        $consumer->ident,
+      ]);
+    }
+  }
+
+  if (
+    $invoices_to_pay
+    and
+    grep { ! $_->is_open and ! $_->is_paid } $ledger->invoices
+  ) {
+    # There are unpaid invoices!
+    my $last_rfp = $ledger->last_request_for_payment;
+
+    # 4. pay and apply payment to invoice
+
+    my $total = sum map { $_->total_amount } $last_rfp->invoices;
+
+    $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => $total },
+    );
+
+    $ledger->process_credits;
+
+    $invoices_to_pay--;
+    $Logger->('...');
   }
 
   Moonpig->env->elapse_time(86400);
