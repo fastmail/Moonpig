@@ -20,6 +20,7 @@ has consumer => (
   default => sub { $_[0]->test_consumer('ByUsage') },
   lazy => 1,
   clearer => 'discard_consumer',
+  predicate => 'has_consumer',
 );
 
 with(
@@ -35,13 +36,35 @@ before run_test => sub {
 
 test create_consumer => sub {
   my ($self) = @_;
-  $self->consumer($self->test_consumer('ByUsage'));
+  return if $self->has_consumer;
+
+  my $b = class('Bank')->new({
+    ledger => $self->ledger,
+    amount => dollars(1),
+  });
+
+  $self->consumer(
+    $self->test_consumer(
+      'ByUsage',
+      { bank => $b,
+        ledger => $self->ledger,
+      }));
   ok($self->consumer);
   ok($self->consumer->does('Moonpig::Role::Consumer::ByUsage'));
+  is($self->consumer->bank, $b, "consumer has bank");
+  is($self->consumer->unapplied_amount, dollars(1), "bank contains \$1");
 };
 
 test successful_hold => sub {
-  ok(1);
+  my ($self) = @_;
+  $self->create_consumer;
+  is($self->consumer->units_remaining, 20, "initially funds for 20 units");
+  my $h = $self->consumer->create_hold_for_units(7);
+  ok($h, "made hold");
+  is($h->consumer, $self->consumer, "hold has correct consumer");
+  is($h->bank, $self->consumer->bank, "hold has correct bank");
+  is($h->amount, cents(35), "hold is for \$.35");
+  is($self->consumer->units_remaining, 13, "after holding 7, there are 13 left");
 };
 
 test commit_hold => sub {

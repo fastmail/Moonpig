@@ -5,8 +5,9 @@ use Carp qw(confess croak);
 use List::Util qw(sum);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Hold;
 use Moonpig::Types qw(ChargePath);
-use Moonpig::Util qw(days event);
+use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);
 
@@ -54,12 +55,12 @@ sub _create_hold_for_amount {
   confess "insufficient funds to satisfy $amount"
     unless $self->has_bank && $amount <= $self->unapplied_amount;
 
-  my $hold = class('Hold')->new(
+  my $hold = Moonpig::Hold->new(
     bank => $self->bank,
     consumer => $self,
     allow_deletion => 1,
     amount => $amount,
-    subsidiary_hold => $subsidiary_hold,
+    $subsidiary_hold ? (subsidiary_hold => $subsidiary_hold) : (),
   );
 
   return $hold;
@@ -68,7 +69,7 @@ sub _create_hold_for_amount {
 sub create_hold_for_units {
   my ($self, $units_requested) = @_;
   my $units_to_get = $units_requested;
-  my $units_remaining = $self->n_units_remaining;
+  my $units_remaining = $self->units_remaining;
 
   my $subsidiary_hold = do {
     if ($units_requested < $units_remaining && $self->has_replacement) {
@@ -92,7 +93,7 @@ sub create_hold_for_units {
   {
     my $low_water_mark =
       $self->has_low_water_mark ? $self->low_water_mark : $units_requested;
-    if ($self->n_units_remaining <= $low_water_mark ||
+    if ($self->units_remaining <= $low_water_mark ||
           $self->estimated_lifetime <= $self->old_age) {
       # XXX code duplicated between ByTime and here
       if ($self->has_replacement) {
@@ -155,13 +156,13 @@ sub create_charge_for_hold {
 # Total amount of money consumed by me in the past $max_age seconds
 sub recent_usage {
   my ($self, $max_age) = @_;
-  my $transfers = class('Transfer')->all_for_consumer($self);
+  my $transfers = Moonpig::Transfer->all_for_consumer($self);
   my $total_usage = sum(
     map $_->amount,
       grep Moonpig->env->now() - $_->date < $max_age,
         @$transfers
   );
-  return $total_usage;
+  return $total_usage || 0;
 }
 
 # based on the last $days days of transfers, how long might we expect
