@@ -108,7 +108,10 @@ sub create_hold_for_units {
                 { remaining_life => $self->estimated_lifetime }
                ));
       } else {
-        $self->handle_event(event('consumer-create-replacement'));
+        $self->handle_event(event('consumer-create-replacement',
+                                  { timestamp => Moonpig->env->now,
+                                    mri => $self->replacement_mri,
+                                  }));
       }
     }
   }
@@ -127,14 +130,15 @@ sub construct_replacement {
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
     {
-      cost_per_unit      => $self->cost_per_unit(),
-      low_water_mark     => $self->low_water_mark(),
-      replacement_mri    => $self->replacement_mri(),
-      ledger             => $self->ledger(),
       charge_path_prefix => $self->charge_path_prefix(),
+      cost_per_unit      => $self->cost_per_unit(),
+      ledger             => $self->ledger(),
+      low_water_mark     => $self->low_water_mark(),
+      old_age            => $self->old_age(),
+      replacement_mri    => $self->replacement_mri(),
+      service_uri        => $self->service_uri(),
       %$param,
   });
-  $self->replacement($repl);
 }
 
 sub create_charge_for_hold {

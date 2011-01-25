@@ -46,7 +46,8 @@ before run_test => sub {
 };
 
 test create_consumer => sub {
-  my ($self) = @_;
+  my ($self, $args) = @_;
+  $args ||= {};
   return if $self->has_consumer;
 
   my $b = class('Bank')->new({
@@ -59,6 +60,7 @@ test create_consumer => sub {
       'ByUsage',
       { bank => $b,
         ledger => $self->ledger,
+        %$args,
       }));
   ok($self->consumer, "set up consumer");
   ok($self->consumer->does('Moonpig::Role::Consumer::ByUsage'),
@@ -113,7 +115,31 @@ test failed_hold => sub {
   is($self->consumer->units_remaining, 13, "still 13 left in bank");
 };
 
-test create_replacement => sub {
+
+test low_water_replacement => sub {
+  my ($self) = @_;
+  my $MRI =
+    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+  my $lwm = 7;
+  $self->create_consumer({
+    low_water_mark => $lwm,
+    replacement_mri => $MRI,
+    old_age => 0,
+  });
+  my $q = 2;
+  my $held = 0;
+  until ($self->consumer->has_replacement) {
+    $self->consumer->create_hold_for_units($q) or last;
+    $held += $q;
+  }
+  cmp_ok($self->consumer->units_remaining, '<=', $lwm,
+         "replacement consumer created at or below LW mark");
+  cmp_ok($self->consumer->units_remaining + $q, '>', $lwm,
+         "replacement consumer created just below LW mark");
+};
+
+test est_lifetime_replacement => sub {
+  my ($self) = @_;
   ok(1);
 };
 
