@@ -132,8 +132,10 @@ sub construct_replacement {
 }
 
 sub create_charge_for_hold {
-  my ($self, $hold) = @_;
+  my ($self, $hold, $description) = @_;
 
+  croak "No hold provided" unless $hold;
+  croak "No charge description provided" unless $description;
   $hold->consumer->guid eq $self->guid
     or confess "misdirected hold";
   $self->has_bank
@@ -142,7 +144,7 @@ sub create_charge_for_hold {
   my $now = Moonpig->env->now;
 
   $self->ledger->current_journal->charge({
-    desc => $hold->charge_description(),  # XXX
+    desc => $description,
     from => $hold->bank,
     to   => $self,
     date => $now,
