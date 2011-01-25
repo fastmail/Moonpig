@@ -11,6 +11,8 @@ has ledger => (
   is   => 'rw',
   does => 'Moonpig::Role::Ledger',
   default => sub { $_[0]->test_ledger() },
+  lazy => 1,
+  clearer => 'scrub_ledger',
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
@@ -58,8 +60,9 @@ test create_consumer => sub {
       { bank => $b,
         ledger => $self->ledger,
       }));
-  ok($self->consumer);
-  ok($self->consumer->does('Moonpig::Role::Consumer::ByUsage'));
+  ok($self->consumer, "set up consumer");
+  ok($self->consumer->does('Moonpig::Role::Consumer::ByUsage'),
+     "consumer is correct type");
   is($self->consumer->bank, $b, "consumer has bank");
   is($self->consumer->unapplied_amount, dollars(1), "bank contains \$1");
 };
@@ -77,6 +80,15 @@ test successful_hold => sub {
   is($self->consumer->units_remaining, 13, "after holding 7, there are 13 left");
 };
 
+test release_hold => sub {
+  my ($self) = @_;
+  $self->scrub_ledger;
+  $self->successful_hold;
+  is($self->consumer->units_remaining, 13, "still 13 left in bank");
+  $self->hold->delete;
+  is($self->consumer->units_remaining, 20, "20 left after releasing hold");
+};
+
 test commit_hold => sub {
   my ($self) = @_;
   my @journals;
@@ -90,10 +102,6 @@ test commit_hold => sub {
   is(@journals, 1, "now one journal");
   is($journals[0]->charge_tree->total_amount, cents(35),
      "total charges now \$.35");
-};
-
-test rollback_hold => sub {
-  ok(1);
 };
 
 test failed_hold => sub {
