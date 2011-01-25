@@ -23,6 +23,12 @@ has consumer => (
   predicate => 'has_consumer',
 );
 
+has hold => (
+  is   => 'rw',
+  isa => 'Moonpig::Hold',
+  clearer => 'discard_hold',
+);
+
 with(
   't::lib::Factory::Consumers',
   't::lib::Factory::Ledger',
@@ -31,6 +37,9 @@ with(
 use t::lib::Logger;
 
 before run_test => sub {
+  my ($self) = @_;
+  $self->discard_consumer;
+  $self->discard_hold;
   Moonpig->env->email_sender->clear_deliveries;
 };
 
@@ -61,6 +70,7 @@ test successful_hold => sub {
   is($self->consumer->units_remaining, 20, "initially funds for 20 units");
   my $h = $self->consumer->create_hold_for_units(7);
   ok($h, "made hold");
+  $self->hold($h);
   is($h->consumer, $self->consumer, "hold has correct consumer");
   is($h->bank, $self->consumer->bank, "hold has correct bank");
   is($h->amount, cents(35), "hold is for \$.35");
@@ -68,7 +78,18 @@ test successful_hold => sub {
 };
 
 test commit_hold => sub {
-  ok(1);
+  my ($self) = @_;
+  my @journals;
+  $self->successful_hold;
+  @journals = $self->ledger->journals;
+  is(@journals, 0, "no journal yet");
+  note("creating charge for hold");
+  $self->consumer->create_charge_for_hold($self->hold, "test charge");
+  is($self->consumer->units_remaining, 13, "still 13 left in bank");
+  @journals = $self->ledger->journals;
+  is(@journals, 1, "now one journal");
+  is($journals[0]->charge_tree->total_amount, cents(35),
+     "total charges now \$.35");
 };
 
 test rollback_hold => sub {
