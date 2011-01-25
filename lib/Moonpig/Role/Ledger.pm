@@ -71,6 +71,7 @@ for my $thing (qw(bank consumer refund)) {
       "${thing}s"   => 'values',
       "_has_$thing" => 'exists',
       "_set_$thing" => 'set',
+      "_get_$thing" => 'get',
     },
   );
   Sub::Install::install_sub({
@@ -264,6 +265,17 @@ has _active_service_consumers => (
   init_arg => undef,
   default  => sub {  {}  },
 );
+
+sub active_consumers_for_service {
+  my ($self, $service_uri) = @_;
+
+  my $reg = $self->_active_service_consumers;
+  return unless my $svc = $reg->{ $service_uri };
+
+  my @consumers = map {; $self->_get_consumer($_) } keys %$svc;
+
+  return @consumers;
+}
 
 sub _is_consumer_active {
   my ($self, $consumer) = @_;
