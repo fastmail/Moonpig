@@ -105,7 +105,12 @@ test commit_hold => sub {
 };
 
 test failed_hold => sub {
-  ok(1);
+  my ($self) = @_;
+  $self->successful_hold;
+  is($self->consumer->units_remaining, 13, "still 13 left in bank");
+  my $hold = $self->consumer->create_hold_for_units(14);
+  is(undef(), $hold, "cannot create hold for 14 units");
+  is($self->consumer->units_remaining, 13, "still 13 left in bank");
 };
 
 test create_replacement => sub {

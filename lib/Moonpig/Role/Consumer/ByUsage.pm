@@ -52,6 +52,8 @@ sub _create_hold_for_amount {
   my ($self, $amount, $subsidiary_hold) = @_;
 
   confess "Hold amount $amount < 0" if $amount < 0;
+
+  # This should have been caught before, in create_hold_for_units
   confess "insufficient funds to satisfy $amount"
     unless $self->has_bank && $amount <= $self->unapplied_amount;
 
@@ -71,14 +73,18 @@ sub create_hold_for_units {
   my $units_to_get = $units_requested;
   my $units_remaining = $self->units_remaining;
 
-  my $subsidiary_hold = do {
-    if ($units_requested < $units_remaining && $self->has_replacement) {
+  my $subsidiary_hold;
+  if ($units_remaining < $units_requested) {
+
+    # Can't satisfy request
+    return unless $self->has_replacement;
+
+    $subsidiary_hold =
       $self->replacement->create_hold_for_units(
         $units_requested - $units_remaining
       ) or return;
-      $units_to_get = $units_remaining;
-    }
-  };
+    $units_to_get = $units_remaining;
+  }
 
   my $hold = $self->_create_hold_for_amount(
     $self->cost_per_unit * $units_requested,
