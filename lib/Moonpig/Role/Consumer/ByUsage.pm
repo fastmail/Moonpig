@@ -153,6 +153,7 @@ sub create_charge_for_hold {
       @{$self->charge_path_prefix}, split(/-/, $now->ymd),
      ],
   });
+  $hold->delete;
 }
 
 # Total amount of money consumed by me in the past $max_age seconds
