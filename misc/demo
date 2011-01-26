@@ -66,16 +66,8 @@ my $consumer = $ledger->add_consumer(
 );
 
 # 3. charge, finalize, send invoice
-
-  # We send a heartbeat, which lets the invoice perform dunning, picking up the
-  # invoice that was charged by virtue of the ByTime consumer's creation.
-
 # 4. pay and apply payment to invoice
-
 # 5. create and link bank to consumer
-
-  # implicit in combination of invoice's handler and credit processing
-
 # 6. heartbeats, until...
 # 7. consumer charges bank
 # 8. until low-funds, goto 6
