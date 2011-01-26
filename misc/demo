@@ -70,20 +70,7 @@ my $consumer = $ledger->add_consumer(
   # We send a heartbeat, which lets the invoice perform dunning, picking up the
   # invoice that was charged by virtue of the ByTime consumer's creation.
 
-$ledger->handle_event( event('heartbeat') );
-
-my $last_rfp = $ledger->last_request_for_payment;
-
 # 4. pay and apply payment to invoice
-
-my $total = sum map { $_->total_amount } $last_rfp->invoices;
-
-$ledger->add_credit(
-  class(qw(Credit::Simulated)),
-  { amount => $total },
-);
-
-$ledger->process_credits;
 
 # 5. create and link bank to consumer
 
