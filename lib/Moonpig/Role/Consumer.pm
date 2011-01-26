@@ -20,14 +20,17 @@ use namespace::autoclean;
 
 implicit_event_handlers {
   return {
-    'terminate-service' => {
-      default => Moonpig::Events::Handler::Method->new(
-        method_name => 'terminate_service',
-      ),
+    'activated' => {
+      noop => Moonpig::Events::Handler::Noop->new,
     },
     'fail-over' => {
       default => Moonpig::Events::Handler::Method->new(
         method_name => 'failover',
+      ),
+    },
+    'terminate-service' => {
+      default => Moonpig::Events::Handler::Method->new(
+        method_name => 'terminate_service',
       ),
     },
   };
@@ -106,12 +109,13 @@ sub become_active {
   my ($self) = @_;
 
   $self->ledger->mark_consumer_active__($self);
+
+  $self->handle_event( event('activated') );
 }
 
 sub failover {
   my ($self) = @_;
 
-  $Logger->log("XXX: failing over");
   $self->ledger->failover_active_consumer__($self);
 }
 
