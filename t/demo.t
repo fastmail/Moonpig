@@ -112,6 +112,10 @@ sub log_current_bank_balance {
 # 11a. fail over (if replacement funded)
 # 11b. cancel account (if replacement unfunded)
 
+sub process_daily_assertions {
+  my ($self, $day) = @_;
+}
+
 test "end to end demo" => sub {
   my ($self) = @_;
 
@@ -141,13 +145,15 @@ test "end to end demo" => sub {
     },
   );
 
-  for (1 .. 760) {
-    $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $_ % 30 == 0;
+  for my $day (1 .. 760) {
+    $self->process_daily_assertions($day);
+
+    $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $day % 30 == 0;
 
     $ledger->handle_event( event('heartbeat') );
 
     # Just a little more noise, to see how things are going.
-    $self->log_current_bank_balance if $_ % 30 == 0;
+    $self->log_current_bank_balance if $day % 30 == 0;
 
     $self->pay_any_open_invoice;
 
