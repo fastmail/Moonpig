@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use Moonpig::DateTime;
 use Moonpig::Util -all;
 use Test::Routine;
 use Test::More;
@@ -70,16 +71,20 @@ test create_consumer => sub {
 };
 
 test successful_hold => sub {
-  my ($self) = @_;
+  my ($self, $n_units) = @_;
+  $n_units ||= 7;
   $self->create_consumer;
   is($self->consumer->units_remaining, 20, "initially funds for 20 units");
-  my $h = $self->consumer->create_hold_for_units(7);
+  my $h = $self->consumer->create_hold_for_units($n_units);
+  my $amt = $n_units * cents(5);
   ok($h, "made hold");
   $self->hold($h);
   is($h->consumer, $self->consumer, "hold has correct consumer");
   is($h->bank, $self->consumer->bank, "hold has correct bank");
-  is($h->amount, cents(35), "hold is for \$.35");
-  is($self->consumer->units_remaining, 13, "after holding 7, there are 13 left");
+  is($h->amount, $amt, "hold is for $amt mc");
+  my $x_remaining = 20 - $n_units;
+  is($self->consumer->units_remaining, $x_remaining,
+     "after holding $n_units, there are $x_remaining left");
 };
 
 test release_hold => sub {
@@ -115,7 +120,6 @@ test failed_hold => sub {
   is($self->consumer->units_remaining, 13, "still 13 left in bank");
 };
 
-
 test low_water_replacement => sub {
   my ($self) = @_;
   my $MRI =
@@ -138,6 +142,52 @@ test low_water_replacement => sub {
          "replacement consumer created just below LW mark");
 };
 
+sub jan {
+  my ($day) = @_;
+  return feb($day-31) if $day > 31;
+  Moonpig::DateTime->new( year => 2000, month => 1, day => $day );
+}
+
+sub feb {
+  my ($day) = @_;
+  Moonpig::DateTime->new( year => 2000, month => 2, day => $day );
+}
+
+test est_lifetime => sub {
+  my ($self) = @_;
+  Moonpig->env->current_time(jan(1));
+
+  $self->create_consumer();
+  is($self->consumer->units_remaining, 20, "initially 20 units");
+  is($self->consumer->unapplied_amount, dollars(1), "initially \$1.00");
+  is($self->consumer->estimated_lifetime, days(365),
+     "inestimable lifetime -> 365d");
+
+  Moonpig->env->current_time(jan(15));
+  $self->consumer->create_hold_for_units(1);
+  is($self->consumer->units_remaining, 19, "now 19 units");
+  is($self->consumer->unapplied_amount, dollars(0.95), "now \$0.95");
+  Moonpig->env->current_time(jan(30));
+  is($self->consumer->estimated_lifetime, days(30 * 19),
+     "1 charge/30d -> lifetime 600d");
+
+  Moonpig->env->current_time(jan(24));
+  $self->consumer->create_hold_for_units(2);
+  is($self->consumer->units_remaining, 17, "now 17 units");
+  is($self->consumer->unapplied_amount, dollars(0.85), "now \$0.85");
+  Moonpig->env->current_time(jan(30));
+  is($self->consumer->estimated_lifetime, days(30 * 17/3),
+     "3 charges/30d -> lifetime 200d");
+
+  Moonpig->env->current_time(jan(50));
+  is($self->consumer->estimated_lifetime, days(30 * 17/2),
+     "old charges don't count");
+
+  Moonpig->env->current_time(jan(58));
+  is($self->consumer->estimated_lifetime, days(365),
+     "no recent charges -> guess 365d");
+};
+
 test est_lifetime_replacement => sub {
   my ($self) = @_;
   ok(1);
@@ -147,11 +197,11 @@ test low_water_check => sub {
   ok(1);
 };
 
-test usage_estimate => sub {
+test expiration => sub {
   ok(1);
 };
 
-test expiration => sub {
+test subsidiary_hold => sub {
   ok(1);
 };
 
