@@ -6,7 +6,7 @@ use base 'Moonpig::Logger';
 use Moonpig::Logger '$Logger' => { init => {
   ident     => "moonpig-test($0)",
   to_self   => 1,
-  to_stderr => 0,
+  to_stdout => $ENV{MOONPIG_LOG_STDERR},
   facility  => undef,
   log_pid   => 0,
 } };
