@@ -40,6 +40,21 @@ has ledger => (
   does => 'Moonpig::Role::Ledger',
 );
 
+sub active_consumer {
+  my ($self) = @_;
+
+  my @active_consumers = $self->ledger->active_consumers_for_service(
+    $self->service_uri
+  );
+
+  return unless @active_consumers;
+
+
+  die "multiple consumers!?!?" if @active_consumers > 1;
+
+  return $active_consumers[0];
+}
+
 sub pay_any_open_invoice {
   my ($self) = @_;
 
@@ -72,14 +87,7 @@ sub pay_any_open_invoice {
 sub log_current_bank_balance {
   my ($self) = @_;
 
-  if (
-    my @consumers = $self->ledger->active_consumers_for_service(
-      $self->service_uri
-    )
-  ) {
-    die "multiple consumers!?!?" if @consumers > 1;
-
-    my $consumer = $consumers[0];
+  if (my $consumer = $self->active_consumer) {
     $Logger->log([ "CURRENTLY ACTIVE: %s", $consumer->ident ]);
 
     if (my $bank = $consumer->bank) {
@@ -114,6 +122,29 @@ sub log_current_bank_balance {
 
 sub process_daily_assertions {
   my ($self, $day) = @_;
+
+  if ($day == 370) {
+    # by this time, consumer 1 should've failed over to consumer 2
+    my @consumers   = $self->ledger->consumers;
+    my $active      = $self->active_consumer;
+    my ($inactive)  = grep { $_->guid ne $active->guid } @consumers;
+
+    is(@consumers, 2, "by day 370, we have created a second consumer");
+    is(
+      $active->guid,
+      $inactive->replacement->guid,
+      "the active one is the replacement for the original one",
+    );
+  }
+
+  if ($day == 740) {
+    # by this time, consumer 2 should've failed over to consumer 3 and expired
+    my @consumers   = $self->ledger->consumers;
+    my $active      = $self->active_consumer;
+
+    is(@consumers, 3, "by day 740, we have created a third consumer");
+    ok( ! $active,    "...and they are all inactive");
+  }
 }
 
 test "end to end demo" => sub {
