@@ -136,10 +136,11 @@ test low_water_replacement => sub {
     $self->consumer->create_hold_for_units($q) or last;
     $held += $q;
   }
+  ok($self->consumer->has_replacement, "replacement consumer created");
   cmp_ok($self->consumer->units_remaining, '<=', $lwm,
-         "replacement consumer created at or below LW mark");
+         "replacement created at or below LW mark");
   cmp_ok($self->consumer->units_remaining + $q, '>', $lwm,
-         "replacement consumer created just below LW mark");
+         "replacement created just below LW mark");
 };
 
 sub jan {
@@ -190,7 +191,38 @@ test est_lifetime => sub {
 
 test est_lifetime_replacement => sub {
   my ($self) = @_;
-  ok(1);
+  my $MRI =
+    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+  my $old_age = days(10);
+
+  for my $q (1 .. 3) { # number of units to reserve each time
+    for my $t (1 .. 3) { # number of days between holds
+      my ($prev_est_life, $cur_est_life);
+      my $day = 0;
+
+      note "Testing with q=$q, t=$t\n";
+      $self->discard_consumer;
+      $self->create_consumer({
+        low_water_mark => 0,
+        replacement_mri => $MRI,
+        old_age => $old_age,
+      });
+
+      until ($self->consumer->has_replacement) {
+        $day += $t;
+        Moonpig->env->current_time(jan($day));
+        $prev_est_life = $self->consumer->estimated_lifetime;
+        $self->consumer->create_hold_for_units($q) or last;
+        $cur_est_life = $self->consumer->estimated_lifetime;
+      }
+      ok($self->consumer->has_replacement, "replacement consumer created");
+      cmp_ok($cur_est_life, '<=', $old_age,
+             "replacement created not created too soon");
+      cmp_ok($prev_est_life, '>', $old_age,
+             "replacement created as soon as appropriate");
+      note "This test finished on Jan $day.\n";
+    }
+  }
 };
 
 test low_water_check => sub {
