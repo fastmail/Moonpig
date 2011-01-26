@@ -35,11 +35,6 @@ implicit_event_handlers {
         method_name => '_invoice',
       ),
     },
-    'low-funds' => {
-      low_funds_handler => Moonpig::Events::Handler::Method->new(
-        method_name => 'predecessor_running_out',
-      ),
-    },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
         method_name => 'create_own_replacement',
@@ -241,18 +236,16 @@ sub reflect_on_mortality {
 
     # If it has a replacement R, it should advise R that R will need
     # to take over soon
-    if ($self->has_replacement and $remaining_life) {
-      $self->replacement->handle_event(
-        event('low-funds',
-              { remaining_life => $self->remaining_life($tick_time) }
-             ));
-    } else {
+    unless ($self->has_replacement and $remaining_life) {
       # Otherwise it should create a replacement R
       $self->handle_event(
-        event('consumer-create-replacement',
-              { timestamp => $tick_time,
-                mri => $self->replacement_mri,
-              })
+        event(
+          'consumer-create-replacement',
+          {
+            timestamp => $tick_time,
+            mri       => $self->replacement_mri,
+          }
+        )
        );
     }
   }

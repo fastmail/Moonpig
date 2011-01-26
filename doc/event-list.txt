@@ -12,11 +12,6 @@ contact-humans:
   args   : message
   sent to: ledgers
 
-low-funds:
-  why    : available funds in a consumer's bank
-  args   : ?
-  sent to: consumers
-
 consumer-create-replacement:
   why    : tells a consumer to set up its replacement
   args   : ?
