@@ -25,8 +25,8 @@ role {
   my $FROM = $p->from_name;
   my $TO   = $p->to_name;
 
-  my $BY_FROM = $MASTER_FROM{$FROM} ||= {};
-  my $BY_TO   = $MASTER_TO{$TO}     ||= {};
+  my $BY_FROM = {}; # $MASTER_FROM{$FROM} ||= {};
+  my $BY_TO   = {}; # $MASTER_TO{$TO}     ||= {};
 
   with ('Moonpig::Role::HasGuid');
 

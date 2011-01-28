@@ -157,7 +157,7 @@ sub latest_invoice {
 sub process_credits {
   my ($self) = @_;
 
-  # $self->_collect_spare_change;
+  $self->_collect_spare_change;
 
   my @credits = $self->credits;
 
@@ -360,8 +360,6 @@ sub _collect_spare_change {
       amount  => $amount,
     });
   }
-
-  warn "$total\n";
 }
 
 1;
