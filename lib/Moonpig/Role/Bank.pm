@@ -11,6 +11,7 @@ use List::Util qw(reduce);
 use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Ledger Millicents);
 use Moonpig::Transfer;
+use Moonpig::Transfer::BankCredit;
 
 use namespace::autoclean;
 
@@ -26,9 +27,11 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::Transfer->all_for_bank($self);
+  my $consumer_xfers = Moonpig::Transfer->all_for_bank($self);
+  my $credit_xfers   = Moonpig::Transfer::BankCredit->all_for_bank($self);
 
-  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
+  my $xfer_total = reduce { $a + $b } 0,
+                   (map {; $_->amount } @$consumer_xfers, @$credit_xfers);
 
   return $self->amount - $xfer_total;
 }

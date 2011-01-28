@@ -196,6 +196,8 @@ test "end to end demo" => sub {
 
   my @active = $ledger->active_consumers_for_service( $self->service_uri );
   is(@active, 0, "...but they're all inactive now");
+
+  $ledger->_collect_spare_change;
 };
 
 run_me;

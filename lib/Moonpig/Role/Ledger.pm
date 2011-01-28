@@ -22,6 +22,9 @@ use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
 use Moonpig::Util qw(class event);
 
+use Data::GUID qw(guid_string);
+use List::Util qw(reduce);
+
 use Moonpig::Behavior::EventHandlers;
 use Sub::Install ();
 
@@ -153,6 +156,8 @@ sub latest_invoice {
 
 sub process_credits {
   my ($self) = @_;
+
+  # $self->_collect_spare_change;
 
   my @credits = $self->credits;
 
@@ -323,6 +328,40 @@ sub failover_active_consumer__ {
   $consumer->replacement->become_active;
 
   return;
+}
+
+sub _collect_spare_change {
+  my ($self) = @_;
+
+  my @consumers = grep {; $_->has_bank && ! $_->is_expired } $self->consumers;
+  my %consider  = map  {; $_->[0]->guid => $_ }
+                  grep {; $_->[1] }
+                  map  {; [ $_, $_->unapplied_amount ] }
+                  $self->banks;
+
+  delete $consider{ $_->bank->guid } for @consumers;
+
+  my $total = reduce { $a + $b } 0, map { $_->[1] } values %consider;
+
+  my $credit = $self->add_credit(
+    class('Credit::Courtesy'),
+    {
+      amount => $total,
+      reason => "collecting spare change", # XXX ? -- rjbs, 2011-01-28
+    },
+  );
+
+  for my $bank_pair (values %consider) {
+    my ($bank, $amount) = @$bank_pair;
+
+    Moonpig::Transfer::BankCredit->new({
+      bank    => $bank,
+      credit  => $credit,
+      amount  => $amount,
+    });
+  }
+
+  warn "$total\n";
 }
 
 1;
