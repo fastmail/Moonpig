@@ -77,6 +77,9 @@ test "with_successor" => sub {
         ledger  => $self->ledger,
         bank    => $b,
         old_age => years(1000),
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
+        replacement_mri    => Moonpig::URI->nothing(),
       },
     );
 
@@ -147,6 +150,8 @@ test "without_successor" => sub {
         bank => $b,
         old_age => days(20),
         replacement_mri => $mri,
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
       });
 
 
@@ -197,6 +202,8 @@ test "irreplaceable" => sub {
         bank => $b,
         old_age => days(20),
         replacement_mri => Moonpig::URI->nothing(),
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
       });
 
     for my $day (@$schedule) {

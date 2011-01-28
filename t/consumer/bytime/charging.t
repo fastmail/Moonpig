@@ -53,6 +53,9 @@ test "charge" => sub {
         ledger => $self->ledger,
         bank => $b,
         old_age => years(1000),
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
+        replacement_mri    => Moonpig::URI->nothing(),
     });
 
     $c->clear_grace_until;
@@ -88,7 +91,14 @@ test grace_period => sub {
 
       $self->ledger( $self->test_ledger );
 
-      my $c = $self->test_consumer($CLASS);
+      my $c = $self->test_consumer(
+        $CLASS,
+        { cost_amount        => dollars(1),
+          cost_period        => days(1),
+          old_age            => days(0),
+          replacement_mri    => Moonpig::URI->nothing(),
+        }
+      );
 
       if (defined $until) {
         $c->grace_until($until);

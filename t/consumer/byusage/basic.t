@@ -61,6 +61,10 @@ test create_consumer => sub {
       'ByUsage',
       { bank => $b,
         ledger => $self->ledger,
+        cost_per_unit      => cents(5),
+        old_age            => days(30),
+        replacement_mri    => Moonpig::URI->nothing(),
+        service_active     => 1,
         %$args,
       }));
   ok($self->consumer, "set up consumer");

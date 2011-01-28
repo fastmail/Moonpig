@@ -37,12 +37,20 @@ test "constructor" => sub {
 
   ok(
     exception {
-      Moonpig::Consumer::ByTime->new({ledger => $self->test_ledger});
+      Moonpig::Consumer::ByTime->new({
+        ledger             => $self->test_ledger,
+       });
     },
     "missing attrs",
   );
 
-  my $c = $self->test_consumer($CLASS);
+  my $c = $self->test_consumer(
+    $CLASS,
+    { cost_amount        => dollars(1),
+      cost_period        => days(1),
+      old_age            => days(0),
+      replacement_mri    => Moonpig::URI->nothing(),
+    });
   ok($c);
 };
 
@@ -58,7 +66,15 @@ test expire_date => sub {
    });
 
   {
-    my $c = $self->test_consumer($CLASS, { bank => $b, ledger => $ledger });
+    my $c = $self->test_consumer(
+      $CLASS,
+      { bank               => $b,
+        ledger             => $ledger,
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
+        old_age            => days(0),
+        replacement_mri    => Moonpig::URI->nothing(),
+      });
 
     my $exp = $c->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
@@ -68,9 +84,12 @@ test expire_date => sub {
   {
     my $c = $self->test_consumer(
       $CLASS,
-      { bank => $b,
-        ledger => $ledger,
-        cost_amount => dollars(3),
+      { bank             => $b,
+        ledger           => $ledger,
+        cost_amount      => dollars(3),
+        cost_period      => days(1),
+        old_age          => days(0),
+        replacement_mri  => Moonpig::URI->nothing(),
       });
     my $exp = $c->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
@@ -80,9 +99,12 @@ test expire_date => sub {
   {
     my $c = $self->test_consumer(
       $CLASS,
-      { bank => $b,
-        ledger => $ledger,
-        cost_period => days(7),
+      { bank               => $b,
+        ledger             => $ledger,
+        cost_amount        => dollars(1),
+        cost_period        => days(7),
+        old_age            => days(0),
+        replacement_mri    => Moonpig::URI->nothing(),
       });
 
     my $exp = $c->expire_date;
@@ -101,8 +123,12 @@ test expire_date => sub {
     ));
     my $c = $self->test_consumer(
       $CLASS,
-      { bank => $b,
-        ledger => $ledger,
+      { bank               => $b,
+        ledger             => $ledger,
+        cost_amount        => dollars(1),
+        cost_period        => days(1),
+        old_age            => days(0),
+        replacement_mri    => Moonpig::URI->nothing(),
       });
 
     my $exp = $c->expire_date;
@@ -129,7 +155,13 @@ test "basic_event" => sub {
   my $ld = $self->test_ledger;
 
   my $c = $self->test_consumer(
-    $CLASS, { ledger => $self->test_ledger });
+    $CLASS,
+    { ledger             => $self->test_ledger,
+      cost_amount        => dollars(1),
+      cost_period        => days(1),
+      old_age            => days(0),
+      replacement_mri    => Moonpig::URI->nothing(),
+    });
 
   my @eq;
   $c->register_event_handler('test', 'testhandler', queue_handler("c", \@eq));
