@@ -225,8 +225,28 @@ test est_lifetime_replacement => sub {
   }
 };
 
-test low_water_check => sub {
-  ok(1);
+test default_low_water_check => sub {
+  my ($self) = @_;
+  my $MRI =
+    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+  $self->create_consumer({
+    replacement_mri => $MRI,
+    old_age => 0,
+  });
+  my $q = 0;
+  my $held = 0;
+  until ($self->consumer->has_replacement) {
+    $q++;
+    $self->consumer->create_hold_for_units($q) or last;
+    $held += $q;
+  }
+  ok($self->consumer->has_replacement, "replacement consumer created");
+  # If no low-water mark specified, create replacement when next request of
+  # same size would cause exhaustion
+  cmp_ok($self->consumer->units_remaining, '<=', $q,
+         "replacement created at or below LW mark");
+  cmp_ok($self->consumer->units_remaining, '>', 0,
+         "replacement created before exhaustion");
 };
 
 test expiration => sub {

@@ -133,7 +133,8 @@ sub construct_replacement {
       charge_path_prefix => $self->charge_path_prefix(),
       cost_per_unit      => $self->cost_per_unit(),
       ledger             => $self->ledger(),
-      low_water_mark     => $self->low_water_mark(),
+    $self->has_low_water_mark ?
+     (low_water_mark     => $self->low_water_mark()) : (),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
       service_uri        => $self->service_uri(),
