@@ -249,10 +249,14 @@ test default_low_water_check => sub {
          "replacement created before exhaustion");
 };
 
+# Postpone testing this until we figure out whether these consumers
+# will actually expire.
 test expiration => sub {
   ok(1);
 };
 
+# Postpone testing this until we figure out whether these consumers
+# will actually have replacements.
 test subsidiary_hold => sub {
   ok(1);
 };
