@@ -20,4 +20,22 @@ with(
   },
 );
 
+has subsidiary_hold => (
+  is => 'rw',
+  isa => 'Moonpig::Hold',
+  predicate => 'has_subsidiary_hold',
+);
+
+before delete => sub {
+  my ($self) = @_;
+  $self->subsidiary_hold->delete if $self->has_subsidiary_hold;
+};
+
+sub commit {
+  my ($self) = @_;
+  $self->consumer->create_charge_for_hold($self);
+  $self->subsidiary_hold->commit() if $self->has_subsidiary_hold;
+  $self->delete;
+}
+
 1;

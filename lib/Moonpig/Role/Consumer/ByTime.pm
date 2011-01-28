@@ -15,6 +15,7 @@ use Moonpig::Logger '$Logger';
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::StubBuild',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -33,11 +34,6 @@ implicit_event_handlers {
     created => {
       'initial-invoice' => Moonpig::Events::Handler::Method->new(
         method_name => '_invoice',
-      ),
-    },
-    'consumer-create-replacement' => {
-      create_replacement => Moonpig::Events::Handler::Method->new(
-        method_name => 'create_own_replacement',
       ),
     },
   };
@@ -78,24 +74,6 @@ has cost_period => (
    is => 'ro',
    required => 1,
    isa => TimeInterval,
-);
-
-# the date is appended to this to make the charge path
-# for this consumer's charges
-has charge_path_prefix => (
-  is => 'ro',
-  isa => ChargePath,
-  coerce => 1,
-  required => 1,
-);
-
-# When the object has less than this long to live, it will
-# start posting low-balance events to its successor, or to itself if
-# it has no successor
-has old_age => (
-  is => 'ro',
-  required => 1,
-  isa => TimeInterval,
 );
 
 # Last time I charged the bank
@@ -172,6 +150,10 @@ sub in_grace_period {
 
   return $self->grace_until >= Moonpig->env->now;
 }
+
+################################################################
+#
+#
 
 sub charge {
   my ($self, $event, $arg) = @_;
@@ -254,23 +236,6 @@ sub reflect_on_mortality {
 sub can_make_next_payment {
   my ($self) = @_;
   return $self->amount_in_bank >= $self->cost_per_charge;
-}
-
-sub create_own_replacement {
-  my ($self, $event, $arg) = @_;
-
-  my $replacement_mri = $event->payload->{mri};
-
-  if (! $self->has_replacement) {
-    $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
-
-    my $replacement = $replacement_mri->construct(
-      { extra => { self => $self } }
-     ) or return;
-    $self->replacement($replacement);
-    return $replacement;
-  }
-  return;
 }
 
 sub construct_replacement {
