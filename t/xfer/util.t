@@ -23,5 +23,10 @@ test type => sub {
   ok(! Moonpig::TransferUtil->valid_type('potato'));
 };
 
+test deletable => sub {
+  ok(  Moonpig::TransferUtil->deletable('hold'));
+  ok(! Moonpig::TransferUtil->deletable('transfer'));
+};
+
 run_me;
 done_testing;

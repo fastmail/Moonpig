@@ -31,6 +31,11 @@ sub valid_type {
   return $TYPE{$type};
 }
 
+sub deletable {
+  my ($class, $type) = @_;
+  return $type eq 'hold';
+}
+
 1;
 
 __DATA__
