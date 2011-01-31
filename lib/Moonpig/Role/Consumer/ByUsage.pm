@@ -170,11 +170,14 @@ sub create_charge_for_hold {
 # Total amount of money consumed by me in the past $max_age seconds
 sub recent_usage {
   my ($self, $max_age) = @_;
+
   my $transfers = Moonpig::Transfer->all_for_consumer($self);
+  my $holds     = Moonpig::Hold->all_for_consumer($self);
+
   my $total_usage = sum(
     map $_->amount,
       grep Moonpig->env->now() - $_->date < $max_age,
-        @$transfers
+        (@$transfers, @$holds)
   );
   return $total_usage || 0;
 }
