@@ -4,7 +4,7 @@ package Moonpig::TransferUtil;
 my %TYPE; # Maps valid type names to 1, others to false
 my %TYPEMAP; # Maps valid from-to-type triples to 1, others to false
 
-CHECK {
+sub import {
   while (my $line = <DATA>) {
     $line =~ s/#.*//;
     next unless $line =~ /\S/;
