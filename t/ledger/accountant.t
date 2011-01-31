@@ -25,5 +25,19 @@ test basic => sub {
          "It is in the right class");
 };
 
+test typemap => sub {
+  my ($self) = @_;
+  my $ac = $self->accountant;
+  ok(  $ac->type_is_ok('bank', 'consumer', 'transfer'));
+  ok(! $ac->type_is_ok('consumer', 'bank', 'transfer'));
+  ok(! $ac->type_is_ok('consumer', 'bank', 'potato'));
+  ok(! $ac->type_is_ok('consumer', 'bank', 'hold'));
+  ok(  $ac->type_is_ok('bank', 'credit', 'bank_credit'));
+  ok(! $ac->type_is_ok('potato', 'credit', 'bank_credit'));
+  ok(! $ac->type_is_ok('potato', 'potato', 'bank_credit'));
+};
+
+
+
 run_me;
 done_testing;
