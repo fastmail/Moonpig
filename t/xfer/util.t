@@ -3,6 +3,7 @@ use warnings;
 
 use Carp qw(confess croak);
 use Moonpig::TransferUtil;
+use Moonpig::Util qw(class);
 use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
@@ -32,6 +33,11 @@ test is_transfer_capable => sub {
   ok(  Moonpig::TransferUtil->is_transfer_capable('bank'));
   ok(  Moonpig::TransferUtil->is_transfer_capable('consumer'));
   ok(! Moonpig::TransferUtil->is_transfer_capable('potato'));
+};
+
+test transferer_type => sub {
+  is(class('Bank')->transferer_type, 'bank');
+  is(class('Consumer::Dummy')->transferer_type, 'consumer');
 };
 
 run_me;

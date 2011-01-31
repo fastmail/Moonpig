@@ -20,6 +20,7 @@ sub import {
     $CANTRANSFER{$to} = 1;
     $TYPE{$type} = 1;
   }
+  close DATA;
 }
 
 sub is_transfer_capable {
