@@ -2,6 +2,7 @@
 package Moonpig::TransferUtil;
 
 my %TYPE; # Maps valid type names to 1, others to false
+my %CANTRANSFER; # Maps valid entity names ("bank") to 1, others to false
 my %TYPEMAP; # Maps valid from-to-type triples to 1, others to false
 
 sub import {
@@ -15,8 +16,15 @@ sub import {
       die "Malformed typemap line '$line'" if /\W/;
     }
     $TYPEMAP{$from}{$to}{$type} = 1;
+    $CANTRANSFER{$from} = 1;
+    $CANTRANSFER{$to} = 1;
     $TYPE{$type} = 1;
   }
+}
+
+sub is_transfer_capable {
+  my ($class, $what) = @_;
+  return $CANTRANSFER{$what};
 }
 
 sub transfer_type_ok {

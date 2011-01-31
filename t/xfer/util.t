@@ -28,5 +28,11 @@ test deletable => sub {
   ok(! Moonpig::TransferUtil->deletable('transfer'));
 };
 
+test is_transfer_capable => sub {
+  ok(  Moonpig::TransferUtil->is_transfer_capable('bank'));
+  ok(  Moonpig::TransferUtil->is_transfer_capable('consumer'));
+  ok(! Moonpig::TransferUtil->is_transfer_capable('potato'));
+};
+
 run_me;
 done_testing;
