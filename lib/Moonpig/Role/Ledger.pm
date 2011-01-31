@@ -14,6 +14,7 @@ use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use Moonpig;
+use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
 use Moonpig::Types qw(Credit);
@@ -48,6 +49,13 @@ has credits => (
     credits    => 'elements',
     _add_credit => 'push',
   },
+);
+
+has accountant => (
+  isa => 'Moonpig::Ledger::Accountant',
+  is => 'ro',
+  handles => [ qw() ],
+  default => sub { Moonpig::Ledger::Accountant->for_ledger($_[0]) },
 );
 
 sub add_credit {
