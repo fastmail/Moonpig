@@ -9,44 +9,34 @@ with 'Role::Subsystem' => {
   weak_ref => 0,
 };
 
-# Given source and destination types, and transfer type,
-# $type_map{source type}{destination type}{transfer type} is true iff
-# the specified transfer type is permitted between the specified source
-# and destination.
-has type_map => (
+# Each transfer has a source, destination, and guid.
+# Each transfer is listed exactly once in each of the three following hashes:
+# By source in %by_from, by destination in %by_to, and by GUID in %by_id.
+
+
+# This is a hash whose keys are GUIDs of objects such as banks or
+# consumers, and whose values are arrays of transfers.  For object X,
+# all transfers from X are listed in $by_from{$X->guid}.
+has by_from => (
   is => 'ro',
   isa => 'HashRef',
-  default => sub { $_[0]->_load_type_map(*DATA) },
+  default => sub { {} },
 );
 
-sub type_is_ok {
-  my ($self, $fm, $to, $tp) = @_;
-  my $tm = $self->type_map;
-  exists $tm->{$fm} and exists $tm->{$fm}{$to} and $tm->{$fm}{$to}{$tp};
-}
+# Like %by_from, but backwards
+has by_to => (
+  is => 'ro',
+  isa => 'HashRef',
+  default => sub { {} },
+);
 
-sub _load_type_map {
-  my ($self, $fh) = @_;
-  my %tm;
-  while (my $line = <$fh>) {
-    $line =~ s/#.*//;
-    next unless $line =~ /\S/;
-    chomp $line;
-    my ($from, $type, $to, $rest) = split /\s+/, $line;
-      die "Malformed typemap line '$line'" if $rest || ! defined($to);
-    for ($from, $type, $to) {
-      die "Malformed typemap line '$line'" if /\W/;
-    }
-    $tm{$from}{$to}{$type} = 1;
-  }
-  return \%tm;
-}
+# Keys here are transfer GUIDs and values are transfer objects
+has by_id => (
+  is => 'ro',
+  isa => 'HashRef',
+  default => sub { {} },
+);
 
+no Moose;
 1;
 
-__DATA__
-# FROM TYPE               TO
-bank   transfer           consumer
-bank   hold               consumer
-credit credit_application payable
-bank   bank_credit        credit
