@@ -47,13 +47,13 @@ has ledger => (
 sub BUILD {
   my ($class, $arg) = @_;
 
-  my $s_type = $arg->{source}->type;
+  my $s_type = $arg->{source}->transferer_type;
   croak "Unknown transfer source type '$s_type'"
-    unless Moonpig::TransferUtil->valid_type($s_type);
+    unless Moonpig::TransferUtil->is_transfer_capable($s_type);
 
-  my $t_type = $arg->{target}->type;
+  my $t_type = $arg->{target}->transferer_type;
   croak "Unknown transfer target type '$t_type'"
-    unless Moonpig::TransferUtil->valid_type($t_type);
+    unless Moonpig::TransferUtil->is_transfer_capable($t_type);
 
   my $x_type = $arg->{type};
   croak "Unknown transfer type '$x_type'"
