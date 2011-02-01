@@ -299,6 +299,15 @@ sub _assert_ledger_handles_xid {
   $Ledger_for_xid{ $xid } = $self->guid;
 }
 
+sub _consider_releasing_xid {
+  my ($self, $xid) = @_;
+
+  $self->_assert_ledger_handles_xid($xid);
+  my @consumers = $self->active_consumers_for_xid($xid);
+
+  delete $Ledger_for_xid{ $xid } unless @consumers;
+}
+
 sub _stop_handling_xid {
   my ($self, $xid) = @_;
 
@@ -355,12 +364,15 @@ sub mark_consumer_inactive__ {
   my ($self, $consumer) = @_;
 
   my $reg = $self->_active_xid_consumers;
+  my $xid = $consumer->xid;
 
-  return unless $reg->{ $consumer->xid };
+  return unless $reg->{ $xid };
 
-  delete $reg->{ $consumer->xid }{ $consumer->guid };
+  my $rv = delete $reg->{ $xid }{ $consumer->guid };
 
-  return;
+  $self->_consider_releasing_xid( $xid );
+
+  return $rv;
 }
 
 sub failover_active_consumer__ {
@@ -371,7 +383,7 @@ sub failover_active_consumer__ {
   $reg->{ $consumer->xid } ||= {};
 
   Moonpig::X->throw("can't failover inactive service")
-    unless delete $reg->{ $consumer->xid }{ $consumer->guid };
+    unless $self->mark_consumer_inactive__($consumer);
 
   $consumer->replacement->become_active;
 
