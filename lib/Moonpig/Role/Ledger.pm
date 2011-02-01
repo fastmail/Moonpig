@@ -261,21 +261,21 @@ sub _send_mkit {
 }
 
 # {
-#   service_uri => [ consumer_guid, ... ],
+#   xid => [ consumer_guid, ... ],
 #   ...
 # }
-has _active_service_consumers => (
+has _active_xid_consumers => (
   is  => 'ro',
   isa => HashRef,
   init_arg => undef,
   default  => sub {  {}  },
 );
 
-sub active_consumers_for_service {
-  my ($self, $service_uri) = @_;
+sub active_consumers_for_xid {
+  my ($self, $xid) = @_;
 
-  my $reg = $self->_active_service_consumers;
-  return unless my $svc = $reg->{ $service_uri };
+  my $reg = $self->_active_xid_consumers;
+  return unless my $svc = $reg->{ $xid };
 
   my @consumers = map {; $self->_get_consumer($_) } keys %$svc;
 
@@ -285,8 +285,8 @@ sub active_consumers_for_service {
 sub _is_consumer_active {
   my ($self, $consumer) = @_;
 
-  my $reg = $self->_active_service_consumers;
-  return unless my $svc = $reg->{ $consumer->service_uri };
+  my $reg = $self->_active_xid_consumers;
+  return unless my $svc = $reg->{ $consumer->xid };
 
   return $svc->{ $consumer->guid };
 }
@@ -294,11 +294,11 @@ sub _is_consumer_active {
 sub mark_consumer_active__ {
   my ($self, $consumer) = @_;
 
-  my $reg = $self->_active_service_consumers;
+  my $reg = $self->_active_xid_consumers;
 
-  $reg->{ $consumer->service_uri } ||= {};
+  $reg->{ $consumer->xid } ||= {};
 
-  $reg->{ $consumer->service_uri }{ $consumer->guid } = 1;
+  $reg->{ $consumer->xid }{ $consumer->guid } = 1;
 
   return;
 }
@@ -306,11 +306,11 @@ sub mark_consumer_active__ {
 sub mark_consumer_inactive__ {
   my ($self, $consumer) = @_;
 
-  my $reg = $self->_active_service_consumers;
+  my $reg = $self->_active_xid_consumers;
 
-  return unless $reg->{ $consumer->service_uri };
+  return unless $reg->{ $consumer->xid };
 
-  delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+  delete $reg->{ $consumer->xid }{ $consumer->guid };
 
   return;
 }
@@ -318,12 +318,12 @@ sub mark_consumer_inactive__ {
 sub failover_active_consumer__ {
   my ($self, $consumer) = @_;
 
-  my $reg = $self->_active_service_consumers;
+  my $reg = $self->_active_xid_consumers;
 
-  $reg->{ $consumer->service_uri } ||= {};
+  $reg->{ $consumer->xid } ||= {};
 
   Moonpig::X->throw("can't failover inactive service")
-    unless delete $reg->{ $consumer->service_uri }{ $consumer->guid };
+    unless delete $reg->{ $consumer->xid }{ $consumer->guid };
 
   $consumer->replacement->become_active;
 

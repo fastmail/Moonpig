@@ -22,7 +22,7 @@ ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
     cost_amount => dollars(1),
     ledger => __PACKAGE__->test_ledger(),
     cost_period => $day,
-    service_uri => 'urn:uuid:' . guid_string,
+    xid         => 'urn:uuid:' . guid_string,
     replacement_mri => Moonpig::URI->nothing(),
     charge_description => "blah",
     charge_path_prefix => [],

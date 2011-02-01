@@ -44,8 +44,8 @@ sub add_consumer_to {
   my $consumer = $ledger->add_consumer(
     class(qw(Consumer::Dummy)),
     {
-      service_uri     => 'urn:uuid:' . guid_string,
-      service_active  => 1,
+      xid             => 'urn:uuid:' . guid_string,
+      make_active     => 1,
       replacement_mri => Moonpig::URI->nothing(),
       charge_path_prefix => [ "dummy-consumer" ],
       old_age => 30,

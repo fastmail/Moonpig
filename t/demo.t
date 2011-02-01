@@ -19,7 +19,7 @@ use Moonpig::Util qw(class days dollars event);
 
 use namespace::autoclean;
 
-has service_uri => (
+has xid => (
   is      => 'ro',
   isa     => 'Str',
   default => sub { 'yoyodyne://account/' . guid_string },
@@ -43,9 +43,7 @@ has ledger => (
 sub active_consumer {
   my ($self) = @_;
 
-  my @active_consumers = $self->ledger->active_consumers_for_service(
-    $self->service_uri
-  );
+  my @active_consumers = $self->ledger->active_consumers_for_xid( $self->xid );
 
   return unless @active_consumers;
 
@@ -165,8 +163,8 @@ test "end to end demo" => sub {
       charge_path_prefix => 'yoyodyne.basic',
       grace_until        => Moonpig->env->now + days(3),
 
-      service_uri        => $self->service_uri,
-      service_active     => 1,
+      xid                => $self->xid,
+      make_active        => 1,
 
       # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
       replacement_mri    => Moonpig::URI->new(
@@ -193,7 +191,7 @@ test "end to end demo" => sub {
   my @consumers = $ledger->consumers;
   is(@consumers, 3, "three consumers created over the lifetime");
 
-  my @active = $ledger->active_consumers_for_service( $self->service_uri );
+  my @active = $ledger->active_consumers_for_xid( $self->xid );
   is(@active, 0, "...but they're all inactive now");
 
   $ledger->_collect_spare_change;

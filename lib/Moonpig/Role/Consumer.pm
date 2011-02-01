@@ -140,7 +140,7 @@ sub amount_in_bank {
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
 }
 
-has service_uri => (
+has xid => (
   is  => 'ro',
   isa => 'Str',
   required => 1,
@@ -159,7 +159,7 @@ before expire => sub {
 after BUILD => sub {
   my ($self, $arg) = @_;
 
-  $self->become_active if delete $arg->{service_active};
+  $self->become_active if delete $arg->{make_active};
 };
 
 sub is_active {
