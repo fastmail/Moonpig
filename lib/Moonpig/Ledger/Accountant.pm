@@ -50,13 +50,19 @@ has transfer_factory => (
 
 sub create_transfer {
   my ($self, $arg) = @_;
-  $arg ||= {};
+  $arg or croak "Missing arguments to create_transfer";
 
   my ($from, $to, $type) = @{$arg}{qw(from to type)};
+
+  croak "missing 'from'" unless defined $from;
+  croak "missing 'to'" unless defined $to;
+  croak "missing transfer type" unless defined $type;
+  croak "missing amount" unless defined $arg->{amount};
+
   my $skip_funds_check = delete $arg->{skip_funds_check};
   if (! $skip_funds_check && $from->unapplied_amount < $arg->{amount}) {
-    croak "Can't transfer $arg->{amount} from " . $from->TO_JSON .
-      "; it has only " . $from->unapplied_amount;
+    croak "Refusing overdraft transfer of $arg->{amount} from " .
+      $from->TO_JSON . "; it has only " . $from->unapplied_amount;
   }
   my $t = $self->transfer_factory->new({
     source => $from,

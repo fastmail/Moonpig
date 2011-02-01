@@ -56,6 +56,8 @@ sub BUILD {
     unless Moonpig::TransferUtil->valid_type($t_type);
 
   my $x_type = $arg->{type};
+  croak "Unknown transfer type '$x_type'"
+    unless Moonpig::TransferUtil->valid_type($x_type);
   croak "Can't create transfer of type '$x_type' from $s_type to $t_type"
     unless Moonpig::TransferUtil->transfer_type_ok($s_type, $t_type, $x_type);
 }
@@ -67,7 +69,7 @@ sub is_deletable {
 
 sub delete {
   my ($self) = @_;
-  croak "Can't delete transfer of type " . $self->type
+  croak "Transfer of type " . $self->type . " is immortal"
     unless $self->is_deletable;
   $self->accountant->delete_transfer($self);
 }
