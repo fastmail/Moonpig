@@ -49,7 +49,6 @@ sub active_consumer {
 
   return unless @active_consumers;
 
-
   die "multiple consumers!?!?" if @active_consumers > 1;
 
   return $active_consumers[0];
@@ -159,10 +158,10 @@ test "end to end demo" => sub {
     class(qw(Consumer::ByTime)),
     {
       cost_amount        => dollars(50),
-      cost_period        => 365 * 86400,
-      charge_frequency   =>   7 * 86400, # less frequent to make logs simpler
+      cost_period        => days(365),
+      charge_frequency   => days(7), # less frequent to make logs simpler
       charge_description => 'yoyodyne service',
-      old_age            =>  30 * 86400,
+      old_age            => days(30),
       charge_path_prefix => 'yoyodyne.basic',
       grace_until        => Moonpig->env->now + days(3),
 
