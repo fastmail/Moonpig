@@ -2,7 +2,6 @@ package Moonpig::Role::Journal;
 # ABSTRACT: a journal of charges made by consumers against banks
 
 use Carp qw(croak);
-use Moonpig::Transfer;
 use Moonpig::Util qw(class);
 use Moose::Role;
 
@@ -36,10 +35,10 @@ sub charge {
   }
 
   # create transfer
-  $self->transfer_factory->new(
-    { amount => $args->{amount},
-      bank => $args->{from},
-      consumer => $args->{to},
+  $self->ledger->transfer(
+    { amount => int($args->{amount}), # Round in favor of customer
+      from   => $args->{from},
+      to     => $args->{to},
     });
 
   my $charge = $self->charge_factory->new({
@@ -59,10 +58,6 @@ sub charge {
   ]);
 
   return $charge;
-}
-
-sub transfer_factory {
-  "Moonpig::Transfer";
 }
 
 sub charge_factory {

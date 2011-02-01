@@ -373,9 +373,10 @@ sub _collect_spare_change {
   for my $bank_pair (values %consider) {
     my ($bank, $amount) = @$bank_pair;
 
-    Moonpig::Transfer::BankCredit->new({
-      bank    => $bank,
-      credit  => $credit,
+    $self->create_transfer({
+      type    => 'bank_credit',
+      from    => $bank,
+      to      => $credit,
       amount  => $amount,
     });
   }

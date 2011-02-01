@@ -3,9 +3,6 @@ use Test::More;
 use Test::Routine::Util;
 
 use Carp::Assert;
-use Moonpig::Hold;
-use Moonpig::Transfer;
-use Moonpig::Hold;
 use Moonpig::Util qw(dollars);
 use Try::Tiny;
 
@@ -30,16 +27,15 @@ test "basics of transfer" => sub {
   my @xfers;
 
   subtest "initial transfer" => sub {
-    plan tests => 3;
+    plan tests => 2;
 
-    push @xfers, Moonpig::Transfer->new({
-      amount => 5000,
-      bank   => $bank,
-      consumer => $consumer,
+    push @xfers, $ledger->transfer({
+      amount   => 5000,
+      from   => $bank,
+      to     => $consumer,
     });
 
     is(@xfers, 1, "we made a transfer");
-    isa_ok($xfers[0], 'Moonpig::Transfer', "the 1st transfer");
 
     is(
       $bank->unapplied_amount,
@@ -49,16 +45,15 @@ test "basics of transfer" => sub {
   };
 
   subtest "transfer down to zero" => sub {
-    plan tests => 3;
+    plan tests => 2;
 
-    push @xfers, Moonpig::Transfer->new({
+    push @xfers, $ledger->transfer({
       amount => $amount - 5000,
-      bank   => $bank,
-      consumer => $consumer,
+      from => $bank,
+      to   => $consumer,
     });
 
     is(@xfers, 2, "we made a transfer");
-    isa_ok($xfers[1], 'Moonpig::Transfer', "the 2nd transfer");
 
     is(
       $bank->unapplied_amount,
@@ -72,10 +67,10 @@ test "basics of transfer" => sub {
 
     my $err;
     my $ok = try {
-      push @xfers, Moonpig::Transfer->new({
+      push @xfers, $ledger->transfer({
         amount => 1,
-        bank   => $bank,
-        consumer => $consumer,
+        from => $bank,
+        to   => $consumer,
       });
       1;
     } catch {
@@ -84,7 +79,7 @@ test "basics of transfer" => sub {
     };
 
     ok(! $ok, "we couldn't transfer anything from an empty bank");
-    like($err, qr{refusing to perform overtransfer}, "got the right error");
+    like($err, qr{Refusing overdraft transfer}, "got the right error");
     is($bank->unapplied_amount, 0, "still have M 0 in bank");
     is(@xfers, 2, "the new transfer was never registered");
   };
@@ -97,18 +92,20 @@ test "multiple transfer types" => sub {
   my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
   my $amt = $bank->amount;
 
-  my $h = Moonpig::Hold->new({
-    consumer => $consumer,
-    bank => $bank,
+  my $h = $ledger->create_transfer({
+    to   => $consumer,
+    from => $bank,
     amount => dollars(1),
+    type   => 'hold',
   });
   is($bank->unapplied_amount, $amt - dollars(1), "hold for \$1");
 
-  my $t = Moonpig::Transfer->new({
-    consumer => $consumer,
-    bank => $bank,
+  my $t = $ledger->create_transfer({
+    to   => $consumer,
+    from => $bank,
     amount => dollars(2),
-  });
+    type   => 'transfer',
+   });
   is($bank->unapplied_amount, $amt - dollars(3), "transfer of \$2");
 
   $h->delete();

@@ -2,10 +2,9 @@ package Moonpig::Role::Consumer::ByUsage;
 # ABSTRACT: a consumer that charges when told to
 
 use Carp qw(confess croak);
-use List::Util qw(sum);
+use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Hold;
 use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
@@ -57,13 +56,12 @@ sub _create_hold_for_amount {
   confess "insufficient funds to satisfy $amount"
     unless $self->has_bank && $amount <= $self->unapplied_amount;
 
-  my $hold = Moonpig::Hold->new(
-    bank => $self->bank,
-    consumer => $self,
-    allow_deletion => 1,
+  my $hold = $self->accountant->create_transfer({
+    type   => 'hold',
+    from   => $self->bank,
+    to     => $self,
     amount => $amount,
-    $subsidiary_hold ? (subsidiary_hold => $subsidiary_hold) : (),
-  );
+  });
 
   return $hold;
 }
@@ -147,7 +145,7 @@ sub create_charge_for_hold {
 
   croak "No hold provided" unless $hold;
   croak "No charge description provided" unless $description;
-  $hold->consumer->guid eq $self->guid
+  $hold->target->guid eq $self->guid
     or confess "misdirected hold";
   $self->has_bank
     or confess "charge committed on bankless consumer";
@@ -156,7 +154,7 @@ sub create_charge_for_hold {
 
   $self->ledger->current_journal->charge({
     desc => $description,
-    from => $hold->bank,
+    from => $hold->source,
     to   => $self,
     date => $now,
     amount    => $hold->amount,
@@ -171,14 +169,11 @@ sub create_charge_for_hold {
 sub recent_usage {
   my ($self, $max_age) = @_;
 
-  my $transfers = Moonpig::Transfer->all_for_consumer($self);
-  my $holds     = Moonpig::Hold->all_for_consumer($self);
+  my @xfers = $self->accountant->from_bank($self->bank)->all;
+  @xfers =  grep Moonpig->env->now() - $_->date < $max_age, @xfers;
 
-  my $total_usage = sum(
-    map $_->amount,
-      grep Moonpig->env->now() - $_->date < $max_age,
-        (@$transfers, @$holds)
-  );
+  my $total_usage = reduce { $a + $b } 0, (map {; $_->amount } @xfers);
+
   return $total_usage || 0;
 }
 
