@@ -244,6 +244,7 @@ sub construct_replacement {
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
     {
+      charge_frequency   => $self->charge_frequency(),
       cost_amount        => $self->cost_amount(),
       cost_period        => $self->cost_period(),
       old_age            => $self->old_age(),
