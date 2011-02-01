@@ -25,6 +25,7 @@ use Moonpig::Util qw(class event);
 
 use Data::GUID qw(guid_string);
 use List::Util qw(reduce);
+use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
 use Sub::Install ();
@@ -85,11 +86,12 @@ for my $thing (qw(bank consumer refund)) {
   my $setter = "_set_$thing";
 
   has $thing => (
-    reader  => "_${thing}s",
-    isa     => HashRef[ role_type('Moonpig::Role::' . ucfirst $thing) ],
-    default => sub { {} },
-    traits  => [ qw(Hash) ],
-    handles => {
+    reader   => "_${thing}s",
+    isa      => HashRef[ role_type('Moonpig::Role::' . ucfirst $thing) ],
+    default  => sub { {} },
+    traits   => [ qw(Hash) ],
+    init_arg => undef,
+    handles  => {
       "${thing}s"   => 'values',
       "_has_$thing" => 'exists',
       "_set_$thing" => 'set',
@@ -384,5 +386,27 @@ sub _collect_spare_change {
     });
   }
 }
+
+my %Ledger_for_guid;
+after BUILD => sub {
+  my ($self) = @_;
+  $Ledger_for_guid{ $self->guid } = $self;
+
+  # This mechanism is just temporary to pretend we have persistence and can get
+  # ledgers by id.  Still, do we want to weaken?  If so, we have to have the
+  # test server (or whatever) keep an array of available ledgers in memory to
+  # prevent garbage collection.  If not, we run the risk of leaks, but only in
+  # tests.  Since the only risk, for now, is in tests, I will *not* weaken the
+  # global registry reference. -- rjbs, 2011-02-01
+  #
+  # weaken $Ledger_for_guid{ $self->guid };
+};
+
+sub for_guid {
+  my ($class, $guid) = @_;
+  return $Ledger_for_guid{ $guid };
+}
+
+my %Ledger_for_xid;
 
 1;
