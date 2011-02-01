@@ -24,14 +24,18 @@ sub filter {
   } => ref($self);
 }
 
-sub after {
-  my ($self, $when) = @_;
-  $self->filter(sub { $_[0]->date->follows($when) });
+# return transfers newer than $max_age (which is in seconds)
+sub newer_than {
+  my ($self, $max_age) = @_;
+  my $now = Moonpig->env->now();
+  $self->filter(sub { $now - $_[0]->date < $max_age });
 }
 
-sub before {
-  my ($self, $when) = @_;
-  $self->filter(sub { $_[0]->date->precedes($when) });
+# return transfers older than $min_age (which is in seconds)
+sub older_than {
+  my ($self, $min_age) = @_;
+  my $now = Moonpig->env->now();
+  $self->filter(sub { $now - $_[0]->date > $min_age });
 }
 
 sub with_type {
