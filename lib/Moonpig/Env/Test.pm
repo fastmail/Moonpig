@@ -26,6 +26,9 @@ use Email::Sender::Transport::Test;
 use Moonpig::X;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Code;
+use Moonpig::Types qw(Time);
+
+use Moose::Util::TypeConstraints;
 
 has email_sender => (
   is   => 'ro',
@@ -46,22 +49,40 @@ sub handle_send_email {
   );
 }
 
-has _current_time => (
-  is  => 'rw',
-  isa => 'Moonpig::DateTime',
-  predicate => 'time_stopped',
+has _clock_state => (
+  is => 'rw',
+  isa => enum([ qw(wallclock stopped offset) ]),
+  init_arg => undef,
+  default  => 'wallclock',
 );
 
-sub stop_time {
+has _clock_stopped_time => (
+  is  => 'rw',
+  isa => Time,
+);
+
+has _clock_restarted_at => (
+  is  => 'rw',
+  isa => 'Int', # epoch seconds
+);
+
+sub stop_clock {
   my ($self) = @_;
 
-  Moonpig::X->throw("can't stop time twice") if $self->time_stopped;
+  Moonpig::X->throw("can't stop clock twice")
+    if $self->_clock_state eq 'stopped';
 
-  $self->_current_time( Moonpig::DateTime->now );
+  $self->_clock_stopped_time( Moonpig::DateTime->now );
+  $self->_clock_state('stopped');
+
+  return;
 }
 
 sub elapse_time {
   my ($self, $duration) = @_;
+
+  Moonpig::X->throw("can't elapse time when clock is not stopped")
+    if $self->_clock_state ne 'stopped';
 
   $duration = DateTime::Duration->new(seconds => $duration)
     unless ref $duration;
@@ -69,18 +90,30 @@ sub elapse_time {
   Moonpig::X->throw("tried to elapse negative time")
     if $duration->is_negative;
 
-  $self->_current_time( $self->now->add_duration( $duration ) );
+  $self->_clock_stopped_time( $self->now->add_duration( $duration ) );
 }
 
 sub now {
   my ($self) = @_;
-  return $self->time_stopped ? $self->_current_time
-    : Moonpig::DateTime->now();
+
+  my $state = $self->_clock_state;
+
+  return Moonpig::DateTime->now if $state eq 'wallclock';
+  return $self->_clock_stopped_time if $state eq 'stopped';
+
+  return $self->_clock_stopped_time + (time - $self->_clock_restarted_at)
+    if $state eq 'offset';
+
+  ...
 }
 
-sub current_time {
-  my ($self, $new) = @_;
-  return @_ > 1 ? $self->_current_time($new) : $self->now();
+sub stop_clock_at {
+  my ($self, $time) = @_;
+
+  Time->assert_valid($time);
+
+  $self->_clock_state('stopped');
+  $self->_clock_stopped_time( $time );
 }
 
 has _guid_serial_number_registry => (

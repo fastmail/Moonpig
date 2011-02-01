@@ -18,11 +18,11 @@ my $epoch = Moonpig::DateTime->new(
   time_zone => "UTC",
 );
 
-Moonpig->env->current_time($epoch);
+Moonpig->env->stop_clock_at($epoch);
 cmp_ok(Moonpig->env->now, '==', $epoch);
 cmp_ok(abs($now - Moonpig->env->now), '>', 1, "env->now is no longer now");
 
-Moonpig->env->current_time($epoch + 30);
+Moonpig->env->stop_clock_at($epoch + 30);
 cmp_ok(abs($epoch - Moonpig->env->now), '==', 30, "env->now is 30");
 
 Moonpig->env->elapse_time(30);

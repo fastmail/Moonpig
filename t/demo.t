@@ -147,7 +147,7 @@ sub process_daily_assertions {
 test "end to end demo" => sub {
   my ($self) = @_;
 
-  Moonpig->env->stop_time;
+  Moonpig->env->stop_clock;
 
   my $ledger = $self->test_ledger;
   $self->ledger( $ledger );

@@ -160,7 +160,7 @@ sub feb {
 
 test est_lifetime => sub {
   my ($self) = @_;
-  Moonpig->env->current_time(jan(1));
+  Moonpig->env->stop_clock_at(jan(1));
 
   $self->create_consumer();
   is($self->consumer->units_remaining, 20, "initially 20 units");
@@ -168,27 +168,27 @@ test est_lifetime => sub {
   is($self->consumer->estimated_lifetime, days(365),
      "inestimable lifetime -> 365d");
 
-  Moonpig->env->current_time(jan(15));
+  Moonpig->env->stop_clock_at(jan(15));
   $self->consumer->create_hold_for_units(1);
   is($self->consumer->units_remaining, 19, "now 19 units");
   is($self->consumer->unapplied_amount, dollars(0.95), "now \$0.95");
-  Moonpig->env->current_time(jan(30));
+  Moonpig->env->stop_clock_at(jan(30));
   is($self->consumer->estimated_lifetime, days(30 * 19),
      "1 charge/30d -> lifetime 600d");
 
-  Moonpig->env->current_time(jan(24));
+  Moonpig->env->stop_clock_at(jan(24));
   $self->consumer->create_hold_for_units(2);
   is($self->consumer->units_remaining, 17, "now 17 units");
   is($self->consumer->unapplied_amount, dollars(0.85), "now \$0.85");
-  Moonpig->env->current_time(jan(30));
+  Moonpig->env->stop_clock_at(jan(30));
   is($self->consumer->estimated_lifetime, days(30 * 17/3),
      "3 charges/30d -> lifetime 200d");
 
-  Moonpig->env->current_time(jan(50));
+  Moonpig->env->stop_clock_at(jan(50));
   is($self->consumer->estimated_lifetime, days(30 * 17/2),
      "old charges don't count");
 
-  Moonpig->env->current_time(jan(58));
+  Moonpig->env->stop_clock_at(jan(58));
   is($self->consumer->estimated_lifetime, days(365),
      "no recent charges -> guess 365d");
 };
@@ -214,7 +214,7 @@ test est_lifetime_replacement => sub {
 
       until ($self->consumer->has_replacement) {
         $day += $t;
-        Moonpig->env->current_time(jan($day));
+        Moonpig->env->stop_clock_at(jan($day));
         $prev_est_life = $self->consumer->estimated_lifetime;
         $self->consumer->create_hold_for_units($q) or last;
         $cur_est_life = $self->consumer->estimated_lifetime;

@@ -113,14 +113,16 @@ test expire_date => sub {
   }
 
   {
-    Moonpig->env->current_time(Moonpig::DateTime->new(
-      year => 1969,
-      month => 4,
-      day => 2,
-      hour => 2,
-      minute => 38,
-      second => 0,
-    ));
+    Moonpig->env->stop_clock_at(
+      Moonpig::DateTime->new(
+        year   => 1969,
+        month  => 4,
+        day    => 2,
+        hour   => 2,
+        minute => 38,
+        second => 0,
+      )
+    );
     my $c = $self->test_consumer(
       $CLASS,
       { bank               => $b,

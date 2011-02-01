@@ -54,7 +54,7 @@ test "with_successor" => sub {
 
     # Pretend today is 2000-01-01 for convenience
     my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-    Moonpig->env->current_time($jan1);
+    Moonpig->env->stop_clock_at($jan1);
 
     $self->ledger($self->test_ledger);
 
@@ -100,7 +100,7 @@ test "with_successor" => sub {
         year => 2000, month => 1, day => $day
       );
 
-      Moonpig->env->current_time($tick_time);
+      Moonpig->env->stop_clock_at($tick_time);
       $self->ledger->handle_event(event('heartbeat'));
     }
 
@@ -118,7 +118,7 @@ test "without_successor" => sub {
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-  Moonpig->env->current_time($jan1);
+  Moonpig->env->stop_clock_at($jan1);
 
   $self->ledger($self->test_ledger);
   $self->ledger->register_event_handler(
@@ -137,7 +137,7 @@ test "without_successor" => sub {
    ) {
     my ($name, $schedule, $succ_creation_date) = @$test;
     $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
-    Moonpig->env->current_time($jan1);
+    Moonpig->env->stop_clock_at($jan1);
 
     my $b = class('Bank')->new({
       ledger => $self->ledger,
@@ -163,7 +163,7 @@ test "without_successor" => sub {
       my $tick_time = Moonpig::DateTime->new(
         year => 2000, month => 1, day => $day
       );
-      Moonpig->env->current_time($tick_time);
+      Moonpig->env->stop_clock_at($tick_time);
       $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
     }
 
@@ -211,7 +211,7 @@ test "irreplaceable" => sub {
         year => 2000, month => 1, day => $day
       );
 
-      Moonpig->env->current_time($tick_time);
+      Moonpig->env->stop_clock_at($tick_time);
       $self->ledger->handle_event(event('heartbeat'));
     }
     pass();

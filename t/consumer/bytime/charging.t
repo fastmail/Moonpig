@@ -39,7 +39,7 @@ test "charge" => sub {
     [ 'double', [ 1, 1, 2, 2, 3 ], ],
     [ 'missed', [ 2, 5 ], ],
   ) {
-    Moonpig->env->current_time($jan1);
+    Moonpig->env->stop_clock_at($jan1);
     my ($name, $schedule) = @$test;
     note("testing with heartbeat schedule '$name'");
 
@@ -65,7 +65,7 @@ test "charge" => sub {
         year => 2000, month => 1, day => $day
       );
 
-      Moonpig->env->current_time($tick_time);
+      Moonpig->env->stop_clock_at($tick_time);
 
       $self->ledger->handle_event(event('heartbeat'));
 
@@ -87,7 +87,7 @@ test grace_period => sub {
 
     subtest((defined $until ? "grace through $until" : "no grace") => sub {
       my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-      Moonpig->env->current_time($jan1);
+      Moonpig->env->stop_clock_at($jan1);
 
       $self->ledger( $self->test_ledger );
 
@@ -116,7 +116,7 @@ test grace_period => sub {
           year => 2000, month => 1, day => $day
         );
 
-        Moonpig->env->current_time($tick_time);
+        Moonpig->env->stop_clock_at($tick_time);
 
         $self->ledger->handle_event(event('heartbeat'));
       }
