@@ -9,7 +9,7 @@ with(
 
 use List::Util qw(reduce);
 use Moonpig::Logger '$Logger';
-use Moonpig::Types qw(Ledger Millicents);
+use Moonpig::Types qw(Ledger PositiveMillicents);
 
 use Moonpig::Hold;
 use Moonpig::Transfer;
@@ -22,7 +22,7 @@ use namespace::autoclean;
 # minus all the charges that transfer from this bank.
 has amount => (
   is  => 'ro',
-  isa =>  Millicents,
+  isa =>  PositiveMillicents,
   coerce   => 1,
   required => 1,
 );

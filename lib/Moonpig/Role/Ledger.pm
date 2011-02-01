@@ -343,6 +343,8 @@ sub _collect_spare_change {
 
   my $total = reduce { $a + $b } 0, map { $_->[1] } values %consider;
 
+  return unless $total > 0;
+
   my $credit = $self->add_credit(
     class('Credit::Courtesy'),
     {

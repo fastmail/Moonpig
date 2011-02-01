@@ -6,7 +6,7 @@ use warnings;
 use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 use Moonpig::URI;
-use Moonpig::Util qw(days);
+use Moonpig::Util qw(days dollars);
 use Test::More;
 use Try::Tiny;
 
@@ -19,7 +19,7 @@ is(Moonpig::URI->nothing->construct, undef, "nothing => undef");
 ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
   ->construct({extra => {
     old_age => $day,
-    cost_amount => 0,
+    cost_amount => dollars(1),
     ledger => __PACKAGE__->test_ledger(),
     cost_period => $day,
     service_uri => 'urn:uuid:' . guid_string,

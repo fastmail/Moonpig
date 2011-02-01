@@ -20,7 +20,7 @@ with(
 
 use Moonpig::Behavior::EventHandlers;
 
-use Moonpig::Types qw(Millicents Time TimeInterval);
+use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
 use namespace::autoclean;
 
@@ -61,7 +61,7 @@ has charge_description => (
 has cost_amount => (
   is => 'ro',
   required => 1,
-  isa => Millicents,
+  isa => PositiveMillicents,
 );
 
 #  XXX this is period in days, which is not quite right, since a

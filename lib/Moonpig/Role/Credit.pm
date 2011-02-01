@@ -10,7 +10,7 @@ with(
 use List::Util qw(reduce);
 
 use Moonpig::CreditApplication;
-use Moonpig::Types qw(Millicents);
+use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
 
@@ -18,7 +18,7 @@ requires 'as_string'; # to be used on line items
 
 has amount => (
   is  => 'ro',
-  isa => Millicents,
+  isa => PositiveMillicents,
   coerce => 1,
 );
 

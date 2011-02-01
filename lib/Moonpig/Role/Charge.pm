@@ -4,7 +4,7 @@ use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);
 use Moonpig;
-use Moonpig::Types qw(Millicents);
+use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
 
@@ -16,7 +16,7 @@ has description => (
 
 has amount => (
   is  => 'ro',
-  isa => Millicents,
+  isa => PositiveMillicents,
   coerce   => 1,
   required => 1,
 );

@@ -20,7 +20,7 @@ with(
 );
 
 use Moonpig::Behavior::EventHandlers;
-use Moonpig::Types qw(Millicents Time TimeInterval);
+use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
 use namespace::autoclean;
 
@@ -32,7 +32,7 @@ implicit_event_handlers {
 
 has cost_per_unit => (
   is => 'ro',
-  isa => Millicents,
+  isa => PositiveMillicents,
   required => 1,
 );
 
