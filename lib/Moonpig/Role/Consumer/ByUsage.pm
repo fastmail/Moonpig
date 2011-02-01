@@ -56,7 +56,7 @@ sub _create_hold_for_amount {
   confess "insufficient funds to satisfy $amount"
     unless $self->has_bank && $amount <= $self->unapplied_amount;
 
-  my $hold = $self->accountant->create_transfer({
+  my $hold = $self->ledger->create_transfer({
     type   => 'hold',
     from   => $self->bank,
     to     => $self,
