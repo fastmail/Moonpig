@@ -93,6 +93,26 @@ sub elapse_time {
   $self->_clock_stopped_time( $self->now->add_duration( $duration ) );
 }
 
+sub stop_clock_at {
+  my ($self, $time) = @_;
+
+  Time->assert_valid($time);
+
+  $self->_clock_state('stopped');
+  $self->_clock_stopped_time( $time );
+}
+
+sub restart_clock {
+  my ($self) = @_;
+
+  Moonpig::X->throw("can't restart clock when clock is not stopped")
+    if $self->_clock_state ne 'stopped';
+
+  $self->_clock_restarted_at(time);
+  $self->_clock_state('offset');
+  return;
+}
+
 sub now {
   my ($self) = @_;
 
@@ -105,15 +125,6 @@ sub now {
     if $state eq 'offset';
 
   ...
-}
-
-sub stop_clock_at {
-  my ($self, $time) = @_;
-
-  Time->assert_valid($time);
-
-  $self->_clock_state('stopped');
-  $self->_clock_stopped_time( $time );
 }
 
 has _guid_serial_number_registry => (
