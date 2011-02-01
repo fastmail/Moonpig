@@ -282,6 +282,30 @@ sub _send_mkit {
   }));
 }
 
+# XXX: This *needs* to be in some other object or stored table, in the future,
+# because it will not be accurately recreated by thawing ledgers, etc. -- rjbs,
+# 2011-02-01
+my %Ledger_for_xid;
+
+sub _assert_ledger_handles_xid {
+  my ($self, $xid) = @_;
+
+  my $current = $Ledger_for_xid{ $xid };
+
+  return if $current and $current eq $self->guid;
+
+  Moonpig::X->throw("xid already registered with ledger") if $current;
+
+  $Ledger_for_xid{ $xid } = $self->guid;
+}
+
+sub _stop_handling_xid {
+  my ($self, $xid) = @_;
+
+  $self->_assert_ledger_handles_xid($xid);
+  delete $Ledger_for_xid{ $xid };
+}
+
 # {
 #   xid => [ consumer_guid, ... ],
 #   ...
@@ -321,6 +345,8 @@ sub mark_consumer_active__ {
   $reg->{ $consumer->xid } ||= {};
 
   $reg->{ $consumer->xid }{ $consumer->guid } = 1;
+
+  $self->_assert_ledger_handles_xid( $consumer->xid );
 
   return;
 }
@@ -406,7 +432,5 @@ sub for_guid {
   my ($class, $guid) = @_;
   return $Ledger_for_guid{ $guid };
 }
-
-my %Ledger_for_xid;
 
 1;
