@@ -3,6 +3,7 @@ package Moonpig::Ledger::Accountant;
 use Carp qw(confess croak);
 use Moonpig::TransferUtil;
 use Moonpig::Ledger::Accountant::Iterator;
+use Moonpig::Ledger::Accountant::Transfer;
 use Moose;
 
 with 'Role::Subsystem' => {
@@ -57,7 +58,14 @@ sub create_transfer {
     croak "Can't transfer $arg->{amount} from " . $from->TO_JSON .
       "; it has only " . $from->unapplied_amount;
   }
-  my $t = $self->transfer_factory->new($arg);
+  my $t = $self->transfer_factory->new({
+    source => $from,
+    target => $to,
+    type   => $type,
+    amount => $arg->{amount},
+    exists $arg->{date} ? (date => $arg->{date}) : (),
+    ledger => $self->ledger,
+  });
   return unless $t;
 
   push @{$self->by_src->{$from->guid}}, $t;
