@@ -17,6 +17,7 @@ has ledger => (
   isa  => Ledger,
   required => 1,
   weak_ref => 1,
+  handles => [ qw(accountant) ],
 );
 
 implicit_event_handlers {

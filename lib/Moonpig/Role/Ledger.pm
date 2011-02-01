@@ -54,9 +54,20 @@ has credits => (
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
   is => 'ro',
-  handles => [ qw() ],
+  handles => { # Also delegate from_*, to_*, all_for_*?
+    create_transfer => 'create_transfer',
+    delete_transfer => 'delete_transfer',
+  },
   default => sub { Moonpig::Ledger::Accountant->for_ledger($_[0]) },
 );
+
+sub transfer {
+  my ($self, $args) = @_;
+  return $self->accountant->create_transfer({
+    type => 'transfer',
+    %$args,
+  });
+}
 
 sub add_credit {
   my ($self, $class, $arg) = @_;

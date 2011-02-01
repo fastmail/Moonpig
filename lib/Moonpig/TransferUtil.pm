@@ -28,6 +28,10 @@ sub is_transfer_capable {
   return $CANTRANSFER{$what};
 }
 
+sub transfer_types {
+  return keys %CANTRANSFER;
+}
+
 sub transfer_type_ok {
   my ($class, $fm, $to, $tp) = @_;
   exists $TYPEMAP{$fm} and
