@@ -10,7 +10,6 @@ with(
 
 use List::Util qw(reduce);
 
-use Moonpig::CreditApplication;
 use Moonpig::Types qw(Millicents);
 
 use namespace::autoclean;
@@ -25,9 +24,9 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::CreditApplication->all_for_credit($self);
+  my $xfers = $self->accountant->from_credit($self);
 
-  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
+  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } $xfers->all);
 
   return $self->amount - $xfer_total;
 }

@@ -214,10 +214,11 @@ sub process_credits {
 
     if ($to_pay == 0) {
       for my $to_apply (@to_apply) {
-        Moonpig::CreditApplication->new({
-          credit  => $to_apply->{credit},
-          payable => $invoice,
-          amount  => $to_apply->{amount},
+        $self->create_transfer({
+          type   => 'credit_application',
+          from   => $to_apply->{credit},
+          to     => $invoice,
+          amount => $to_apply->{amount},
         });
       }
 
