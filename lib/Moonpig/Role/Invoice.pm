@@ -12,7 +12,6 @@ with(
 
 use Moonpig::Behavior::EventHandlers;
 
-use Moonpig::CreditApplication;
 use Moonpig::Util qw(event);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;

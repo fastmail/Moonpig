@@ -1,7 +1,6 @@
 package t::lib::Role::Refundable::Test;
 use Moose::Role;
 
-use Moonpig::CreditApplication;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
 
@@ -21,9 +20,10 @@ sub issue_refund {
     },
   );
 
-  Moonpig::CreditApplication->new({
-    credit  => $self,
-    payable => $refund,
+  $self->ledger->create_transfer({
+    type  => 'credit_application',
+    from  => $self,
+    to    => $refund,
     amount  => $self->amount,
   });
 }

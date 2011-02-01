@@ -19,6 +19,8 @@ use MooseX::Types -declare => [ qw(
   MRI
 
   Time TimeInterval
+
+  TransferCapable TransferType
 ) ];
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
@@ -118,4 +120,12 @@ subtype TimeInterval, as Num;
     via { $zero->add_duration($_)->epoch }
 }
 
+################################################################
+#
+# Transfer types
+
+use Moonpig::TransferUtil;
+
+subtype TransferType, as Str, where { Moonpig::TransferUtil->valid_type($_) };
+subtype TransferCapable, as Str, where { Moonpig::TransferUtil->is_transfer_capable($_) };
 1;

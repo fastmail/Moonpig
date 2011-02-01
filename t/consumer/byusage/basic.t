@@ -28,7 +28,7 @@ has consumer => (
 
 has hold => (
   is   => 'rw',
-  isa => 'Moonpig::Hold',
+  isa => 'Moonpig::Ledger::Accountant::Transfer',
   clearer => 'discard_hold',
 );
 
@@ -83,8 +83,8 @@ test successful_hold => sub {
   my $amt = $n_units * cents(5);
   ok($h, "made hold");
   $self->hold($h);
-  is($h->consumer, $self->consumer, "hold has correct consumer");
-  is($h->bank, $self->consumer->bank, "hold has correct bank");
+  is($h->target, $self->consumer, "hold has correct consumer");
+  is($h->source, $self->consumer->bank, "hold has correct bank");
   is($h->amount, $amt, "hold is for $amt mc");
   my $x_remaining = 20 - $n_units;
   is($self->consumer->units_remaining, $x_remaining,

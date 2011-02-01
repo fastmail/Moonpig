@@ -5,11 +5,11 @@ use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
+  'Moonpig::Role::CanTransfer' => { transfer_type_id => "credit" },
 );
 
 use List::Util qw(reduce);
 
-use Moonpig::CreditApplication;
 use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
@@ -24,11 +24,7 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = Moonpig::CreditApplication->all_for_credit($self);
-
-  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } @$xfers);
-
-  return $self->amount - $xfer_total;
+  return $self->amount - $self->accountant->from_credit($self)->total;
 }
 
 has created_at => (

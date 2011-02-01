@@ -14,6 +14,7 @@ use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use Moonpig;
+use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
 use Moonpig::Types qw(Credit);
@@ -49,6 +50,24 @@ has credits => (
     _add_credit => 'push',
   },
 );
+
+has accountant => (
+  isa => 'Moonpig::Ledger::Accountant',
+  is => 'ro',
+  handles => { # Also delegate from_*, to_*, all_for_*?
+    create_transfer => 'create_transfer',
+    delete_transfer => 'delete_transfer',
+  },
+  default => sub { Moonpig::Ledger::Accountant->for_ledger($_[0]) },
+);
+
+sub transfer {
+  my ($self, $args) = @_;
+  return $self->accountant->create_transfer({
+    type => 'transfer',
+    %$args,
+  });
+}
 
 sub add_credit {
   my ($self, $class, $arg) = @_;
@@ -195,10 +214,11 @@ sub process_credits {
 
     if ($to_pay == 0) {
       for my $to_apply (@to_apply) {
-        Moonpig::CreditApplication->new({
-          credit  => $to_apply->{credit},
-          payable => $invoice,
-          amount  => $to_apply->{amount},
+        $self->create_transfer({
+          type   => 'credit_application',
+          from   => $to_apply->{credit},
+          to     => $invoice,
+          amount => $to_apply->{amount},
         });
       }
 
@@ -356,9 +376,10 @@ sub _collect_spare_change {
   for my $bank_pair (values %consider) {
     my ($bank, $amount) = @$bank_pair;
 
-    Moonpig::Transfer::BankCredit->new({
-      bank    => $bank,
-      credit  => $credit,
+    $self->create_transfer({
+      type    => 'bank_credit',
+      from    => $bank,
+      to      => $credit,
       amount  => $amount,
     });
   }
