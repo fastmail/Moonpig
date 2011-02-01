@@ -26,11 +26,7 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my @xfers = $self->accountant->from_bank($self)->all;
-
-  my $total = reduce { $a + $b } 0, (map {; $_->amount } @xfers);
-
-  return $self->amount - $total;
+  return $self->amount - $self->accountant->from_bank($self)->total;
 }
 
 1;

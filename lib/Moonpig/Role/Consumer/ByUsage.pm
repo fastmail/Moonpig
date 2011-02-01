@@ -169,12 +169,8 @@ sub create_charge_for_hold {
 sub recent_usage {
   my ($self, $max_age) = @_;
 
-  my @xfers = $self->accountant->from_bank($self->bank)->all;
-  @xfers =  grep Moonpig->env->now() - $_->date < $max_age, @xfers;
-
-  my $total_usage = reduce { $a + $b } 0, (map {; $_->amount } @xfers);
-
-  return $total_usage || 0;
+  return $self->accountant->from_bank($self->bank)
+    ->newer_than($max_age)->total;
 }
 
 # based on the last $days days of transfers, how long might we expect

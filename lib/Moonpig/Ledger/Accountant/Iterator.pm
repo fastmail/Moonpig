@@ -60,6 +60,14 @@ sub all {
   return @all;
 }
 
+sub total {
+  my ($self) = @_;
+  my $sum = 0;
+  my $t;
+  $sum += $t->amount while $t = $self->next;
+  return $sum;
+}
+
 sub union {
   my ($class, @its) = @_;
   bless sub {

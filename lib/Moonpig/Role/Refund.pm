@@ -14,12 +14,7 @@ use namespace::autoclean;
 
 sub amount {
   my ($self) = @_;
-
-  my $xfers = $self->accountant->all_for_payable($self);
-
-  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } $xfers->all);
-
-  return $xfer_total;
+  return $self->accountant->all_for_payable($self)->total;
 }
 
 1;

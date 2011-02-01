@@ -24,11 +24,7 @@ has amount => (
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $xfers = $self->accountant->from_credit($self);
-
-  my $xfer_total = reduce { $a + $b } 0, (map {; $_->amount } $xfers->all);
-
-  return $self->amount - $xfer_total;
+  return $self->amount - $self->accountant->from_credit($self)->total;
 }
 
 has created_at => (
