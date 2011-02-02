@@ -3,7 +3,7 @@ package Moonpig::Role::Payable;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::CanTransfer' => { transfer_type_id => "payable" },
+  'Moonpig::Role::CanTransfer' => { transferer_type => "payable" },
 );
 
 1;

@@ -5,7 +5,7 @@ use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
-  'Moonpig::Role::CanTransfer' => { transfer_type_id => "credit" },
+  'Moonpig::Role::CanTransfer' => { transferer_type => "credit" },
 );
 
 use List::Util qw(reduce);

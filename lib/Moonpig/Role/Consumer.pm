@@ -7,7 +7,7 @@ with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::StubBuild',
-  'Moonpig::Role::CanTransfer' => { transfer_type_id => "consumer" },
+  'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
 );
 
 use Moonpig::Behavior::EventHandlers;

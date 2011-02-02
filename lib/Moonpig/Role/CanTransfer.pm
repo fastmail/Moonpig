@@ -5,11 +5,11 @@ use Moonpig;
 use Moonpig::Types qw(TransferCapable);
 
 use namespace::autoclean;
-parameter transfer_type_id => (isa => TransferCapable, required => 1);
+parameter transferer_type => (isa => TransferCapable, required => 1);
 
 role {
   my ($p) = @_;
-  my $tti = $p->transfer_type_id;
+  my $tti = $p->transferer_type;
 
   method transferer_type => sub { $tti };
 };

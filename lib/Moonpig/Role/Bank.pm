@@ -5,7 +5,7 @@ with(
  'Moonpig::Role::HasGuid',
  'Moonpig::Role::LedgerComponent',
  'Moonpig::Role::StubBuild',
- 'Moonpig::Role::CanTransfer' => { transfer_type_id => "bank" },
+ 'Moonpig::Role::CanTransfer' => { transferer_type => "bank" },
 );
 
 use List::Util qw(reduce);
