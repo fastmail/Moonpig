@@ -4,6 +4,11 @@ use Moose;
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents Time TransferType);
 
+#
+# This module is for internal use by Moonpig::Ledger::Accountant
+# Please do not use it elsewhere.  20110202 mjd
+#
+
 with ('Moonpig::Role::HasGuid');
 
 has source => (

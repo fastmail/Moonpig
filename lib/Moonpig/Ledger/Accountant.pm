@@ -82,7 +82,7 @@ sub create_transfer {
   return $t;
 }
 
-sub delete_transfer {
+sub _force_delete_transfer {
   my ($self, $transfer) = @_;
   my $src = $self->by_src->{$transfer->source->guid} ||= [];
   my $dst = $self->by_dst->{$transfer->target->guid} ||= [];
@@ -90,6 +90,14 @@ sub delete_transfer {
   @$src = grep $_->guid ne $transfer->guid, @$src;
   @$dst = grep $_->guid ne $transfer->guid, @$dst;
   delete $self->by_id->{$transfer->guid};
+}
+
+sub delete_transfer {
+  my ($self, $transfer) = @_;
+  my $type = $transfer->type;
+  croak "Can't delete transfer of immortal type '$type'"
+    unless $transfer->is_deletable;
+  $self->_force_delete_transfer($transfer);
 }
 
 BEGIN {
@@ -174,7 +182,7 @@ sub _convert_transfer_type {
     amount => $transfer->amount,
     skip_funds_check => 1,
   });
-  $self->delete_transfer($transfer) if $new;
+  $self->_force_delete_transfer($transfer) if $new;
   return $new;
 }
 
