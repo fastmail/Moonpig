@@ -83,9 +83,9 @@ sub follows {
 
 sub iso {
   my ($self) = @_;
-  return $self->strftime("%D %T");
+  join q{ }, $self->ymd('-'), $self->hms(':');
 }
 
-sub TO_JSON { "$_[0]" }
+sub TO_JSON { $_[0]->iso }
 
 1;
