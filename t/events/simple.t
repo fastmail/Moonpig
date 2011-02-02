@@ -138,5 +138,34 @@ test implicit_events_and_overrides => sub {
   );
 };
 
+{
+  package Conflicted::Handler;
+  use Moose;
+  extends 't::lib::Class::Ledger::ImplicitEvents';
+
+  use Moonpig::Behavior::EventHandlers;
+
+  implicit_event_handlers {
+    my ($self) = @_;
+
+    return {
+      'test.noop' => { nothing  => main->make_event_handler(Noop => { }) }
+    };
+  };
+}
+
+test "implicit handler composition conflict" => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->test_ledger('Conflicted::Handler');
+  my $err = exception { $ledger->composed_implicit_event_handlers };
+
+  is(
+    $err->ident,
+    'implicit handler composition conflict',
+    "can't have the same event/handlername when composing implicit handlers",
+  );
+};
+
 run_me;
 done_testing;
