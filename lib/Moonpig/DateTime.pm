@@ -8,7 +8,6 @@ use Carp qw(confess croak);
 use overload
   '+' => \&plus,
   '-' => \&minus,
-  '<=>' => \&compare,
 ;
 use Scalar::Util qw(blessed reftype);
 
@@ -70,11 +69,6 @@ sub _to_sec {
   } else {
     return $a;
   }
-}
-
-sub compare {
-  my ($self, $d, $rev) = @_;
-  $self->SUPER::compare($d) * ($rev ? -1 : 1);
 }
 
 sub precedes {

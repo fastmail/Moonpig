@@ -149,13 +149,9 @@ test low_water_replacement => sub {
 
 sub jan {
   my ($day) = @_;
-  return feb($day-31) if $day > 31;
-  Moonpig::DateTime->new( year => 2000, month => 1, day => $day );
-}
-
-sub feb {
-  my ($day) = @_;
-  Moonpig::DateTime->new( year => 2000, month => 2, day => $day );
+  my $month = 1;
+  ($day, $month) = ($day-31, 2) if $day > 31;
+  Moonpig::DateTime->new( year => 2000, month => $month, day => $day );
 }
 
 test est_lifetime => sub {
