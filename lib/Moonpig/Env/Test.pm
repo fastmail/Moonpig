@@ -70,13 +70,11 @@ has _clock_restarted_at => (
 sub stop_clock {
   my ($self) = @_;
 
-  Moonpig::X->throw("can't stop clock twice")
-    if $self->_clock_state eq 'stopped';
-
-  $self->_clock_stopped_time( Moonpig::DateTime->now );
+  my $now = $self->now;
+  $self->_clock_stopped_time( $now );
   $self->_clock_state('stopped');
 
-  return;
+  return $now;
 }
 
 sub elapse_time {
@@ -97,20 +95,26 @@ sub elapse_time {
 sub stop_clock_at {
   my ($self, $time) = @_;
 
-  Time->assert_valid($time);
-
   $self->_clock_state('stopped');
   $self->_clock_stopped_time( $time );
+
+  return $time;
 }
 
 sub restart_clock {
   my ($self) = @_;
 
-  Moonpig::X->throw("can't restart clock when clock is not stopped")
-    if $self->_clock_state ne 'stopped';
+  # if the clock is already running, just let it keep running
+  return if $self->_clock_state =~ /\A(?:wallclock|offset)\z/;
 
   $self->_clock_restarted_at(time);
   $self->_clock_state('offset');
+  return;
+}
+
+sub reset_clock {
+  my ($self) = @_;
+  $self->_clock_state('wallclock');
   return;
 }
 
