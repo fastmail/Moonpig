@@ -287,6 +287,13 @@ sub _send_mkit {
 # 2011-02-01
 my %Ledger_for_xid;
 
+sub for_xid {
+  my ($self, $xid) = @_;
+
+  return unless my $ledger_guid = $Ledger_for_xid{ $xid };
+  return $self->for_guid( $ledger_guid );
+}
+
 sub _assert_ledger_handles_xid {
   my ($self, $xid) = @_;
 
