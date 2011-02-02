@@ -83,8 +83,8 @@ sub create_transfer {
 
 sub delete_transfer {
   my ($self, $transfer) = @_;
-  my $src = $self->by_src->{$transfer->source->guid};
-  my $dst = $self->by_dst->{$transfer->target->guid};
+  my $src = $self->by_src->{$transfer->source->guid} ||= [];
+  my $dst = $self->by_dst->{$transfer->target->guid} ||= [];
 
   @$src = grep $_->guid ne $transfer->guid, @$src;
   @$dst = grep $_->guid ne $transfer->guid, @$dst;
@@ -124,7 +124,7 @@ BEGIN {
   }
 }
 
-# args: source, target, type, before, after
+# args: source, target, type, newer_than, newer_than
 sub select {
   my ($self, $args) = @_;
   my $SS = exists($args->{source});
@@ -147,9 +147,9 @@ sub select {
     croak "source or target specifier required in transfer selection";
   }
 
-  $res = $res->before   ($args->{before}) if exists $args->{before};
-  $res = $res->after    ($args->{after} ) if exists $args->{after} ;
-  $res = $res->with_type($args->{type}  ) if exists $args->{type}  ;
+  $res = $res->older_than($args->{older_than}) if exists $args->{older_than};
+  $res = $res->newer_than($args->{newer_than}) if exists $args->{newer_than};
+  $res = $res->with_type ($args->{type}      ) if exists $args->{type}      ;
 
   return $res;
 }
@@ -163,6 +163,9 @@ has iterator_factory => (
 sub _convert_transfer_type {
   my ($self, $transfer, $from_type, $to_type) = @_;
   croak "Transfer is not a $from_type" unless $transfer->type eq $from_type;
+  croak "Transfer is not deletable"
+    unless Moonpig::TransferUtil->deletable($from_type);
+
   my $new = $self->create_transfer({
     source => $transfer->source,
     target => $transfer->target,
