@@ -173,12 +173,12 @@ sub _convert_transfer_type {
   my ($self, $transfer, $from_type, $to_type) = @_;
   croak "Transfer is not a $from_type" unless $transfer->type eq $from_type;
   croak "Transfer is not deletable"
-    unless Moonpig::TransferUtil->deletable($from_type);
+    unless $transfer->is_deletable($from_type);
 
   my $new = $self->create_transfer({
-    source => $transfer->source,
-    target => $transfer->target,
-    type => $to_type,
+    from   => $transfer->source,
+    to     => $transfer->target,
+    type   => $to_type,
     amount => $transfer->amount,
     skip_funds_check => 1,
   });
