@@ -22,6 +22,7 @@ BEGIN {
 }
 # END HUGE AWFUL HACK -- rjbs, 2010-12-16
 
+use Carp qw(croak confess);
 use Email::Sender::Transport::Test;
 use Moonpig::X;
 use Moonpig::DateTime;
@@ -124,7 +125,7 @@ sub now {
   return $self->_clock_stopped_time + (time - $self->_clock_restarted_at)
     if $state eq 'offset';
 
-  ...
+  confess "Bizarre clock state '$state'; aborting";
 }
 
 has _guid_serial_number_registry => (
