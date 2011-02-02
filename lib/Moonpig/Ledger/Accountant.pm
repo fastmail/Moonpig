@@ -10,7 +10,8 @@ with 'Role::Subsystem' => {
   ident  => 'ledger-accountant',
   type   => 'Moonpig::Role::Ledger',
   what   => 'ledger',
-  weak_ref => 0,
+  getter => sub { class('Ledger')->for_guid( $_[0] ) },
+  id_method => 'guid',
 };
 
 ################################################################

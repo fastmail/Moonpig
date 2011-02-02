@@ -59,6 +59,7 @@ has accountant => (
     create_transfer => 'create_transfer',
     delete_transfer => 'delete_transfer',
   },
+  lazy => 1, # avoid initializing this before $self->guid is set 20110202 MJD
   default => sub { Moonpig::Ledger::Accountant->for_ledger($_[0]) },
 );
 
