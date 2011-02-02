@@ -187,8 +187,7 @@ sub terminate_service {
   my ($self) = @_;
 
   $Logger->log([
-    'terminating service: %s, %s',
-    $self->charge_description,
+    'terminating service: %s',
     $self->ident,
   ]);
 
