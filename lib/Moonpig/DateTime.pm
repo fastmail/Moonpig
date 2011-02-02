@@ -31,7 +31,7 @@ sub new_datetime {
 # $a is expected to be epoch seconds
 sub plus {
   my ($self, $a) = @_;
-  my $class = ref($self) || $self;
+  my $class = ref($self);
   my $a_sec = $class->_to_sec($a);
   return $class->from_epoch( epoch => $self->epoch + $a_sec );
 }
