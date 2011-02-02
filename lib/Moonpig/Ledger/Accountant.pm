@@ -2,7 +2,7 @@
 package Moonpig::Ledger::Accountant;
 use Carp qw(confess croak);
 use Moonpig::TransferUtil;
-use Moonpig::Ledger::Accountant::Iterator;
+use Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::Ledger::Accountant::Transfer;
 use Moose;
 
@@ -135,14 +135,14 @@ sub select {
   my $res;
   if ($SS && $TT) {
     if (@$s < @$t) {
-      $res = $self->iterator_factory->new($s)->with_target($args->{target});
+      $res = $self->transfer_set_factory->new($s)->with_target($args->{target});
     } else {
-      $res = $self->iterator_factory->new($t)->with_target($args->{source});
+      $res = $self->transfer_set_factory->new($t)->with_target($args->{source});
     }
   } elsif ($SS) {
-    $res = $self->iterator_factory->new($s);
+    $res = $self->transfer_set_factory->new($s);
   } elsif ($TT) {
-    $res = $self->iterator_factory->new($t);
+    $res = $self->transfer_set_factory->new($t);
   } else {
     croak "source or target specifier required in transfer selection";
   }
@@ -154,10 +154,10 @@ sub select {
   return $res;
 }
 
-has iterator_factory => (
+has transfer_set_factory => (
   is => 'ro',
   isa => 'Str|Object',
-  default => sub { 'Moonpig::Ledger::Accountant::Iterator' },
+  default => sub { 'Moonpig::Ledger::Accountant::TransferSet' },
 );
 
 sub _convert_transfer_type {

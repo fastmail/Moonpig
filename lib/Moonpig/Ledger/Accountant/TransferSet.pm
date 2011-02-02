@@ -1,27 +1,14 @@
-package Moonpig::Ledger::Accountant::Iterator;
+package Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::TransferUtil;
 
 sub new {
   my ($class, $array) = @_;
-  my $i = 0;
-  bless sub {
-    return if $i > $#$array;
-    return $array->[$i++];
-  } => $class;
-}
-
-sub next {
-  my ($self) = @_;
-  return $self->();
+  bless [ @$array ] => $class;
 }
 
 sub filter {
   my ($self, $pred) = @_;
-  bless sub {
-    my $c;
-    1 while defined($c = $self->next) && ! $pred->($c);
-    return $c;
-  } => ref($self);
+  bless [ grep $pred->($_), @$self ] => ref $self;
 }
 
 # return transfers newer than $max_age (which is in seconds)
@@ -55,27 +42,21 @@ sub with_target {
 
 sub all {
   my ($self) = @_;
-  my (@all, $t);
-  push @all, $t while $t = $self->next;
-  return @all;
+  return @$self;
 }
 
 sub total {
   my ($self) = @_;
   my $sum = 0;
-  my $t;
-  $sum += $t->amount while $t = $self->next;
+  $sum += $_->amount for @$self;
   return $sum;
 }
 
 sub union {
-  my ($class, @its) = @_;
-  bless sub {
-    my $c;
-    shift @its until @its == 0 || defined($c = $its[0]->next);
-    return unless @its;
-    return $c;
-  } => $class;
+  my ($class, @sets) = @_;
+  my %e;
+  $e{$_} = $_ for map @$_, @sets;
+  bless [ values %e ] => $class;
 }
 
 sub _make_filter {
