@@ -21,9 +21,13 @@ test generic_event_test => sub {
 
   my $noop_h = $self->make_event_handler(Noop => { });
 
+  my $miss_h = $self->make_event_handler(Missing => { });
+
   my $code_h = $self->make_event_handler('t::Test');
 
   $ledger->register_event_handler('test.noop', 'nothing',  $noop_h);
+
+  $ledger->register_event_handler('test.miss', 'missing',  $miss_h);
 
   $ledger->register_event_handler('test.code', 'callback', $code_h);
 
@@ -65,9 +69,15 @@ test generic_event_test => sub {
     "event handler callback-handler called as expected",
   );
 
-  isnt(
-    exception { $ledger->handle_event('test.unknown', { foo => 1 }) },
-    undef,
+  is(
+    exception(sub { $ledger->handle_event('test.miss') })->ident,
+    'event received by Missing handler',
+    "missing event handlers must be shadowed to be non-fatal",
+  );
+
+  is(
+    exception(sub { $ledger->handle_event('test.unknown') })->ident,
+    'unhandled event',
     "receiving an unknown event is fatal",
   );
 };
