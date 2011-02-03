@@ -27,7 +27,7 @@ test "basics of transfer" => sub {
   my @xfers;
 
   subtest "initial transfer" => sub {
-    plan tests => 2;
+    plan tests => 3;
 
     push @xfers, $ledger->transfer({
       amount   => 5000,
@@ -36,6 +36,7 @@ test "basics of transfer" => sub {
     });
 
     is(@xfers, 1, "we made a transfer");
+    is($xfers[0]->type, 'transfer', "the 1st transfer");
 
     is(
       $bank->unapplied_amount,
@@ -45,7 +46,7 @@ test "basics of transfer" => sub {
   };
 
   subtest "transfer down to zero" => sub {
-    plan tests => 2;
+    plan tests => 3;
 
     push @xfers, $ledger->transfer({
       amount => $amount - 5000,
@@ -54,6 +55,7 @@ test "basics of transfer" => sub {
     });
 
     is(@xfers, 2, "we made a transfer");
+    is($xfers[1]->type, 'transfer', "the 2nd transfer");
 
     is(
       $bank->unapplied_amount,

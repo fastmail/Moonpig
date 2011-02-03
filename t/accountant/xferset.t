@@ -29,21 +29,7 @@ has transfers => (
   clearer => 'scrub_transfers',
 );
 
-has banks => (
-  is  => 'rw',
-  isa => 'ArrayRef',
-  default => sub { [] },
-  lazy => 1,
-  clearer => 'scrub_banks',
-);
-
-has consumers => (
-  is  => 'rw',
-  isa => 'ArrayRef',
-  default => sub { [] },
-  lazy => 1,
-  clearer => 'scrub_consumers',
-);
+my (@b, @c);
 
 sub jan {
   my ($day) = @_;
@@ -54,8 +40,7 @@ sub scrub {
   my ($self) = @_;
   $self->scrub_ledger;
   $self->scrub_transfers;
-  $self->scrub_banks;
-  $self->scrub_consumers;
+  (@b, @c) = ();
 }
 
 sub setup {
@@ -63,14 +48,14 @@ sub setup {
   $self->scrub;
   my ($b1, $c1) = $self->add_bank_and_consumer_to($self->ledger);
   my ($b2, $c2) = $self->add_bank_and_consumer_to($self->ledger);
-  push @{$self->banks}, $b1, $b2;
-  push @{$self->consumers}, $c1, $c2;
+  @b = ($b1, $b2);
+  @c = ($c1, $c2);
 
   for my $b (0..1) {
     for my $c (0..1) {
       my $t = $self->ledger->transfer({
-        from => $self->banks->[$b],
-        to => $self->consumers->[$c],
+        from => $b[$b],
+        to => $c[$c],
         amount => 100 + $b*10 + $c,
         date => jan(10 + $b*10 + $c), # 10, 11, 20, 21
       });
@@ -82,8 +67,6 @@ sub setup {
 test "from" => sub {
   my ($self) = @_;
   my %t = %{$self->transfers};
-  my @b = @{$self->banks};
-  my @c = @{$self->consumers};
   cmp_bag([ $self->accountant->from_bank($b[0])->all ], [ @t{"00", "01"} ]);
   cmp_bag([ $self->accountant->from_bank($b[1])->all ], [ @t{"10", "11"} ]);
   cmp_bag([ $self->accountant->from_consumer($c[0])->all ], [ ]);
