@@ -21,7 +21,7 @@ has _handlers_for => (
 sub _handlers_for_event {
   my ($self, $event_name) = @_;
 
-  return $self->_handlers_for->{ $event_name } || {};
+  return $self->_handlers_for->{ $event_name };
 }
 
 sub _event_handler_named {
@@ -104,7 +104,7 @@ sub handle_event {
   my $guid = guid_string;
 
   for my $handler_name (keys %$handlers) {
-    next unless my $handler = $handlers->{ $handler_name };
+    my $handler = $handlers->{ $handler_name };
 
     $handler->handle_event(
       $event,
