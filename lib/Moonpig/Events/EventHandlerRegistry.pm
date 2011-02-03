@@ -15,6 +15,7 @@ has _handlers_for => (
   isa => EventHandlerMap,
   required => 1,
   default  => sub {  {}  },
+  init_arg => undef,
 );
 
 sub _handlers_for_event {
@@ -54,8 +55,6 @@ sub _setup_implicit_event_handlers {
     my $implicit_handlers = $handler_map->{ $event_name };
 
     for my $handler_name (keys %$implicit_handlers) {
-      next if $self->_event_handler_named($event_name, $handler_name);
-
       my $handler = $implicit_handlers->{ $handler_name };
       EventHandler->assert_valid($handler);
 
