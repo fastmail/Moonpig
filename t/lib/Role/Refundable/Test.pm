@@ -26,6 +26,8 @@ sub issue_refund {
     to    => $refund,
     amount  => $self->amount,
   });
+
+  return $refund;
 }
 
 1;

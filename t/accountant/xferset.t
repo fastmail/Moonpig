@@ -92,15 +92,47 @@ test "from" => sub {
 test "to" => sub {
   my ($self) = @_;
   my %t = %{$self->transfers};
-  my @b = @{$self->banks};
-  my @c = @{$self->consumers};
   cmp_bag([ $self->accountant->to_bank($b[0])->all ], [ ]);
   cmp_bag([ $self->accountant->to_consumer($c[0])->all ], [ @t{"10", "00"} ]);
   cmp_bag([ $self->accountant->to_consumer($c[1])->all ], [ @t{"11", "01"} ]);
 };
 
-# todo: all_for
 
+# Right now credits are the only CanTransfer that supports both
+# incoming and outgoing transfers, so we'll use that to test.
+#
+# bank      ->     credit        ->          payable
+#      bank_credit        credit_application
+test "all_for" => sub {
+  my ($self) = @_;
+  my $amount = dollars(1.50);
+
+  # Bank to credit
+  my $credit = $self->ledger->add_credit(
+    class(qw(t::Refundable::Test Credit::Courtesy)),
+    {
+      amount => $amount,
+      reason => 'ran over your dog',
+    },
+  );
+  my $t1 = $self->ledger->create_transfer({
+    type   => 'bank_credit',
+    from   => $b[0],
+    to     => $credit,
+    amount => $amount,
+  });
+
+  # Credit to payable
+  my $refund = $credit->issue_refund;
+  my $t2 = do {
+    my @t = $self->accountant->to_payable($refund)->all;
+    is(@t, 1, "one transfer to refund object");
+    $t[0];
+  };
+
+  cmp_bag([ $self->accountant->all_for_credit($credit)->all ], [ $t1, $t2 ]);
+  is($credit->unapplied_amount, 0, "no credit left");
+};
 
 before run_test => \&setup;
 
