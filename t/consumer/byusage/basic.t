@@ -46,7 +46,7 @@ before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
 
-test create_consumer => sub {
+sub create_consumer {
   my ($self, $args) = @_;
   $args ||= {};
   return if $self->has_consumer;
@@ -72,9 +72,14 @@ test create_consumer => sub {
      "consumer is correct type");
   is($self->consumer->bank, $b, "consumer has bank");
   is($self->consumer->unapplied_amount, dollars(1), "bank contains \$1");
+}
+
+test "consumer creation" => sub {
+  my ($self) = @_;
+  $self->create_consumer;
 };
 
-test successful_hold => sub {
+sub successful_hold {
   my ($self, $n_units) = @_;
   $n_units ||= 7;
   $self->create_consumer;
@@ -89,6 +94,11 @@ test successful_hold => sub {
   my $x_remaining = 20 - $n_units;
   is($self->consumer->units_remaining, $x_remaining,
      "after holding $n_units, there are $x_remaining left");
+}
+
+test "successful hold" => sub {
+  my ($self) = @_;
+  $self->successful_hold;
 };
 
 test release_hold => sub {
