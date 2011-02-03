@@ -180,8 +180,9 @@ sub _convert_transfer_type {
     to     => $transfer->target,
     type   => $to_type,
     amount => $transfer->amount,
-    skip_funds_check => 1,
+    skip_funds_check => 1, # do not check for overdraft...
   });
+  # ... because we are about to do this:
   $self->_force_delete_transfer($transfer) if $new;
   return $new;
 }
