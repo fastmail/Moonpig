@@ -10,8 +10,9 @@ use Moonpig::Util -all;
 use namespace::autoclean;
 
 sub test_ledger {
-  my ($self, $class) = @_;
+  my ($self, $class, $extra) = @_;
   $class ||= class('Ledger');
+  $extra ||= {};
 
   my $contact = class('Contact')->new({
     name => 'J. Fred Bloggs',
@@ -19,6 +20,7 @@ sub test_ledger {
   });
 
   my $ledger = $class->new({
+    %$extra,
     contact => $contact,
   });
 
