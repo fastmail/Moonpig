@@ -1,4 +1,4 @@
-package Moonpig::Role::Happening;
+package Moonpig::Role::Notification;
 # ABSTRACT: something that can happen, like an exception or event
 use Moose::Role;
 

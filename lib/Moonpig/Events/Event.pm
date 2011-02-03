@@ -3,7 +3,7 @@ package Moonpig::Events::Event;
 use Moose;
 
 # We had to make this a class, rather than a role, to +attr ident.  If we
-# really want, in the future, we can convert Happening into a parameterized
+# really want, in the future, we can convert Notification into a parameterized
 # role. -- rjbs, 2011-01-12
 
 use Moonpig::Types qw(EventName);
@@ -11,7 +11,7 @@ use Moonpig::Types qw(EventName);
 use namespace::autoclean;
 
 with(
-  'Moonpig::Role::Happening',
+  'Moonpig::Role::Notification',
 );
 
 has '+ident' => (

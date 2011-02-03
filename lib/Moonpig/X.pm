@@ -4,7 +4,7 @@ use Moose;
 
 with(
   'Throwable',
-  'Moonpig::Role::Happening',
+  'Moonpig::Role::Notification',
   'StackTrace::Auto',
 );
 
