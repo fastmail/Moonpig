@@ -55,20 +55,17 @@ has credits => (
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
   is => 'ro',
-  handles => { # Also delegate from_*, to_*, all_for_*?
-    create_transfer => 'create_transfer',
-    delete_transfer => 'delete_transfer',
-  },
+  handles => [ qw(create_transfer delete_transfer) ],
   lazy => 1, # avoid initializing this before $self->guid is set 20110202 MJD
   default => sub { Moonpig::Ledger::Accountant->for_ledger($_[0]) },
 );
 
+# Convenience method for generating standard transfers
 sub transfer {
   my ($self, $args) = @_;
-  return $self->accountant->create_transfer({
-    type => 'transfer',
-    %$args,
-  });
+  ($args->{type} ||= 'transfer') eq 'transfer'
+    or croak(ref($self) . "::transfer only makes standard-type transfers");
+  return $self->accountant->create_transfer($args);
 }
 
 sub add_credit {

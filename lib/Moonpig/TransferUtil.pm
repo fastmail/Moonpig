@@ -13,9 +13,9 @@ our @EXPORT_OK = qw(
 );
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
-my %TYPE; # Maps valid type names to 1, others to false
-my %CANTRANSFER; # Maps valid entity names ("bank") to 1, others to false
-my %TYPEMAP; # Maps valid from-to-type triples to 1, others to false
+my %TYPE; # Maps valid transfer type names to 1, others to false
+my %CANTRANSFER; # Maps valid transferer names ("bank") to 1, others to false
+my %TYPEMAP; # Maps valid (from, to, type) triples to 1, others to false
 my $INITIALIZED;
 
 sub import {
@@ -26,8 +26,8 @@ sub import {
     $line =~ s/#.*//;
     next unless $line =~ /\S/;
     chomp $line;
-    my ($from, $type, $to, $rest) = split /\s+/, $line;
-      die "Malformed typemap line '$line'" if $rest || ! defined($to);
+    my ($from, $to, $type, $rest) = split /\s+/, $line;
+    die "Malformed typemap line '$line'" if $rest || ! defined($to);
     for ($from, $type, $to) {
       die "Malformed typemap line '$line'" if /\W/;
     }
@@ -69,8 +69,8 @@ sub deletable {
 1;
 
 __DATA__
-# FROM TYPE               TO
-bank   transfer           consumer
-bank   hold               consumer
-credit credit_application payable
-bank   bank_credit        credit
+# FROM  TO       TYPE
+bank    consumer  transfer
+bank    consumer  hold
+credit  payable   credit_application
+bank    credit    bank_credit

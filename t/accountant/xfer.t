@@ -1,9 +1,9 @@
-use Test::Routine;
-use Test::More;
-use Test::Routine::Util;
 
 use Carp::Assert;
 use Moonpig::Util qw(dollars);
+use Test::More;
+use Test::Routine;
+use Test::Routine::Util;
 use Try::Tiny;
 
 with 't::lib::Factory::Ledger';
@@ -93,18 +93,18 @@ test "multiple transfer types" => sub {
   my $amt = $bank->amount;
 
   my $h = $ledger->create_transfer({
-    to   => $consumer,
-    from => $bank,
-    amount => dollars(1),
     type   => 'hold',
+    to     => $consumer,
+    from   => $bank,
+    amount => dollars(1),
   });
   is($bank->unapplied_amount, $amt - dollars(1), "hold for \$1");
 
   my $t = $ledger->create_transfer({
-    to   => $consumer,
-    from => $bank,
-    amount => dollars(2),
     type   => 'transfer',
+    to     => $consumer,
+    from   => $bank,
+    amount => dollars(2),
    });
   is($bank->unapplied_amount, $amt - dollars(3), "transfer of \$2");
 
