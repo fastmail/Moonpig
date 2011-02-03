@@ -112,5 +112,36 @@ test "multiple transfer types" => sub {
   is($bank->unapplied_amount, $amt - dollars(2), "deleted hold");
 };
 
+test "ledger->transfer" => sub {
+    my ($self) = @_;
+    plan tests => 6;
+
+    my $ledger = $self->test_ledger;
+    my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
+
+    for my $type (qw(transfer bank_credit DEFAULT)) {
+        my $err;
+        my $t = try {
+           $ledger->transfer({
+               amount => 1,
+               from => $bank,
+               to   => $consumer,
+               $type eq "DEFAULT" ? () : (type => $type),
+           });
+        } catch {
+            $err = $_;
+            return;
+        };
+        if ($type eq "DEFAULT" || $type eq "transfer") {
+            ok($t);
+            is($t->type, "transfer");
+        } else {
+            ok(! $t);
+            like($err, qr/\S+/);
+        }
+    }
+};
+
+
 run_me;
 done_testing;
