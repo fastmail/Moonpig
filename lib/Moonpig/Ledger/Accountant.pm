@@ -1,7 +1,7 @@
 
 package Moonpig::Ledger::Accountant;
 use Carp qw(confess croak);
-use Moonpig::TransferUtil;
+use Moonpig::TransferUtil ();
 use Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::Ledger::Accountant::Transfer;
 use Moose;
@@ -101,7 +101,7 @@ sub delete_transfer {
 }
 
 BEGIN {
-  for my $type (Moonpig::TransferUtil->transfer_types) {
+  for my $type (Moonpig::TransferUtil::transfer_types) {
     my $check = sub {
       my $a_type = $_[0]->transferer_type;
       croak "Expected object of type '$type', got '$a_type' instead"

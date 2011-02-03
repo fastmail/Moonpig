@@ -1,11 +1,27 @@
 
 package Moonpig::TransferUtil;
+use strict;
+use warnings;
+
+use base 'Exporter';
+our @EXPORT_OK = qw(
+  is_transfer_capable
+  transfer_types
+  transfer_type_ok
+  valid_type
+  deletable
+);
+our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
 my %TYPE; # Maps valid type names to 1, others to false
 my %CANTRANSFER; # Maps valid entity names ("bank") to 1, others to false
 my %TYPEMAP; # Maps valid from-to-type triples to 1, others to false
+my $INITIALIZED;
 
 sub import {
+  my ($class) = @_;
+  $class->export_to_level(1, @_); # Call Exporter::import as usual
+  return if $INITIALIZED;
   while (my $line = <DATA>) {
     $line =~ s/#.*//;
     next unless $line =~ /\S/;
@@ -21,10 +37,11 @@ sub import {
     $TYPE{$type} = 1;
   }
   close DATA;
+  $INITIALIZED = 1;
 }
 
 sub is_transfer_capable {
-  my ($class, $what) = @_;
+  my ($what) = @_;
   return $CANTRANSFER{$what};
 }
 
@@ -33,19 +50,19 @@ sub transfer_types {
 }
 
 sub transfer_type_ok {
-  my ($class, $fm, $to, $tp) = @_;
+  my ($fm, $to, $tp) = @_;
   exists $TYPEMAP{$fm} and
   exists $TYPEMAP{$fm}{$to} and
          $TYPEMAP{$fm}{$to}{$tp};
 }
 
 sub valid_type {
-  my ($class, $type) = @_;
+  my ($type) = @_;
   return $TYPE{$type};
 }
 
 sub deletable {
-  my ($class, $type) = @_;
+  my ($type) = @_;
   return $type eq 'hold';
 }
 

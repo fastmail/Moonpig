@@ -124,8 +124,8 @@ subtype TimeInterval, as Num;
 #
 # Transfer types
 
-use Moonpig::TransferUtil;
+use Moonpig::TransferUtil qw(is_transfer_capable valid_type);
 
-subtype TransferType, as Str, where { Moonpig::TransferUtil->valid_type($_) };
-subtype TransferCapable, as Str, where { Moonpig::TransferUtil->is_transfer_capable($_) };
+subtype TransferCapable, as Str, where { is_transfer_capable($_) };
+subtype TransferType, as Str, where { valid_type($_) };
 1;

@@ -3,6 +3,7 @@ use Carp qw(confess croak);
 use Moose;
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents Time TransferType);
+use Moonpig::TransferUtil qw(is_transfer_capable transfer_type_ok valid_type);
 
 #
 # This module is for internal use by Moonpig::Ledger::Accountant
@@ -54,22 +55,22 @@ sub BUILD {
 
   my $s_type = $arg->{source}->transferer_type;
   croak "Unknown transfer source type '$s_type'"
-    unless Moonpig::TransferUtil->is_transfer_capable($s_type);
+    unless is_transfer_capable($s_type);
 
   my $t_type = $arg->{target}->transferer_type;
   croak "Unknown transfer target type '$t_type'"
-    unless Moonpig::TransferUtil->is_transfer_capable($t_type);
+    unless is_transfer_capable($t_type);
 
   my $x_type = $arg->{type};
   croak "Unknown transfer type '$x_type'"
-    unless Moonpig::TransferUtil->valid_type($x_type);
+    unless valid_type($x_type);
   croak "Can't create transfer of type '$x_type' from $s_type to $t_type"
-    unless Moonpig::TransferUtil->transfer_type_ok($s_type, $t_type, $x_type);
+    unless transfer_type_ok($s_type, $t_type, $x_type);
 }
 
 sub is_deletable {
   my ($self) = @_;
-  Moonpig::TransferUtil->deletable($self->type);
+  Moonpig::TransferUtil::deletable($self->type);
 }
 
 sub delete {

@@ -1,5 +1,5 @@
 package Moonpig::Ledger::Accountant::TransferSet;
-use Moonpig::TransferUtil;
+use Moonpig::TransferUtil ();
 
 sub new {
   my ($class, $array) = @_;
@@ -65,7 +65,7 @@ sub _make_filter {
 }
 
 BEGIN {
-  for my $type (Moonpig::TransferUtil->transfer_types) {
+  for my $type (Moonpig::TransferUtil::transfer_types) {
     *{"$type\_only"} = _make_filter(sub { $_[0]->type eq $type });
   }
 }
