@@ -25,6 +25,7 @@ has _subtree_for => (
     subtree_for      => 'get',
     _set_subtree_for => 'set',
     subtrees         => 'values',
+    subtree_names    => 'keys',
   },
 );
 
@@ -45,15 +46,19 @@ sub _leaf_name {
   my ($self) = @_;
   my @names;
 
+  my $prev = $self;
   my $this = $self;
+
   while ($this->_has_parent and $this = $this->_parent) {
     my $subtree_hash = $this->_subtree_for;
-    my $name = first { same_object($self, $subtree_hash->{ $_ }) }
+
+    my $name = first { same_object($prev, $subtree_hash->{ $_ }) }
                keys %$subtree_hash;
 
     confess "can't find subtree in parent" unless defined $name;
 
     push @names, $name;
+    $prev = $this;
   }
 
   return join '.', reverse @names;
