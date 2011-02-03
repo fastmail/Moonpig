@@ -10,7 +10,7 @@ use Email::MIME::Kit 2;
 sub kit {
   my ($self, $kitname) = @_;
 
-  $kitname .= '.mkit' unless $kitname =~ /\.mkit$/;
+  $kitname .= '.mkit';
 
   my $root = defined $ENV{MOONPIG_MKITS_DIR}
            ? $ENV{MOONPIG_MKITS_DIR}
