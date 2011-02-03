@@ -65,10 +65,13 @@ test "stopped clock" => sub {
   cmp_ok(Moonpig->env->now, '==', $epoch, "the clock is stopped at $epoch");
 
   Moonpig->env->stop_clock_at($epoch + 30);
-  cmp_ok(abs($epoch - Moonpig->env->now), '==', 30, "env->now is 30");
+  cmp_ok(abs($epoch - Moonpig->env->now), '==', 30, "env->now is +30");
 
   Moonpig->env->elapse_time(30);
-  cmp_ok(abs($epoch - Moonpig->env->now), '==', 60, "env->now is 60");
+  cmp_ok(abs($epoch - Moonpig->env->now), '==', 60, "env->now is +60");
+
+  Moonpig->env->elapse_time( DateTime::Duration->new(minutes => 1) );
+  cmp_ok(abs($epoch - Moonpig->env->now), '==', 120, "env->now is +120");
 
   like(
     (exception { Moonpig->env->elapse_time(-30) })->ident,
