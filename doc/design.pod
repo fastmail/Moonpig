@@ -6,9 +6,9 @@
 =head3 Ledger
 
 A ledger wraps up an account history.  It contains the entire history
-number of piggy banks, consumers, journals, and invoices.  It also singles out
-the currently-active piggy banks and consumers, the current "general fund"
-piggy bank, if there is one, and the current invoice.  It also
+number of banks, consumers, journals, and invoices.  It also singles out
+the currently-active banks and consumers, the current "general fund"
+bank, if there is one, and the current invoice.  It also
 contains contact information for the account.
 
 =head3 Contact
@@ -34,18 +34,18 @@ span of time.  It is represented as the head of a cost tree.  A journal can be
 marked as closed, at which time new transfers will be recorded on a new
 journal.
 
-=head3 Piggy bank
+=head3 Bank
 
-A piggy bank represents a pool of funds converted from a credit or customer
+A bank represents a pool of funds converted from a credit or customer
 payment, and generally associated with a consumer.  The consumer will perform
-transfers as needed to pay for its continued operation.  A piggy bank may be a
+transfers as needed to pay for its continued operation.  A bank may be a
 "general fund", not associated with any consumer but available to any consumer
-whose associated piggy bank is insufficient to cover its demands.
+whose associated bank is insufficient to cover its demands.
 
 [ Are general funds still a good idea, compared to refundable credit? -- rjbs,
 2010-12-07 ]
 
-The piggy bank has some initial value, corresponding to the amount received on
+The bank has some initial value, corresponding to the amount received on
 payment.  At any given moment, it has as much remaining value as its initial
 value minus and transfers or holds.
 
@@ -132,13 +132,13 @@ For example, A Pobox account costs $20 per year.  We will assess this
 as a $20/12 payment per month.  (Or possibly a $20/365 payment per
 year?)  Each day the consumer object will receive a heartbeat event.
 It will check if it has processed a charge yet this month.  If not, it
-will try to process a charge against its piggy bank.  If the piggy
+will try to process a charge against its bank.  If the piggy
 bank is sufficiently well-funded, that is all that is needed; the
 charge is now in the right cost tree and the later receipt will inform
 the customer.
 
-If the piggy bank is not well-enough funded, the account will check to
-see if there is a general fund piggy bank from which it can draw.
+If the bank is not well-enough funded, the account will check to
+see if there is a general fund bank from which it can draw.
 If not, it will check to see if there is
 
 =head3 Pay-as-you-go services
