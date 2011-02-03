@@ -17,11 +17,6 @@ the currently-active banks and consumers, the current "general fund"
 bank, if there is one, and the current invoice.  It also
 contains contact information for the account.
 
-=head3 Contact
-
-Email addresses, postal addresses, credit card numbers (or proxies for
-credit card numbers.)
-
 =head3 Invoice
 
 An invoice represents list of unpaid charges that the owner of the
@@ -128,6 +123,54 @@ charges the way we want:
 
 	TOTAL                   $36.23
 
+=head2 Subsidiary entities
+
+=head3 Contact
+
+Email addresses, postal addresses, credit card numbers (or proxies for
+credit card numbers.)
+
+=head3 Accountant
+
+The Accountant is a subsystem of the ledger which is responsible for
+creating and tracking transfers of funds between funds-bearing
+entities such as banks, consumers, credits, and refunds.
+
+It contains methods for selecting all the transfers that satisfy
+pecified criteria, such as the set of all transfers out of a certain
+bank, and for adding up the values of the transfers.
+
+=head3 Transfer
+
+Each transfer has a source object (typically a bank), a target object
+(typically a consumer), a date, an amount of money transferred, and a
+type.  The type is a string the describes the function of the
+transfer.  For example, the normal transfer of money from a bank to a
+consumer that occurs when the consumer enters a charge is has type
+"transfer".  But the transfer from a credit to an invoice that occurs
+when an invoice is paid has type "credit_application".  The accountant
+will refuse to make a transfer if the transfer type does not match the
+types of the source and target objects.
+
+Transfer types are defined in C<Moonpig::TransferUtil>, which also
+contains related utility functions.
+
+When queried for transfers, accountants return TransferSets that
+represent collections of transfers.  These are supposed to be opaque
+objects, so please do not poke inside them.  They support methods for
+querying the collection and extracting subsets.  $transfer_set->all
+returns a list of the transfers the set contains.  But if you need to
+deal with transfers directly, consider adding a new TransferSet method
+that does what you want.  For example, instead of using ->all and then
+looping over the transfers to calculate the total amount, there is a
+$transfer_set->total method that does this opaquely.
+
+=head3 RateSchedule
+
+=head3 Refund
+
+=head2 External interface, XIDs, and Moonpig::URI
+
 =head2 Examples
 
 At present there appear to be three sorts of consumers:
@@ -179,11 +222,43 @@ a number interprets the number as a number of seconds to add.  One may
 also add any object that supports an C<< ->as_seconds >> method.
 
 =item C<Moonpig::DateTime> provides C<< $a->precedes($b) >> and
-C<< $a->follows($b) >> for more readable comparisons of dates.  THe
-usual comparison operators are also overloaded.
+C<< $a->follows($b) >> for more readable comparisons of dates.
 
 =back
 
 Time intervals are all declared as instances of a C<TimeInterval>
 type, which is a plain number, represented as a number of seconds.
+
+=head3 Money
+
+All money is accounted in exact integral numbers of "millicents".  One
+millicent ('mc') is 1/1000 of a cent, or 10^{-5} dollars.
+
+Charges for non-integral amounts are rounded *down* to the nearest
+millicent, giving the customer the benefit of the roundoff error, such
+as it is.  An account that costs $20.00 per year is typically charged
+in 365 daily increments of 5749 mc each, totalling $19.99 and 835mc.
+
+Unadorned numeric values are taken to be in millicents.
+C<Moonpig::Util> provides  C<dollars> and C<cents> functions to
+construct dollar and cent amounts.  For example, 150000,
+C<dollars(1.50)>, and C<cents(150)> are all the same amount of money.
+
+Many money attributes are required to be positive amounts.  For
+example, you cannot create a bank that contains a negative or zero
+amount of money, or transfer a negative or zero amount of money from
+anywhere to anywhere.
+
+=head3 TransferSets
+
+Internally, these are simply arrays of transfers.  An earlier
+implementation created them as iterators, which I<might> make sense
+for ledgers with extremely large numbers of transfers.  If you think
+you need an iterator implementation, see commit
+6308071566b618badfd4d6aa1183cba1d3ff5d33.
+
+=head2 Authors
+
+Ricardo SIGNES, C<rjbs@icgroup.com>
+Mark Jason DOMINUS, C<mjd@icgroup.com>
 
