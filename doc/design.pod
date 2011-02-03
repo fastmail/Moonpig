@@ -1,7 +1,13 @@
 
 =head1 Moonpig design
 
-=head2 Basic entities
+=head2 Brief summary
+
+=head2 Events
+
+=head2 Environment
+
+=head2 Essential entities
 
 =head3 Ledger
 
@@ -89,7 +95,7 @@ payment by customers.
 
 =head3 Cost tree
 
-Charges are assmebled into cost trees.  A cost tree node is either a
+Charges are assembled into cost trees.  A cost tree node is either a
 charge or a rollup node which collects together several charges and
 cost trees.  For example, consider a user with a pobox account and
 a listbox account.  At the end of the month, their cost tree might
@@ -163,7 +169,7 @@ to be an epoch time.  (That is, C<< Moonpig::DateTime->new( $epoch )
 ) >>.
 
 =item The overloading has been changed.  Subtracting one C<DateTime>
-from another yields a C<DateTime::Duration>.   Subtracting one
+from another yields a C<DateTime::Duration>.  But subtracting one
 C<Moonpig::DateTime> from another yields an ordinary number, the
 number of epoch seconds between the two dates.
 
