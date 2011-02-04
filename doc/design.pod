@@ -5,7 +5,7 @@
 
 =head2 Events
 
-=head2 Environment
+More details are in <events.pod>.
 
 =head2 Essential entities
 
@@ -195,6 +195,23 @@ If not, it will check to see if there is
 =head3 Pay-once services
 
 =head2 Implementation notes
+
+=head3 Environment
+
+Moonpig executes in an I<environment>, which is a single object of
+type C<Moonpig::Role::Env>.  The environment object mediates access to
+the outside world, principally for testing purposes.  Examples of
+intereactions mediated by the environment are logging, sending email,
+and getting the current time.  Code should not use C<time()> or any
+related function to get the current time; it should use C<<
+Moonpig->env->now >>.
+
+By default, Moonpig will load the "normal" environment,
+C<Moonpig::Env::Normal>.  But for testing, one should inhibit this by
+preloading the "test" environment.  C<Moonpig::Env::test>.  In the
+test environment, send email will be delivered to a test box, for
+later perusal, instead of being sent through the real email system.
+The current time given by the environment can be stopped or changed.
 
 =head3 Dates and times
 
