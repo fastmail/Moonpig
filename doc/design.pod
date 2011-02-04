@@ -165,6 +165,52 @@ $transfer_set->total method that does this opaquely.
 
 =head2 External interface, XIDs, and Moonpig::URI
 
+Moonpig will support a web API for ICG's other systems to make
+requests of it.  Each entity external to Moonpig, such as a Pobox
+account or a Listbox list member, will be assigned an external entity
+id, or XID, which will be used in API requests pertaining to it.
+Alternatively, API requests may use Moonpig's internal GUIDs, if it
+knows them.
+
+We have not determined the form of the XID yet, but it will look
+something like "pobox:account:01234567" or "listbox:list:1:member:3".
+
+Typical API requests include:
+
+    GET /invoice/$XID
+    GET /ledger/xid/$XID/invoices
+    GET /....
+
+        To retrieve all sorts of JSON-formatted details about all
+        sorts of stuff
+
+    PUT /ledger/xid/$XID
+
+        Create a new ledger; request content includes details about
+        initial consumers and their properties, etc.
+
+    PUT /ledger/xid/$XID1/consumer/$XID2
+
+        Add a consumer for entity $XID2 to the already-existing
+        ledger that serves $XID1.
+
+    POST /ledger/xid/$XID1/contact
+
+        To update contact data
+
+    GET  /ledger/xid/$XID/refunds
+    POST /ledger/xid/$XID/refund/$refund_id
+
+        Mark refund as having been paid, or other status update
+
+    GET /consumer/xid/$XID/holds
+    GET /consumer/xid/$XID/hold/$hold_id
+    DELETE /consumer/xid/$XID/hold/$hold_id
+    POST /consumer/xid/$XID/hold/$hold_id
+
+        To recover information about extant holds and then to discard
+        a particular hold or commit it and create a charge for it.
+
 =head2 Examples
 
 At present there appear to be three sorts of consumers:
