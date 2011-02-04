@@ -12,9 +12,8 @@ More details are in <events.pod>.
 =head3 Ledger
 
 A ledger wraps up an account history.  It contains the entire history
-number of banks, consumers, journals, and invoices.  It also singles out
-the currently-active banks and consumers, the current "general fund"
-bank, if there is one, and the current invoice.  It also
+number of banks, consumers, journals, and invoices.  It singles out
+the currently-active banks and consumers, and the current invoice.  It
 contains contact information for the account.
 
 =head3 Invoice
@@ -39,12 +38,7 @@ journal.
 
 A bank represents a pool of funds converted from a credit or customer
 payment, and generally associated with a consumer.  The consumer will perform
-transfers as needed to pay for its continued operation.  A bank may be a
-"general fund", not associated with any consumer but available to any consumer
-whose associated bank is insufficient to cover its demands.
-
-[ Are general funds still a good idea, compared to refundable credit? -- rjbs,
-2010-12-07 ]
+transfers as needed to pay for its continued operation.
 
 The bank has some initial value, corresponding to the amount received on
 payment.  At any given moment, it has as much remaining value as its initial
@@ -57,8 +51,8 @@ appear to be three sorts: periodically assessed services; pay-as-you-go
 services, and pay-once services.  Periodically, the service object will decide
 that it needs to make a charge.  Charges are added to the current journal, and
 a transfer is made from the consumer's bank to the consumer.  If the consumer
-has not been associated with a bank (and if no general purpose bank is
-available), the consumer can't make charges.  If there are not sufficient
+has not been associated with a bank, the consumer can't make charges.
+If there are not sufficient
 funds, it is responsible for issuing appropriate warnings to the use and
 eventually for cutting off service.
 
@@ -186,9 +180,7 @@ bank is sufficiently well-funded, that is all that is needed; the
 charge is now in the right cost tree and the later receipt will inform
 the customer.
 
-If the bank is not well-enough funded, the account will check to
-see if there is a general fund bank from which it can draw.
-If not, it will check to see if there is
+TODO
 
 =head3 Pay-as-you-go services
 
