@@ -49,6 +49,8 @@ sub class {
     roles        => \@roles,
   ));
 
+  $class->make_immutable;
+
   return $class->name;
 }
 
