@@ -2,7 +2,7 @@ package Moonpig::Types;
 # ABSTRACT: type constraints for use with Moonpig
 use MooseX::Types -declare => [ qw(
   EmailAddresses
-  Ledger
+  Ledger Consumer
   Millicents PositiveMillicents
   Credit
 
@@ -41,6 +41,8 @@ subtype EmailAddresses, as ArrayRef, where {
 };
 
 role_type Ledger, { role => 'Moonpig::Role::Ledger' };
+
+role_type Consumer, { role => 'Moonpig::Role::Consumer' };
 
 role_type Invoice, { role => 'Moonpig::Role::Invoice' };
 

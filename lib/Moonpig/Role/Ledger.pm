@@ -17,7 +17,7 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Types qw(Credit);
+use Moonpig::Types qw(Credit Consumer);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
@@ -304,15 +304,6 @@ sub _assert_ledger_handles_xid {
   $Ledger_for_xid{ $xid } = $self->guid;
 }
 
-sub _consider_releasing_xid {
-  my ($self, $xid) = @_;
-
-  $self->_assert_ledger_handles_xid($xid);
-  my @consumers = $self->active_consumers_for_xid($xid);
-
-  delete $Ledger_for_xid{ $xid } unless @consumers;
-}
-
 sub _stop_handling_xid {
   my ($self, $xid) = @_;
 
@@ -331,34 +322,39 @@ has _active_xid_consumers => (
   default  => sub {  {}  },
 );
 
-sub active_consumers_for_xid {
+sub active_consumer_for_xid {
   my ($self, $xid) = @_;
 
   my $reg = $self->_active_xid_consumers;
-  return unless my $svc = $reg->{ $xid };
+  return unless my $guid = $reg->{ $xid };
 
-  my @consumers = map {; $self->_get_consumer($_) } keys %$svc;
+  my $consumer = $self->_get_consumer($guid);
 
-  return @consumers;
+  Consumer->assert_valid($consumer);
+
+  return $consumer;
 }
 
 sub _is_consumer_active {
   my ($self, $consumer) = @_;
 
   my $reg = $self->_active_xid_consumers;
-  return unless my $svc = $reg->{ $consumer->xid };
-
-  return $svc->{ $consumer->guid };
+  return unless my $guid = $reg->{ $consumer->xid };
+  return $guid eq $consumer->guid;
 }
 
 sub mark_consumer_active__ {
   my ($self, $consumer) = @_;
 
   my $reg = $self->_active_xid_consumers;
+  my $xid = $consumer->xid;
 
-  $reg->{ $consumer->xid } ||= {};
-
-  $reg->{ $consumer->xid }{ $consumer->guid } = 1;
+  if (my $guid = $reg->{ $consumer->xid }) {
+    return if $guid eq $consumer->guid;
+    Moonpig::X->throw("cannot activate for already-handled xid");
+  }
+    
+  $reg->{ $xid } = $consumer->guid;
 
   $self->_assert_ledger_handles_xid( $consumer->xid );
 
@@ -371,11 +367,11 @@ sub mark_consumer_inactive__ {
   my $reg = $self->_active_xid_consumers;
   my $xid = $consumer->xid;
 
-  return unless $reg->{ $xid };
+  return unless $reg->{ $xid } and $reg->{ $xid } eq $consumer->guid;
 
-  my $rv = delete $reg->{ $xid }{ $consumer->guid };
+  my $rv = delete($reg->{ $xid }) ? 1 : 0;
 
-  $self->_consider_releasing_xid( $xid );
+  delete $Ledger_for_xid{ $xid };
 
   return $rv;
 }

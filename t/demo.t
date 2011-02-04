@@ -43,13 +43,7 @@ has ledger => (
 sub active_consumer {
   my ($self) = @_;
 
-  my @active_consumers = $self->ledger->active_consumers_for_xid( $self->xid );
-
-  return unless @active_consumers;
-
-  die "multiple consumers!?!?" if @active_consumers > 1;
-
-  return $active_consumers[0];
+  $self->ledger->active_consumer_for_xid( $self->xid );
 }
 
 sub pay_any_open_invoice {
@@ -191,8 +185,8 @@ test "end to end demo" => sub {
   my @consumers = $ledger->consumers;
   is(@consumers, 3, "three consumers created over the lifetime");
 
-  my @active = $ledger->active_consumers_for_xid( $self->xid );
-  is(@active, 0, "...but they're all inactive now");
+  my $active_consumer = $ledger->active_consumer_for_xid( $self->xid );
+  is($active_consumer, undef, "...but they're all inactive now");
 
   $ledger->_collect_spare_change;
 };

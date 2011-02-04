@@ -143,7 +143,7 @@ test "registered abandoned xid" => sub {
     );
   }
 
-  my ($consumer) = $ledger->{1}->active_consumers_for_xid($xid->{1});
+  my $consumer = $ledger->{1}->active_consumer_for_xid($xid->{1});
   $consumer->terminate_service;
 
   # now, X-1 should go nowhere, but X-2 is still taken by L-2
