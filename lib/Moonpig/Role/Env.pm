@@ -9,6 +9,7 @@ with(
   'Moonpig::Role::TracksTime',
 );
 
+use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
 
 use Moonpig::Behavior::EventHandlers;
@@ -24,5 +25,12 @@ implicit_event_handlers {
     }
   };
 };
+
+has _consumer_templates => (
+  is  => 'ro',
+  isa => 'Moonpig::Consumer::TemplateRegistry',
+  init_arg => undef,
+  default  => sub { Moonpig::Consumer::TemplateRegistry->new },
+);
 
 1;
