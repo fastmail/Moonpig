@@ -53,13 +53,13 @@ has ledger => (
 sub BUILD {
   my ($class, $arg) = @_;
 
+  croak "Source cannot participate in transfers"
+    unless $arg->{source}->does('Moonpig::Role::CanTransfer');
   my $s_type = $arg->{source}->transferer_type;
-  croak "Unknown transfer source type '$s_type'"
-    unless is_transfer_capable($s_type);
 
+  croak "Target cannot participate in transfers"
+    unless $arg->{source}->does('Moonpig::Role::CanTransfer');
   my $t_type = $arg->{target}->transferer_type;
-  croak "Unknown transfer target type '$t_type'"
-    unless is_transfer_capable($t_type);
 
   my $x_type = $arg->{type};
   croak "Unknown transfer type '$x_type'"
