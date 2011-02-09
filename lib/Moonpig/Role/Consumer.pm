@@ -74,10 +74,6 @@ sub unapplied_amount {
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
 }
 
-# Should construct a replacement object for this one, and install it in the
-# ledger.
-requires 'construct_replacement';
-
 has replacement => (
   is   => 'rw',
   does => 'Moonpig::Role::Consumer',
