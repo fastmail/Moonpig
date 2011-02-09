@@ -23,7 +23,7 @@ sub register_templates {
     confess "consumer template $name already registered"
       if $self->_template_exists($name);
 
-    $self->_register_template($name, $templates->{$_});
+    $self->_register_template($name, $templates->{$name});
   }
 }
 

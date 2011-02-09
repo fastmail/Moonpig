@@ -96,6 +96,7 @@ for my $thing (qw(bank consumer refund)) {
       "_get_$thing" => 'get',
     },
   );
+
   Sub::Install::install_sub({
     as   => "add_$thing",
     code => sub {
@@ -116,6 +117,25 @@ for my $thing (qw(bank consumer refund)) {
       return $value;
     },
   });
+}
+
+sub add_consumer_from_template {
+  my ($self, $template_name, $arg) = @_;
+
+  my $template = Moonpig->env->consumer_template($template_name);
+
+  Moonpig::X->throw("unknown consumer template") unless $template;
+
+  my $template_roles = $template->{roles} || [];
+  my $template_arg   = $template->{arg}   || {};
+
+  $self->add_consumer(
+    class(qw(Consumer), @$template_roles),
+    {
+      %$template_arg,
+      %$arg,
+    },
+  );
 }
 
 for my $thing (qw(journal invoice)) {

@@ -26,11 +26,14 @@ implicit_event_handlers {
   };
 };
 
-has _consumer_templates => (
+has consumer_template_registry => (
   is  => 'ro',
   isa => 'Moonpig::Consumer::TemplateRegistry',
   init_arg => undef,
   default  => sub { Moonpig::Consumer::TemplateRegistry->new },
+  handles  => {
+    consumer_template => 'template',
+  },
 );
 
 1;
