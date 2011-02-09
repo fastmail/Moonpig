@@ -238,12 +238,12 @@ sub can_make_next_payment {
   return $self->amount_in_bank >= $self->cost_per_charge;
 }
 
-sub construct_replacement {
+sub template_like_this {
   my ($self) = @_;
 
-  my $repl = $self->ledger->add_consumer(
-    $self->meta->name,
-    {
+  return {
+    class => $self->meta->name,
+    arg   => {
       charge_frequency   => $self->charge_frequency(),
       cost_amount        => $self->cost_amount(),
       cost_period        => $self->cost_period(),
@@ -254,7 +254,7 @@ sub construct_replacement {
       charge_path_prefix => $self->charge_path_prefix(),
       grace_until        => Moonpig->env->now  +  days(3),
     }
-  );
+  };
 }
 
 # My predecessor is running out of money

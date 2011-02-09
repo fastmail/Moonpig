@@ -162,7 +162,7 @@ test "end to end demo" => sub {
 
       # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
       replacement_mri    => Moonpig::URI->new(
-        "moonpig://test/method?method=construct_replacement"
+        "moonpig://test/method?method=template_like_this"
       ),
     },
   );

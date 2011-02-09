@@ -137,7 +137,7 @@ test failed_hold => sub {
 test low_water_replacement => sub {
   my ($self) = @_;
   my $MRI =
-    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+    Moonpig::URI->new("moonpig://test/method?method=template_like_this");
   my $lwm = 7;
   $self->create_consumer({
     low_water_mark => $lwm,
@@ -202,7 +202,7 @@ test est_lifetime => sub {
 test est_lifetime_replacement => sub {
   my ($self) = @_;
   my $MRI =
-    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+    Moonpig::URI->new("moonpig://test/method?method=template_like_this");
   my $old_age = days(10);
 
   for my $q (1 .. 3) { # number of units to reserve each time
@@ -238,7 +238,7 @@ test est_lifetime_replacement => sub {
 test default_low_water_check => sub {
   my ($self) = @_;
   my $MRI =
-    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+    Moonpig::URI->new("moonpig://test/method?method=template_like_this");
   $self->create_consumer({
     replacement_mri => $MRI,
     old_age => 0,

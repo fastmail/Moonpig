@@ -128,7 +128,7 @@ test "without_successor" => sub {
   plan tests => 4 * 3;
 
   my $mri =
-    Moonpig::URI->new("moonpig://test/method?method=construct_replacement");
+    Moonpig::URI->new("moonpig://test/method?method=template_like_this");
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be

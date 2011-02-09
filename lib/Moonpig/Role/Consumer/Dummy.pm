@@ -28,18 +28,18 @@ implicit_event_handlers {
   };
 };
 
-sub construct_replacement {
+sub template_like_this {
   my ($self) = @_;
 
-  my $repl = $self->ledger->add_consumer(
-    $self->meta->name,
-    {
+  return {
+    class => $self->meta->name,
+    arg   => {
       charge_path_prefix => $self->charge_path_prefix(),
       ledger             => $self->ledger(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
     },
-  );
+  };
 }
 
 1;

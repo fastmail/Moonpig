@@ -105,12 +105,21 @@ sub create_own_replacement {
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
   if ($self->is_replaceable && ! $self->has_replacement) {
-    my $replacement = $replacement_mri->construct(
-      { extra => { self => $self } }
-     ) or return;
+    # The replacement must be a consumer template, of course.
+    my $replacement_template = $replacement_mri->construct({
+      extra => { self => $self }
+    });
+
+    return unless $replacement_template;
+
+    my $replacement = $self->ledger->add_consumer_from_template(
+      $replacement_template,
+    );
+
     $self->replacement($replacement);
     return $replacement;
   }
+
   return;
 }
 

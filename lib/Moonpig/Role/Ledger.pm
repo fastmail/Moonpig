@@ -120,9 +120,13 @@ for my $thing (qw(bank consumer refund)) {
 }
 
 sub add_consumer_from_template {
-  my ($self, $template_name, $arg) = @_;
+  my ($self, $template, $arg) = @_;
+  $arg ||= {};
 
-  my $template = Moonpig->env->consumer_template($template_name);
+  # XXX: sloppy; we should make a template class and a coercion
+  # -- rjbs, 2011-02-09
+  $template = Moonpig->env->consumer_template($template)
+    unless ref $template;
 
   Moonpig::X->throw("unknown consumer template") unless $template;
 

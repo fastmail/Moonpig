@@ -122,12 +122,12 @@ sub units_remaining {
   int($self->unapplied_amount / $self->cost_per_unit);
 }
 
-sub construct_replacement {
+sub template_like_this {
   my ($self) = @_;
 
-  my $repl = $self->ledger->add_consumer(
-    $self->meta->name,
-    {
+  return {
+    class => $self->meta->name,
+    arg   => {
       charge_path_prefix => $self->charge_path_prefix(),
       cost_per_unit      => $self->cost_per_unit(),
       ledger             => $self->ledger(),
@@ -138,7 +138,8 @@ sub construct_replacement {
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
       xid                => $self->xid,
-  });
+    },
+  };
 }
 
 sub create_charge_for_hold {
