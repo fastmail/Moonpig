@@ -12,9 +12,19 @@ has _registry => (
   handles  => {
     _template_exists   => 'exists',
     _register_template => 'set',
-    template           => 'get',
+    _get_template      => 'get',
   },
 );
+
+sub template {
+  my ($self, $name) = @_;
+
+  my $template_sub = $self->_get_template($name);
+
+  Moonpig::X->throw("unknown template") unless $template_sub;
+
+  my $template = $template_sub->($name);
+}
 
 sub register_templates {
   my ($self, $templates) = @_;
