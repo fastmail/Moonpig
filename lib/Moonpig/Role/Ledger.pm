@@ -127,10 +127,14 @@ sub add_consumer_from_template {
   Moonpig::X->throw("unknown consumer template") unless $template;
 
   my $template_roles = $template->{roles} || [];
+  my $template_class = $template->{class};
   my $template_arg   = $template->{arg}   || {};
 
+  Moonpig::X->throw("consumer template supplied class and roles")
+    if @$template_roles and $template_class;
+
   $self->add_consumer(
-    class(qw(Consumer), @$template_roles),
+    ($template_class || class(qw(Consumer), @$template_roles)),
     {
       %$template_arg,
       %$arg,
