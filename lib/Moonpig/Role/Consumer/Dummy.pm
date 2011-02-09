@@ -29,7 +29,7 @@ implicit_event_handlers {
 };
 
 sub construct_replacement {
-  my ($self, $param) = @_;
+  my ($self) = @_;
 
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
@@ -38,8 +38,8 @@ sub construct_replacement {
       ledger             => $self->ledger(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
-      %$param,
-  });
+    },
+  );
 }
 
 1;

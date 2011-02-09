@@ -239,7 +239,7 @@ sub can_make_next_payment {
 }
 
 sub construct_replacement {
-  my ($self, $param) = @_;
+  my ($self) = @_;
 
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
@@ -253,8 +253,8 @@ sub construct_replacement {
       charge_description => $self->charge_description(),
       charge_path_prefix => $self->charge_path_prefix(),
       grace_until        => Moonpig->env->now  +  days(3),
-      %$param,
-  });
+    }
+  );
 }
 
 # My predecessor is running out of money

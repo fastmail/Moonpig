@@ -123,7 +123,7 @@ sub units_remaining {
 }
 
 sub construct_replacement {
-  my ($self, $param) = @_;
+  my ($self) = @_;
 
   my $repl = $self->ledger->add_consumer(
     $self->meta->name,
@@ -138,7 +138,6 @@ sub construct_replacement {
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
       xid                => $self->xid,
-      %$param,
   });
 }
 
