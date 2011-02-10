@@ -104,7 +104,7 @@ BEGIN {
   for my $type (Moonpig::TransferUtil::transfer_types) {
     my $check = sub {
       croak "$_[0] is not something that participates in transfers"
-        unless $_[0]->can('transferer_type');
+        unless $_[0]->does('Moonpig::Role::CanTransfer');
       my $a_type = $_[0]->transferer_type;
       croak "Expected object of type '$type', got '$a_type' instead"
         unless $a_type eq $type;
