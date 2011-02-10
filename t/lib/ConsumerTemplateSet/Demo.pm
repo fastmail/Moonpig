@@ -9,7 +9,7 @@ use namespace::autoclean;
 
 sub templates {
   return {
-    service => sub {
+    'demo-service' => sub {
       my ($name) = @_;
 
       return {

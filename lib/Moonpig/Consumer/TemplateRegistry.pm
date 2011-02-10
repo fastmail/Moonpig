@@ -37,12 +37,4 @@ sub register_templates {
   }
 }
 
-sub register_templates_with_prefix {
-  my ($self, $prefix, $templates) = @_;
-
-  my %new = map {; "$prefix.$_" => $templates->{$_} } keys %$templates;
-
-  $self->register_templates(\%new);
-}
-
 1;

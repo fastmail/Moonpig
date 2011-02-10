@@ -15,7 +15,7 @@ with(
   't::lib::Factory::Ledger',
 );
 
-use t::lib::ConsumerTemplateSet::Test 'test';
+use t::lib::ConsumerTemplateSet::Test;
 
 test "consumer from template" => sub {
   my ($self) = @_;
@@ -23,7 +23,7 @@ test "consumer from template" => sub {
   my $ledger = $self->test_ledger;
 
   my $c = $ledger->add_consumer_from_template(
-    'test.boring',
+    'boring',
     { make_active => 1 },
   );
 

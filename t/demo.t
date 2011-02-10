@@ -17,7 +17,7 @@ use Data::GUID qw(guid_string);
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);
 
-use t::lib::ConsumerTemplateSet::Demo 'yoyodyne';
+use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
@@ -149,7 +149,7 @@ test "end to end demo" => sub {
   $self->ledger( $ledger );
 
   my $consumer = $ledger->add_consumer_from_template(
-    'yoyodyne.service',
+    'demo-service',
     {
       xid                => $self->xid,
       make_active        => 1,
