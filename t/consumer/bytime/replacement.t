@@ -128,7 +128,7 @@ test "without_successor" => sub {
   plan tests => 4 * 3;
 
   my $mri =
-    Moonpig::URI->new("moonpig://test/method?method=template_like_this");
+    Moonpig::URI->new("moonpig://method?method=template_like_this");
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
@@ -146,14 +146,13 @@ test "without_successor" => sub {
 
     my $c = $self->test_consumer(
       $CLASS, {
-        ledger => $self->ledger,
-        bank => $b,
+        ledger  => $self->ledger,
+        bank    => $b,
         old_age => days(20),
         replacement_mri => $mri,
         cost_amount        => dollars(1),
         cost_period        => days(1),
       });
-
 
     my @eq;
     $c->register_event_handler(

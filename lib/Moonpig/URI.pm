@@ -82,41 +82,24 @@ sub parse_query_string {
 
 sub nothing { $_[0]->new("moonpig://nothing") }
 
-my %table = (
+my %TABLE = (
   nothing => sub { undef },
-  test => {
-    callback => sub {
-      my ($params, $extra) = @_;
-      my $code = delete $extra->{code}
-        or confess "Missing 'code' argument in moonpig://test/callback";
-      return $code->($params);
-    },
-    consumer => {
-      ByTime => sub {
-        my ($params, $extra) = @_;
-        require Moonpig::Util;
-        return Moonpig::Util::class('Consumer::ByTime')->new({
-          %$params,
-          %$extra,
-        })
-      },
-    },
-    function => sub {
-      my ($params, $extra) = @_;
-      my $func = $params->{name}
-        or confess "Missing 'name' argument in moonpig://test/function";
-      no strict 'refs';
-      return $func->($extra);
-    },
-    method => sub {
-      my ($params, $extra) = @_;
-      my $self = delete $extra->{self}
-        or confess "Missing 'self' argument in moonpig://test/method";
-      my $meth = delete $params->{method}
-        or confess "Missing 'method' argument in moonpig://test/method";
-      return $self->$meth($params);
-    }
+
+  'consumer-template' => sub {
+    my ($path, $params, $extra) = @_;
+
+    my $name = $path->[0];
+    return Moonpig->env->consumer_template($name);
   },
+
+  method => sub {
+    my ($path, $params, $extra) = @_;
+    my $self = delete $extra->{self}
+      or confess "Missing 'self' argument in moonpig://test/method";
+    my $meth = delete $params->{method}
+      or confess "Missing 'method' argument in moonpig://test/method";
+    return $self->$meth($params);
+  }
 );
 
 # Replace this with some sort of more interesting and less centralized
@@ -124,23 +107,15 @@ my %table = (
 sub construct {
   my ($self, $args) = @_;
   $args ||= { };
-  my $table = $args->{table} || \%table;
-  my (@path) = $self->path_segments;
-  while (my $c = shift @path) {
-    croak "Unknown constructor path components <@path> in MRI $self"
-      unless defined $table &&
-        reftype($table) eq 'HASH' && exists $table->{$c};
-    $table = $table->{$c};
-  }
 
-  if (reftype($table) eq 'HASH') {
-    croak "Incomplete constructor path in MRI $self" unless defined $table;
-  } elsif (reftype($table) eq 'CODE') {
-    # A callback; call it using the query part of the URI as arguments
-    return $table->($self->param_hash, $args->{extra} || {});
-  } else {
-    croak "Garbage value in MRI table for $self";
-  }
+  my (@path) = $self->path_segments;
+
+  my $first   = shift @path;
+
+  my $handler = $TABLE{ $first }
+    or croak "Unknown Moonpig URI type <$first> in MRI $self";
+
+  $handler->(\@path, $self->param_hash, $args->{extra} || {});
 }
 
 1;

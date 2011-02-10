@@ -14,20 +14,9 @@ use Moose;
 with 't::lib::Factory::Ledger';
 
 my $day = days(1);
-plan tests => 5;
+plan tests => 4;
+
 is(Moonpig::URI->nothing->construct, undef, "nothing => undef");
-ok(Moonpig::URI->new('moonpig://test/consumer/ByTime')
-  ->construct({extra => {
-    old_age => $day,
-    cost_amount => dollars(1),
-    ledger => __PACKAGE__->test_ledger(),
-    cost_period => $day,
-    xid         => 'urn:uuid:' . guid_string,
-    replacement_mri => Moonpig::URI->nothing(),
-    charge_description => "blah",
-    charge_path_prefix => [],
-   }}),
-   "good path Consumer::ByTime");
 
 for my $bad (qw(moonpig://foo
                 moonpig://test/bar

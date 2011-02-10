@@ -17,6 +17,8 @@ use Data::GUID qw(guid_string);
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);
 
+use t::lib::ConsumerTemplateSet::Demo 'yoyodyne';
+
 use namespace::autoclean;
 
 has xid => (
@@ -146,24 +148,11 @@ test "end to end demo" => sub {
   my $ledger = $self->test_ledger;
   $self->ledger( $ledger );
 
-  my $consumer = $ledger->add_consumer(
-    class(qw(Consumer::ByTime)),
+  my $consumer = $ledger->add_consumer_from_template(
+    'yoyodyne.service',
     {
-      cost_amount        => dollars(50),
-      cost_period        => days(365),
-      charge_frequency   => days(7), # less frequent to make logs simpler
-      charge_description => 'yoyodyne service',
-      old_age            => days(30),
-      charge_path_prefix => 'yoyodyne.basic',
-      grace_until        => Moonpig->env->now + days(3),
-
       xid                => $self->xid,
       make_active        => 1,
-
-      # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
-      replacement_mri    => Moonpig::URI->new(
-        "moonpig://test/method?method=template_like_this"
-      ),
     },
   );
 

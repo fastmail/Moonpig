@@ -24,7 +24,7 @@ test "consumer from template" => sub {
 
   my $c = $ledger->add_consumer_from_template(
     'test.boring',
-    { xid => 'xyzzy', make_active => 1 },
+    { make_active => 1 },
   );
 
   ok(

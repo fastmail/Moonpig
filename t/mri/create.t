@@ -21,11 +21,11 @@ has mri => (
 
 test "good coercions" => sub {
   my ($self) = @_;
-  plan tests => 3 * 2;
-  for my $good ("moonpig://consumer/id/123456",
-                Moonpig::URI->nothing(),
-                URI->new("moonpig://consumer/id/123456"),
-               ) {
+  plan tests => 2 * 2;
+  for my $good (
+    Moonpig::URI->nothing(),
+    URI->new("moonpig://nothing"),
+   ) {
     try {
       $self->mri($good);
     } finally {
@@ -58,5 +58,3 @@ test "bad coercions" => sub {
 
 run_me;
 done_testing;
-
-

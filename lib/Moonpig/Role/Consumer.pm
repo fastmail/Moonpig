@@ -114,6 +114,7 @@ sub create_own_replacement {
 
     my $replacement = $self->ledger->add_consumer_from_template(
       $replacement_template,
+      { xid => $self->xid },
     );
 
     $self->replacement($replacement);
