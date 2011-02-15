@@ -14,6 +14,10 @@ use Moonpig::Router;
 
 use namespace::autoclean;
 
+use Moonpig::Util qw(class);
+
+class('Ledger');
+
 test "end to end demo" => sub {
   my ($self) = @_;
 
@@ -23,8 +27,8 @@ test "end to end demo" => sub {
 
   # XXX: temporary first draft of a route to get the guid
   # /ledger/guid/:GUID/guid
-  my $result = Moonpig::Router->route(
-    [ 'ledger', 'guid', $guid, 'guid' ],
+  my $result = Moonpig->env->route(
+    get => [ 'ledger', 'guid', $guid, 'guid' ],
   );
 
   is($result, $guid, "we can get the ledger's guid by routing to it");

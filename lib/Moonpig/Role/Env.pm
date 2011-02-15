@@ -3,6 +3,7 @@ package Moonpig::Role::Env;
 use Moose::Role;
 
 use Moonpig;
+use Moonpig::Router;
 
 with(
   'Moonpig::Role::HandlesEvents',
@@ -11,8 +12,11 @@ with(
 
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Util qw(class);
 
 use Moonpig::Behavior::EventHandlers;
+
+use namespace::autoclean;
 
 requires 'handle_send_email';
 
@@ -35,5 +39,21 @@ has consumer_template_registry => (
     consumer_template => 'template',
   },
 );
+
+sub _router {
+  my ($class) = @_;
+
+  Moonpig::Router->new({
+    routes => {
+      ledger => scalar class('Ledger'),
+    },
+  });
+}
+
+sub route {
+  my ($self, @rest) = @_;
+
+  $self->_router->route(undef, @rest);
+}
 
 1;

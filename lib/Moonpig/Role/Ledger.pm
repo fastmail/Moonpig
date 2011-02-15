@@ -7,6 +7,7 @@ with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
+  'Moonpig::Role::Routable',
 );
 
 use Moose::Util::TypeConstraints;
@@ -474,32 +475,31 @@ sub for_guid {
   return $Ledger_for_guid{ $guid };
 }
 
-sub _class_route {
-  my ($class, $orig_path, $arg) = @_;
+sub class_router {
+  my ($class) = @_;
 
-  my ($type, $id, @rest) = @$orig_path;
-
-  my $ledger;
-
-  if ($type eq 'xid') {
-    Moonpig::X::NoRoute->throw unless $ledger = $class->for_xid($id);
-  } elsif ($type eq 'guid') {
-    Moonpig::X::NoRoute->throw unless $ledger = $class->for_guid($id);
-  } else {
-    Moonpig::X::NoRoute->throw;
-  }
-
-  return $ledger->_instance_route(\@rest, $arg);
+  Moonpig::Router->new({
+    routes => {
+      xid  => sub { my $xid = shift @{$_[0]};  $class->for_xid($xid);   },
+      guid => sub { my $guid = shift @{$_[0]}; $class->for_guid($guid); },
+    },
+  });
 }
 
-sub _instance_route {
-  my ($self, $orig_path, $arg) = @_;
+sub instance_router {
+  my ($self) = @_;
 
-  my ($next, @path) = @$orig_path;
-
-  Moonpig::X::NoRoute->throw unless $self->can($next);
-
-  my $result = $self->$next;
+  Moonpig::Router->new({
+    routes => {
+      guid => sub {
+        require Moonpig::WrappedMethod;
+        Moonpig::WrappedMethod->new({
+          invocant   => $self,
+          get_method => sub { $_[0]->guid },
+        });
+      },
+    },
+  });
 }
 
 1;
