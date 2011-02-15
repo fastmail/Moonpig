@@ -12,12 +12,14 @@ has is_public => (
   is  => 'ro',
   isa => 'Bool',
   init_arg => 'public',
-  default  => 0,
+  builder  => 'public_by_default',
 );
 
 use Data::Dumper ();
 
 use namespace::clean -except => 'meta';
+
+sub public_by_default { 0 }
 
 use overload
   '""' => sub {
@@ -29,4 +31,16 @@ use overload
   },
   fallback => 1;
 
+{
+  package Moonpig::X::NoRoute;
+  use Moose;
+  extends 'Moonpig::X';
+  use namespace::autoclean;
+
+  has '+ident'   => (init_arg => undef, default => "no route");
+
+  __PACKAGE__->meta->make_immutable(inline_constructor => 0);
+}
+
+__PACKAGE__->meta->make_immutable(inline_constructor => 0);
 1;

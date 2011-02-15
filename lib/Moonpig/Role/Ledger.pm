@@ -474,4 +474,32 @@ sub for_guid {
   return $Ledger_for_guid{ $guid };
 }
 
+sub _class_route {
+  my ($class, $orig_path, $arg) = @_;
+
+  my ($type, $id, @rest) = @$orig_path;
+
+  my $ledger;
+
+  if ($type eq 'xid') {
+    Moonpig::X::NoRoute->throw unless $ledger = $class->for_xid($id);
+  } elsif ($type eq 'guid') {
+    Moonpig::X::NoRoute->throw unless $ledger = $class->for_guid($id);
+  } else {
+    Moonpig::X::NoRoute->throw;
+  }
+
+  return $ledger->_instance_route(\@rest, $arg);
+}
+
+sub _instance_route {
+  my ($self, $orig_path, $arg) = @_;
+
+  my ($next, @path) = @$orig_path;
+
+  Moonpig::X::NoRoute->throw unless $self->can($next);
+
+  my $result = $self->$next;
+}
+
 1;
