@@ -22,11 +22,23 @@ sub app {
       my $result = Moonpig->env->route(lc $req->method, \@path, {});
       return [
         200,
-        [ 'Content-type' => 'JSON' ],
+        [ 'Content-type' => 'application/json' ],
         [ $JSON->encode({ result => $result }) ],
       ];
     } catch {
-      die $_;
+      if (try { $_->isa('Moonpig::X::Route') }) {
+        return [
+          404,
+          [ 'Content-type' => 'application/json' ],
+          [ $JSON->encode({ error => "no such resource" }) ],
+        ];
+      } else {
+        return [
+          500,
+          [ 'Content-type' => 'application/json' ],
+          [ $JSON->encode({ error => "unknown" }) ],
+        ];
+      }
     };
 
     return $response;
