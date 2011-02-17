@@ -11,7 +11,6 @@ requires 'instance_router';
 sub route {
   my ($invocant, @rest) = @_;
 
-  # my ($self, $invocant, $method, $orig_path, $arg) = @_;
   my $result = $invocant->_router->route($invocant, @rest);
 }
 

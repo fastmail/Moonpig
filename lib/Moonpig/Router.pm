@@ -29,7 +29,7 @@ has routes => (
 #             method     - inv->resolver has method; returns method
 
 sub route {
-  my ($self, $invocant, $method, $orig_path, $arg) = @_;
+  my ($self, $invocant, $orig_path) = @_;
 
   Moonpig::X::NoRoute->throw unless my (@path) = @$orig_path;
   
@@ -49,7 +49,7 @@ sub route {
       $c_invocant = $next;
     } elsif ($next->isa('Moonpig::WrappedMethod')) {
       Moonpig::X->throw("bogus route: method at non-endpoint") if @path;
-      return $next->invoke($c_invocant, $method, $arg);
+      return ($next, $c_invocant);
     }
   }
 

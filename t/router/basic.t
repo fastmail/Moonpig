@@ -27,9 +27,11 @@ test "end to end demo" => sub {
 
   # XXX: temporary first draft of a route to get the guid
   # /ledger/guid/:GUID/guid
-  my $result = Moonpig->env->route(
-    get => [ 'ledger', 'guid', $guid, 'guid' ],
+  my ($invocable, $obj) = Moonpig->env->route(
+    [ 'ledger', 'guid', $guid, 'guid' ],
   );
+
+  my $result = $invocable->invoke($obj, 'get', {});
 
   is($result, $guid, "we can get the ledger's guid by routing to it");
 };
