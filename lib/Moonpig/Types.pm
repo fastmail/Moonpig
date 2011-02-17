@@ -21,9 +21,13 @@ use MooseX::Types -declare => [ qw(
   Time TimeInterval
 
   TransferCapable TransferType
+
+  PositiveInt
+
+  Factory
 ) ];
 
-use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str);
+use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str Object);
 # use MooseX::Types::Structured qw(Map);
 use Data::GUID 0.046 ();
 use DateTime;
@@ -46,6 +50,8 @@ role_type Consumer, { role => 'Moonpig::Role::Consumer' };
 
 role_type Invoice, { role => 'Moonpig::Role::Invoice' };
 
+subtype PositiveInt, as Int, where { $_ > 0 };
+
 subtype Millicents, as Int;
 subtype PositiveMillicents, as Millicents, where { $_ > 0 };
 
@@ -53,6 +59,8 @@ coerce Millicents, from Num, via { int };
 coerce PositiveMillicents, from Num, via { int };
 
 role_type Credit, { role => 'Moonpig::Role::Credit' };
+
+subtype Factory, as Str | Object;
 
 ################################################################
 #

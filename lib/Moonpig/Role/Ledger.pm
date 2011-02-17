@@ -501,4 +501,9 @@ publish published_guid => { -path => 'gguid' } => sub {
   return $self->guid;
 };
 
+# This allows us to call ->ledger on the ledger itself, as we would on
+# any of its contents. 20110217 MJD
+sub ledger { return $_[0] }
+
+
 1;
