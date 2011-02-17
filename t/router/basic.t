@@ -8,7 +8,6 @@ with(
 );
 
 use Moonpig::Env::Test;
-use Moonpig::Router;
 
 # use Moonpig::Util qw(class days dollars event);
 
@@ -27,11 +26,11 @@ test "end to end demo" => sub {
 
   # XXX: temporary first draft of a route to get the guid
   # /ledger/guid/:GUID/guid
-  my ($invocable, $obj) = Moonpig->env->route(
+  my ($resource) = Moonpig->env->route(
     [ 'ledger', 'guid', $guid, 'guid' ],
   );
 
-  my $result = $invocable->invoke($obj, 'get', {});
+  my $result = $resource->resource_request(get => {});
 
   is($result, $guid, "we can get the ledger's guid by routing to it");
 };

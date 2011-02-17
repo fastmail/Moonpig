@@ -7,7 +7,7 @@ with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
-  'Moonpig::Role::Routable',
+  'Moonpig::Role::Routable::Disjunct',
 );
 
 use Moose::Util::TypeConstraints;
@@ -382,7 +382,7 @@ sub mark_consumer_active__ {
     return if $guid eq $consumer->guid;
     Moonpig::X->throw("cannot activate for already-handled xid");
   }
-    
+
   $reg->{ $xid } = $consumer->guid;
 
   $self->_assert_ledger_handles_xid( $consumer->xid );
@@ -475,31 +475,36 @@ sub for_guid {
   return $Ledger_for_guid{ $guid };
 }
 
-sub class_router {
-  my ($class) = @_;
+sub _class_subroute {
+  my ($class, $path) = @_;
 
-  Moonpig::Router->new({
-    routes => {
-      xid  => sub { my $xid = shift @{$_[0]};  $class->for_xid($xid);   },
-      guid => sub { my $guid = shift @{$_[0]}; $class->for_guid($guid); },
-    },
-  });
+  if ($path->[0] eq 'xid') {
+    my (undef, $xid) = splice @$path, 0, 2;
+    return $class->for_xid($xid);
+  }
+
+  if ($path->[0] eq 'guid') {
+    my (undef, $guid) = splice @$path, 0, 2;
+    return $class->for_guid($guid);
+  }
+
+  return;
 }
 
-sub instance_router {
-  my ($self) = @_;
+sub _instance_subroute {
+  my ($self, $path) = @_;
 
-  Moonpig::Router->new({
-    routes => {
-      guid => sub {
-        require Moonpig::WrappedMethod;
-        Moonpig::WrappedMethod->new({
-          invocant   => $self,
-          get_method => sub { $_[0]->guid },
-        });
-      },
-    },
-  });
+  if ($path->[0] eq 'guid') {
+    shift @$path;
+
+    require Moonpig::WrappedMethod;
+    return Moonpig::WrappedMethod->new({
+      invocant   => $self,
+      get_method => sub { $_[0]->guid },
+    });
+  }
+
+  return;
 }
 
 1;

@@ -19,7 +19,8 @@ sub app {
     shift @path; # get rid of leading "/" part
 
     my $response = try {
-      my $result = Moonpig->env->route(lc $req->method, \@path, {});
+      my $resource = Moonpig->env->route(\@path);
+      my $result   = $resource->resource_request(lc $req->method, {});
       return [
         200,
         [ 'Content-type' => 'application/json' ],

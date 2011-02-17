@@ -3,11 +3,11 @@ package Moonpig::Role::Env;
 use Moose::Role;
 
 use Moonpig;
-use Moonpig::Router;
 
 with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::TracksTime',
+  'Moonpig::Role::Routable::Disjunct',
 );
 
 use Moonpig::Consumer::TemplateRegistry;
@@ -40,20 +40,19 @@ has consumer_template_registry => (
   },
 );
 
-sub _router {
-  my ($class) = @_;
-
-  Moonpig::Router->new({
-    routes => {
-      ledger => scalar class('Ledger'),
-    },
-  });
+sub _class_subroute {
+  Moonpig::X->throw("cannot route through Moonpig environment class");
 }
 
-sub route {
-  my ($self, @rest) = @_;
+sub _instance_subroute {
+  my ($class, $path) = @_;
 
-  $self->_router->route(undef, @rest);
+  if ($path->[0] eq 'ledger') {
+    shift @$path;
+    return scalar class('Ledger');
+  }
+
+  return;
 }
 
 1;
