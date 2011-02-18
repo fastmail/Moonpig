@@ -5,15 +5,6 @@ require Moonpig::X;
 
 use namespace::autoclean;
 
-# GET /ledger/guid/ABC-DEF-GHI/invoice/INVID/method
-# GET /                  - start at root
-#   ledger/              - "ledger" leads to Moonpig::Role::Ledger->resolver
-#     guid/              - Ledger->resolver has guid(1); returns obj resolver
-#       ABC-DEF-GHI/
-#         invoice/       - obj->resolver has invoice(1); returns obj resolver
-#           INVID/
-#             method     - inv->resolver has method; returns method
-
 requires '_subroute';
 
 sub route {
