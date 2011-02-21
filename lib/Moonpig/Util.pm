@@ -26,30 +26,46 @@ use Sub::Exporter -setup => [ qw(
   same_object
 ) ];
 
-memoize(class => (NORMALIZER => sub { join $;, sort @_ },
+memoize(class => (NORMALIZER => sub { join $;, grep !ref($_), @_ },
                   LIST_CACHE => 'MERGE',
-                  ));
+                 ));
 
+use Moose::Util qw(apply_all_roles);
+my $nonce = "00";
+# Arguments here are role names, or role objects followed by nonce-names.
 sub class {
-  my ($main, @rest) = @_;
+  my (@args) = @_;
 
-  my @name_bits = @rest;
-  s/::/_/g for @name_bits;
+  # $role_hash is a hash mapping nonce-names to role objects
+  # $role_names is an array of names of more roles to add
+  my (@roles, @role_class_names, @all_names);
 
-  my $name = join q{::}, 'Moonpig::Class', $main, @name_bits;
+  while (@args) {
+    my $name = shift @args;
+    if (ref $name) { # role object
+      push @roles, $name;
+      $name = shift(@args)|| "nonce" . $nonce++;
+    } else {
+      push @role_class_names, $name;
+    }
+    $name =~ s/::/_/g if @all_names;
+    push @all_names, $name;
+  }
 
-  my @roles = String::RewritePrefix->rewrite(
+  my $name = join q{::}, 'Moonpig::Class', @all_names;
+
+  @role_class_names = String::RewritePrefix->rewrite(
     {
       ''    => 'Moonpig::Role::',
       't::' => 't::lib::Role::',
     },
-    $main, @rest,
+    @role_class_names,
   );
 
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
-    roles        => \@roles,
   ));
+  apply_all_roles($class, @role_class_names, @roles);
 
   $class->make_immutable;
 
