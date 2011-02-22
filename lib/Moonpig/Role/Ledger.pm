@@ -13,6 +13,10 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
+  'Moonpig::Role::HasCollections' => {
+    item => 'refund',
+    item_class => class('Refund'),
+   },
 );
 
 use Moose::Util::TypeConstraints;
