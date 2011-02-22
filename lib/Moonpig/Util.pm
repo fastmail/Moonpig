@@ -26,7 +26,9 @@ use Sub::Exporter -setup => [ qw(
   same_object
 ) ];
 
-memoize(class => (NORMALIZER => sub { join $;, sort @_ }));
+memoize(class => (NORMALIZER => sub { join $;, sort @_ },
+                  LIST_CACHE => 'MERGE',
+                  ));
 
 sub class {
   my ($main, @rest) = @_;
