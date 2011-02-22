@@ -168,16 +168,16 @@ sub add_consumer_from_template {
 for my $thing (qw(journal invoice)) {
   my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
   my $class  = class(ucfirst $thing);
-  my $plural = "${thing}s";
-  my $reader = "_$plural";
+  my $things = "${thing}s";
+  my $reader = "_$things";
 
-  has $plural => (
+  has $things => (
     reader  => $reader,
     isa     => ArrayRef[ role_type($role) ],
     default => sub { [] },
     traits  => [ qw(Array) ],
     handles => {
-      $plural        => 'elements',
+      $things        => 'elements',
       "_push_$thing" => 'push',
     },
   );
