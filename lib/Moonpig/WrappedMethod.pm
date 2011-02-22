@@ -2,7 +2,7 @@ package Moonpig::WrappedMethod;
 use Moose;
 
 with(
-  'Moonpig::Role::PublicResource',
+  'Stick::Role::PublicResource',
 );
 
 use namespace::autoclean;

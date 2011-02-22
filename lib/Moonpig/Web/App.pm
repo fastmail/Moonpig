@@ -28,9 +28,9 @@ sub app {
       ];
     } catch {
       return $_->as_psgi if try { $_->does('HTTP::Throwable') };
-      return HTTP::Throwable::InternalServerError->throw({
+      return HTTP::Throwable::Factory->new_exception(InternalServerError => {
         show_stack_trace => 0,
-      });
+      })->as_psgi;
     };
 
     return $response;

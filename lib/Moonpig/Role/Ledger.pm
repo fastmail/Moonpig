@@ -7,7 +7,7 @@ with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
-  'Moonpig::Role::Routable::Disjunct',
+  'Stick::Role::Routable::Disjunct',
 );
 
 use Moose::Util::TypeConstraints;
