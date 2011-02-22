@@ -4,6 +4,8 @@ package Moonpig::Role::Ledger;
 use Moose::Role;
 use Stick::Publisher;
 
+_generate_subcomponent_methods(qw(bank consumer refund));
+
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
@@ -83,44 +85,57 @@ sub add_credit {
   return $credit;
 }
 
-for my $thing (qw(bank consumer refund)) {
-  my $predicate = "_has_$thing";
-  my $setter = "_set_$thing";
+# Compile-time generation of accessors for subcomponents such as
+# banks and refunds
+sub _generate_subcomponent_methods {
+  for my $thing (@_) {
+    my $predicate = "_has_$thing";
+    my $setter = "_set_$thing";
+    my $things = $thing . "s";
 
-  has $thing => (
-    reader   => "_${thing}s",
-    isa      => HashRef[ role_type('Moonpig::Role::' . ucfirst $thing) ],
-    default  => sub { {} },
-    traits   => [ qw(Hash) ],
-    init_arg => undef,
-    handles  => {
-      "${thing}s"   => 'values',
-      "_has_$thing" => 'exists',
-      "_set_$thing" => 'set',
-      "_get_$thing" => 'get',
-    },
-  );
+    has $thing => (
+      reader   => "_${thing}s",
+      isa      => HashRef[ role_type('Moonpig::Role::' . ucfirst $thing) ],
+      default  => sub { {} },
+      traits   => [ qw(Hash) ],
+      init_arg => undef,
+      handles  => {
+        $things       => 'values',
+        "_has_$thing" => 'exists',
+        "_set_$thing" => 'set',
+        "_get_$thing" => 'get',
+      },
+     );
 
-  Sub::Install::install_sub({
-    as   => "add_$thing",
-    code => sub {
-      my ($self, $class, $arg) = @_;
-      $arg ||= {};
+    Sub::Install::install_sub({
+      as   => "$thing\_array",
+      code => sub {
+        my ($self) = @_;
+        return [ $self->$things() ];
+      },
+    });
 
-      local $arg->{ledger} = $self;
+    Sub::Install::install_sub({
+      as   => "add_$thing",
+      code => sub {
+        my ($self, $class, $arg) = @_;
+        $arg ||= {};
 
-      my $value = $class->new($arg);
+        local $arg->{ledger} = $self;
 
-      confess sprintf "%s with guid %s already present", $thing, $value->guid
-        if $self->$predicate($value->guid);
+        my $value = $class->new($arg);
 
-      $self->$setter($value->guid, $value);
+        confess sprintf "%s with guid %s already present", $thing, $value->guid
+          if $self->$predicate($value->guid);
 
-      $value->handle_event(event('created'));
+        $self->$setter($value->guid, $value);
 
-      return $value;
-    },
-  });
+        $value->handle_event(event('created'));
+
+        return $value;
+      },
+    });
+  }
 }
 
 sub add_consumer_from_template {
