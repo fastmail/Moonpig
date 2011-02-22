@@ -47,9 +47,10 @@ parameter item_collection_name => (
 );
 
 # Name of ledger method that returns an arrayref of the things
-# default "get_all_things"
+# default "thing_array"
 parameter accessor => (isa => Str, lazy => 1,
-                       default => sub { "get_all_" . $_[0]->items },
+                       default => sub {
+                         $_[0]->item . "_array" },
                       );
 
 # Method name for collection object constructor
@@ -67,7 +68,7 @@ role {
   my ($p) = @_;
   my $thing = $p->item;
   my $things = $p->items;
-  my $accessor = $p->accessor || "get_all_$things";
+  my $accessor = $p->accessor || "$thing\_array";
   my $constructor = $p->constructor || "$thing\_collection";
   my $add_thing = $p->add_thing || "add_$thing";
 
