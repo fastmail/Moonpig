@@ -27,19 +27,10 @@ sub app {
         [ $JSON->encode({ result => $result }) ],
       ];
     } catch {
-      if (try { $_->isa('Moonpig::X::Route') }) {
-        return [
-          404,
-          [ 'Content-type' => 'application/json' ],
-          [ $JSON->encode({ error => "no such resource" }) ],
-        ];
-      } else {
-        return [
-          500,
-          [ 'Content-type' => 'application/json' ],
-          [ $JSON->encode({ error => "unknown" }) ],
-        ];
-      }
+      return $_->as_psgi if try { $_->does('HTTP::Throwable') };
+      return HTTP::Throwable::InternalServerError->throw({
+        show_stack_trace => 0,
+      });
     };
 
     return $response;

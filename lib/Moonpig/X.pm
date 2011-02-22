@@ -31,16 +31,5 @@ use overload
   },
   fallback => 1;
 
-{
-  package Moonpig::X::NoRoute;
-  use Moose;
-  extends 'Moonpig::X';
-  use namespace::autoclean;
-
-  has '+ident'   => (init_arg => undef, default => "no route");
-
-  __PACKAGE__->meta->make_immutable(inline_constructor => 0);
-}
-
 __PACKAGE__->meta->make_immutable(inline_constructor => 0);
 1;
