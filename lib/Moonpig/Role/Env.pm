@@ -7,7 +7,7 @@ use Moonpig;
 with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::TracksTime',
-  'Stick::Role::Routable::Disjunct',
+  'Stick::Role::Routable::ClassAndInstance',
 );
 
 use Moonpig::Consumer::TemplateRegistry;

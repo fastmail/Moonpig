@@ -2,12 +2,15 @@ package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
 use Moose::Role;
+use Stick::Publisher;
+
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
-  'Stick::Role::Routable::Disjunct',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
 
 use Moose::Util::TypeConstraints;
@@ -491,20 +494,9 @@ sub _class_subroute {
   return;
 }
 
-sub _instance_subroute {
-  my ($self, $path) = @_;
-
-  if ($path->[0] eq 'guid') {
-    shift @$path;
-
-    require Moonpig::WrappedMethod;
-    return Moonpig::WrappedMethod->new({
-      invocant   => $self,
-      get_method => sub { $_[0]->guid },
-    });
-  }
-
-  return;
-}
+publish published_guid => { -path => 'gguid' } => sub {
+  my ($self) = $_;
+  return $self->guid;
+};
 
 1;
