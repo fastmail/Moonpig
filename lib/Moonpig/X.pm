@@ -2,24 +2,17 @@ package Moonpig::X;
 # ABSTRACT: an exception thrown in Moonpig
 use Moose;
 
+extends 'Stick::Error';
+
 with(
   'Throwable',
   'Moonpig::Role::Notification',
   'StackTrace::Auto',
 );
 
-has is_public => (
-  is  => 'ro',
-  isa => 'Bool',
-  init_arg => 'public',
-  builder  => 'public_by_default',
-);
-
 use Data::Dumper ();
 
 use namespace::clean -except => 'meta';
-
-sub public_by_default { 0 }
 
 use overload
   '""' => sub {
