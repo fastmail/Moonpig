@@ -25,7 +25,7 @@ test "end to end demo" => sub {
   my $guid = $ledger->guid;
 
   # XXX: temporary first draft of a route to get the guid
-  # /ledger/guid/:GUID/guid
+  # /ledger/guid/:GUID/gguid
   my ($resource) = Moonpig->env->route(
     [ 'ledger', 'guid', $guid, 'gguid' ],
   );

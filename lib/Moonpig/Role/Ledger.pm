@@ -494,8 +494,10 @@ sub _class_subroute {
   return;
 }
 
+# This method is here only as a favor to the router test, which can be adapted
+# to query other published methods once we *have some*. -- rjbs, 2011-02-23
 publish published_guid => { -path => 'gguid' } => sub {
-  my ($self) = $_;
+  my ($self) = @_;
   return $self->guid;
 };
 
