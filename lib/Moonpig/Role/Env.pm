@@ -7,12 +7,16 @@ use Moonpig;
 with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::TracksTime',
+  'Stick::Role::Routable::ClassAndInstance',
 );
 
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Util qw(class);
 
 use Moonpig::Behavior::EventHandlers;
+
+use namespace::autoclean;
 
 requires 'handle_send_email';
 
@@ -35,5 +39,20 @@ has consumer_template_registry => (
     consumer_template => 'template',
   },
 );
+
+sub _class_subroute {
+  Moonpig::X->throw("cannot route through Moonpig environment class");
+}
+
+sub _instance_subroute {
+  my ($class, $path) = @_;
+
+  if ($path->[0] eq 'ledger') {
+    shift @$path;
+    return scalar class('Ledger');
+  }
+
+  return;
+}
 
 1;

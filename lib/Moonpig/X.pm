@@ -2,17 +2,12 @@ package Moonpig::X;
 # ABSTRACT: an exception thrown in Moonpig
 use Moose;
 
+extends 'Stick::Error';
+
 with(
   'Throwable',
   'Moonpig::Role::Notification',
   'StackTrace::Auto',
-);
-
-has is_public => (
-  is  => 'ro',
-  isa => 'Bool',
-  init_arg => 'public',
-  default  => 0,
 );
 
 use Data::Dumper ();
@@ -29,4 +24,5 @@ use overload
   },
   fallback => 1;
 
+__PACKAGE__->meta->make_immutable(inline_constructor => 0);
 1;

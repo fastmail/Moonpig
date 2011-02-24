@@ -2,11 +2,15 @@ package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
 use Moose::Role;
+use Stick::Publisher;
+
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
 
 use Moose::Util::TypeConstraints;
@@ -381,7 +385,7 @@ sub mark_consumer_active__ {
     return if $guid eq $consumer->guid;
     Moonpig::X->throw("cannot activate for already-handled xid");
   }
-    
+
   $reg->{ $xid } = $consumer->guid;
 
   $self->_assert_ledger_handles_xid( $consumer->xid );
@@ -473,5 +477,28 @@ sub for_guid {
   my ($class, $guid) = @_;
   return $Ledger_for_guid{ $guid };
 }
+
+sub _class_subroute {
+  my ($class, $path) = @_;
+
+  if ($path->[0] eq 'xid') {
+    my (undef, $xid) = splice @$path, 0, 2;
+    return $class->for_xid($xid);
+  }
+
+  if ($path->[0] eq 'guid') {
+    my (undef, $guid) = splice @$path, 0, 2;
+    return $class->for_guid($guid);
+  }
+
+  return;
+}
+
+# This method is here only as a favor to the router test, which can be adapted
+# to query other published methods once we *have some*. -- rjbs, 2011-02-23
+publish published_guid => { -path => 'gguid' } => sub {
+  my ($self) = @_;
+  return $self->guid;
+};
 
 1;
