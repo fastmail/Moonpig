@@ -20,6 +20,12 @@ has ledger => (
   clearer => 'scrub_ledger',
 );
 
+before run_test => sub {
+  my ($self) = @_;
+
+  $self->scrub_ledger;
+};
+
 test "accessor" => sub {
   my ($self) = @_;
   my $r = class("Refund")->new({
@@ -28,11 +34,18 @@ test "accessor" => sub {
   });
 
   my @refunds = $self->ledger->refunds();
-  is(@refunds, 0);
+  is(@refunds, 0, "before list");
+  is_deeply(\@refunds, $self->ledger->refund_array, "before array");
   $self->ledger->add_refund($r);
   @refunds = $self->ledger->refunds();
-  is(@refunds, 1);
+  is(@refunds, 1, "after list");
+  is_deeply(\@refunds, $self->ledger->refund_array, "after array");
 };
+
+test "constructor" => sub {
+  ok(1);
+};
+
 
 run_me;
 done_testing;
