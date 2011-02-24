@@ -11,6 +11,7 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
+  'Stick::Role::PublicResource::GetSelf',
 );
 
 use Moose::Util::TypeConstraints;
@@ -500,5 +501,13 @@ publish published_guid => { -path => 'gguid' } => sub {
   my ($self) = @_;
   return $self->guid;
 };
+
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return {
+    guid => $self->guid,
+  };
+}
 
 1;
