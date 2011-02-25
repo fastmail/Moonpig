@@ -88,4 +88,6 @@ sub iso {
 
 sub TO_JSON { $_[0]->iso }
 
+sub STICK_PACK { $_[0]->iso }
+
 1;

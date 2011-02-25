@@ -16,6 +16,9 @@ use Moonpig::Util qw(event);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
+use Stick::Types qw(StickBool);
+use Stick::Util qw(ppack true false);
+
 use namespace::autoclean;
 
 has created_at => (
@@ -25,16 +28,20 @@ has created_at => (
 );
 
 has paid => (
-  isa => 'Bool',
+  isa => StickBool,
   init_arg => undef,
+  coerce   => 1,
   default  => 0,
   reader   => 'is_paid',
-  traits   => [ 'Bool' ],
-  handles  => {
-    mark_paid => 'set',
-    is_unpaid => 'not',
-  },
+  writer   => '__paid',
 );
+
+sub mark_paid { $_[0]->__paid(true) }
+
+sub is_unpaid {
+  my $value = $_[0]->is_paid;
+  return ! $value->is_true
+}
 
 implicit_event_handlers {
   return {
@@ -48,6 +55,18 @@ sub _pay_charges {
   my ($self, $event) = @_;
 
   $self->charge_tree->apply_to_all_charges(sub { $_->handle_event($event) });
+}
+
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return ppack({
+    guid         => $self->guid,
+    total_amount => $self->total_amount,
+    is_paid      => $self->is_paid,
+    is_closed    => $self->is_closed,
+    date         => $self->date,
+  });
 }
 
 1;
