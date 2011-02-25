@@ -43,7 +43,7 @@ parameter item_collection_name => (
   isa => Str, lazy => 1,
   default => sub {
     my ($p) = @_;
-    ucfirst($p->item . "Collection");
+    "Moonpig::Class::" . ucfirst($p->item . "Collection");
   },
 );
 
