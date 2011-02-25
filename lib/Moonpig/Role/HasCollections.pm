@@ -16,7 +16,7 @@ parameter items => (isa => Str, lazy => 1,
 
 # Class name or factory object for an item in the collection
 # e.g., class('Refund')
-parameter item_class => (
+parameter item_factory => (
   isa => Str, required => 1,
 );
 
@@ -37,7 +37,7 @@ parameter factory => (
   },
 );
 
-# Name for the item collection name
+# Name for the item collection class
 # e.g., "RefundCollection";
 parameter item_collection_name => (
   isa => Str, lazy => 1,

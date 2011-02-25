@@ -15,7 +15,7 @@ with(
   'Stick::Role::Routable::AutoInstance',
   'Moonpig::Role::HasCollections' => {
     item => 'refund',
-    item_class => class('Refund'),
+    item_factory => class('Refund'),
    },
 );
 
