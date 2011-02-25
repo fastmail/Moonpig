@@ -2,16 +2,20 @@ package Moonpig::Role::CanExpire;
 # ABSTRACT: something that can expire
 use Moose::Role;
 
+use Stick::Types qw(StickBool);
+use Stick::Util qw(true false);
+
 use namespace::autoclean;
 
-has is_expired => (
+has expired => (
   is  => 'ro',
-  isa => 'Bool',
+  isa => StickBool,
+  coerce  => 1,
   default => 0,
-  traits  => [ 'Bool' ],
-  handles => {
-    'expire' => 'set',
-  },
+  reader  => 'is_expired',
+  writer  => '__set_expired',
 );
+
+sub expire { $_[0]->__set_expired( true ) }
 
 1;

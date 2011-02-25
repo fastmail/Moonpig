@@ -4,18 +4,21 @@ use Moose::Role;
 
 use Moonpig::Types qw(EventHandlerName);
 
+use Stick::Types qw(StickBool);
+use Stick::Util qw(true false);
+
 use namespace::autoclean;
 
 has implicit => (
-  isa => 'Bool',
-  traits  => [ 'Bool' ],
+  isa => StickBool,
+  coerce  => 1,
   default => 0,
   reader  => 'is_implicit',
-  handles => {
-    mark_implicit => 'set',
-    is_explicit   => 'not',
-  },
+  writer  => '__set_implicit',
 );
+
+sub mark_implicit { $_[0]->__set_implicit( true ) };
+sub is_explicit   { ! $_[0]->is_implicit };
 
 requires 'handle_event';
 

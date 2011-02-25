@@ -33,10 +33,10 @@ has paid => (
   coerce   => 1,
   default  => 0,
   reader   => 'is_paid',
-  writer   => '__paid',
+  writer   => '__set_paid',
 );
 
-sub mark_paid { $_[0]->__paid(true) }
+sub mark_paid { $_[0]->__set_paid(true) }
 
 sub is_unpaid {
   my $value = $_[0]->is_paid;
