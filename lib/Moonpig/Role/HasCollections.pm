@@ -26,13 +26,14 @@ parameter item_class => (
 parameter factory => (
   isa => Factory, lazy => 1,
   default => sub {
-    require 'Moonpig::Role::CollectionType';
+    require Moonpig::Role::CollectionType;
     my ($p) = @_;
     my $item_factory = $p->item_factory;
     my $item_class = ref($item_factory) || $item_factory;
     my $item_collection_role = Moonpig::Role::CollectionType->meta->
-      generate_role(parameters => { item_type => $p->item_class });
-    class($item_collection_role, $p->item_collection_name);
+      generate_role(parameters => { item_class => $item_class });
+    my $c = class($item_collection_role, $p->item_collection_name);
+    return $c;
   },
 );
 
@@ -79,11 +80,11 @@ role {
   # build collection constructor
   method $constructor => sub {
     my ($parent, $opts) = @_;
-    $parent->factory->new(
+    $p->factory->new({
       items => [ $parent->accessor ],
       options => $opts,
       ledger => $parent->ledger
-    );
+    });
   };
 };
 
