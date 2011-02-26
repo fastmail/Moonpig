@@ -26,8 +26,8 @@ parameter item_factory => (
 parameter factory => (
   isa => Factory, lazy => 1,
   default => sub {
-    require Moonpig::Role::CollectionType;
     my ($p) = @_;
+    require Moonpig::Role::CollectionType;
     my $item_factory = $p->item_factory;
     my $item_class = ref($item_factory) || $item_factory;
     my $item_collection_role = Moonpig::Role::CollectionType->meta->
@@ -46,6 +46,19 @@ parameter item_collection_name => (
     "Moonpig::Class::" . ucfirst($p->item . "Collection");
   },
 );
+
+sub methods {
+  my ($x) = @_;
+  my $class = ref($x) || $x;
+  no strict 'refs';
+  my $stash = \%{"$class\::"};
+  for my $k (sort keys %$stash) {
+    print STDERR "# $k (via $class)\n" if defined &{"$class\::$k"};
+  }
+  for my $parent (@{"$class\::ISA"}) {
+    methods($parent);
+  }
+}
 
 # Name of ledger method that returns an arrayref of the things
 # default "thing_array"
@@ -72,6 +85,7 @@ role {
   my $accessor = $p->accessor || "$thing\_array";
   my $constructor = $p->constructor || "$thing\_collection";
   my $add_thing = $p->add_thing || "add_$thing";
+  my $collection_factory = $p->factory;
 
   # the accessor method is required
   requires $accessor;

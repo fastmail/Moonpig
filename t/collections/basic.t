@@ -14,7 +14,7 @@ with(
 
 has ledger => (
   is => 'ro',
-  isa => 'Moonpig::Class::Ledger',
+  does => 'Moonpig::Role::Ledger',
   lazy => 1,
   default => sub { $_[0]->test_ledger },
   clearer => 'scrub_ledger',
@@ -46,6 +46,13 @@ test "constructor" => sub {
   my ($self) = @_;
   my $c = $self->ledger->refund_collection;
   ok($c->does, "Moonpig::Role::CollectionType");
+};
+
+test "collection object" => sub {
+  my ($self) = @_;
+  my $c = $self->ledger->refund_collection();
+  ok($c);
+  ok($c->does("Moonpig::Role::CollectionType"));
 };
 
 run_me;

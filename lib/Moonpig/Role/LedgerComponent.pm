@@ -2,6 +2,12 @@ package Moonpig::Role::LedgerComponent;
 # ABSTRACT: something that's part of a ledger and links back to it
 use Moose::Role;
 
+{
+  use Carp 'cluck';
+  my $caller = caller;
+#  cluck "# LedgerComponent called from $caller\n";
+}
+
 with(
   'Moonpig::Role::HandlesEvents',
 );

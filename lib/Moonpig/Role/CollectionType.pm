@@ -6,7 +6,9 @@ use Moonpig::Types qw(PositiveInt);
 use Stick::Publisher;
 use POSIX qw(ceil);
 
-parameter item_class => (
+with (qw(Moonpig::Role::LedgerComponent));
+
+parameter item_type => (
   is => 'ro',
   isa => Str,
   required => 1,
