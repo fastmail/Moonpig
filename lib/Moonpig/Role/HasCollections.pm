@@ -61,7 +61,7 @@ parameter factory => (
     my $item_factory = $p->item_factory;
     my $item_class = ref($item_factory) || $item_factory;
     my $item_collection_role = Moonpig::Role::CollectionType->meta->
-      generate_role(parameters => { item_type => $item_class });
+      generate_role(parameters => { item_class => $item_class });
     my $c = class({ $p->item_collection_name => $item_collection_role});
     return $c;
   },
@@ -125,7 +125,7 @@ role {
   method $constructor => sub {
     my ($parent, $opts) = @_;
     $p->factory->new({
-      items => [ $parent->$accessor ],
+      items => $parent->$accessor,
       options => $opts,
       ledger => $parent->ledger
     });

@@ -6,7 +6,7 @@ use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Carp 'confess';
 
-parameter item_type => (
+parameter item_class => (
   is => 'ro',
   isa => Str,
   required => 1,
@@ -15,11 +15,10 @@ parameter item_type => (
 role {
   require Stick::Publisher;
   Stick::Publisher->import();
+  sub publish;
 
   my ($p) = @_;
   with (qw(Moonpig::Role::LedgerComponent));
-
-=for later
 
   has items => (
     is => 'ro',
@@ -83,8 +82,6 @@ role {
   };
 
   sub default_page_size { 20 }
-
-=cut
 
 };
 
