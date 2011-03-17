@@ -4,6 +4,35 @@ use Moonpig::Types qw(Factory);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Str HashRef Defined);
 
+=head2 USAGE
+
+	package Foo;
+	with (Moonpig::Role::HasCollections => {
+	  item => 'banana',
+          item_factory => 'Fruit::Banana',
+        });
+
+        sub banana_array { ... }   # Should return an array of this object's
+                                   # bananas
+
+        sub add_banana { ... }     # Should add a banana to this object
+
+        package main;
+        my $foo = Foo->new(...);
+
+        my $bananas = $foo->banana_collection({...});
+        $bananas->items;     # same as $foo->banana_array
+        $bananas->item_list  # same as @{$foo->banana_array}
+        $bananas->n_items;   # number of bananas
+
+        # published methods
+        $bananas->all                 # same as item_list
+        $bananas->count               # same as n_items
+        $bananas->find_by_guid($guid)
+        $bananas->find_by_xid($xid)
+
+=cut
+
 requires 'ledger';
 
 # Name of the sort of thing this collection will contain
