@@ -1,12 +1,19 @@
 package Moonpig::Role::CollectionType;
 use Moose::Util::TypeConstraints qw(class_type);
 use MooseX::Role::Parameterized;
-use MooseX::Types::Moose qw(ArrayRef HashRef Maybe Str );
+use MooseX::Types::Moose qw(ArrayRef Defined HashRef Maybe Str);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Carp 'confess';
 
 parameter item_class => (
+  is => 'ro',
+  isa => Str,
+  required => 1,
+);
+
+# name of the ledger method that adds a new item of this type to a ledger
+parameter add_item => (
   is => 'ro',
   isa => Str,
   required => 1,
@@ -18,6 +25,7 @@ role {
   sub publish;
 
   my ($p) = @_;
+  my $add_item = $p->add_item;
   with (qw(Moonpig::Role::LedgerComponent));
 
   has items => (
@@ -28,6 +36,7 @@ role {
     handles => {
       n_items => 'count',
       item_list => 'elements',
+      _push => 'push',
     },
    );
 
@@ -72,13 +81,14 @@ role {
   publish find_by_xid => { xid => Str } => sub {
     my ($self, $ctx, $arg) = @_;
     my $xid = $arg->{xid};
-    my ($item) = grep { $_ eq $xid } $self->items;
+    my ($item) = grep { $_->xid eq $xid } $self->items;
     return $item;
   };
 
-  publish add_new => { stuff => HashRef } => sub {
+  publish add => { new_item => Defined } => sub {
     my ($self, $ctx, $arg) = @_;
-    #  my $new = 
+    $self->ledger->$add_item($arg->{new_item});
+    $self->_push($arg->{new_item});
   };
 
   sub default_page_size { 20 }
