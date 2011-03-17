@@ -3,10 +3,8 @@ use Moose::Util::TypeConstraints qw(class_type);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(ArrayRef HashRef Maybe Str );
 use Moonpig::Types qw(PositiveInt);
-use Stick::Publisher;
 use POSIX qw(ceil);
-
-with (qw(Moonpig::Role::LedgerComponent));
+use Carp 'confess';
 
 parameter item_type => (
   is => 'ro',
@@ -15,8 +13,11 @@ parameter item_type => (
 );
 
 role {
+  require Stick::Publisher;
+  Stick::Publisher->import();
+
   my ($p) = @_;
-#  with (qw(Moonpig::Role::LedgerComponent));
+  with (qw(Moonpig::Role::LedgerComponent));
 
 =for later
 

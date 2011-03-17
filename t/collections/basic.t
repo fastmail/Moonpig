@@ -45,7 +45,7 @@ test "accessor" => sub {
 test "constructor" => sub {
   my ($self) = @_;
   my $c = $self->ledger->refund_collection;
-  ok($c->does, "Moonpig::Role::CollectionType");
+  ok($c->does("Moonpig::Role::CollectionType"));
 };
 
 test "collection object" => sub {

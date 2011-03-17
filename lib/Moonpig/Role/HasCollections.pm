@@ -24,15 +24,16 @@ parameter item_factory => (
 # e.g., "Moonpig::Class::RefundCollection", which will do
 #   Moonpig::Role::CollectionType
 parameter factory => (
-  isa => Factory, lazy => 1,
+  isa => Factory,
+  lazy => 1,
   default => sub {
     my ($p) = @_;
     require Moonpig::Role::CollectionType;
     my $item_factory = $p->item_factory;
     my $item_class = ref($item_factory) || $item_factory;
     my $item_collection_role = Moonpig::Role::CollectionType->meta->
-      generate_role(parameters => { item_class => $item_class });
-    my $c = class($item_collection_role, $p->item_collection_name);
+      generate_role(parameters => { item_type => $item_class });
+    my $c = class({ $p->item_collection_name => $item_collection_role});
     return $c;
   },
 );
@@ -43,7 +44,7 @@ parameter item_collection_name => (
   isa => Str, lazy => 1,
   default => sub {
     my ($p) = @_;
-    "Moonpig::Class::" . ucfirst($p->item . "Collection");
+    ucfirst($p->item . "Collection");
   },
 );
 
@@ -95,7 +96,7 @@ role {
   method $constructor => sub {
     my ($parent, $opts) = @_;
     $p->factory->new({
-      items => [ $parent->accessor ],
+      items => [ $parent->$accessor ],
       options => $opts,
       ledger => $parent->ledger
     });

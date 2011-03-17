@@ -26,9 +26,13 @@ use Sub::Exporter -setup => [ qw(
   same_object
 ) ];
 
-memoize(class => (NORMALIZER => sub { join $;, grep !ref($_), @_ },
-                  LIST_CACHE => 'MERGE',
-                 ));
+ memoize(class => (NORMALIZER =>
+                     sub { my @items = map ref() ? keys %$_ : $_, @_;
+                           my $k = join $; => @items;
+                           return $k;
+                         },
+                   LIST_CACHE => 'MERGE',
+                  ));
 
 use Moose::Util qw(apply_all_roles);
 my $nonce = "00";
@@ -42,12 +46,14 @@ sub class {
 
   while (@args) {
     my $name = shift @args;
-    if (ref $name) { # role object
-      push @roles, $name;
-      $name = shift(@args)|| "nonce" . $nonce++;
+    if (ref $name) {                   # { role name => role object }
+      my ($role_name, $role_object) = %$name;
+      push @roles, $role_object;
+      $name = $role_name;
     } else {
       push @role_class_names, $name;
     }
+
     $name =~ s/::/_/g if @all_names;
     push @all_names, $name;
   }
