@@ -7,7 +7,7 @@ use Config ();
 use Carp ();
 
 Carp::croak("Moonpig requires a perl compile with use64bitint")
-  unless $Config::Config{use64bitint};
+  unless $Config::Config{use64bitint} || $ENV{Moonpig32BitsOK};
 
 my $env;
 
