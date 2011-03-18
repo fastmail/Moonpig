@@ -27,7 +27,7 @@ use Sub::Exporter -setup => [ qw(
 ) ];
 
  memoize(class => (NORMALIZER =>
-                     sub { my @items = map ref() ? keys %$_ : $_, @_;
+                     sub { my @items = map ref() ? $_->[1] : $_, @_;
                            my $k = join $; => @items;
                            return $k;
                          },
@@ -50,10 +50,24 @@ sub class {
 
   while (@args) {
     my $name = shift @args;
-    if (ref $name) {                   # { role name => role object }
-      my ($role_name, $role_object) = %$name;
+
+    if (ref $name) {
+      my ($role_name, $moniker, $params) = @$name;
+
+      my $full_name = String::RewritePrefix->rewrite(
+        {
+          ''    => 'Moonpig::Role::',
+          't::' => 't::lib::Role::',
+        },
+        $role_name,
+      );
+
+      my $role_object = $full_name->meta->generate_role(
+        parameters => $params,
+      );
+
       push @roles, $role_object;
-      $name = $role_name;
+      $name = $moniker;
     } else {
       push @role_class_names, $name;
     }

@@ -29,13 +29,17 @@ my @tests = (
   [ [ 'Consumer::ByTime' ],
       'MC::Consumer::ByTime',
     [ 'MR::Consumer::ByTime' ] ],
-  [ [ { Bill => $canTransfer } ],
+
+  [ [ [ CanTransfer => Bill => { transferer_type => 'bank' } ] ],
       'MC::Bill',
     [ 'MR::CanTransfer' ] ],
-  [ [ 'Consumer::ByTime', { Smitty => $canTransfer } ],
+
+  [ [ 'Consumer::ByTime', [ CanTransfer => Smitty => { transferer_type => 'bank' } ] ],
       'MC::Consumer::ByTime::Smitty',
     [ 'MR::CanTransfer', 'MR::Consumer::ByTime' ] ],
-  [ [ { cantransfer => $canTransfer}, 'Consumer::ByTime' ],
+
+  [ [ [ CanTransfer => cantransfer => { transferer_type => 'bank' } ],
+    'Consumer::ByTime' ],
       'MC::cantransfer::Consumer_ByTime',
     [ 'MR::CanTransfer', 'MR::Consumer::ByTime' ] ],
 );
