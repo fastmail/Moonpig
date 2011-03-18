@@ -26,12 +26,18 @@ before run_test => sub {
   $self->scrub_ledger;
 };
 
+sub refund {
+  my ($self, $amount) = @_;
+  class("Refund")->new({
+    ledger => $self->ledger,
+    amount => $amount || dollars(1),
+  });
+}
+
 test "accessor" => sub {
   my ($self) = @_;
-  my $r = class("Refund")->new({
-    ledger => $self->ledger,
-    amount => dollars(1)
-  });
+
+  my $r = $self->refund();
 
   my @refunds = $self->ledger->refunds();
   is(@refunds, 0, "before list");
@@ -48,11 +54,36 @@ test "constructor" => sub {
   ok($c->does("Moonpig::Role::CollectionType"));
 };
 
+sub refund_amounts {
+  join ", " => sort map $_->amount, @_;
+}
+
 test "collection object" => sub {
   my ($self) = @_;
+  my $credit = $self->ledger->add_credit(
+    class('Credit::Simulated', 't::Refundable::Test'),
+    { amount => dollars(5_000) },
+  );
+
   my $c = $self->ledger->refund_collection();
   ok($c);
   ok($c->does("Moonpig::Role::CollectionType"));
+
+  my @r;
+
+  for (0..2) {
+    $c = $self->ledger->refund_collection();
+    is($c->_count, @r, "collection contains $_ refund(s)" );
+    is(refund_amounts($c->_all), refund_amounts(@r), "amounts are correct");
+    last if $_ == 2;
+    push @r, my $next_refund = $self->ledger->add_refund(class('Refund'));
+    $self->ledger->create_transfer({
+      type => 'credit_application',
+      from => $credit,
+      to => $next_refund,
+      amount => dollars(10) + $_ * dollars(1.01),
+    });
+  }
 };
 
 run_me;
