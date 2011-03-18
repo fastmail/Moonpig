@@ -26,11 +26,12 @@ role {
 
   my ($p) = @_;
   my $add_item = $p->add_item;
+  my $item_type = class_type($p->item_class);
   with (qw(Moonpig::Role::LedgerComponent));
 
   has items => (
     is => 'ro',
-    isa => ArrayRef [class_type($p->item_class)],
+    isa => ArrayRef [ $item_type ],
     default => sub { [] },
     traits => [ 'Array' ],
     handles => {
@@ -85,7 +86,7 @@ role {
     return $item;
   };
 
-  publish add => { new_item => Defined } => sub {
+  publish add => { new_item => $item_type } => sub {
     my ($self, $ctx, $arg) = @_;
     $self->ledger->$add_item($arg->{new_item});
     $self->_push($arg->{new_item});
