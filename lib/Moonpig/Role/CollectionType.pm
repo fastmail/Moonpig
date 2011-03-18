@@ -1,4 +1,5 @@
 package Moonpig::Role::CollectionType;
+use List::Util qw(min);
 use Moose::Util::TypeConstraints qw(class_type);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(ArrayRef Defined HashRef Maybe Str);
@@ -41,6 +42,12 @@ role {
     },
    );
 
+  has default_page_size => (
+    is => 'rw',
+    isa => PositiveInt,
+    default => 20,
+  );
+
   publish all => { } => sub {
     my ($self) = @_;
     return $self->_all;
@@ -52,25 +59,33 @@ role {
   };
 
   # Page numbers start at 1.
+  method _page => sub {
+    my ($self, $pagenum, $pagesize) = @_;
+    $pagesize ||= $self->default_page_size();
+    my $items = $self->items;
+    my $start = ($pagenum-1) * $pagesize;
+    my $end = min($start+$pagesize-1, $#$items);
+    return @{$self->items}[$start .. $end];
+  };
+
   publish page => { pagesize => Maybe[PositiveInt],
                     page => PositiveInt,
                   } =>
     sub {
       my ($self, $ctx, $arg) = @_;
-      my $pagesize = $arg->{pagesize} || $self->default_page_size();
-      my $page = $arg->{page};
-      my $start = $page * $pagesize;
-      return @{$self->items}[$start .. $start+$pagesize-1];
+      $self->_page($arg->{page}, $arg->{pagesize});
     };
 
   # If there are 3 pages, they are numbered 1, 2, 3.
+  method _pages => sub {
+    my ($self) = @_;
+    my $pagesize = $self->default_page_size();
+    return ceil($self->_count / $pagesize);
+  };
+
   publish pages => { pagesize => Maybe[PositiveInt],
                    } =>
-    sub {
-      my ($self, $ctx, $arg) = @_;
-      my $pagesize = $arg->{pagesize} || $self->default_page_size();
-      return ceil($self->_count / $pagesize);
-    };
+    \&_pages;
 
   publish find_by_guid => { guid => Str } => sub {
     my ($self, $ctx, $arg) = @_;
@@ -95,8 +110,6 @@ role {
     my ($self, $ctx, $arg) = @_;
     $self->_add($arg->{new_item});
   };
-
-  sub default_page_size { 20 }
 
 };
 
