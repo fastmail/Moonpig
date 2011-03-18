@@ -119,8 +119,11 @@ sub _generate_subcomponent_methods {
       },
     });
 
+    my $add_thing = "add_$thing";
+    my $add_this_thing = "add_this_$thing";
+
     Sub::Install::install_sub({
-      as   => "add_$thing",
+      as   => $add_thing,
       code => sub {
         my ($self, $class, $arg) = @_;
         $arg ||= {};
@@ -129,14 +132,27 @@ sub _generate_subcomponent_methods {
 
         my $value = $class->new($arg);
 
-        confess sprintf "%s with guid %s already present", $thing, $value->guid
-          if $self->$predicate($value->guid);
-
-        $self->$setter($value->guid, $value);
+        $self->$add_this_thing($value);
 
         $value->handle_event(event('created'));
 
         return $value;
+      },
+    });
+
+    Sub::Install::install_sub({
+      as   => $add_this_thing,
+      code => sub {
+        my ($self, $thing) = @_;
+        confess "Can only add this $thing to its own ledger"
+          unless $thing->ledger->guid eq $self->guid;
+
+        confess sprintf "%s with guid %s already present", $thing, $thing->guid
+          if $self->$predicate($thing->guid);
+
+        $self->$setter($thing->guid, $thing);
+
+        return $thing;
       },
     });
   }
