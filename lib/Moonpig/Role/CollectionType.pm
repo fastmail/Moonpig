@@ -20,6 +20,12 @@ parameter add_this_item => (
   required => 1,
 );
 
+parameter pagesize => (
+  is => 'rw',
+  isa => PositiveInt,
+  default => 20,
+);
+
 role {
   require Stick::Publisher;
   Stick::Publisher->import();
@@ -28,6 +34,7 @@ role {
   my ($p) = @_;
   my $add_this_item = $p->add_this_item;
   my $item_type = class_type($p->item_class);
+
   with (qw(Moonpig::Role::LedgerComponent));
 
   has items => (
@@ -45,7 +52,7 @@ role {
   has default_page_size => (
     is => 'rw',
     isa => PositiveInt,
-    default => 20,
+    default => $p->pagesize,
   );
 
   publish all => { } => sub {
@@ -110,7 +117,6 @@ role {
     my ($self, $ctx, $arg) = @_;
     $self->_add($arg->{new_item});
   };
-
 };
 
 1;
