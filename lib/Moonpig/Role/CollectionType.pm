@@ -78,8 +78,8 @@ role {
 
   # If there are 3 pages, they are numbered 1, 2, 3.
   method _pages => sub {
-    my ($self) = @_;
-    my $pagesize = $self->default_page_size();
+    my ($self, $pagesize) = @_;
+    $pagesize ||= $self->default_page_size();
     return ceil($self->_count / $pagesize);
   };
 
