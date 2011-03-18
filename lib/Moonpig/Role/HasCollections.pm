@@ -6,7 +6,7 @@ use MooseX::Types::Moose qw(Str HashRef Defined);
 
 =head2 USAGE
 
-	package Foo;
+	package Fruitbasket;
 	with (Moonpig::Role::HasCollections => {
 	  item => 'banana',
           item_factory => 'Fruit::Banana',
@@ -18,18 +18,23 @@ use MooseX::Types::Moose qw(Str HashRef Defined);
         sub add_banana { ... }     # Should add a banana to this object
 
         package main;
-        my $foo = Foo->new(...);
+        my $basket = Fruitbasket->new(...);
 
-        my $bananas = $foo->banana_collection({...});
-        $bananas->items;     # same as $foo->banana_array
-        $bananas->item_list  # same as @{$foo->banana_array}
-        $bananas->n_items;   # number of bananas
+        my $bananas = $basket->banana_collection({...});
+        $bananas->items;     # same as $basket->banana_array
+        $bananas->_all       # same as @{$basket->banana_array}
+        $bananas->_count;    # number of bananas
+        $bananas->_pages;    # return number of pages of bananas
+        $bananas->_page(3);  # return list of bananas on page 3
+	$bananas->_add($platano) # Add the platano to the fruitbasket
 
-        # published methods
-        $bananas->all                 # same as item_list
-        $bananas->count               # same as n_items
-        $bananas->find_by_guid($guid)
-        $bananas->find_by_xid($xid)
+        # Stick published methods
+        find_by_guid($guid)
+        find_by_xid($xid)
+        all                 # like ->_all
+        count               # like ->_count
+        pages               # like ->_pages
+        page(3)             # like ->_page(3)
 
 =cut
 
