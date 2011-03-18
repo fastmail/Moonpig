@@ -13,7 +13,7 @@ parameter item_class => (
 );
 
 # name of the ledger method that adds a new item of this type to a ledger
-parameter add_item => (
+parameter add_this_item => (
   is => 'ro',
   isa => Str,
   required => 1,
@@ -25,7 +25,7 @@ role {
   sub publish;
 
   my ($p) = @_;
-  my $add_item = $p->add_item;
+  my $add_this_item = $p->add_this_item;
   my $item_type = class_type($p->item_class);
   with (qw(Moonpig::Role::LedgerComponent));
 
@@ -86,10 +86,14 @@ role {
     return $item;
   };
 
+  method _add => sub {
+    my ($self, $new_item) = @_;
+    $self->_push($self->ledger->$add_this_item($new_item));
+  };
+
   publish add => { new_item => $item_type } => sub {
     my ($self, $ctx, $arg) = @_;
-    $self->ledger->$add_item($arg->{new_item});
-    $self->_push($arg->{new_item});
+    $self->_add($arg->{new_item});
   };
 
   sub default_page_size { 20 }

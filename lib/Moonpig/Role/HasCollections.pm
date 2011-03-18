@@ -63,7 +63,7 @@ parameter factory => (
     my $item_collection_role = Moonpig::Role::CollectionType->meta->
       generate_role(parameters => {
         item_class => $item_class,
-        add_item => $p->add_thing,
+        add_this_item => $p->add_this_thing,
       });
     my $c = class({ $p->item_collection_name => $item_collection_role});
     return $c;
@@ -77,8 +77,7 @@ parameter item_collection_name => (
   default => sub {
     my ($p) = @_;
     ucfirst($p->item . "Collection");
-  },
-);
+  },);
 
 sub methods {
   my ($x) = @_;
@@ -107,9 +106,9 @@ parameter constructor => (isa => Str, lazy => 1,
                          );
 
 # Names of ledger methods
-parameter add_thing => (isa => Str, lazy => 1,
-                        default => sub { "add_" . $_[0]->item },
-                       );
+parameter add_this_thing => (isa => Str, lazy => 1,
+                             default => sub { "add_this_" . $_[0]->item },
+                            );
 
 role {
   my ($p) = @_;
@@ -117,12 +116,12 @@ role {
   my $things = $p->items;
   my $accessor = $p->accessor || "$thing\_array";
   my $constructor = $p->constructor || "$thing\_collection";
-  my $add_thing = $p->add_thing || "add_$thing";
+  my $add_this_thing = $p->add_this_thing || "add_this_$thing";
   my $collection_factory = $p->factory;
 
   # the accessor method is required
   requires $accessor;
-  requires $add_thing;
+  requires $add_this_thing;
 
   # build collection constructor
   method $constructor => sub {

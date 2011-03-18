@@ -84,6 +84,21 @@ test "collection object" => sub {
       amount => dollars(10) + $_ * dollars(1.01),
     });
   }
+
+  for (3..5) {
+    $c = $self->ledger->refund_collection();
+    is($c->_count, @r, "collection contains $_ refund(s)" );
+    is(refund_amounts($c->_all), refund_amounts(@r), "amounts are correct");
+    last if $_ == 2;
+    push @r, my $next_refund = class('Refund')->new({ledger => $self->ledger});
+    $c->_add($next_refund);
+    $self->ledger->create_transfer({
+      type => 'credit_application',
+      from => $credit,
+      to => $next_refund,
+      amount => dollars(10) + $_ * dollars(1.01),
+    });
+  }
 };
 
 run_me;
