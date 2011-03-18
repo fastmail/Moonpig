@@ -7,6 +7,8 @@ use namespace::autoclean;
 use Moonpig;
 
 use Moonpig::Util qw(class);
+use Stick::Types qw(StickBool);
+use Stick::Util qw(true false);
 
 parameter charges_handle_events => (
   isa      => 'Bool',
@@ -49,15 +51,15 @@ role {
   };
 
   has closed => (
-    isa     => 'Bool',
+    isa     => StickBool,
+    coerce  => 1,
     default => 0,
-    traits  => [ 'Bool' ],
     reader  => 'is_closed',
-    handles => {
-      'close'   => 'set',
-      'is_open' => 'not',
-    },
+    writer  => '__set_closed',
   );
+
+  method close   => sub { $_[0]->__set_closed( true ) };
+  method is_open => sub { ! $_[0]->is_closed };
 
   # TODO: make sure that charges added to this container have dates that
   # precede this date. 2010-10-17 mjd@icgroup.com

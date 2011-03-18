@@ -17,7 +17,31 @@ use Moonpig::Util qw(class);
 
 class('Ledger');
 
-test "end to end demo" => sub {
+test "route to and get a simple resource" => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->test_ledger;
+
+  my $guid = $ledger->guid;
+
+  # XXX: temporary first draft of a route to get the guid
+  # /ledger/guid/:GUID/gguid
+  my ($resource) = Moonpig->env->route(
+    [ 'ledger', 'guid', $guid ],
+  );
+
+  my $result = $resource->resource_request(get => {});
+
+  isa_ok(
+    $result,
+    $ledger->meta->name,
+    "...ledger by path",
+  );
+
+  is($result->guid, $ledger->guid, "...and the rightly-identified one");
+};
+
+test "route to and GET a method on a simple resource" => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger;

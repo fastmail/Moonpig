@@ -17,6 +17,7 @@ with(
     item => 'refund',
     item_factory => class('Refund'),
    },
+  'Stick::Role::PublicResource::GetSelf',
 );
 
 use Moose::Util::TypeConstraints;
@@ -540,5 +541,12 @@ publish published_guid => { -path => 'gguid' } => sub {
 # any of its contents. 20110217 MJD
 sub ledger { return $_[0] }
 
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return {
+    guid => $self->guid,
+  };
+}
 
 1;

@@ -4,15 +4,16 @@ package Moonpig::Web::App;
 
 use JSON;
 use Moonpig;
+use Stick::Util qw(ppack);
 use Try::Tiny;
 
 use Plack::Request;
 
+my $JSON = JSON->new->ascii(1)->convert_blessed(1)->allow_blessed(1);
+
 sub app {
   return sub {
     my ($env) = @_;
-
-    my $JSON = JSON->new;
 
     my $req = Plack::Request->new($env);
     my @path = split q{/}, $req->path_info;
@@ -24,7 +25,7 @@ sub app {
       return [
         200,
         [ 'Content-type' => 'application/json' ],
-        [ $JSON->encode({ result => $result }) ],
+        [ $JSON->encode( ppack($result) ) ],
       ];
     } catch {
       return $_->as_psgi if try { $_->does('HTTP::Throwable') };

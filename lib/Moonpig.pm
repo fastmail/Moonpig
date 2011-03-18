@@ -3,6 +3,12 @@ use warnings;
 package Moonpig;
 # ABSTRACT: a flexible billing system
 
+use Config ();
+use Carp ();
+
+Carp::croak("Moonpig requires a perl compile with use64bitint")
+  unless $Config::Config{use64bitint};
+
 my $env;
 
 sub set_env {
