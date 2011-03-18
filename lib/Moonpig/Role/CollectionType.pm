@@ -35,20 +35,20 @@ role {
     default => sub { [] },
     traits => [ 'Array' ],
     handles => {
-      n_items => 'count',
-      item_list => 'elements',
+      _count => 'count',
+      _all => 'elements',
       _push => 'push',
     },
    );
 
   publish all => { } => sub {
     my ($self) = @_;
-    return $self->item_list;
+    return $self->_all;
   };
 
   publish count => { } => sub {
     my ($self) = @_;
-    return $self->n_items;
+    return $self->_count;
   };
 
   # Page numbers start at 1.
@@ -69,20 +69,20 @@ role {
     sub {
       my ($self, $ctx, $arg) = @_;
       my $pagesize = $arg->{pagesize} || $self->default_page_size();
-      return ceil($self->n_items / $pagesize);
+      return ceil($self->_count / $pagesize);
     };
 
   publish find_by_guid => { guid => Str } => sub {
     my ($self, $ctx, $arg) = @_;
     my $guid = $arg->{guid};
-    my ($item) = grep { $_->guid eq $guid } $self->items;
+    my ($item) = grep { $_->guid eq $guid } $self->_all;
     return $item;
   };
 
   publish find_by_xid => { xid => Str } => sub {
     my ($self, $ctx, $arg) = @_;
     my $xid = $arg->{xid};
-    my ($item) = grep { $_->xid eq $xid } $self->items;
+    my ($item) = grep { $_->xid eq $xid } $self->_all;
     return $item;
   };
 
