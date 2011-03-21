@@ -60,7 +60,6 @@ test "store and retrieve" => sub {
 
     Moonpig::Storage->store_ledger($ledger);
 
-    Test::Builder->new->no_ending(1);
     exit(0);
   }
 
