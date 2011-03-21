@@ -62,6 +62,7 @@ sub class {
         $role_name,
       );
 
+      Class::MOP::load_class($full_name);
       my $role_object = $full_name->meta->generate_role(
         parameters => $params,
       );
@@ -85,6 +86,8 @@ sub class {
     },
     @role_class_names,
   );
+
+  Class::MOP::load_class($_) for @role_class_names;
 
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
