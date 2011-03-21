@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Moonpig::Storage;
 
-use Class::Rebless;
+use Class::Rebless 0.009;
 use DBI;
 use File::Spec;
 
