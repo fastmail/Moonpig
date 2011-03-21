@@ -73,8 +73,8 @@ test "collection object" => sub {
 
   for (0..2) {
     $c = $self->ledger->refund_collection();
-    is($c->_count, @r, "collection contains $_ refund(s)" );
-    is(refund_amounts($c->_all), refund_amounts(@r), "amounts are correct");
+    is($c->count, @r, "collection contains $_ refund(s)" );
+    is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
     last if $_ == 2;
     push @r, my $next_refund = $self->ledger->add_refund(class('Refund'));
     $self->ledger->create_transfer({
@@ -85,13 +85,15 @@ test "collection object" => sub {
     });
   }
 
+  note "0..2 done, starting 3..5\n";
+
   for (3..5) {
     $c = $self->ledger->refund_collection();
-    is($c->_count, @r, "collection contains $_ refund(s)" );
-    is(refund_amounts($c->_all), refund_amounts(@r), "amounts are correct");
-    last if $_ == 2;
+    is($c->count, @r, "collection contains $_ refund(s)" );
+    is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
+    last if $_ == 5;
     push @r, my $next_refund = class('Refund')->new({ledger => $self->ledger});
-    $c->_add($next_refund);
+    $c->add({ new_item => $next_refund });
     $self->ledger->create_transfer({
       type => 'credit_application',
       from => $credit,

@@ -28,6 +28,7 @@ parameter pagesize => (
 
 role {
   require Stick::Publisher;
+  Stick::Publisher->VERSION(0.20110321);
   Stick::Publisher->import();
   sub publish;
 
@@ -66,56 +67,43 @@ role {
   };
 
   # Page numbers start at 1.
-  method _page => sub {
-    my ($self, $pagenum, $pagesize) = @_;
-    $pagesize ||= $self->default_page_size();
+  publish page => { pagesize => Maybe[PositiveInt],
+                    page => PositiveInt,
+                  } => sub {
+    my ($self, $args) = @_;
+    my $pagesize = $args->{pagesize} || $self->default_page_size();
+    my $pagenum = $args->{page};
     my $items = $self->items;
     my $start = ($pagenum-1) * $pagesize;
     my $end = min($start+$pagesize-1, $#$items);
     return @{$self->items}[$start .. $end];
   };
 
-  publish page => { pagesize => Maybe[PositiveInt],
-                    page => PositiveInt,
-                  } =>
-    sub {
-      my ($self, $ctx, $arg) = @_;
-      $self->_page($arg->{page}, $arg->{pagesize});
-    };
-
   # If there are 3 pages, they are numbered 1, 2, 3.
-  method _pages => sub {
-    my ($self, $pagesize) = @_;
-    $pagesize ||= $self->default_page_size();
+  publish pages => { pagesize => Maybe[PositiveInt],
+                   } => sub {
+    my ($self, $args) = @_;
+    my $pagesize = $args->{pagesize} || $self->default_page_size();
     return ceil($self->_count / $pagesize);
   };
 
-  publish pages => { pagesize => Maybe[PositiveInt],
-                   } =>
-    \&_pages;
-
   publish find_by_guid => { guid => Str } => sub {
-    my ($self, $ctx, $arg) = @_;
+    my ($self, $arg) = @_;
     my $guid = $arg->{guid};
     my ($item) = grep { $_->guid eq $guid } $self->_all;
     return $item;
   };
 
   publish find_by_xid => { xid => Str } => sub {
-    my ($self, $ctx, $arg) = @_;
+    my ($self, $arg) = @_;
     my $xid = $arg->{xid};
     my ($item) = grep { $_->xid eq $xid } $self->_all;
     return $item;
   };
 
-  method _add => sub {
-    my ($self, $new_item) = @_;
-    $self->_push($self->ledger->$add_this_item($new_item));
-  };
-
   publish add => { new_item => $item_type } => sub {
-    my ($self, $ctx, $arg) = @_;
-    $self->_add($arg->{new_item});
+    my ($self, $arg) = @_;
+    $self->_push($self->ledger->$add_this_item($arg->{new_item}));
   };
 };
 

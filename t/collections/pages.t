@@ -48,8 +48,9 @@ test "page" => sub {
   );
 
   my @r;
-  is($self->ledger->refund_collection->_pages, 0);
+  is($self->ledger->refund_collection->pages, 0);
 
+  note "About to check page counts";
   for (1..30) {
     push @r, my $next_refund = $self->ledger->add_refund(class('Refund'));
     $self->ledger->create_transfer({
@@ -58,16 +59,17 @@ test "page" => sub {
       to => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
     });
-    is($self->ledger->refund_collection->_pages,     int($_ / 20))
+    is($self->ledger->refund_collection->pages,     int($_ / 20))
       if $_ % 20 == 0;
-    is($self->ledger->refund_collection->_pages, 1 + int($_ / 20))
+    is($self->ledger->refund_collection->pages, 1 + int($_ / 20))
       if $_ % 20 != 0;
   };
 
+  note "About to check page sizes";
   {
-    my @page1 = $self->refund_collection->_page(1);
-    my @page2 = $self->refund_collection->_page(2);
-    my @page3 = $self->refund_collection->_page(3);
+    my @page1 = $self->refund_collection->page({ page => 1 });
+    my @page2 = $self->refund_collection->page({ page => 2 });
+    my @page3 = $self->refund_collection->page({ page => 3 });
 
     is(@page1, 20, "page 1 has 20/30 items");
     is(@page2, 10, "page 2 has 10/30 items");
@@ -76,23 +78,25 @@ test "page" => sub {
     is(ids(@page1, @page2), ids(@r), "pages 1+2 have all 30 items");
   }
 
+  note "About to check pages with alternative size";
   {
     for (1..4) {
-      my @page = $self->refund_collection->_page($_, 7);
+      my @page = $self->refund_collection->page({ page => $_, pagesize => 7 });
       is(@page, 7, "page $_ has 7/7 items");
     }
-    my @page = $self->refund_collection->_page(5, 7);
+    my @page = $self->refund_collection->page({ page => 5, pagesize => 7 });
     is(@page, 2, "page 5 has 2/7 items");
   }
 
+  note "About to check pages with alternative default size";
   {
     my $c = $self->refund_collection;
     $c->default_page_size(7);
     for (1..4) {
-      my @page = $c->_page($_);
+      my @page = $c->page({ page => $_ });
       is(@page, 7, "page $_ has 7/7 items");
     }
-    my @page = $c->_page(5);
+    my @page = $c->page({ page => 5 });
     is(@page, 2, "page 5 has 2/7 items");
   }
 
