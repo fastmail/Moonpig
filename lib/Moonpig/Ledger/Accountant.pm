@@ -1,4 +1,3 @@
-
 package Moonpig::Ledger::Accountant;
 use Carp qw(confess croak);
 use Moonpig::TransferUtil ();
@@ -10,8 +9,16 @@ with 'Role::Subsystem' => {
   ident  => 'ledger-accountant',
   type   => 'Moonpig::Role::Ledger',
   what   => 'ledger',
-  getter => sub { class('Ledger')->for_guid( $_[0] ) },
   id_method => 'guid',
+
+  # This getter should not be needed.  Nothing should be trying to talk to the
+  # accountant after its ledger has been garbage collected, but we need to
+  # supply a getter if we want to hold a weak ref -- which we do, because we
+  # want the entire object graph of a ledger to be garbage collectable.  So,
+  # either we put in this bogus getter, or we add a DEMOLISH to Ledger and mark
+  # this (weak_ref => 0).  For now, this is the one I picked. -- rjbs,
+  # 2011-03-22
+  getter    => sub { confess("can't retrieve garbage collected ledger") },
 };
 
 ################################################################
