@@ -17,12 +17,12 @@ sub _root {
   return($ENV{MOONPIG_STORAGE_ROOT} || die('no storage root'));
 }
 
-sub _dbh_for_guid {
+sub _dbh {
   my ($self, $guid) = @_;
 
   my $db_file = File::Spec->catfile(
     $self->_root,
-    $guid . q{.sqlite}
+    "moonpig.sqlite",
   );
 
   my $dbh = DBI->connect(
@@ -38,39 +38,60 @@ sub store_ledger {
 
   Ledger->assert_valid($ledger);
 
-  my $dbh = $self->_dbh_for_guid($ledger->guid);
+  my $dbh = $self->_dbh;
 
   $dbh->begin_work;
 
-  $dbh->do("CREATE TABLE stuff (name TEXT PRIMARY KEY, blob BLOB NOT NULL)");
+  $dbh->do(q{
+    CREATE TABLE stuff (
+      guid TEXT NOT NULL,
+      name TEXT NOT NULL,
+      blob BLOB NOT NULL,
+      PRIMARY KEY (guid, name)
+    )
+  });
 
   $dbh->do(q{DELETE FROM stuff});
 
   $dbh->do(
-    q{INSERT INTO stuff (name, blob) VALUES ('class_roles', ?)},
+    q{INSERT INTO stuff (guid, name, blob) VALUES (?, 'class_roles', ?)},
     undef,
+    $ledger->guid,
     nfreeze( class_roles ),
   );
 
   $dbh->do(
-    q{INSERT INTO stuff (name, blob) VALUES ('ledger', ?)},
+    q{INSERT INTO stuff (guid, name, blob) VALUES (?, 'ledger', ?)},
     undef,
+    $ledger->guid,
     nfreeze( $ledger ),
   );
 
   $dbh->commit;
 }
 
+sub known_guids {
+  my ($self) = @_;
+  my $dbh = $self->_dbh;
+
+  my $guids = $dbh->selectcol_arrayref(q{SELECT DISTINCT guid FROM stuff});
+  return @$guids;
+}
+
 sub retrieve_ledger {
   my ($self, $guid) = @_;
 
-  my $dbh = $self->_dbh_for_guid($guid);
+  my $dbh = $self->_dbh;
   my ($class_blob) = $dbh->selectrow_array(
-    q{SELECT blob FROM stuff WHERE name = 'class_roles'}
+    q{SELECT blob FROM stuff WHERE guid = ? AND name = 'class_roles'},
+    undef,
+    $guid,
   );
 
   my ($ledger_blob) = $dbh->selectrow_array(
-    q{SELECT blob FROM stuff WHERE name = 'ledger'}
+    q{SELECT blob FROM stuff WHERE guid = ? AND name = 'ledger'},
+    undef,
+    $guid,
   );
 
   require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18

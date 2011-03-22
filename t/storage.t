@@ -63,13 +63,11 @@ test "store and retrieve" => sub {
     exit(0);
   }
 
-  my @files = grep { -f } dir($self->tempdir)->children;
+  my @guids = Moonpig::Storage->known_guids;
 
-  Carp::croak("found too many files!"), note explain \@files if @files > 1;
+  is(@guids, 1, "we have stored one guid");
 
-  my ($guid) = $files[0] =~ m{/([^/]+)\.sqlite\z};
-
-  my $ledger = Moonpig::Storage->retrieve_ledger($guid);
+  my $ledger = Moonpig::Storage->retrieve_ledger($guids[0]);
 
   my $consumer = $ledger->active_consumer_for_xid($xid);
   # diag explain $retr_ledger;
