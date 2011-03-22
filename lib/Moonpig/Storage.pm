@@ -6,6 +6,8 @@ use Class::Rebless 0.009;
 use DBI;
 use File::Spec;
 
+use Moonpig::Logger '$Logger';
+
 use Moonpig::Types qw(Ledger);
 use Moonpig::Util qw(class class_roles);
 use Scalar::Util qw(blessed);
@@ -37,6 +39,12 @@ sub store_ledger {
   my ($self, $ledger) = @_;
 
   Ledger->assert_valid($ledger);
+
+  $Logger->log_debug([
+    'storing %s under guid %s',
+    $ledger->ident,
+    $ledger->guid,
+  ]);
 
   my $dbh = $self->_dbh;
 
@@ -93,6 +101,11 @@ sub store_ledger {
   );
 
   for my $xid ($ledger->xids_handled) {
+    $Logger->log_debug([
+      'registering ledger %s for xid %s',
+      $ledger->ident,
+      $xid,
+    ]);
     $xid_sth->execute($xid, $ledger->guid);
   }
 
@@ -118,11 +131,15 @@ sub retrieve_ledger_for_xid {
     $xid,
   );
 
+  $Logger->log_debug([ 'retrieved guid %s for xid %s', $ledger_guid, $xid ]);
+
   return $self->retrieve_ledger_for_guid($ledger_guid);
 }
 
 sub retrieve_ledger_for_guid {
   my ($self, $guid) = @_;
+
+  $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
 
   my $dbh = $self->_dbh;
   my ($class_blob) = $dbh->selectrow_array(
