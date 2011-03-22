@@ -25,43 +25,6 @@ sub random_xid {
   return 'urn:uuid:' . guid_string;
 }
 
-test "global ledger registry" => sub {
-  my ($self) = @_;
-
-  my $ledger_guid;
-  my $consumer_guid;
-
-  {
-    my $ledger = $self->test_ledger;
-
-    $ledger_guid = $ledger->guid;
-
-    my $consumer = $ledger->add_consumer(
-      class(qw(Consumer::Dummy)),
-      {
-        xid                => $self->random_xid,
-        make_active        => 1,
-
-        charge_path_prefix => '',
-        old_age            => 1,
-        replacement_mri    => Moonpig::URI->nothing,
-      },
-    );
-
-    $consumer_guid = $consumer->guid;
-  }
-
-  my $ledger = class('Ledger')->for_guid($ledger_guid);
-  
-  isa_ok($ledger, class('Ledger'));
-  is($ledger->guid, $ledger_guid, "we got back the right ledger");
-
-  my @consumers = $ledger->consumers;
-  is(@consumers, 1, "we got back the ledger with 1 consumer");
-
-  is($consumers[0]->guid, $consumer_guid, "...and it's the right consumer");
-};
-
 sub _test_ledgers_and_xids {
   my ($self) = @_;
 

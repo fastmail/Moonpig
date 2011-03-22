@@ -43,29 +43,58 @@ sub store_ledger {
   $dbh->begin_work;
 
   $dbh->do(q{
-    CREATE TABLE stuff (
+    CREATE TABLE IF NOT EXISTS stuff (
       guid TEXT NOT NULL,
       name TEXT NOT NULL,
       blob BLOB NOT NULL,
       PRIMARY KEY (guid, name)
-    )
+    );
+  });
+
+  $dbh->do(q{
+    CREATE TABLE IF NOT EXISTS xid_ledgers (
+      xid TEXT PRIMARY KEY,
+      ledger_guid TEXT NOT NULL
+    );
   });
 
   $dbh->do(q{DELETE FROM stuff});
 
   $dbh->do(
-    q{INSERT INTO stuff (guid, name, blob) VALUES (?, 'class_roles', ?)},
+    q{
+      INSERT OR REPLACE INTO stuff
+      (guid, name, blob)
+      VALUES (?, 'class_roles', ?)
+    },
     undef,
     $ledger->guid,
     nfreeze( class_roles ),
   );
 
   $dbh->do(
-    q{INSERT INTO stuff (guid, name, blob) VALUES (?, 'ledger', ?)},
+    q{
+      INSERT OR REPLACE INTO stuff
+      (guid, name, blob)
+      VALUES (?, 'ledger', ?)
+    },
     undef,
     $ledger->guid,
     nfreeze( $ledger ),
   );
+
+  $dbh->do(
+    q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
+    undef,
+    $ledger->guid,
+  );
+
+  my $xid_sth = $dbh->prepare(
+    q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
+  );
+
+  for my $xid ($ledger->xids_handled) {
+    $xid_sth->execute($xid, $ledger->guid);
+  }
 
   $dbh->commit;
 }
@@ -80,7 +109,16 @@ sub known_guids {
 
 sub retrieve_ledger_by_xid {
   my ($self, $xid) = @_;
-  die "unimplemented";
+
+  my $dbh = $self->_dbh;
+
+  my ($ledger_guid) = $dbh->selectrow_array(
+    q{SELECT ledger_guid FROM xid_ledgers WHERE xid = ?},
+    undef,
+    $xid,
+  );
+
+  return $self->retrieve_ledger_by_guid($ledger_guid);
 }
 
 sub retrieve_ledger_by_guid {

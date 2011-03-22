@@ -388,6 +388,10 @@ has _active_xid_consumers => (
   isa => HashRef,
   init_arg => undef,
   default  => sub {  {}  },
+  traits   => [ 'Hash' ],
+  handles  => {
+    xids_handled => 'keys',
+  },
 );
 
 sub active_consumer_for_xid {
