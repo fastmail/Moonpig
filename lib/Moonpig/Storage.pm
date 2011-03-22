@@ -129,6 +129,8 @@ sub retrieve_ledger_for_xid {
     $xid,
   );
 
+  return unless defined $ledger_guid;
+
   $Logger->log_debug([ 'retrieved guid %s for xid %s', $ledger_guid, $xid ]);
 
   return $self->retrieve_ledger_for_guid($ledger_guid);
@@ -151,6 +153,11 @@ sub retrieve_ledger_for_guid {
     undef,
     $guid,
   );
+
+  return unless defined $class_blob or defined $ledger_blob;
+
+  Carp::confess("incomplete storage data found for $guid")
+    unless defined $class_blob and defined $ledger_blob;
 
   require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
 
