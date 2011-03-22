@@ -78,7 +78,12 @@ sub known_guids {
   return @$guids;
 }
 
-sub retrieve_ledger {
+sub retrieve_ledger_by_xid {
+  my ($self, $xid) = @_;
+  die "unimplemented";
+}
+
+sub retrieve_ledger_by_guid {
   my ($self, $guid) = @_;
 
   my $dbh = $self->_dbh;
