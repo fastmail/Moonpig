@@ -28,6 +28,7 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
+use Moonpig::Storage;
 use Moonpig::Types qw(Credit Consumer);
 
 use Moonpig::Logger '$Logger';
@@ -348,37 +349,6 @@ sub _send_mkit {
   }));
 }
 
-# XXX: This *needs* to be in some other object or stored table, in the future,
-# because it will not be accurately recreated by thawing ledgers, etc. -- rjbs,
-# 2011-02-01
-my %Ledger_for_xid;
-
-sub for_xid {
-  my ($self, $xid) = @_;
-
-  return unless my $ledger_guid = $Ledger_for_xid{ $xid };
-  return $self->for_guid( $ledger_guid );
-}
-
-sub _assert_ledger_handles_xid {
-  my ($self, $xid) = @_;
-
-  my $current = $Ledger_for_xid{ $xid };
-
-  return if $current and $current eq $self->guid;
-
-  Moonpig::X->throw("xid already registered with ledger") if $current;
-
-  $Ledger_for_xid{ $xid } = $self->guid;
-}
-
-sub _stop_handling_xid {
-  my ($self, $xid) = @_;
-
-  $self->_assert_ledger_handles_xid($xid);
-  delete $Ledger_for_xid{ $xid };
-}
-
 # {
 #   xid => [ consumer_guid, ... ],
 #   ...
@@ -428,8 +398,6 @@ sub mark_consumer_active__ {
 
   $reg->{ $xid } = $consumer->guid;
 
-  $self->_assert_ledger_handles_xid( $consumer->xid );
-
   return;
 }
 
@@ -442,8 +410,6 @@ sub mark_consumer_inactive__ {
   return unless $reg->{ $xid } and $reg->{ $xid } eq $consumer->guid;
 
   my $rv = delete($reg->{ $xid }) ? 1 : 0;
-
-  delete $Ledger_for_xid{ $xid };
 
   return $rv;
 }
@@ -498,37 +464,18 @@ sub _collect_spare_change {
   }
 }
 
-my %Ledger_for_guid;
-after BUILD => sub {
-  my ($self) = @_;
-  $Ledger_for_guid{ $self->guid } = $self;
-
-  # This mechanism is just temporary to pretend we have persistence and can get
-  # ledgers by id.  Still, do we want to weaken?  If so, we have to have the
-  # test server (or whatever) keep an array of available ledgers in memory to
-  # prevent garbage collection.  If not, we run the risk of leaks, but only in
-  # tests.  Since the only risk, for now, is in tests, I will *not* weaken the
-  # global registry reference. -- rjbs, 2011-02-01
-  #
-  # weaken $Ledger_for_guid{ $self->guid };
-};
-
-sub for_guid {
-  my ($class, $guid) = @_;
-  return $Ledger_for_guid{ $guid };
-}
-
 sub _class_subroute {
   my ($class, $path) = @_;
 
   if ($path->[0] eq 'xid') {
     my (undef, $xid) = splice @$path, 0, 2;
+    confess "unimplemented";
     return $class->for_xid($xid);
   }
 
   if ($path->[0] eq 'guid') {
     my (undef, $guid) = splice @$path, 0, 2;
-    return $class->for_guid($guid);
+    return Moonpig::Storage->retrieve_ledger_for_guid($guid);
   }
 
   return;

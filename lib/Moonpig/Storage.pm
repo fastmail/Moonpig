@@ -107,7 +107,7 @@ sub known_guids {
   return @$guids;
 }
 
-sub retrieve_ledger_by_xid {
+sub retrieve_ledger_for_xid {
   my ($self, $xid) = @_;
 
   my $dbh = $self->_dbh;
@@ -118,10 +118,10 @@ sub retrieve_ledger_by_xid {
     $xid,
   );
 
-  return $self->retrieve_ledger_by_guid($ledger_guid);
+  return $self->retrieve_ledger_for_guid($ledger_guid);
 }
 
-sub retrieve_ledger_by_guid {
+sub retrieve_ledger_for_guid {
   my ($self, $guid) = @_;
 
   my $dbh = $self->_dbh;

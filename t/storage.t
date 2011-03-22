@@ -67,7 +67,7 @@ test "store and retrieve" => sub {
 
   is(@guids, 1, "we have stored one guid");
 
-  my $ledger = Moonpig::Storage->retrieve_ledger_by_guid($guids[0]);
+  my $ledger = Moonpig::Storage->retrieve_ledger_for_guid($guids[0]);
 
   my $consumer = $ledger->active_consumer_for_xid($xid);
   # diag explain $retr_ledger;
