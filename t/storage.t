@@ -5,6 +5,7 @@ use Test::More;
 
 with(
   't::lib::Factory::Ledger',
+  't::lib::Role::HasTempdir',
 );
 
 use t::lib::Logger '$Logger';
@@ -13,18 +14,11 @@ use Moonpig::Env::Test;
 use Moonpig::Storage;
 
 use Data::GUID qw(guid_string);
-use File::Temp qw(tempdir);
 use Path::Class;
 
 use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
-
-has tempdir => (
-  is  => 'ro',
-  isa => 'Str',
-  default => sub { tempdir(CLEANUP => 1 ) },
-);
 
 test "store and retrieve" => sub {
   my ($self) = @_;
