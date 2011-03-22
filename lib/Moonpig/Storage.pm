@@ -66,8 +66,6 @@ sub store_ledger {
     );
   });
 
-  $dbh->do(q{DELETE FROM stuff});
-
   $dbh->do(
     q{
       INSERT OR REPLACE INTO stuff
