@@ -5,7 +5,7 @@ use Test::More;
 
 with(
   't::lib::Factory::Ledger',
-  't::lib::Role::HasTempdir',
+  't::lib::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';
@@ -22,8 +22,6 @@ use namespace::autoclean;
 
 test "store and retrieve" => sub {
   my ($self) = @_;
-
-  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
 
   my $pid = fork;
   Carp::croak("error forking") unless defined $pid;
@@ -52,16 +50,16 @@ test "store and retrieve" => sub {
       },
     );
 
-    Moonpig::Storage->store_ledger($ledger);
+    Moonpig->env->storage->store_ledger($ledger);
 
     exit(0);
   }
 
-  my @guids = Moonpig::Storage->known_guids;
+  my @guids = Moonpig->env->storage->known_guids;
 
   is(@guids, 1, "we have stored one guid");
 
-  my $ledger = Moonpig::Storage->retrieve_ledger_for_guid($guids[0]);
+  my $ledger = Moonpig->env->storage->retrieve_ledger_for_guid($guids[0]);
 
   my $consumer = $ledger->active_consumer_for_xid($xid);
   # diag explain $retr_ledger;

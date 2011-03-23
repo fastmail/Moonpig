@@ -1,9 +1,9 @@
-use strict;
-use warnings;
 package Moonpig::Storage;
+use Moose;
 
 use Class::Rebless 0.009;
 use DBI;
+use DBIx::Connector;
 use File::Spec;
 
 use Moonpig::Logger '$Logger';
@@ -15,25 +15,35 @@ use Storable qw(nfreeze thaw);
 
 use namespace::autoclean;
 
-sub _root {
-  return($ENV{MOONPIG_STORAGE_ROOT} || die('no storage root'));
-}
+has _root => (
+  is  => 'ro',
+  isa => 'Str',
+  init_arg => undef,
+  default  => sub { $ENV{MOONPIG_STORAGE_ROOT} || die('no storage root') },
+);
 
-sub _dbh {
-  my ($self, $guid) = @_;
+has _conn => (
+  is   => 'ro',
+  isa  => 'DBIx::Connector',
+  lazy => 1,
+  init_arg => undef,
+  default  => sub {
+    my ($self) = @_;
 
-  my $db_file = File::Spec->catfile(
-    $self->_root,
-    "moonpig.sqlite",
-  );
+    my $db_file = File::Spec->catfile(
+      $self->_root,
+      "moonpig.sqlite",
+    );
 
-  my $dbh = DBI->connect(
-    "dbi:SQLite:dbname=$db_file", undef, undef,
-    { RaiseError => 1 },
-  );
-
-  return $dbh;
-}
+    return DBIx::Connector->new(
+      "dbi:SQLite:dbname=$db_file", undef, undef,
+      {
+        RaiseError => 1,
+        PrintError => 0,
+      },
+    );
+  },
+);
 
 sub store_ledger {
   my ($self, $ledger) = @_;
@@ -46,73 +56,73 @@ sub store_ledger {
     $ledger->guid,
   ]);
 
-  my $dbh = $self->_dbh;
+  my $conn = $self->_conn;
 
-  $dbh->begin_work;
+  $conn->txn(sub {
+    my ($dbh) = $_;
 
-  $dbh->do(q{
-    CREATE TABLE IF NOT EXISTS stuff (
-      guid TEXT NOT NULL,
-      name TEXT NOT NULL,
-      blob BLOB NOT NULL,
-      PRIMARY KEY (guid, name)
+    $dbh->do(q{
+      CREATE TABLE IF NOT EXISTS stuff (
+        guid TEXT NOT NULL,
+        name TEXT NOT NULL,
+        blob BLOB NOT NULL,
+        PRIMARY KEY (guid, name)
+      );
+    });
+
+    $dbh->do(q{
+      CREATE TABLE IF NOT EXISTS xid_ledgers (
+        xid TEXT PRIMARY KEY,
+        ledger_guid TEXT NOT NULL
+      );
+    });
+
+    $dbh->do(
+      q{
+        INSERT OR REPLACE INTO stuff
+        (guid, name, blob)
+        VALUES (?, 'class_roles', ?)
+      },
+      undef,
+      $ledger->guid,
+      nfreeze( class_roles ),
     );
-  });
 
-  $dbh->do(q{
-    CREATE TABLE IF NOT EXISTS xid_ledgers (
-      xid TEXT PRIMARY KEY,
-      ledger_guid TEXT NOT NULL
+    $dbh->do(
+      q{
+        INSERT OR REPLACE INTO stuff
+        (guid, name, blob)
+        VALUES (?, 'ledger', ?)
+      },
+      undef,
+      $ledger->guid,
+      nfreeze( $ledger ),
     );
+
+    $dbh->do(
+      q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
+      undef,
+      $ledger->guid,
+    );
+
+    my $xid_sth = $dbh->prepare(
+      q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
+    );
+
+    for my $xid ($ledger->xids_handled) {
+      $Logger->log_debug([
+        'registering ledger %s for xid %s',
+        $ledger->ident,
+        $xid,
+      ]);
+      $xid_sth->execute($xid, $ledger->guid);
+    }
   });
-
-  $dbh->do(
-    q{
-      INSERT OR REPLACE INTO stuff
-      (guid, name, blob)
-      VALUES (?, 'class_roles', ?)
-    },
-    undef,
-    $ledger->guid,
-    nfreeze( class_roles ),
-  );
-
-  $dbh->do(
-    q{
-      INSERT OR REPLACE INTO stuff
-      (guid, name, blob)
-      VALUES (?, 'ledger', ?)
-    },
-    undef,
-    $ledger->guid,
-    nfreeze( $ledger ),
-  );
-
-  $dbh->do(
-    q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
-    undef,
-    $ledger->guid,
-  );
-
-  my $xid_sth = $dbh->prepare(
-    q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
-  );
-
-  for my $xid ($ledger->xids_handled) {
-    $Logger->log_debug([
-      'registering ledger %s for xid %s',
-      $ledger->ident,
-      $xid,
-    ]);
-    $xid_sth->execute($xid, $ledger->guid);
-  }
-
-  $dbh->commit;
 }
 
 sub known_guids {
   my ($self) = @_;
-  my $dbh = $self->_dbh;
+  my $dbh = $self->_conn->dbh;
 
   my $guids = $dbh->selectcol_arrayref(q{SELECT DISTINCT guid FROM stuff});
   return @$guids;
@@ -121,7 +131,7 @@ sub known_guids {
 sub retrieve_ledger_for_xid {
   my ($self, $xid) = @_;
 
-  my $dbh = $self->_dbh;
+  my $dbh = $self->_conn->dbh;
 
   my ($ledger_guid) = $dbh->selectrow_array(
     q{SELECT ledger_guid FROM xid_ledgers WHERE xid = ?},
@@ -141,7 +151,7 @@ sub retrieve_ledger_for_guid {
 
   $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
 
-  my $dbh = $self->_dbh;
+  my $dbh = $self->_conn->dbh;
   my ($class_blob) = $dbh->selectrow_array(
     q{SELECT blob FROM stuff WHERE guid = ? AND name = 'class_roles'},
     undef,

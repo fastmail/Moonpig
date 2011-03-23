@@ -7,7 +7,7 @@ use Test::More;
 
 with(
   't::lib::Factory::Ledger',
-  't::lib::Role::HasTempdir',
+  't::lib::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';
@@ -19,7 +19,6 @@ use Moonpig::Events::Handler::Code;
 use Data::GUID qw(guid_string);
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);
-use Moonpig::Storage;
 
 use namespace::autoclean;
 
@@ -48,7 +47,7 @@ sub _test_ledgers_and_xids {
       },
     );
 
-    Moonpig::Storage->store_ledger($ledger{$key});
+    Moonpig->env->storage->store_ledger($ledger{$key});
   }
 
   return( \%ledger, \%xid );
@@ -57,12 +56,10 @@ sub _test_ledgers_and_xids {
 test "global xid lookup" => sub {
   my ($self) = @_;
 
-  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
-
   my ($ledger, $xid) = $self->_test_ledgers_and_xids;
 
   for my $id (1, 2) {
-    my $got_ledger = Moonpig::Storage->retrieve_ledger_for_xid($xid->{$id});
+    my $got_ledger = Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$id});
 
     isa_ok(
       $got_ledger,
@@ -81,8 +78,6 @@ test "global xid lookup" => sub {
 test "one-ledger-per-xid safety" => sub {
   my ($self) = @_;
 
-  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
-
   my $Ledger = class('Ledger');
 
   my ($ledger, $xid) = $self->_test_ledgers_and_xids;
@@ -100,7 +95,7 @@ test "one-ledger-per-xid safety" => sub {
       },
     );
 
-    Moonpig::Storage->store_ledger($ledger->{1});
+    Moonpig->env->storage->store_ledger($ledger->{1});
   };
 
   ok($err, "we can't register 1 id with 2 ledgers");
@@ -114,8 +109,6 @@ test "one-ledger-per-xid safety" => sub {
 test "registered abandoned xid" => sub {
   my ($self) = @_;
 
-  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
-
   my $Ledger = class('Ledger');
 
   my ($ledger, $xid) = $self->_test_ledgers_and_xids;
@@ -123,7 +116,7 @@ test "registered abandoned xid" => sub {
   # first, ensure that both X-1 and X-2 are taken by L-1 and L-2
   for (1, 2) {
     is(
-      Moonpig::Storage->retrieve_ledger_for_xid($xid->{$_})->guid,
+      Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$_})->guid,
       $ledger->{$_}->guid,
       "xid $_ -> ledger $_",
     );
@@ -132,17 +125,17 @@ test "registered abandoned xid" => sub {
   my $consumer = $ledger->{1}->active_consumer_for_xid($xid->{1});
   $consumer->terminate_service;
 
-  Moonpig::Storage->store_ledger($ledger->{1});
+  Moonpig->env->storage->store_ledger($ledger->{1});
 
   # now, X-1 should go nowhere, but X-2 is still taken by L-2
   is(
-    Moonpig::Storage->retrieve_ledger_for_xid($xid->{1}),
+    Moonpig->env->storage->retrieve_ledger_for_xid($xid->{1}),
     undef,
     "xid 1 -> (undef)",
   );
 
   is(
-    Moonpig::Storage->retrieve_ledger_for_xid($xid->{2})->guid,
+    Moonpig->env->storage->retrieve_ledger_for_xid($xid->{2})->guid,
     $ledger->{2}->guid,
     "xid 2 -> ledger 2",
   );
@@ -160,11 +153,11 @@ test "registered abandoned xid" => sub {
     },
   );
 
-  Moonpig::Storage->store_ledger($ledger->{2});
+  Moonpig->env->storage->store_ledger($ledger->{2});
 
   # Now make sure that both X-1 and X-2 are on L-2
   for (1, 2) {
-    my $got_ledger = Moonpig::Storage->retrieve_ledger_for_xid($xid->{$_});
+    my $got_ledger = Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$_});
 
     is(
       $got_ledger->guid,

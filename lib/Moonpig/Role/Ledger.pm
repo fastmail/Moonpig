@@ -475,7 +475,7 @@ sub _class_subroute {
 
   if ($path->[0] eq 'guid') {
     my (undef, $guid) = splice @$path, 0, 2;
-    return Moonpig::Storage->retrieve_ledger_for_guid($guid);
+    return Moonpig->env->storage->retrieve_ledger_for_guid($guid);
   }
 
   return;

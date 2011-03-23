@@ -12,6 +12,7 @@ with(
 
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Storage;
 use Moonpig::Util qw(class);
 
 use Moonpig::Behavior::EventHandlers;
@@ -29,6 +30,15 @@ implicit_event_handlers {
     }
   };
 };
+
+has storage => (
+  is   => 'ro',
+  isa  => 'Moonpig::Storage',
+  lazy => 1,
+  init_arg => undef,
+  default  => sub { Moonpig::Storage->new },
+  clearer  => 'clear_storage',
+);
 
 has consumer_template_registry => (
   is  => 'ro',

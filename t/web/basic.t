@@ -8,7 +8,7 @@ use Plack::Test;
 
 with(
   't::lib::Factory::Ledger',
-  't::lib::Role::HasTempdir',
+  't::lib::Role::UsesStorage',
 );
 
 use namespace::autoclean;
@@ -16,13 +16,11 @@ use namespace::autoclean;
 test "get a ledger guid via web" => sub {
   my ($self) = @_;
 
-  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
-
   my $ledger = $self->test_ledger;
 
   my $guid = $ledger->guid;
 
-  Moonpig::Storage->store_ledger($ledger);
+  Moonpig->env->storage->store_ledger($ledger);
 
   test_psgi(Moonpig::Web::App->app, sub {
     my ($cb) = @_;
