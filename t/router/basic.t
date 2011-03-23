@@ -5,6 +5,7 @@ use Test::Fatal;
 
 with(
   't::lib::Factory::Ledger',
+  't::lib::Role::HasTempdir',
 );
 
 use Moonpig::Env::Test;
@@ -15,14 +16,6 @@ use namespace::autoclean;
 
 use File::Temp qw(tempdir);
 use Moonpig::Util qw(class);
-
-class('Ledger');
-
-has tempdir => (
-  is  => 'ro',
-  isa => 'Str',
-  default => sub { tempdir(CLEANUP => 1 ) },
-);
 
 test "route to and get a simple resource" => sub {
   my ($self) = @_;
