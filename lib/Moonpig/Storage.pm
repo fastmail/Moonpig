@@ -22,6 +22,15 @@ has _root => (
   default  => sub { $ENV{MOONPIG_STORAGE_ROOT} || die('no storage root') },
 );
 
+sub sqlite_filename {
+  my ($self) = @_;
+
+  my $db_file = File::Spec->catfile(
+    $self->_root,
+    "moonpig.sqlite",
+  );
+}
+
 has _conn => (
   is   => 'ro',
   isa  => 'DBIx::Connector',
@@ -30,10 +39,7 @@ has _conn => (
   default  => sub {
     my ($self) = @_;
 
-    my $db_file = File::Spec->catfile(
-      $self->_root,
-      "moonpig.sqlite",
-    );
+    my $db_file = $self->sqlite_filename;
 
     return DBIx::Connector->new(
       "dbi:SQLite:dbname=$db_file", undef, undef,
