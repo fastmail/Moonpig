@@ -1,0 +1,10 @@
+<h1>sign up!</h1>
+<form action='/post/signup' method='post'>
+  <table>
+    <tr>
+      <th>Your name</th>
+      <td><% $m->widget->input({ id => 'signup.name' }) %></td>
+    </tr>
+  </table>
+  <% $m->widget->submit %>
+</form>

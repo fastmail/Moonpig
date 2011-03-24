@@ -1,0 +1,7 @@
+%# vim:set ft=perl:
+<%perl>
+if ($m->dhandler_arg eq '') {
+  $m->redirect('/index');
+}
+$m->abort(404);
+</%perl>
