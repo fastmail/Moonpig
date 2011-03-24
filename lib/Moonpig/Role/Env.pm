@@ -12,6 +12,7 @@ with(
 
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Ledger::PostTarget;
 use Moonpig::Storage;
 use Moonpig::Util qw(class);
 
@@ -60,6 +61,11 @@ sub _instance_subroute {
   if ($path->[0] eq 'ledger') {
     shift @$path;
     return scalar class('Ledger');
+  }
+
+  if ($path->[0] eq 'ledgers') {
+    shift @$path;
+    return 'Moonpig::Ledger::PostTarget';
   }
 
   return;

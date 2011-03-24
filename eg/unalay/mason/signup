@@ -6,6 +6,14 @@
       <th>Your name</th>
       <td><% $m->widget->input({ id => 'signup.name' }) %></td>
     </tr>
+    <tr>
+      <th>Your desired username</th>
+      <td><% $m->widget->input({ id => 'signup.username' }) %></td>
+    </tr>
+    <tr>
+      <th>Your email address</th>
+      <td><% $m->widget->input({ id => 'signup.email_addresses.0' }) %></td>
+    </tr>
   </table>
   <% $m->widget->submit %>
 </form>
