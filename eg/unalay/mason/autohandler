@@ -4,8 +4,7 @@
   </head>
 
   <body>
-    <p>Welcome to Unalay.</p>
-
+    <h1>Unalay!</h1>
     <% $m->call_next %>
   </body>
 </html>

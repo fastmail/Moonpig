@@ -1,0 +1,4 @@
+<form action='/post/login' method='post'>
+  Username: <% $m->widget->input({ id => 'login.username' }) %>
+  <% $m->widget->submit({ value => 'Login' }) %>
+</form>

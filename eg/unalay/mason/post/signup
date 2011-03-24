@@ -1,5 +1,6 @@
+<%args>
+$params
+</%args>
 <%perl>
-use CGI::Expand ();
-my $signup = CGI::Expand->expand_hash( \%ARGS )->{signup};
 $m->redirect('/signup');
 </%perl>
