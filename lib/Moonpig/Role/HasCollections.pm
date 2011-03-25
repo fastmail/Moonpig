@@ -65,12 +65,11 @@ parameter factory => (
     require Moonpig::Role::CollectionType;
     my $item_factory = $p->item_factory;
     my $item_class = ref($item_factory) || $item_factory;
-    my $item_collection_role = Moonpig::Role::CollectionType->meta->
-      generate_role(parameters => {
+    my $params = {
         item_class => $item_class,
         add_this_item => $p->add_this_thing,
-      });
-    my $c = class({ $p->item_collection_name => $item_collection_role});
+    };
+    my $c = class([ 'CollectionType', $p->item_collection_name, $params ]);
     return $c;
   },
 );

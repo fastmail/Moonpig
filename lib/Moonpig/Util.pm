@@ -27,7 +27,7 @@ use Sub::Exporter -setup => [ qw(
 ) ];
 
  memoize(class => (NORMALIZER =>
-                     sub { my @items = map ref() ? keys %$_ : $_, @_;
+                     sub { my @items = map ref() ? $_->[1] : $_, @_;
                            my $k = join $; => @items;
                            return $k;
                          },
@@ -46,10 +46,17 @@ sub class {
 
   while (@args) {
     my $name = shift @args;
-    if (ref $name) {                   # { role name => role object }
-      my ($role_name, $role_object) = %$name;
+    if (ref $name) {
+      my ($role_name, $moniker, $params) = @$name;
+
+      my $full_name = _rewrite_prefix($role_name);
+      Class::MOP::load_class($full_name);
+      my $role_object = $full_name->meta->generate_role(
+        parameters => $params,
+      );
+
       push @roles, $role_object;
-      $name = $role_name;
+      $name = $moniker;
     } else {
       push @role_class_names, $name;
     }
@@ -60,13 +67,7 @@ sub class {
 
   my $name = join q{::}, 'Moonpig::Class', @all_names;
 
-  @role_class_names = String::RewritePrefix->rewrite(
-    {
-      ''    => 'Moonpig::Role::',
-      't::' => 't::lib::Role::',
-    },
-    @role_class_names,
-  );
+  @role_class_names = _rewrite_prefix(@role_class_names);
 
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
@@ -76,6 +77,17 @@ sub class {
   $class->make_immutable;
 
   return $class->name;
+}
+
+sub _rewrite_prefix {
+  my (@in) = @_;
+  return String::RewritePrefix->rewrite(
+    {
+     ''    => 'Moonpig::Role::',
+     't::' => 't::lib::Role::',
+    },
+    @in
+  );
 }
 
 sub event {
