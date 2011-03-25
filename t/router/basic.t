@@ -5,6 +5,7 @@ use Test::Fatal;
 
 with(
   't::lib::Factory::Ledger',
+  't::lib::Role::UsesStorage',
 );
 
 use Moonpig::Env::Test;
@@ -13,9 +14,8 @@ use Moonpig::Env::Test;
 
 use namespace::autoclean;
 
+use File::Temp qw(tempdir);
 use Moonpig::Util qw(class);
-
-class('Ledger');
 
 test "route to and get a simple resource" => sub {
   my ($self) = @_;
@@ -23,6 +23,8 @@ test "route to and get a simple resource" => sub {
   my $ledger = $self->test_ledger;
 
   my $guid = $ledger->guid;
+
+  Moonpig->env->storage->store_ledger($ledger);
 
   # XXX: temporary first draft of a route to get the guid
   # /ledger/guid/:GUID/gguid
@@ -45,6 +47,8 @@ test "route to and GET a method on a simple resource" => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger;
+
+  Moonpig->env->storage->store_ledger($ledger);
 
   my $guid = $ledger->guid;
 

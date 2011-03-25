@@ -15,7 +15,7 @@ use Scalar::Util qw(refaddr);
 use String::RewritePrefix;
 
 use Sub::Exporter -setup => [ qw(
-  class
+  class class_roles
 
   event
 
@@ -37,8 +37,12 @@ use Sub::Exporter -setup => [ qw(
 use Moose::Util qw(apply_all_roles);
 my $nonce = "00";
 # Arguments here are role names, or role objects followed by nonce-names.
+
+my %CLASS_ROLES;
+
 sub class {
   my (@args) = @_;
+  my @orig_args = @args;
 
   # $role_hash is a hash mapping nonce-names to role objects
   # $role_names is an array of names of more roles to add
@@ -69,12 +73,16 @@ sub class {
 
   @role_class_names = _rewrite_prefix(@role_class_names);
 
+  Class::MOP::load_class($_) for @role_class_names;
+
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
   ));
   apply_all_roles($class, @role_class_names, @roles);
 
   $class->make_immutable;
+
+  $CLASS_ROLES{ $name } = \@orig_args;
 
   return $class->name;
 }
@@ -88,6 +96,10 @@ sub _rewrite_prefix {
     },
     @in
   );
+}
+
+sub class_roles {
+  return \%CLASS_ROLES;
 }
 
 sub event {

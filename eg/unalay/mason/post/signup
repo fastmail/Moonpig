@@ -1,0 +1,6 @@
+<%args>
+$params
+</%args>
+<%perl>
+$m->redirect('/signup');
+</%perl>

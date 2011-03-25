@@ -1,0 +1,6 @@
+<%flags>
+inherit => undef
+</%flags>
+% require CGI::Expand;
+% my $params = CGI::Expand->expand_hash(\%ARGS);
+% $m->call_next(params => $params);

@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <title>Unalay: Lingua Porcorum Lunae</title>
+  </head>
+
+  <body>
+    <h1>Unalay!</h1>
+    <% $m->call_next %>
+  </body>
+</html>
