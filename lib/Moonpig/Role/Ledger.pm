@@ -2,7 +2,8 @@ package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
 use Moose::Role;
-use Stick::Publisher;
+use Stick::Publisher 0.20110324;
+use Stick::Publisher::Publish 0.20110324;
 
 _generate_subcomponent_methods(qw(bank consumer refund));
 

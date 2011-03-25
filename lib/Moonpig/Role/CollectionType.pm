@@ -6,6 +6,9 @@ use MooseX::Types::Moose qw(ArrayRef Defined HashRef Maybe Str);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Carp 'confess';
+require Stick::Publisher;
+Stick::Publisher->VERSION(0.20110324);
+use Stick::Publisher::Publish 0.20110324;
 
 parameter item_class => (
   is => 'ro',
@@ -27,12 +30,10 @@ parameter pagesize => (
 );
 
 role {
-  require Stick::Publisher;
-  Stick::Publisher->VERSION(0.20110321);
-  Stick::Publisher->import();
+  my ($p, %args) = @_;
+  Stick::Publisher->import({ into => $args{operating_on}->name });
   sub publish;
 
-  my ($p) = @_;
   my $add_this_item = $p->add_this_item;
   my $item_type = class_type($p->item_class);
 
