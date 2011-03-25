@@ -1,0 +1,9 @@
+<%args>
+$params
+</%args>
+<%perl>
+my $username = $params->{login}{username};
+
+my $ledger = $m->mp_request(GET => "/ledger/xid/$username");
+$m->redirect('/dashboard?guid=' . $ledger->{value}{guid});
+</%perl>

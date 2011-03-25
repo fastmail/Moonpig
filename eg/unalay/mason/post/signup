@@ -2,7 +2,6 @@
 $params
 </%args>
 <%perl>
-require Data::Dumper;
 my $ledger = $m->mp_request(
   POST => '/ledgers' => {
     name => $params->{signup}{name},

@@ -469,8 +469,7 @@ sub _class_subroute {
 
   if ($path->[0] eq 'xid') {
     my (undef, $xid) = splice @$path, 0, 2;
-    confess "unimplemented";
-    return $class->for_xid($xid);
+    return Moonpig->env->storage->retrieve_ledger_for_xid($xid);
   }
 
   if ($path->[0] eq 'guid') {
