@@ -18,6 +18,10 @@ with(
     item => 'refund',
     item_factory => class('Refund'),
    },
+  'Moonpig::Role::HasCollections' => {
+    item => 'consumer',
+    item_factory => class('Consumer'),
+   },
   'Stick::Role::PublicResource::GetSelf',
 );
 
