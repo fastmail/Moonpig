@@ -2,5 +2,15 @@
 $params
 </%args>
 <%perl>
-$m->redirect('/signup');
+require Data::Dumper;
+my $ledger = $m->mp_request(
+  POST => '/ledgers' => {
+    name => $params->{signup}{name},
+    email_addresses => $params->{signup}{email_addresses},
+    consumers => {
+      $params->{signup}{username} => { template => 'username' },
+    },
+  },
+);
+$m->redirect('/dashboard?guid=' . $ledger->{value}{guid});
 </%perl>

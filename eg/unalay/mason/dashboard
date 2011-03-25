@@ -1,0 +1,6 @@
+<%args>
+$guid
+</%args>
+
+<h2>Your Dashboard!</h2>
+<h3>currently logged in as <% $guid %>
