@@ -34,6 +34,7 @@ use Moonpig::Types qw(Credit Consumer);
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
 use Moonpig::Util qw(class event);
+use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
 use List::Util qw(reduce);
@@ -496,6 +497,10 @@ sub STICK_PACK {
 
   return {
     guid => $self->guid,
+    active_xids => {
+      map {; $_ => ppack($self->active_consumer_for_xid($_)) }
+        $self->xids_handled
+    },
   };
 }
 

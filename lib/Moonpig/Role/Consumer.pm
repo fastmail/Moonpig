@@ -200,4 +200,9 @@ sub terminate_service {
   $self->ledger->mark_consumer_inactive__($self);
 }
 
+sub STICK_PACK {
+  my ($self) = @_;
+  return $self->guid;
+}
+
 1;

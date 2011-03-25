@@ -23,7 +23,7 @@ sub app {
       my $resource = Moonpig->env->route(\@path);
 
       my $args = {};
-      if ($req->content_type eq 'application/json') {
+      if (($req->content_type || '') eq 'application/json') {
         $args = $JSON->decode($req->content);
       }
 

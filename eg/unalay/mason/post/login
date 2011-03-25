@@ -4,6 +4,6 @@ $params
 <%perl>
 my $username = $params->{login}{username};
 
-my $ledger = $m->mp_request(GET => "/ledger/xid/$username");
+my $ledger = $m->mp_request(GET => "/ledger/xid/unalay:username:$username");
 $m->redirect('/dashboard?guid=' . $ledger->{value}{guid});
 </%perl>

@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+my $mp_pid = fork;
+$mp_pid or do { exec 'plackup -p 5001 eg/unalay/bin/moonpig.psgi' };
+
+my $ul_pid = fork;
+$ul_pid or do {
+  $ENV{UNALAY_MOONPIG_URI} = 'http://localhost:5001';
+  exec 'plackup -p 5000 eg/unalay/bin/unalay.psgi';
+};
+
+$SIG{INT} = sub { kill 0, 2 };
+
+1 until wait == -1;
+
+
