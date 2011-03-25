@@ -21,7 +21,13 @@ sub app {
 
     my $response = try {
       my $resource = Moonpig->env->route(\@path);
-      my $result   = $resource->resource_request(lc $req->method, {});
+
+      my $args = {};
+      if ($req->content_type eq 'application/json') {
+        $args = $JSON->decode($req->content);
+      }
+
+      my $result = $resource->resource_request(lc $req->method, $args);
       return [
         200,
         [ 'Content-type' => 'application/json' ],
