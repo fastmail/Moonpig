@@ -7,7 +7,9 @@ my $ledger = $m->mp_request(
     name => $params->{signup}{name},
     email_addresses => $params->{signup}{email_addresses},
     consumers => {
-      $params->{signup}{username} => { template => 'username' },
+      "unalay://username/$params->{signup}{username}" => {
+        template => 'username'
+      },
     },
   },
 );
