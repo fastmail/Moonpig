@@ -35,9 +35,19 @@ sub app {
       ];
     } catch {
       return $_->as_psgi if try { $_->does('HTTP::Throwable') };
-      return HTTP::Throwable::Factory->new_exception(InternalServerError => {
+
+      my $r = HTTP::Throwable::Factory->new_exception(InternalServerError => {
         show_stack_trace => 0,
       })->as_psgi;
+
+      # XXX: Colossal hack for now, for dev.
+      {
+        my $h = Plack::Util::headers($r->[1]);
+        $h->remove('Content-Length');
+        push @{ $r->[2] }, "\n\n", $_;
+      }
+
+      return $r;
     };
 
     return $response;
