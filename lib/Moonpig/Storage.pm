@@ -36,6 +36,7 @@ has _conn => (
   isa  => 'DBIx::Connector',
   lazy => 1,
   init_arg => undef,
+  handles  => [ qw(txn) ],
   default  => sub {
     my ($self) = @_;
 
@@ -124,6 +125,8 @@ sub store_ledger {
       $xid_sth->execute($xid, $ledger->guid);
     }
   });
+
+  return $ledger;
 }
 
 sub known_guids {
