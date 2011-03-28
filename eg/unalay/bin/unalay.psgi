@@ -4,6 +4,8 @@ use warnings;
 
 use lib 'eg/unalay/lib';
 
+my $root = $ENV{UNALAY_STORAGE_ROOT} = 'eg/unalay/db';
+
 use File::Spec;
 use HTML::Mason::PSGIHandler;
 use Plack::Util;

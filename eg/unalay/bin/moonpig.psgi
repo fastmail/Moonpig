@@ -4,7 +4,7 @@ use warnings;
 use lib 'lib';
 use lib 'eg/unalay/lib';
 
-my $root =$ENV{MOONPIG_STORAGE_ROOT} = 'eg/unalay/db';
+my $root = $ENV{MOONPIG_STORAGE_ROOT} = 'eg/unalay/db';
 
 mkdir $root unless -d $root;
 
