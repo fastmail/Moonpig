@@ -11,8 +11,11 @@ use HTML::Mason::PSGIHandler;
 use Plack::Util;
 
 use Unalay::Mason::Request;
+use Unalay::Schema;
 
 use namespace::autoclean;
+
+Unalay::Schema->shared_connection->deploy;
 
 my $h = HTML::Mason::PSGIHandler->new(
   comp_root     => File::Spec->rel2abs("eg/unalay/mason"),

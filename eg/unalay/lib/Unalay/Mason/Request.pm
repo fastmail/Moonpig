@@ -8,6 +8,7 @@ use Data::Dumper ();
 use HTML::Widget::Factory;
 use JSON;
 use LWP::UserAgent;
+use Unalay::Schema;
 
 my $JSON = JSON->new;
 
@@ -51,6 +52,10 @@ sub dump {
   my ($self, $arg) = @_;
 
   warn Data::Dumper->Dump([ $arg ]);
+}
+
+sub schema {
+  Unalay::Schema->shared_connection;
 }
 
 1;

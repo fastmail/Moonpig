@@ -2,6 +2,10 @@
 $params
 </%args>
 <%perl>
+my $user = $m->schema->resultset('User')->create({
+  username => $params->{signup}{username},
+});
+
 my $ledger = $m->mp_request(
   POST => '/ledgers' => {
     name => $params->{signup}{name},
@@ -13,5 +17,6 @@ my $ledger = $m->mp_request(
     },
   },
 );
+
 $m->redirect('/dashboard?guid=' . $ledger->{value}{guid});
 </%perl>
