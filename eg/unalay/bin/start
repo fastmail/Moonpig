@@ -2,13 +2,17 @@
 use strict;
 use warnings;
 
+my $colorize = '2>&1 | eg/unalay/bin/color';
+
 my $mp_pid = fork;
-$mp_pid or do { exec 'plackup -p 5001 eg/unalay/bin/moonpig.psgi' };
+$mp_pid or do {
+  exec "plackup -p 5001 eg/unalay/bin/moonpig.psgi $colorize cyan"
+};
 
 my $ul_pid = fork;
 $ul_pid or do {
   $ENV{UNALAY_MOONPIG_URI} = 'http://localhost:5001';
-  exec 'plackup -p 5000 eg/unalay/bin/unalay.psgi';
+  exec "plackup -p 5000 eg/unalay/bin/unalay.psgi $colorize yellow";
 };
 
 $SIG{INT} = sub { kill 0, 2 };

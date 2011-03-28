@@ -1,0 +1,9 @@
+#!/usr/bin/env perl
+use strict;
+use Term::ANSIColor;
+
+$|++;
+
+sub END { print color('reset') };
+
+print color("bold $ARGV[0]"), $_, color('reset') while <STDIN>;
