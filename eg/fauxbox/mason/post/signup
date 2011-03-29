@@ -11,12 +11,12 @@ my $ledger = $m->mp_request(
     name => $params->{signup}{name},
     email_addresses => $params->{signup}{email_addresses},
     consumers => {
-      "fauxbox:username:$params->{signup}{username}" => {
+      username_xid($params->{signup}{username}) => {
         template => 'username'
       },
     },
   },
 );
 
-$m->redirect('/dashboard?guid=' . $ledger->{value}{guid});
+$m->redirect('/dashboard?username=' . $params->{signup}{username});
 </%perl>

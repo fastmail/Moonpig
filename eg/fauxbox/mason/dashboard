@@ -1,13 +1,13 @@
 %# vim:set ft=mason:
 <%args>
-$guid
+$username
 </%args>
 <%init>
-my $ledger = $m->mp_request(GET => "/ledger/guid/$guid");
+my $ledger = $m->mp_request(GET => "/ledger/xid/" . username_xid($username));
 </%init>
 
 <h2>Your Dashboard!</h2>
-<h3>currently logged in as <% $guid %>
+<h3>currently logged in as <% $username %>
 
 <pre>
 <% Data::Dumper->Dump([ $ledger ]) |h %>

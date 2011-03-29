@@ -4,7 +4,7 @@
   </head>
 
   <body>
-    <h1>Fauxbox!</h1>
+    <h1><a href='/'>Fauxbox!</a></h1>
     <% $m->call_next %>
   </body>
 </html>

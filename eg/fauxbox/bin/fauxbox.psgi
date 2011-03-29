@@ -10,12 +10,14 @@ use File::Spec;
 use HTML::Mason::PSGIHandler;
 use Plack::Util;
 
+use Fauxbox::Mason::Commands { into => 'HTML::Mason::Commands' };
 use Fauxbox::Mason::Request;
 use Fauxbox::Schema;
 
 use namespace::autoclean;
 
-Fauxbox::Schema->shared_connection->deploy;
+Fauxbox::Schema->shared_connection->deploy
+  unless -e File::Spec->catfile($root, 'fauxbox.sqlite');
 
 my $h = HTML::Mason::PSGIHandler->new(
   comp_root     => File::Spec->rel2abs("eg/fauxbox/mason"),
