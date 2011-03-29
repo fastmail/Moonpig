@@ -1,4 +1,4 @@
-package Unalay::Schema::Result::User;
+package Fauxbox::Schema::Result::User;
 use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('users');

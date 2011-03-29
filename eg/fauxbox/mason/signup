@@ -1,4 +1,4 @@
-<h2>Welcome to Unalay.</h2>
+<h2>Welcome to Fauxbox.</h2>
 
 <form action='/post/signup' method='post'>
   <table>

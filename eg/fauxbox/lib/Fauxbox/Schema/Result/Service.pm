@@ -1,4 +1,4 @@
-package Unalay::Schema::Result::Service;
+package Fauxbox::Schema::Result::Service;
 use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('services');

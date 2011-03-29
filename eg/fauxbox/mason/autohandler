@@ -1,10 +1,10 @@
 <html>
   <head>
-    <title>Unalay: Lingua Porcorum Lunae</title>
+    <title>Fauxbox: Lingua Porcorum Lunae</title>
   </head>
 
   <body>
-    <h1>Unalay!</h1>
+    <h1>Fauxbox!</h1>
     <% $m->call_next %>
   </body>
 </html>

@@ -2,24 +2,24 @@
 use strict;
 use warnings;
 
-use lib 'eg/unalay/lib';
+use lib 'eg/fauxbox/lib';
 
-my $root = $ENV{UNALAY_STORAGE_ROOT} = 'eg/unalay/db';
+my $root = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/db';
 
 use File::Spec;
 use HTML::Mason::PSGIHandler;
 use Plack::Util;
 
-use Unalay::Mason::Request;
-use Unalay::Schema;
+use Fauxbox::Mason::Request;
+use Fauxbox::Schema;
 
 use namespace::autoclean;
 
-Unalay::Schema->shared_connection->deploy;
+Fauxbox::Schema->shared_connection->deploy;
 
 my $h = HTML::Mason::PSGIHandler->new(
-  comp_root     => File::Spec->rel2abs("eg/unalay/mason"),
-  request_class => 'Unalay::Mason::Request',
+  comp_root     => File::Spec->rel2abs("eg/fauxbox/mason"),
+  request_class => 'Fauxbox::Mason::Request',
 );
 
 my $handler = sub {

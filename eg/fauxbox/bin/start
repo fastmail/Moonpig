@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+mkdir 'eg/fauxbox/db' unless -d 'eg/fauxbox/db';
+
+my $colorize = '2>&1 | eg/fauxbox/bin/color';
+
+my $mp_pid = fork;
+$mp_pid or do {
+  exec "plackup -p 5001 eg/fauxbox/bin/moonpig.psgi $colorize cyan"
+};
+
+my $ul_pid = fork;
+$ul_pid or do {
+  $ENV{FAUXBOX_MOONPIG_URI} = 'http://localhost:5001';
+  exec "plackup -p 5000 eg/fauxbox/bin/fauxbox.psgi $colorize yellow";
+};
+
+$SIG{INT} = sub { kill 0, 2 };
+
+1 until wait == -1;
+
+

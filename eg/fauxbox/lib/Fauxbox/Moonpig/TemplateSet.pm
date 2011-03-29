@@ -1,4 +1,4 @@
-package Unalay::Moonpig::TemplateSet;
+package Fauxbox::Moonpig::TemplateSet;
 use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 

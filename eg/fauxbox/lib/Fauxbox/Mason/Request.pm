@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-package Unalay::Mason::Request;
+package Fauxbox::Mason::Request;
 
 BEGIN { our @ISA = qw(HTML::Mason::Request::PSGI) }
 
@@ -8,14 +8,14 @@ use Data::Dumper ();
 use HTML::Widget::Factory;
 use JSON;
 use LWP::UserAgent;
-use Unalay::Schema;
+use Fauxbox::Schema;
 
 my $JSON = JSON->new;
 
 my $WIDGET_FACTORY = HTML::Widget::Factory->new;
 sub widget { $WIDGET_FACTORY; }
 
-my $BASE_URI = $ENV{UNALAY_MOONPIG_URI} || die "no UNALAY_MOONPIG_URI";
+my $BASE_URI = $ENV{FAUXBOX_MOONPIG_URI} || die "no FAUXBOX_MOONPIG_URI";
 
 my $UA = LWP::UserAgent->new;
 
@@ -55,7 +55,7 @@ sub dump {
 }
 
 sub schema {
-  Unalay::Schema->shared_connection;
+  Fauxbox::Schema->shared_connection;
 }
 
 1;
