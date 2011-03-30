@@ -3,7 +3,6 @@
 $params
 </%args>
 <%perl>
-$m->dump( $params );
 my $acct_p  = $params->{account};
 my $client  = $m->schema->resultset('Client')->find($acct_p->{client_id});
 my $account = $client->related_resultset('accounts')->create({
