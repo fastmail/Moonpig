@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Fauxbox: Pobox, Except Worse (Better)</title>
+    <style>form { border: thin black solid }</style>
   </head>
 
   <body>

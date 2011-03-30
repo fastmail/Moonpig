@@ -3,12 +3,46 @@
 $username
 </%args>
 <%init>
+my $client = $m->schema->resultset('Client')->find({ username => $username });
 my $ledger = $m->mp_request(GET => "/ledger/xid/" . username_xid($username));
 </%init>
 
 <h2>Your Dashboard!</h2>
-<h3>currently logged in as <% $username %>
+<h3>currently logged in as <% $client->username %>
+
+<& SELF:account-list, client => $client &>
+
+<& SELF:account-form, client => $client &>
 
 <pre>
 <% Data::Dumper->Dump([ $ledger ]) |h %>
 </pre>
+
+<%method account-list>
+<%args>
+$client
+</%args>
+<%perl>
+my @accounts = $client->accounts;
+if (@accounts) {
+  print "<ul>\n";
+  printf "  <li>%s</li>\n", join(' -&gt; ', $_->alias, $_->fwd) for @accounts;
+  print "</ul>\n";
+} else {
+  print "<p>You have no accounts</p>\n"
+}
+</%perl>
+</%method>
+
+<%method account-form>
+<%args>
+$client
+</%args>
+<form action='/post/add-account' method='post'>
+  Mail from    <% $m->widget->input({ id => 'account.alias' }) %>
+  should go to <% $m->widget->input({ id => 'account.fwd' }) %>
+  <br />
+  <% $m->widget->hidden({ id => 'account.client_id', value => $client->id }) %>
+  <% $m->widget->submit %>
+</form>
+</%method>

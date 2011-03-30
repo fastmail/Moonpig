@@ -2,7 +2,7 @@
 $params
 </%args>
 <%perl>
-my $user = $m->schema->resultset('User')->create({
+my $user = $m->schema->resultset('Client')->create({
   username => $params->{signup}{username},
 });
 

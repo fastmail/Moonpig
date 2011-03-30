@@ -41,6 +41,8 @@ sub mp_request {
     );
   }
 
+  return undef if $res->code == 404;
+
   unless ($res->code == 200) {
     die "unexpected response from moonpig:\n" . $res->as_string;
   }
