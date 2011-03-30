@@ -14,13 +14,23 @@ sub templates {
 
       return {
         arg   => {
-          make_active => 1,
+          make_active     => 1,
+          replacement_mri => "moonpig://consumer-template/$name",
+        },
+      }
+    },
 
-          old_age     => days(30),
-          charge_path_prefix => 'SHOULD.NOT.BE.HERE',
+    fauxboxbasic => sub {
+      my ($name) = @_;
 
-          # build the uri based on the $name -- rjbs, 2011-02-09
-          replacement_mri    => "moonpig://consumer-template/$name",
+      return {
+        arg   => {
+          roles => [ qw(Consumer::ByTime) ],
+          cost_amount     => dollars(20),
+          cost_period     => days(365),
+          old_age         => days(30),
+          make_active     => 1,
+          replacement_mri => "moonpig://consumer-template/$name",
         },
       }
     },
