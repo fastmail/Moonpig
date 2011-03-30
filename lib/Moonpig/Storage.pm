@@ -52,16 +52,8 @@ has _conn => (
   },
 );
 
-sub store_ledger {
-  my ($self, $ledger) = @_;
-
-  Ledger->assert_valid($ledger);
-
-  $Logger->log_debug([
-    'storing %s under guid %s',
-    $ledger->ident,
-    $ledger->guid,
-  ]);
+sub _ensure_tables_exist {
+  my ($self) = @_;
 
   my $conn = $self->_conn;
 
@@ -83,6 +75,36 @@ sub store_ledger {
         ledger_guid TEXT NOT NULL
       );
     });
+
+    $dbh->do(q{
+      CREATE TABLE IF NOT EXISTS metadata (
+        one PRIMARY KEY,
+        version INTEGER NOT NULL,
+        last_realtime INTEGER NOT NULL,
+        last_moontime INTEGER NOT NULL,
+      );
+    });
+
+    # $dbh->do(q{
+  });
+}
+
+sub store_ledger {
+  my ($self, $ledger) = @_;
+
+  Ledger->assert_valid($ledger);
+
+  $Logger->log_debug([
+    'storing %s under guid %s',
+    $ledger->ident,
+    $ledger->guid,
+  ]);
+
+  my $conn = $self->_conn;
+  $conn->txn(sub {
+    my ($dbh) = $_;
+
+    $conn->_ensure_tables_exist;
 
     $dbh->do(
       q{
