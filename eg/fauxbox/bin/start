@@ -2,7 +2,20 @@
 use strict;
 use warnings;
 
-mkdir 'eg/fauxbox/db' unless -d 'eg/fauxbox/db';
+use File::Path qw(remove_tree);
+use Getopt::Long::Descriptive;
+
+my ($opt, $usage) = describe_options(
+  'Usage: %c %o',
+  [ 'new-db|N' => 'create a new set of databases' ],
+);
+
+my $db_path = 'eg/fauxbox/db';
+if ($opt->new_db) {
+  print "deleting old databases...\n";
+  remove_tree($db_path);
+}
+mkdir $db_path unless -d $db_path;
 
 my $colorize = '2>&1 | eg/fauxbox/bin/color';
 
