@@ -14,7 +14,7 @@ use namespace::autoclean;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::Consumer',
+  'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::StubBuild',
 );
 

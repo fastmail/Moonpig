@@ -124,24 +124,6 @@ sub create_own_replacement {
   return;
 }
 
-# the date is appended to this to make the cost path
-# for this consumer's charges
-has charge_path_prefix => (
-  is => 'ro',
-  isa => ChargePath,
-  coerce => 1,
-  required => 1,
-);
-
-# When the object has less than this long to live, it will
-# start posting low-balance events to its successor, or to itself if
-# it has no successor
-has old_age => (
-  is => 'ro',
-  required => 1,
-  isa => TimeInterval,
-);
-
 sub amount_in_bank {
   my ($self) = @_;
   return $self->has_bank ? $self->bank->unapplied_amount : 0;

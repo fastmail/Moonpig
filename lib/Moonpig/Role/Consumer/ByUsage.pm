@@ -13,7 +13,7 @@ use MooseX::Types::Moose qw(Num);
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::Consumer',
+  'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );

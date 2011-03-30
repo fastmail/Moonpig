@@ -26,7 +26,7 @@ $client
 my @accounts = $client->accounts;
 if (@accounts) {
   print "<ul>\n";
-  printf "  <li>%s</li>\n", join(' -&gt; ', $_->alias, $_->fwd) for @accounts;
+  printf "  <li>%s</li>\n", join(' ➜ ', $_->alias, $_->fwd) for @accounts;
   print "</ul>\n";
 } else {
   print "<p>You have no accounts</p>\n"
