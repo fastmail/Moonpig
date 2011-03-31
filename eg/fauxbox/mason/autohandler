@@ -8,6 +8,10 @@
 
   <body>
     <h1><a href='/'>Fauxbox!</a></h1>
+    <table>
+      <tr><th>Moon time</th><td><% $m->mp_time %>   </th></tr>
+      <tr><th>Real time</th><td><% $m->real_time %> </td></tr>
+    </table>
     <% $m->call_next %>
   </body>
 </html>

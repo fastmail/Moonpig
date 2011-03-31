@@ -9,6 +9,7 @@ use HTML::Widget::Factory;
 use JSON;
 use LWP::UserAgent;
 use Fauxbox::Schema;
+use DateTime;
 
 my $JSON = JSON->new;
 
@@ -20,6 +21,16 @@ my $BASE_URI = $ENV{FAUXBOX_MOONPIG_URI} || die "no FAUXBOX_MOONPIG_URI";
 my $UA = LWP::UserAgent->new;
 
 $BASE_URI =~ s{/$}{};
+
+sub mp_time {
+  my ($self) = @_;
+  my $time = $self->mp_request(GET => '/time')->{now};
+  return DateTime->from_epoch(epoch => $time, time_zone => 'America/New_York');
+}
+
+sub real_time {
+  return DateTime->now(time_zone => 'America/New_York');
+}
 
 sub mp_request {
   my ($self, $method, $path, $arg) = @_;
