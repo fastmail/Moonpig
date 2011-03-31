@@ -16,6 +16,13 @@ parameter item_class => (
   required => 1,
 );
 
+# name of the ledger method that retrieves an array of items
+parameter item_array => (
+  is => 'ro',
+  isa => Str,
+  required => 1,
+);
+
 # name of the ledger method that adds a new item of this type to a ledger
 parameter add_this_item => (
   is => 'ro',
@@ -35,21 +42,15 @@ role {
   sub publish;
 
   my $add_this_item = $p->add_this_item;
+  my $item_array = $p->item_array;
   my $item_type = class_type($p->item_class);
 
   with (qw(Moonpig::Role::LedgerComponent));
 
-  has items => (
-    is => 'ro',
-    isa => ArrayRef [ $item_type ],
-    default => sub { [] },
-    traits => [ 'Array' ],
-    handles => {
-      _count => 'count',
-      _all => 'elements',
-      _push => 'push',
-    },
-   );
+
+  method items => sub {
+    return $_[0]->ledger->$item_array;
+  };
 
   has default_page_size => (
     is => 'rw',
@@ -59,12 +60,12 @@ role {
 
   publish all => { } => sub {
     my ($self) = @_;
-    return $self->_all;
+    return @{$self->items};
   };
 
   publish count => { } => sub {
     my ($self) = @_;
-    return $self->_count;
+    return scalar @{$self->items};
   };
 
   # Page numbers start at 1.
@@ -77,7 +78,7 @@ role {
     my $items = $self->items;
     my $start = ($pagenum-1) * $pagesize;
     my $end = min($start+$pagesize-1, $#$items);
-    return @{$self->items}[$start .. $end];
+    return @{$items}[$start .. $end];
   };
 
   # If there are 3 pages, they are numbered 1, 2, 3.
@@ -85,26 +86,26 @@ role {
                    } => sub {
     my ($self, $args) = @_;
     my $pagesize = $args->{pagesize} || $self->default_page_size();
-    return ceil($self->_count / $pagesize);
+    return ceil($self->count / $pagesize);
   };
 
   publish find_by_guid => { guid => Str } => sub {
     my ($self, $arg) = @_;
     my $guid = $arg->{guid};
-    my ($item) = grep { $_->guid eq $guid } $self->_all;
+    my ($item) = grep { $_->guid eq $guid } $self->all;
     return $item;
   };
 
   publish find_by_xid => { xid => Str } => sub {
     my ($self, $arg) = @_;
     my $xid = $arg->{xid};
-    my ($item) = grep { $_->xid eq $xid } $self->_all;
+    my ($item) = grep { $_->xid eq $xid } $self->all;
     return $item;
   };
 
   publish add => { new_item => $item_type } => sub {
     my ($self, $arg) = @_;
-    $self->_push($self->ledger->$add_this_item($arg->{new_item}));
+    $self->ledger->$add_this_item($arg->{new_item});
   };
 };
 

@@ -69,6 +69,7 @@ parameter factory => (
     my $parameters = {
       item_class => $item_class,
       add_this_item => $p->add_this_thing,
+      item_array => $p->accessor,
     };
 
     my $c = class([ 'CollectionType', $p->item_collection_name, $parameters ]);
@@ -120,7 +121,6 @@ role {
   method $constructor => sub {
     my ($parent, $opts) = @_;
     $p->factory->new({
-      items => $parent->$accessor,
       options => $opts,
       ledger => $parent->ledger
     });
