@@ -2,6 +2,7 @@ package Moonpig::Storage;
 use Moose;
 
 use Class::Rebless 0.009;
+use Digest::MD5 qw(md5_hex);
 use DBI;
 use DBIx::Connector;
 use File::Spec;
@@ -52,6 +53,29 @@ has _conn => (
   },
 );
 
+my $sql = <<'END_SQL';
+    CREATE TABLE stuff (
+      guid TEXT NOT NULL,
+      name TEXT NOT NULL,
+      blob BLOB NOT NULL,
+      PRIMARY KEY (guid, name)
+    );
+
+    CREATE TABLE xid_ledgers (
+      xid TEXT PRIMARY KEY,
+      ledger_guid TEXT NOT NULL
+    );
+
+    CREATE TABLE metadata (
+      one PRIMARY KEY,
+      schema_md5 TEXT NOT NULL,
+      last_realtime INTEGER NOT NULL,
+      last_moontime INTEGER NOT NULL
+    );
+END_SQL
+
+my $SCHEMA_MD5 = md5_hex($sql);
+
 sub _ensure_tables_exist {
   my ($self) = @_;
 
@@ -60,32 +84,26 @@ sub _ensure_tables_exist {
   $conn->txn(sub {
     my ($dbh) = $_;
 
-    $dbh->do(q{
-      CREATE TABLE IF NOT EXISTS stuff (
-        guid TEXT NOT NULL,
-        name TEXT NOT NULL,
-        blob BLOB NOT NULL,
-        PRIMARY KEY (guid, name)
-      );
-    });
+    my ($schema_md5) = eval {
+      $dbh->selectrow_array("SELECT schema_md5 FROM metadata");
+    };
 
-    $dbh->do(q{
-      CREATE TABLE IF NOT EXISTS xid_ledgers (
-        xid TEXT PRIMARY KEY,
-        ledger_guid TEXT NOT NULL
-      );
-    });
+    return if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
+    confess "database is of an incompatible schema" if defined $schema_md5;
 
-    $dbh->do(q{
-      CREATE TABLE IF NOT EXISTS metadata (
-        one PRIMARY KEY,
-        version INTEGER NOT NULL,
-        last_realtime INTEGER NOT NULL,
-        last_moontime INTEGER NOT NULL,
-      );
-    });
+    my @hunks = split /\n{2,}/, $sql;
 
-    # $dbh->do(q{
+    $dbh->do($_) for @hunks;
+
+    $dbh->do(
+      q{
+        INSERT INTO metadata (one, schema_md5, last_realtime, last_moontime)
+        VALUES (1, ?, ?, ?)
+      },
+      undef,
+      $SCHEMA_MD5,
+      (time) x 2,
+    );
   });
 }
 
@@ -104,7 +122,7 @@ sub store_ledger {
   $conn->txn(sub {
     my ($dbh) = $_;
 
-    $conn->_ensure_tables_exist;
+    $self->_ensure_tables_exist;
 
     $dbh->do(
       q{
