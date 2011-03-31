@@ -31,4 +31,6 @@ use Moonpig::Env::Test;
 
 use Fauxbox::Moonpig::TemplateSet;
 
+Moonpig->env->storage->_ensure_tables_exist;
+
 return Moonpig::Web::App->app;
