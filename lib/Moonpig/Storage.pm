@@ -169,6 +169,37 @@ sub store_ledger {
   return $ledger;
 }
 
+sub _reinstate_stored_time {
+  my ($self) = @_;
+
+  my ($real, $moon) = $self->_conn->dbh->selectrow_array(
+    "SELECT last_realtime, last_moontime FROM metadata",
+  );
+
+  my $diff = time - $real;
+  confess("last realtime from storage is in the future") if $diff < 0;
+
+  my $should_be = $moon + $diff;
+
+  Moonpig->env->stop_clock_at( Moonpig::DateTime->new($should_be) );
+  Moonpig->env->restart_clock;
+}
+
+sub _store_time {
+  my ($self) = @_;
+
+  my $now_s = Moonpig->env->now->epoch;
+
+  $self->txn(sub {
+    $_->do(
+      "UPDATE metadata SET last_realtime = ?, last_moontime = ?",
+      undef,
+      time,
+      $now_s,
+    );
+  });
+}
+
 sub known_guids {
   my ($self) = @_;
   my $dbh = $self->_conn->dbh;
