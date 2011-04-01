@@ -50,18 +50,10 @@ sub class {
 
   while (@args) {
     my $name = shift @args;
-
     if (ref $name) {
       my ($role_name, $moniker, $params) = @$name;
 
-      my $full_name = String::RewritePrefix->rewrite(
-        {
-          ''    => 'Moonpig::Role::',
-          't::' => 't::lib::Role::',
-        },
-        $role_name,
-      );
-
+      my $full_name = _rewrite_prefix($role_name);
       Class::MOP::load_class($full_name);
       my $role_object = $full_name->meta->generate_role(
         parameters => $params,
@@ -79,13 +71,7 @@ sub class {
 
   my $name = join q{::}, 'Moonpig::Class', @all_names;
 
-  @role_class_names = String::RewritePrefix->rewrite(
-    {
-      ''    => 'Moonpig::Role::',
-      't::' => 't::lib::Role::',
-    },
-    @role_class_names,
-  );
+  @role_class_names = _rewrite_prefix(@role_class_names);
 
   Class::MOP::load_class($_) for @role_class_names;
 
@@ -99,6 +85,17 @@ sub class {
   $CLASS_ROLES{ $name } = \@orig_args;
 
   return $class->name;
+}
+
+sub _rewrite_prefix {
+  my (@in) = @_;
+  return String::RewritePrefix->rewrite(
+    {
+     ''    => 'Moonpig::Role::',
+     't::' => 't::lib::Role::',
+    },
+    @in
+  );
 }
 
 sub class_roles {

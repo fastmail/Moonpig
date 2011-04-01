@@ -8,6 +8,7 @@ with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
+  'Stick::Role::PublicResource',
 );
 
 use Moonpig::Behavior::EventHandlers;
