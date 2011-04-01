@@ -85,19 +85,6 @@ parameter item_collection_name => (
     ucfirst($p->item . "Collection");
   },);
 
-sub methods {
-  my ($x) = @_;
-  my $class = ref($x) || $x;
-  no strict 'refs';
-  my $stash = \%{"$class\::"};
-  for my $k (sort keys %$stash) {
-    print STDERR "# $k (via $class)\n" if defined &{"$class\::$k"};
-  }
-  for my $parent (@{"$class\::ISA"}) {
-    methods($parent);
-  }
-}
-
 # Name of ledger method that returns an arrayref of the things
 # default "thing_array"
 parameter accessor => (isa => Str, lazy => 1,
