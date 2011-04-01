@@ -1,20 +1,14 @@
 package Moonpig::Role::CollectionType;
 use List::Util qw(min);
-use Moose::Util::TypeConstraints qw(class_type);
+use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::Role::Parameterized;
-use MooseX::Types::Moose qw(ArrayRef Defined HashRef Maybe Str);
+use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Str);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Carp 'confess';
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
-
-parameter item_class => (
-  is => 'ro',
-  isa => Str,
-  required => 1,
-);
 
 # name of the ledger method that retrieves an array of items
 parameter item_array => (
@@ -36,6 +30,24 @@ parameter pagesize => (
   default => 20,
 );
 
+parameter item_roles => (
+  isa => ArrayRef [ Str ],
+  is => 'ro',
+  required => 1,
+);
+
+sub item_type {
+  my ($p) = @_;
+  my @roles = map role_type($_), @{$p->item_roles};
+  if (@roles == 0) { return Any }
+  elsif (@roles == 1) { return $roles[0] }
+  else {
+    require Moose::Meta::TypeConstraint::Union;
+    return Moose::Meta::TypeConstraint::Union
+      ->new(type_constraints => \@roles);
+  }
+}
+
 role {
   my ($p, %args) = @_;
   Stick::Publisher->import({ into => $args{operating_on}->name });
@@ -43,7 +55,7 @@ role {
 
   my $add_this_item = $p->add_this_item;
   my $item_array = $p->item_array;
-  my $item_type = class_type($p->item_class);
+  my $item_type = item_type($p);
 
   with (qw(Moonpig::Role::LedgerComponent));
 

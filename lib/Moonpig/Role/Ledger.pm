@@ -16,11 +16,15 @@ with(
   'Stick::Role::Routable::AutoInstance',
   'Moonpig::Role::HasCollections' => {
     item => 'refund',
-    item_factory => class('Refund'),
+    item_roles => [ 'Moonpig::Role::Refund' ],
    },
   'Moonpig::Role::HasCollections' => {
     item => 'consumer',
-    item_factory => class('Consumer'),
+    item_roles => [ 'Moonpig::Role::Consumer' ],
+   },
+  'Moonpig::Role::HasCollections' => {
+    item => 'bank',
+    item_roles => [ 'Moonpig::Role::Bank' ],
    },
   'Stick::Role::PublicResource::GetSelf',
 );
