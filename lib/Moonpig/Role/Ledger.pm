@@ -4,6 +4,9 @@ package Moonpig::Role::Ledger;
 use Moose::Role;
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
+use Moose::Util::TypeConstraints qw(role_type);
+require Stick::Role::Routable::AutoInstance;
+Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
 
 _generate_subcomponent_methods(qw(bank consumer refund));
 
@@ -98,6 +101,21 @@ sub add_credit {
   $self->_add_credit($credit);
 
   return $credit;
+}
+
+sub _extra_instance_subroute {
+  my ($self, $path, $npr) = @_;
+  my ($first) = @$path;
+  my %x_rt = (
+    banks => $self->bank_collection,
+    consumers => $self->consumer_collection,
+    refunds => $self->refund_collection,
+  );
+  if (exists $x_rt{$first}) {
+    shift @$path;
+    return $x_rt{$first};
+  }
+  return;
 }
 
 # Compile-time generation of accessors for subcomponents such as
