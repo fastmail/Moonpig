@@ -90,7 +90,7 @@ role {
     my $items = $self->items;
     my $start = ($pagenum-1) * $pagesize;
     my $end = min($start+$pagesize-1, $#$items);
-    return @{$items}[$start .. $end];
+    return [ @{$items}[$start .. $end] ];
   };
 
   # If there are 3 pages, they are numbered 1, 2, 3.
