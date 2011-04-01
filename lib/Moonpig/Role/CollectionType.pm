@@ -5,6 +5,7 @@ use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Str);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
+use Scalar::Util qw(blessed);
 use Carp 'confess';
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
@@ -50,15 +51,48 @@ sub item_type {
 
 role {
   my ($p, %args) = @_;
+
   Stick::Publisher->import({ into => $args{operating_on}->name });
   sub publish;
+
+  require Stick::Role::Routable::AutoInstance;
+  Stick::Role::Routable::AutoInstance->VERSION(0.20110331);
 
   my $add_this_item = $p->add_this_item;
   my $item_array = $p->item_array;
   my $item_type = item_type($p);
 
-  with (qw(Moonpig::Role::LedgerComponent));
+  method _subroute => sub {
+    my ($self, @args) = @_;
+    confess "Can't route collection class, instances only"
+      unless blessed($self);
+    $self->_instance_subroute(@args);
+  };
 
+  method _extra_instance_subroute => sub {
+    my ($self, $path) = @_;
+
+    return $self unless @$path;
+
+    my ($first, $second) = @$path;
+
+    if ($first eq "guid") {
+      splice @$path, 0, 2;
+      return $self->find_by_guid({guid => $second});
+    } elsif ($first eq "xid") {
+      splice @$path, 0, 2;
+      return $self->find_by_xid({xid => $second});
+    } else {
+      return;
+    }
+  };
+
+  with (qw(Moonpig::Role::LedgerComponent
+           Stick::Role::PublicResource
+           Stick::Role::Routable
+           Stick::Role::Routable::AutoInstance
+           Stick::Role::PublicResource::GetSelf
+        ));
 
   method items => sub {
     return $_[0]->ledger->$item_array;
@@ -81,6 +115,7 @@ role {
   };
 
   # Page numbers start at 1.
+  # TODO: .../collection/page/3 doesn't work yet
   publish page => { pagesize => Maybe[PositiveInt],
                     page => PositiveInt,
                   } => sub {
@@ -119,6 +154,11 @@ role {
     my ($self, $arg) = @_;
     $self->ledger->$add_this_item($arg->{new_item});
   };
+
+  method resource_post => sub {
+    my ($self, @args) = @_;
+    $self->add(@args);
+   }
 };
 
 1;

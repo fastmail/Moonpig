@@ -96,7 +96,7 @@ parameter constructor => (isa => Str, lazy => 1,
                           default => sub { $_[0]->item . "_collection" },
                          );
 
-# Names of ledger methods
+# Names of ledger method that inserts a new item
 parameter add_this_thing => (isa => Str, lazy => 1,
                              default => sub { "add_this_" . $_[0]->item },
                             );
@@ -108,7 +108,6 @@ role {
   my $accessor = $p->accessor || "$thing\_array";
   my $constructor = $p->constructor || "$thing\_collection";
   my $add_this_thing = $p->add_this_thing || "add_this_$thing";
-  my $collection_factory = $p->factory;
 
   # the accessor method is required
   requires $accessor;
