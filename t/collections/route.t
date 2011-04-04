@@ -6,6 +6,7 @@ use Moonpig::Env::Test;
 
 with(
   't::lib::Factory::Ledger',
+  't::lib::Role::UsesStorage',
 );
 
 use Moonpig::Env::Test;
