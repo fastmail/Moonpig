@@ -4,6 +4,7 @@ $params
 <%perl>
 my $username = $params->{login}{username};
 
-my $ledger = $m->mp_request(GET => "/ledger/xid/" . username_xid($username));
+my $client = $m->schema->resultset('Client')->find({ username => $username });
+$m->redirect('/login') unless $client;
 $m->redirect('/dashboard?username=' . $username);
 </%perl>
