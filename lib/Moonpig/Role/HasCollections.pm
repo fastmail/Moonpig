@@ -44,9 +44,9 @@ parameter factory => (
     };
 
     my $c = class([ 'CollectionType',
-                    $p->item_collection_name, $parameters,
-                    @{$p->collection_roles},
-                  ]);
+                    $p->item_collection_name, $parameters, ],
+                  map "Collection::$_", @{$p->collection_roles},
+                 );
     return $c;
   },
 );
