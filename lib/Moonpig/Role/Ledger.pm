@@ -24,6 +24,7 @@ with(
   'Moonpig::Role::HasCollections' => {
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
+    collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras' ],
    },
   'Moonpig::Role::HasCollections' => {
     item => 'bank',

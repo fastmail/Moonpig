@@ -21,6 +21,7 @@ parameter item_roles => (
 );
 
 # The collection itelf will compose these roles
+# Good for adding extra constructors or whatever
 parameter collection_roles => (
   isa => ArrayRef [ Str ],
   default => sub { [] },
