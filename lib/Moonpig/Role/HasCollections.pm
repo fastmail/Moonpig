@@ -4,39 +4,6 @@ use Moonpig::Types qw(Factory);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Str ArrayRef HashRef Defined);
 
-=head2 USAGE
-
-	package Fruitbasket;
-	with (Moonpig::Role::HasCollections => {
-	  item => 'banana',
-        });
-
-        sub banana_array { ... }   # Should return an array of this object's
-                                   # bananas
-
-        sub add_banana { ... }     # Should add a banana to this object
-
-        package main;
-        my $basket = Fruitbasket->new(...);
-
-        my $bananas = $basket->banana_collection({...});
-        $bananas->items;     # same as $basket->banana_array
-        $bananas->_all       # same as @{$basket->banana_array}
-        $bananas->_count;    # number of bananas
-        $bananas->_pages;    # return number of pages of bananas
-        $bananas->_page(3);  # return list of bananas on page 3
-	$bananas->_add($platano) # Add the platano to the fruitbasket
-
-        # Stick published methods
-        find_by_guid($guid)
-        find_by_xid($xid)
-        all                 # like ->_all
-        count               # like ->_count
-        pages               # like ->_pages
-        page(3)             # like ->_page(3)
-
-=cut
-
 requires 'ledger';
 
 # Name of the sort of thing this collection will contain
