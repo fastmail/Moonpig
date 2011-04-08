@@ -78,7 +78,8 @@ sub class {
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
   ));
-  apply_all_roles($class, @role_class_names, @roles);
+#  apply_all_roles($class, @role_class_names, @roles);
+  apply_all_roles($class, @role_class_names, map $_->name, @roles);
 
   $class->make_immutable;
 
