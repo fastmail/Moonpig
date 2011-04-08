@@ -20,6 +20,12 @@ parameter item_roles => (
   required => 1,
 );
 
+# The collection itelf will compose these roles
+parameter collection_roles => (
+  isa => ArrayRef [ Str ],
+  default => sub { [] },
+);
+
 # Class name or factory object for the collection itself.
 # e.g., "Moonpig::Class::RefundCollection", which will do
 #   Moonpig::Role::CollectionType
@@ -36,7 +42,10 @@ parameter factory => (
       item_array => $p->accessor,
     };
 
-    my $c = class([ 'CollectionType', $p->item_collection_name, $parameters ]);
+    my $c = class([ 'CollectionType',
+                    $p->item_collection_name, $parameters,
+                    @{$p->collection_roles},
+                  ]);
     return $c;
   },
 );
