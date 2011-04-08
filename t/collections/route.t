@@ -3,21 +3,14 @@ use Test::Routine::Util -all;
 use Test::More;
 use Test::Fatal;
 use Moonpig::Env::Test;
+use Moonpig::Util qw(class dollars);
 
 with(
   't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
 
-use Moonpig::Env::Test;
-
-# use Moonpig::Util qw(class days dollars event);
-
 use namespace::autoclean;
-
-use Moonpig::Util qw(class dollars);
-
-class('Ledger');
 
 test "check for existence of collection routes" => sub {
   my ($self) = @_;
