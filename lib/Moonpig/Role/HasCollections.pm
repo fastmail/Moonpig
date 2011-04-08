@@ -27,6 +27,13 @@ parameter collection_roles => (
   default => sub { [] },
 );
 
+# method that handles POST requests to this collection
+parameter post_action => (
+  isa => Str,
+  is => 'ro',
+  default => 'add',
+);
+
 # Class name or factory object for the collection itself.
 # e.g., "Moonpig::Class::RefundCollection", which will do
 #   Moonpig::Role::CollectionType
@@ -41,6 +48,7 @@ parameter factory => (
       item_roles => $p->item_roles,
       add_this_item => $p->add_this_thing,
       item_array => $p->accessor,
+      post_action => $p->post_action,
     };
 
     my $c = class([ 'CollectionType',

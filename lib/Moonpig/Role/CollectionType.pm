@@ -37,6 +37,13 @@ parameter item_roles => (
   required => 1,
 );
 
+# method that handles POST requests to this collection
+parameter post_action => (
+  isa => Str,
+  is => 'ro',
+  default => 'add',
+);
+
 sub item_type {
   my ($p) = @_;
   my @roles = map role_type($_), @{$p->item_roles};
@@ -61,6 +68,7 @@ role {
   my $add_this_item = $p->add_this_item;
   my $item_array = $p->item_array;
   my $item_type = item_type($p);
+  my $post_action = $p->post_action;
 
   method _subroute => sub {
     my ($self, @args) = @_;
@@ -157,7 +165,7 @@ role {
 
   method resource_post => sub {
     my ($self, @args) = @_;
-    $self->add(@args);
+    $self->$post_action(@args);
    }
 };
 

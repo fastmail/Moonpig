@@ -84,6 +84,7 @@ sub _count_items_in_pages {
   return scalar keys %h;
 }
 
+# alternate post_action setting is tested in consumers.t 2011-04-08 MJD
 test "add item to a collection" => sub {
   my ($self) = @_;
 

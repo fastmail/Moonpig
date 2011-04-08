@@ -25,6 +25,7 @@ with(
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
     collection_roles => [ 'ConsumerExtras' ],
+    post_action => 'add_from_template',
    },
   'Moonpig::Role::HasCollections' => {
     item => 'bank',
