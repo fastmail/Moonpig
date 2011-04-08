@@ -44,29 +44,36 @@ parameter factory => (
 # Name for the item collection class
 # e.g., "RefundCollection";
 parameter item_collection_name => (
-  isa => Str, lazy => 1,
+  isa => Str,
+  lazy => 1,
   default => sub {
     my ($p) = @_;
     ucfirst($p->item . "Collection");
-  },);
+  },
+);
 
 # Name of ledger method that returns an arrayref of the things
 # default "thing_array"
-parameter accessor => (isa => Str, lazy => 1,
-                       default => sub {
-                         $_[0]->item . "_array" },
-                      );
+parameter accessor => (
+  isa => Str,
+  lazy => 1,
+  default => sub { $_[0]->item . "_array" },
+);
 
 # Method name for collection object constructor
 # Default: "thing_collection"
-parameter constructor => (isa => Str, lazy => 1,
-                          default => sub { $_[0]->item . "_collection" },
-                         );
+parameter constructor => (
+  isa => Str,
+  lazy => 1,
+  default => sub { $_[0]->item . "_collection" },
+);
 
 # Names of ledger method that inserts a new item
-parameter add_this_thing => (isa => Str, lazy => 1,
-                             default => sub { "add_this_" . $_[0]->item },
-                            );
+parameter add_this_thing => (
+  isa => Str,
+  lazy => 1,
+  default => sub { "add_this_" . $_[0]->item },
+);
 
 role {
   my ($p) = @_;
