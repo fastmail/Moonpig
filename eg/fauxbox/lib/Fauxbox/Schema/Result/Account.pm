@@ -21,9 +21,12 @@ __PACKAGE__->belongs_to(
   { 'foreign.id' => 'self.client_id' },
 );
 
-__PACKAGE__->might_have(
+__PACKAGE__->has_many(
   active_flag => 'Fauxbox::Schema::Result::AccountActiveFlag',
-  { 'foreign.id' => 'self.id' },
+  {
+    'foreign.id'    => 'self.id',
+    'foreign.alias' => 'self.alias',
+  },
 );
 
 1;

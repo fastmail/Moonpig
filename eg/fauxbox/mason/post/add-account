@@ -5,9 +5,15 @@ $params
 <%perl>
 my $acct_p  = $params->{account};
 my $client  = $m->schema->resultset('Client')->find($acct_p->{client_id});
-my $account = $client->related_resultset('accounts')->create({
-  alias => $acct_p->{alias},
-  fwd   => $acct_p->{fwd},
+
+my $account;
+$m->schema->txn_do(sub {
+  $account = $client->related_resultset('accounts')->create({
+    alias => $acct_p->{alias},
+    fwd   => $acct_p->{fwd},
+  });
+
+  $account->create_related('active_flag', {});
 });
 
 $m->mp_request(
