@@ -3,7 +3,7 @@ use List::Util qw(min);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Str);
-use Moonpig::Types qw(PositiveInt);
+use Moonpig::Types qw(Ledger PositiveInt);
 use POSIX qw(ceil);
 use Scalar::Util qw(blessed);
 use Carp 'confess';
@@ -95,8 +95,13 @@ role {
     }
   };
 
-  with (qw(Moonpig::Role::LedgerComponent
-           Stick::Role::PublicResource
+  has ledger => (
+    is   => 'ro',
+    isa  => Ledger,
+    required => 1,
+  );
+
+  with (qw(Stick::Role::PublicResource
            Stick::Role::Routable
            Stick::Role::Routable::AutoInstance
            Stick::Role::PublicResource::GetSelf
