@@ -122,16 +122,18 @@ has _in_update_mode => (
 sub do_rw {
   my ($self, $code) = @_;
   $self->_set_update_mode;
-  $code->();
+  my $rv = $code->();
   $self->execute_saves;
   $self->_clear_update_mode;
+  return $rv;
 }
 
 sub do_ro {
   my ($self, $code) = @_;
   $self->_set_noupdate_mode;
-  $code->();
+  my $rv = $code->();
   $self->_clear_update_mode;
+  return $rv;
 }
 
 has _ledger_queue => (

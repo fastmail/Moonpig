@@ -69,29 +69,34 @@ sub app {
     shift @path; # get rid of leading "/" part
 
     my $response = try {
+      my $do_method = ($req->method eq 'GET' || $req->method eq 'HEAD')
+                    ? 'do_ro'
+                    : 'do_rw';
 
-      # XXX: IF WE ARE IN TESTING MODE -- rjbs, 2011-03-30
-      if (1) {
-        my $res = test_routes(\@path, $storage);
-        return $res if $res;
-      }
+      return Moonpig->env->storage->$do_method(sub {
+        # XXX: IF WE ARE IN TESTING MODE -- rjbs, 2011-03-30
+        if (1) {
+          my $res = test_routes(\@path, $storage);
+          return $res if $res;
+        }
 
-      my $resource = Moonpig->env->route(\@path);
+        my $resource = Moonpig->env->route(\@path);
 
-      my $args = {};
-      if (($req->content_type || '') eq 'application/json') {
-        $args = $JSON->decode($req->content);
-      }
+        my $args = {};
+        if (($req->content_type || '') eq 'application/json') {
+          $args = $JSON->decode($req->content);
+        }
 
-      my $result = $resource->resource_request(lc $req->method, $args);
+        my $result = $resource->resource_request(lc $req->method, $args);
 
-      $storage->execute_saves;
+        $storage->execute_saves;
 
-      return [
-        200,
-        [ 'Content-type' => 'application/json' ],
-        [ $JSON->encode( ppack($result) ) ],
-      ];
+        [
+          200,
+          [ 'Content-type' => 'application/json' ],
+          [ $JSON->encode( ppack($result) ) ],
+        ];
+      });
     } catch {
       return $_->as_psgi if try { $_->does('HTTP::Throwable') };
 
