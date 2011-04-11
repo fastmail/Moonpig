@@ -40,7 +40,7 @@ sub resource_post {
       }
     }
 
-    Moonpig->env->storage->store_ledger($ledger);
+    Moonpig->env->save_ledger($ledger);
   });
 
   return $ledger;

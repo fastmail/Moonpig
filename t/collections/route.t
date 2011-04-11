@@ -28,7 +28,8 @@ test "route to get a collection" => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger;
-  Moonpig->env->storage->store_ledger($ledger);
+  Moonpig->env->save_ledger($ledger);
+  Moonpig->env->storage->execute_saves;
 
   my $guid = $ledger->guid;
 
@@ -45,7 +46,8 @@ test "pages" => sub {
   my ($self) = @_;
 
   my $ledger = $self->test_ledger;
-  Moonpig->env->storage->store_ledger($ledger);
+  Moonpig->env->save_ledger($ledger);
+  Moonpig->env->storage->execute_saves;
   my @bank;
   for my $i (1..20) {
     my $b = class('Bank')->new({ ledger => $ledger, amount => dollars($i) });

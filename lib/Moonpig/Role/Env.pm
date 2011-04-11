@@ -39,6 +39,7 @@ has storage => (
   init_arg => undef,
   default  => sub { Moonpig::Storage->new },
   clearer  => 'clear_storage',
+  handles  => [ qw(save_ledger) ],
 );
 
 has consumer_template_registry => (

@@ -107,7 +107,30 @@ sub _ensure_tables_exist {
   });
 }
 
-sub store_ledger {
+has _ledger_queue => (
+  is  => 'ro',
+  isa => 'HashRef',
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+sub save_ledger {
+  my ($self, $ledger) = @_;
+  $self->_ledger_queue->{ $ledger->guid } = $ledger;
+}
+
+sub execute_saves {
+  my ($self) = @_;
+
+  $self->txn(sub {
+    for my $guid (keys %{ $self->_ledger_queue }) {
+      my $ledger = delete $self->_ledger_queue->{ $guid };
+      $self->_store_ledger($ledger);
+    }
+  });
+}
+
+sub _store_ledger {
   my ($self, $ledger) = @_;
 
   Ledger->assert_valid($ledger);

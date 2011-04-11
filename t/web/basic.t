@@ -20,7 +20,8 @@ test "get a ledger guid via web" => sub {
 
   my $guid = $ledger->guid;
 
-  Moonpig->env->storage->store_ledger($ledger);
+  Moonpig->env->save_ledger($ledger);
+  Moonpig->env->storage->execute_saves;
 
   test_psgi(Moonpig::Web::App->app, sub {
     my ($cb) = @_;

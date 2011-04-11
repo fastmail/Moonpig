@@ -84,6 +84,9 @@ sub app {
       }
 
       my $result = $resource->resource_request(lc $req->method, $args);
+
+      $storage->execute_saves;
+
       return [
         200,
         [ 'Content-type' => 'application/json' ],
