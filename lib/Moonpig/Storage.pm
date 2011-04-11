@@ -122,8 +122,11 @@ has _in_update_mode => (
 sub do_rw {
   my ($self, $code) = @_;
   $self->_set_update_mode;
-  my $rv = $code->();
-  $self->execute_saves;
+  my $rv = $self->txn(sub {
+    my $rv = $code->();
+    $self->execute_saves;
+    return $rv;
+  });
   $self->_clear_update_mode;
   return $rv;
 }
@@ -131,7 +134,9 @@ sub do_rw {
 sub do_ro {
   my ($self, $code) = @_;
   $self->_set_noupdate_mode;
-  my $rv = $code->();
+  my $rv = $self->txn(sub {
+    $code->();
+  });
   $self->_clear_update_mode;
   return $rv;
 }
