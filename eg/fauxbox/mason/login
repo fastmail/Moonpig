@@ -1,4 +1,12 @@
+%# vim:set ft=mason:
 <form action='/post/login' method='post'>
   Username: <% $m->widget->input({ id => 'login.username' }) %>
   <% $m->widget->submit({ value => 'Login' }) %>
 </form>
+
+% my $clients = $m->schema->resultset('Client')->search({}, { rows => 10 });
+<ul>
+% while (my $client = $clients->next) {
+  <li><% $client->username |h %></li>
+% }
+</ul>

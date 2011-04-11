@@ -9,5 +9,20 @@ my $account = $client->related_resultset('accounts')->create({
   alias => $acct_p->{alias},
   fwd   => $acct_p->{fwd},
 });
+
+$m->mp_request(
+  POST => sprintf(
+    '/ledger/xid/%s/consumers',
+    username_xid($client->username),
+  ),
+  {
+    template      => 'fauxboxbasic',
+    template_args => {
+      xid         => 'fauxbox:account:' . $account->id,
+      make_active => 1,
+    },
+  },
+);
+
 $m->redirect('/dashboard?username=' . $client->username);
 </%perl>
