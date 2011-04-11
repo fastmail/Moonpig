@@ -4,6 +4,7 @@ use Test::More;
 use Test::Fatal;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class dollars);
+use Scalar::Util qw(refaddr);
 
 with(
   't::lib::Factory::Ledger',
@@ -26,6 +27,13 @@ test "create consumer" => sub {
   is($c[0]->ledger, $ledger, "ledger set correctly");
   is($c[0]->charge_description, 'boring test charge',
      "template-supplied charge description");
+
+  my $consumer_xid = $c[0]->xid;
+
+  my $active = $ledger->active_consumer_for_xid($consumer_xid);
+
+  ok($active, "the consumer xid has an active service");
+  is(refaddr($active), refaddr($c[0]), "...and it's the same object");
 };
 
 test "route to ad-hoc method" => sub {
