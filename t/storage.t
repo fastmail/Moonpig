@@ -51,7 +51,6 @@ test "store and retrieve" => sub {
     );
 
     Moonpig->env->save_ledger($ledger);
-    Moonpig->env->storage->execute_saves;
 
     exit(0);
   }

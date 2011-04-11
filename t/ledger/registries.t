@@ -50,8 +50,6 @@ sub _test_ledgers_and_xids {
     Moonpig->env->save_ledger($ledger{$key});
   }
 
-  Moonpig->env->storage->execute_saves;
-
   return( \%ledger, \%xid );
 }
 
@@ -98,7 +96,6 @@ test "one-ledger-per-xid safety" => sub {
     );
 
     Moonpig->env->save_ledger($ledger->{1});
-    Moonpig->env->storage->execute_saves;
   };
 
   ok($err, "we can't register 1 id with 2 ledgers");
@@ -129,7 +126,6 @@ test "registered abandoned xid" => sub {
   $consumer->terminate_service;
 
   Moonpig->env->save_ledger($ledger->{1});
-  Moonpig->env->storage->execute_saves;
 
   # now, X-1 should go nowhere, but X-2 is still taken by L-2
   is(
@@ -158,8 +154,6 @@ test "registered abandoned xid" => sub {
   );
 
   Moonpig->env->save_ledger($ledger->{2});
-  Moonpig->env->storage->execute_saves;
-
 
   # Now make sure that both X-1 and X-2 are on L-2
   for (1, 2) {
