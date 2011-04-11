@@ -111,11 +111,12 @@ has _in_update_mode => (
   is  => 'ro',
   isa => 'Bool',
   traits  => [ 'Bool' ],
-  clearer => '_clear_update_mode',
   handles => {
     _set_update_mode   => 'set',
     _set_noupdate_mode => 'unset',
   },
+  predicate => '_has_update_mode',
+  clearer   => '_clear_update_mode',
 );
 
 sub do_rw {
@@ -142,7 +143,21 @@ has _ledger_queue => (
 
 sub save_ledger {
   my ($self, $ledger) = @_;
-  $self->_ledger_queue->{ $ledger->guid } = $ledger;
+
+  # EITHER:
+  # 1. we are in a do_rw transaction -- save this ledger to write later
+  # 2. we are in a do_ro transaction -- die
+  # 3. we are not in a transaction -- do one right now to save immediately
+  # -- rjbs, 2011-04-11
+  if ($self->_has_update_mode) {
+    if ($self->_in_update_mode) {
+      $self->_ledger_queue->{ $ledger->guid } = $ledger;
+    } else {
+      Moonpig::X->throw("save ledger inside read-only transaction");
+    }
+  } else {
+    $self->_store_ledger($ledger);
+  }
 }
 
 sub execute_saves {
