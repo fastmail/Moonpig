@@ -107,6 +107,32 @@ sub _ensure_tables_exist {
   });
 }
 
+has _in_update_mode => (
+  is  => 'ro',
+  isa => 'Bool',
+  traits  => [ 'Bool' ],
+  clearer => '_clear_update_mode',
+  handles => {
+    _set_update_mode   => 'set',
+    _set_noupdate_mode => 'unset',
+  },
+);
+
+sub do_rw {
+  my ($self, $code) = @_;
+  $self->_set_update_mode;
+  $code->();
+  $self->execute_saves;
+  $self->_clear_update_mode;
+}
+
+sub do_ro {
+  my ($self, $code) = @_;
+  $self->_set_noupdate_mode;
+  $code->();
+  $self->_clear_update_mode;
+}
+
 has _ledger_queue => (
   is  => 'ro',
   isa => 'HashRef',
@@ -293,6 +319,8 @@ sub retrieve_ledger_for_guid {
       bless $obj, $class_for{ $class };
     },
   });
+
+  $self->save_ledger($ledger) if $self->_in_update_mode;
 
   return $ledger;
 }
