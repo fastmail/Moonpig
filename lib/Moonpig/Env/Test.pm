@@ -150,6 +150,9 @@ sub format_guid {
   return ($reg->{ $guid } ||= $i++)
 }
 
-Moonpig->set_env( __PACKAGE__->new );
+my $THIS = __PACKAGE__->new;
+sub import {
+  Moonpig->set_env($THIS)
+  };
 
 1;

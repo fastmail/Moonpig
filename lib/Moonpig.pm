@@ -13,7 +13,14 @@ my $env;
 
 sub set_env {
   my ($self, $new_env) = @_;
-  Carp::croak("environment is already configured") if $env;
+  if ($env) {
+    if (Scalar::Util::refaddr($new_env) == Scalar::Util::refaddr($env)) {
+      return;
+    } else {
+      Carp::croak("environment is already configured");
+    }
+  }
+
   $env = $new_env;
 }
 
