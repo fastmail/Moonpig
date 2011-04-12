@@ -22,7 +22,7 @@ $null->add_callback(sub {
 });
 $Logger->dispatcher->add($null);
 
-my $root = $ENV{MOONPIG_STORAGE_ROOT} = 'eg/fauxbox/db';
+my $root = $ENV{MOONPIG_STORAGE_ROOT} = 'eg/fauxbox/var';
 
 mkdir $root unless -d $root;
 

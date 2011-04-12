@@ -8,16 +8,17 @@ use Getopt::Long::Descriptive;
 
 my ($opt, $usage) = describe_options(
   'Usage: %c %o',
-  [ 'new-db|N' => 'create a new set of databases' ],
+  [ 'new-db|N' => 'create a new set of working files' ],
 );
 
 $ENV{FAUXBOX_ROOT} = 'eg/fauxbox';
-my $db_path = File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'db');
+my $db_path = File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'var');
 
 if ($opt->new_db) {
   print "deleting old databases...\n";
   remove_tree($db_path);
 }
+
 mkdir $db_path unless -d $db_path;
 
 my $colorize = "2>&1 | $ENV{FAUXBOX_ROOT}/bin/color";

@@ -4,7 +4,7 @@ use warnings;
 
 use lib 'eg/fauxbox/lib';
 
-my $root = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/db';
+my $root = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
 
 use File::Spec;
 use HTML::Mason::PSGIHandler;
