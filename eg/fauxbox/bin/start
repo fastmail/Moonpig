@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use File::Path qw(remove_tree);
+use File::Spec;
 use Getopt::Long::Descriptive;
 
 my ($opt, $usage) = describe_options(
@@ -10,28 +11,28 @@ my ($opt, $usage) = describe_options(
   [ 'new-db|N' => 'create a new set of databases' ],
 );
 
-my $db_path = 'eg/fauxbox/db';
+$ENV{FAUXBOX_ROOT} = 'eg/fauxbox';
+my $db_path = File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'db');
+
 if ($opt->new_db) {
   print "deleting old databases...\n";
   remove_tree($db_path);
 }
 mkdir $db_path unless -d $db_path;
 
-my $colorize = '2>&1 | eg/fauxbox/bin/color';
+my $colorize = "2>&1 | $ENV{FAUXBOX_ROOT}/bin/color";
 
 my $mp_pid = fork;
 $mp_pid or do {
-  exec "plackup -p 5001 eg/fauxbox/bin/moonpig.psgi $colorize cyan"
+  exec "plackup -p 5001 $ENV{FAUXBOX_ROOT}/bin/moonpig.psgi $colorize cyan"
 };
 
 my $ul_pid = fork;
 $ul_pid or do {
   $ENV{FAUXBOX_MOONPIG_URI} = 'http://localhost:5001';
-  exec "plackup -p 5000 eg/fauxbox/bin/fauxbox.psgi $colorize yellow";
+  exec "plackup -p 5000 $ENV{FAUXBOX_ROOT}/bin/fauxbox.psgi $colorize yellow";
 };
 
 $SIG{INT} = sub { kill 0, 2 };
 
 1 until wait == -1;
-
-

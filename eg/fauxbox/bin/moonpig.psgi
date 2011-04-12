@@ -27,7 +27,7 @@ my $root = $ENV{MOONPIG_STORAGE_ROOT} = 'eg/fauxbox/db';
 mkdir $root unless -d $root;
 
 use Moonpig::Web::App;
-use Moonpig::Env::Test;
+use Fauxbox::Moonpig::Env;
 
 use Fauxbox::Moonpig::TemplateSet;
 

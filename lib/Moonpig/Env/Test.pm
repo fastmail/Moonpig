@@ -34,8 +34,12 @@ use Moose::Util::TypeConstraints;
 has email_sender => (
   is   => 'ro',
   does => 'Email::Sender::Transport',
-  default => sub { Email::Sender::Transport::Test->new },
+  builder => 'build_email_sender',
 );
+
+sub build_email_sender {
+  Email::Sender::Transport::Test->new;
+}
 
 sub handle_send_email {
   my ($self, $event, $arg) = @_;
