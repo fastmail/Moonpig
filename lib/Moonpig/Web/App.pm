@@ -19,12 +19,12 @@ sub test_routes {
   $storage->_reinstate_stored_time;
 
   if (@path == 1 and $path[0] eq 'heartbeat-all') {
-    $storage->txn(sub {
+    $storage->do_rw(sub {
       my @guids = $storage->known_guids;
       for my $guid (@guids) {
         my $ledger = $storage->retrieve_ledger_for_guid($guid);
         $ledger->handle_event( event('heartbeat') );
-        $storage->store_ledger($ledger);
+        $storage->save_ledger($ledger);
       }
     });
 
