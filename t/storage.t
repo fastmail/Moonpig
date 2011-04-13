@@ -11,7 +11,6 @@ with(
 use t::lib::Logger '$Logger';
 
 use Moonpig::Env::Test;
-use Moonpig::Storage;
 
 use Data::GUID qw(guid_string);
 use Path::Class;

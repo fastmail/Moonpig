@@ -1,4 +1,4 @@
-package Moonpig::Storage;
+package Moonpig::Storage::Spike;
 use Moose;
 with 'Moonpig::Role::Storage';
 

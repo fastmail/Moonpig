@@ -14,6 +14,11 @@ sub handle_send_email {
   confess "unimplemented";
 }
 
+sub storage_class {
+  require Moonpig::Storage::Spike;
+  'Moonpig::Storage::Spike';
+}
+
 sub now {
   return Moonpig::DateTime->now();
 }

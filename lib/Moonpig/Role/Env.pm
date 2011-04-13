@@ -13,7 +13,6 @@ with(
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Ledger::PostTarget;
-use Moonpig::Storage;
 use Moonpig::Util qw(class);
 
 use Moonpig::Behavior::EventHandlers;
@@ -42,9 +41,7 @@ has storage => (
   handles  => [ qw(save_ledger) ],
 );
 
-sub storage_class {
-  'Moonpig::Storage';
-}
+requires 'storage_class';
 
 has consumer_template_registry => (
   is  => 'ro',

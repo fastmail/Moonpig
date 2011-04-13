@@ -28,8 +28,14 @@ use Moonpig::X;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Code;
 use Moonpig::Types qw(Time);
+use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
+
+sub storage_class {
+  require Moonpig::Storage::Spike;
+  'Moonpig::Storage::Spike';
+}
 
 has email_sender => (
   is   => 'ro',

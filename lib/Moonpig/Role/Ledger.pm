@@ -42,7 +42,6 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Storage;
 use Moonpig::Types qw(Credit Consumer);
 
 use Moonpig::Logger '$Logger';
