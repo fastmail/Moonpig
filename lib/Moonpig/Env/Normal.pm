@@ -8,8 +8,6 @@ with 'Moonpig::Role::Env';
 
 use namespace::autoclean;
 
-Moonpig->set_env( __PACKAGE__->new );
-
 sub handle_send_email {
   my ($self, $event, $arg) = @_;
 

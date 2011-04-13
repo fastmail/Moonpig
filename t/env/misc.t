@@ -7,6 +7,7 @@ use Test::Fatal;
 {
   my $err = exception {
     require Moonpig;
+    Moonpig->import;
     Moonpig->env;
   };
 
@@ -20,9 +21,9 @@ use Test::Fatal;
 {
   my $err = exception {
     require Moonpig::Env::Test;
-    Moonpig::Env::Test->import();
+    Moonpig::Env::Test->import;
     require Moonpig::Env::Normal;
-    Moonpig::Env::Normal->import();
+    Moonpig::Env::Normal->import;
   };
 
   like(

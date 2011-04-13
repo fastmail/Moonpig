@@ -34,13 +34,17 @@ implicit_event_handlers {
 
 has storage => (
   is   => 'ro',
-  isa  => 'Moonpig::Storage',
+  does => 'Moonpig::Role::Storage',
   lazy => 1,
   init_arg => undef,
-  default  => sub { Moonpig::Storage->new },
+  default  => sub { $_[0]->storage_class->new },
   clearer  => 'clear_storage',
   handles  => [ qw(save_ledger) ],
 );
+
+sub storage_class {
+  'Moonpig::Storage';
+}
 
 has consumer_template_registry => (
   is  => 'ro',
@@ -71,5 +75,12 @@ sub _instance_subroute {
 
   return;
 }
+
+my %MP_ENV;
+sub import {
+  my ($class) = @_;
+  my $THIS = $MP_ENV{ $class } ||= $class->new;
+  Moonpig->set_env($THIS)
+};
 
 1;

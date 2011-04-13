@@ -1,5 +1,6 @@
 package Moonpig::Storage;
 use Moose;
+with 'Moonpig::Role::Storage';
 
 use Class::Rebless 0.009;
 use Digest::MD5 qw(md5_hex);
