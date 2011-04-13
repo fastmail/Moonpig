@@ -125,7 +125,7 @@ sub do_rw {
   $self->_set_update_mode;
   my $rv = $self->txn(sub {
     my $rv = $code->();
-    $self->execute_saves;
+    $self->_execute_saves;
     return $rv;
   });
   $self->_clear_update_mode;
@@ -168,7 +168,7 @@ sub save_ledger {
   }
 }
 
-sub execute_saves {
+sub _execute_saves {
   my ($self) = @_;
 
   $self->txn(sub {
