@@ -6,6 +6,9 @@ use namespace::autoclean;
 requires 'do_rw';
 requires 'do_ro';
 
+requires 'queue_job';
+requires 'iterate_jobs';
+
 requires 'save_ledger';
 requires 'ledger_guids';
 

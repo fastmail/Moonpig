@@ -8,6 +8,7 @@ use DBI;
 use DBIx::Connector;
 use File::Spec;
 
+use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 
 use Moonpig::Types qw(Ledger);
@@ -33,6 +34,19 @@ sub _sqlite_filename {
   );
 }
 
+sub _dbi_connect_args {
+  my ($self) = @_;
+  my $db_file = $self->_sqlite_filename;
+
+  return (
+    "dbi:SQLite:dbname=$db_file", undef, undef,
+    {
+      RaiseError => 1,
+      PrintError => 0,
+    },
+  );
+}
+
 has _conn => (
   is   => 'ro',
   isa  => 'DBIx::Connector',
@@ -42,15 +56,7 @@ has _conn => (
   default  => sub {
     my ($self) = @_;
 
-    my $db_file = $self->_sqlite_filename;
-
-    return DBIx::Connector->new(
-      "dbi:SQLite:dbname=$db_file", undef, undef,
-      {
-        RaiseError => 1,
-        PrintError => 0,
-      },
-    );
+    return DBIx::Connector->new( $self->_dbi_connect_args );
   },
 );
 
@@ -73,6 +79,22 @@ my $sql = <<'END_SQL';
       last_realtime INTEGER NOT NULL,
       last_moontime INTEGER NOT NULL
     );
+
+    CREATE TABLE jobs (
+      id INTEGER PRIMARY KEY,
+      type TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      locked_at INTEGER,
+      fulfilled_at INTEGER
+    );
+
+    CREATE TABLE job_documents (
+      job_id INTEGER NOT NULL,
+      ident TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      PRIMARY KEY (job_id, ident),
+      FOREIGN KEY (job_id) REFERENCES jobs (id)
+    );
 END_SQL
 
 my $SCHEMA_MD5 = md5_hex($sql);
@@ -90,7 +112,7 @@ sub _ensure_tables_exist {
     };
 
     return if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
-    confess "database is of an incompatible schema" if defined $schema_md5;
+    Carp::croak("database is of an incompatible schema") if defined $schema_md5;
 
     my @hunks = split /\n{2,}/, $sql;
 
@@ -148,6 +170,88 @@ has _ledger_queue => (
   init_arg => undef,
   default  => sub {  {}  },
 );
+
+sub queue_job {
+  my ($self, $type, $payloads) = @_;
+  $payloads ||= {};
+
+  if ($self->_has_update_mode and $self->_in_update_mode) {
+    $self->txn(sub {
+      my $dbh = $_;
+      $dbh->do(
+        q{INSERT INTO jobs (type, created_at) VALUES (?, ?)},
+        undef,
+        $type,
+        Moonpig->env->now->epoch,
+      );
+
+      my $job_id = $dbh->last_insert_id;
+
+      for my $ident (keys %$payloads) {
+        $dbh->do(
+          q{
+            INSERT INTO job_documents (job_id, ident, payload)
+            VALUES (?, ?, ?)
+          },
+          undef,
+          $job_id,
+          $ident,
+          $payloads->{ $ident },
+        );
+      }
+    });
+  } else {
+    Moonpig::X->throw("queue_job outside of read-write transactio");
+  }
+}
+
+sub iterate_jobs {
+  my ($self, $type, $code) = @_;
+  my $conn = $self->_conn;
+
+  # NOTE: not ->txn, because we want each job to be updateable ASAP, rather
+  # than waiting for every job to work ! -- rjbs, 2011-04-13
+  $conn->run(sub {
+    my $dbh = $_;
+
+    my $job_sth = $dbh->prepare(
+      q{
+        SELECT *
+        FROM jobs
+        WHERE type = ? AND fulfilled_at IS NULL AND locked_at IS NULL
+        ORDER BY created_by
+      },
+      undef,
+      $type,
+    );
+
+    $job_sth->execute;
+
+    while (my $job_row = $job_sth->fetchrow_hashref) {
+      $conn->txn(sub {
+        my $job = Moonpig::Job->new({
+          job_id => $job_row->{id},
+          lock_callback => sub {
+            my ($self) = @_;
+            $conn->run(sub { $_->do(
+              "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
+              undef, time, $job_row->{id},
+            )});
+          },
+          done_callback => sub {
+            my ($self) = @_;
+            $conn->run(sub { $_->do(
+              "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
+              undef, time, $job_row->{id},
+            )});
+          },
+        });
+        $job->lock;
+        $code->($job);
+      });
+    }
+  });
+}
 
 sub save_ledger {
   my ($self, $ledger) = @_;
