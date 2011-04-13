@@ -3,4 +3,13 @@ use Moose::Role;
 
 use namespace::autoclean;
 
+requires 'do_rw';
+requires 'do_ro';
+
+requires 'save_ledger';
+requires 'ledger_guids';
+
+requires 'retrieve_ledger_for_guid';
+requires 'retrieve_ledger_for_xid';
+
 1;

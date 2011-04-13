@@ -20,7 +20,7 @@ sub test_routes {
 
   if (@path == 1 and $path[0] eq 'heartbeat-all') {
     $storage->do_rw(sub {
-      my @guids = $storage->known_guids;
+      my @guids = $storage->ledger_guids;
       for my $guid (@guids) {
         my $ledger = $storage->retrieve_ledger_for_guid($guid);
         $ledger->handle_event( event('heartbeat') );

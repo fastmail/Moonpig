@@ -54,7 +54,7 @@ test "store and retrieve" => sub {
     exit(0);
   }
 
-  my @guids = Moonpig->env->storage->known_guids;
+  my @guids = Moonpig->env->storage->ledger_guids;
 
   is(@guids, 1, "we have stored one guid");
 
