@@ -66,5 +66,66 @@ test "store and retrieve" => sub {
   pass('we lived');
 };
 
+test "job queue" => sub {
+  Moonpig->env->storage->do_rw(sub {
+    Moonpig->env->storage->queue_job('test.job.0' => {
+      foo => $^T,
+      bar => 'serious business',
+    });
+
+    Moonpig->env->storage->queue_job('test.job.1' => {
+      proc => $$,
+      bar  => "..!",
+    });
+  });
+
+  my @jobs_done;
+  Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
+    my ($job) = @_;
+    isa_ok($job, 'Moonpig::Job');
+    is($job->job_id, 1, "cheating: we know we number jobs from 1");
+    is_deeply(
+      $job->payloads,
+      {
+        foo => $^T,
+        bar => 'serious business',
+      },
+      "payloads as expected",
+    );
+    push @jobs_done, $job->job_id;
+    $job->mark_complete;
+  });
+
+  Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+    my ($job) = @_;
+    isa_ok($job, 'Moonpig::Job');
+    is($job->job_id, 2, "cheating: we know we number jobs from 1");
+    is_deeply(
+      $job->payloads,
+      {
+        proc => $$,
+        bar  => '..!',
+      },
+      "payloads as expected",
+    );
+    push @jobs_done, $job->job_id;
+    $job->mark_complete;
+  });
+
+  Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
+    my ($job) = @_;
+    push @jobs_done, $job->job_id;
+    $job->mark_complete;
+  });
+
+  Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+    my ($job) = @_;
+    push @jobs_done, $job->job_id;
+    $job->mark_complete;
+  });
+
+  is_deeply(\@jobs_done, [ 1, 2 ], "completed jobs are completed");
+};
+
 run_me;
 done_testing;

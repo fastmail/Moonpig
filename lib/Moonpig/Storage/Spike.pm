@@ -185,9 +185,10 @@ sub queue_job {
         Moonpig->env->now->epoch,
       );
 
-      my $job_id = $dbh->last_insert_id;
+      my $job_id = $dbh->sqlite_last_insert_rowid;
 
       for my $ident (keys %$payloads) {
+        # XXX: barf on reference payloads? -- rjbs, 2011-04-13
         $dbh->do(
           q{
             INSERT INTO job_documents (job_id, ident, payload)
@@ -219,18 +220,26 @@ sub iterate_jobs {
         SELECT *
         FROM jobs
         WHERE type = ? AND fulfilled_at IS NULL AND locked_at IS NULL
-        ORDER BY created_by
+        ORDER BY created_at
       },
-      undef,
-      $type,
     );
 
-    $job_sth->execute;
+    $job_sth->execute($type);
 
     while (my $job_row = $job_sth->fetchrow_hashref) {
+      my $payloads = $dbh->selectall_hashref(
+        q{SELECT ident, payload FROM job_documents WHERE job_id = ?},
+        'ident',
+        undef,
+        $job_row->{id},
+      );
+
+      $_ = $_->{payload} for values %$payloads;
+
       $conn->txn(sub {
         my $job = Moonpig::Job->new({
-          job_id => $job_row->{id},
+          job_id  => $job_row->{id},
+          payloads => $payloads,
           lock_callback => sub {
             my ($self) = @_;
             $conn->run(sub { $_->do(
@@ -297,8 +306,6 @@ sub _store_ledger {
   my $conn = $self->_conn;
   $conn->txn(sub {
     my ($dbh) = $_;
-
-    $self->_ensure_tables_exist;
 
     $dbh->do(
       q{
@@ -450,6 +457,11 @@ sub retrieve_ledger_for_guid {
   $self->save_ledger($ledger) if $self->_in_update_mode;
 
   return $ledger;
+}
+
+sub BUILD {
+  my ($self) = @_;
+  $self->_ensure_tables_exist;
 }
 
 1;

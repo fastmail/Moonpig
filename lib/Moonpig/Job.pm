@@ -30,4 +30,10 @@ has done_callback => (
   },
 );
 
+has payloads => (
+  is  => 'ro',
+  isa => 'HashRef',
+  required => 1,
+);
+
 1;
