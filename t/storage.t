@@ -93,6 +93,13 @@ test "job queue" => sub {
       "payloads as expected",
     );
     push @jobs_done, $job->job_id;
+
+    Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
+      my ($job) = @_;
+      push @jobs_done, $job->job_id;
+      $job->mark_complete;
+    });
+
     $job->mark_complete;
   });
 
@@ -109,12 +116,13 @@ test "job queue" => sub {
       "payloads as expected",
     );
     push @jobs_done, $job->job_id;
-    $job->mark_complete;
-  });
 
-  Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
-    my ($job) = @_;
-    push @jobs_done, $job->job_id;
+    Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+      my ($job) = @_;
+      push @jobs_done, $job->job_id;
+      $job->mark_complete;
+    });
+
     $job->mark_complete;
   });
 

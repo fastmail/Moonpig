@@ -236,28 +236,32 @@ sub iterate_jobs {
 
       $_ = $_->{payload} for values %$payloads;
 
-      $conn->txn(sub {
-        my $job = Moonpig::Job->new({
-          job_id  => $job_row->{id},
-          payloads => $payloads,
-          lock_callback => sub {
-            my ($self) = @_;
-            $conn->run(sub { $_->do(
-              "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-              undef, time, $job_row->{id},
-            )});
-          },
-          done_callback => sub {
-            my ($self) = @_;
-            $conn->run(sub { $_->do(
-              "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-              undef, time, $job_row->{id},
-            )});
-          },
-        });
-        $job->lock;
-        $code->($job);
+      # We don't wrap each job in a transaction, because we want to let calls
+      # to "done" or "lock" happen immediately.  Otherwise, a very slow job
+      # that calls "extend_lock" will be calling it inside a transaction, and
+      # it won't be updated in other job iterators!  I general, jobs should not
+      # need to do much work inside larger transaction -- that's the point!
+      # They will do outside work and mark the job done. -- rjbs, 2011-04-14
+      my $job = Moonpig::Job->new({
+        job_id  => $job_row->{id},
+        payloads => $payloads,
+        lock_callback => sub {
+          my ($self) = @_;
+          $conn->run(sub { $_->do(
+            "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
+            undef, time, $job_row->{id},
+          )});
+        },
+        done_callback => sub {
+          my ($self) = @_;
+          $conn->run(sub { $_->do(
+            "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
+            undef, time, $job_row->{id},
+          )});
+        },
       });
+      $job->lock;
+      $code->($job);
     }
   });
 }
