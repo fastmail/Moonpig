@@ -20,9 +20,11 @@ has ledger => (
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
-with ('t::lib::Factory::Consumers',
-      't::lib::Factory::Ledger',
-     );
+with(
+  't::lib::Factory::Consumers',
+  't::lib::Factory::Ledger',
+  't::lib::Role::UsesStorage',
+ );
 
 test "charge" => sub {
   my ($self) = @_;
@@ -67,7 +69,7 @@ test "charge" => sub {
 
       Moonpig->env->stop_clock_at($tick_time);
 
-      $self->ledger->handle_event(event('heartbeat'));
+      $self->heartbeat_and_send_mail($self->ledger);
 
       is($b->unapplied_amount, dollars(10 - $day));
     }
@@ -118,7 +120,7 @@ test grace_period => sub {
 
         Moonpig->env->stop_clock_at($tick_time);
 
-        $self->ledger->handle_event(event('heartbeat'));
+        $self->heartbeat_and_send_mail($self->ledger);
       }
 
       ok(

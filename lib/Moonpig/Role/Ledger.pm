@@ -372,7 +372,7 @@ sub _send_mkit {
     $event->payload->{arg},
   );
 
-  Moonpig->env->handle_event(event('send-email' => {
+  Moonpig->env->handle_event(event('queue-email' => {
     email => $email,
     env   => { to => $to, from => $from },
   }));

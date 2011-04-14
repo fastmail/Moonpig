@@ -7,21 +7,12 @@ use Moonpig::Logger '$Logger';
 use Email::Sender::Transport::Maildir;
 use Email::Sender::Transport::SMTP;
 
-# I would just use this instead of the copied and pasted "handle_send_email"
-# method below, but I want to send real mail and maildir mail, and we don't
-# have a muxing mailer. -- rjbs, 2011-04-12
-#
-#sub build_email_sender {
-#  Email::Sender::Transport::Maildir->new({
-#    dir => File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'Maildir'),
-#  });
-#}
-
-sub handle_send_email {
-  my ($self, $event, $arg) = @_;
+sub send_email {
+  my ($self, $email, $env) = @_;
 
   # XXX: validate email -- rjbs, 2010-12-08
 
+  # Too bad we don't have a muxing transport. -- rjbs, 2011-04-14
   my @senders = (
     Email::Sender::Transport::SMTP->new({
       helo => 'moonpig.fauxbox.com',
@@ -33,10 +24,7 @@ sub handle_send_email {
 
   for my $sender (@senders) {
     $Logger->log_debug([ 'sending mail through %s', blessed $sender ]);
-    $sender->send_email(
-      $event->payload->{email},
-      $event->payload->{env},
-    );
+    $sender->send_email($email, $env);
   }
 }
 

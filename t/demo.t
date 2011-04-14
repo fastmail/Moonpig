@@ -5,6 +5,7 @@ use Test::More;
 
 with(
   't::lib::Factory::Ledger',
+  't::lib::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';
@@ -157,18 +158,22 @@ test "end to end demo" => sub {
   );
 
   for my $day (1 .. 760) {
+    Moonpig->env->process_email_queue;
+
     $self->process_daily_assertions($day);
 
-    $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $day % 30 == 0;
+    Moonpig->env->storage->do_rw(sub {
+      $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $day % 30 == 0;
 
-    $ledger->handle_event( event('heartbeat') );
+      $ledger->handle_event( event('heartbeat') );
 
-    # Just a little more noise, to see how things are going.
-    $self->log_current_bank_balance if $day % 30 == 0;
+      # Just a little more noise, to see how things are going.
+      $self->log_current_bank_balance if $day % 30 == 0;
 
-    $self->pay_any_open_invoice;
+      $self->pay_any_open_invoice;
 
-    Moonpig->env->elapse_time(86400);
+      Moonpig->env->elapse_time(86400);
+    });
   }
 
   my @consumers = $ledger->consumers;

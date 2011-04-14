@@ -22,9 +22,11 @@ has ledger => (
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
-with ('t::lib::Factory::Consumers',
-      't::lib::Factory::Ledger',
-     );
+with(
+  't::lib::Factory::Consumers',
+  't::lib::Factory::Ledger',
+  't::lib::Role::UsesStorage',
+ );
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
@@ -88,7 +90,7 @@ test "with_successor" => sub {
       is(@deliveries, 0, "no notices sent yet");
     }
 
-    $self->ledger->handle_event(event('heartbeat'));
+    $self->heartbeat_and_send_mail($self->ledger);
 
     {
       my @deliveries = Moonpig->env->email_sender->deliveries;
@@ -101,7 +103,7 @@ test "with_successor" => sub {
       );
 
       Moonpig->env->stop_clock_at($tick_time);
-      $self->ledger->handle_event(event('heartbeat'));
+      $self->heartbeat_and_send_mail($self->ledger);
     }
 
     my @deliveries = Moonpig->env->email_sender->deliveries;
@@ -163,7 +165,10 @@ test "without_successor" => sub {
         year => 2000, month => 1, day => $day
       );
       Moonpig->env->stop_clock_at($tick_time);
-      $self->ledger->handle_event(event('heartbeat', { timestamp => $tick_time }));
+      $self->heartbeat_and_send_mail(
+        $self->ledger,
+        { timestamp => $tick_time },
+      );
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
@@ -211,7 +216,7 @@ test "irreplaceable" => sub {
       );
 
       Moonpig->env->stop_clock_at($tick_time);
-      $self->ledger->handle_event(event('heartbeat'));
+      $self->heartbeat_and_send_mail($self->ledger);
     }
     pass();
   }

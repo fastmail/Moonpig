@@ -19,14 +19,14 @@ use Moonpig::Behavior::EventHandlers;
 
 use namespace::autoclean;
 
-requires 'handle_send_email';
+requires 'handle_queue_email';
 
 sub format_guid { return $_[1] }
 
 implicit_event_handlers {
   return {
-    'send-email' => {
-      default => Moonpig::Events::Handler::Method->new('handle_send_email'),
+    'queue-email' => {
+      default => Moonpig::Events::Handler::Method->new('handle_queue_email'),
     }
   };
 };

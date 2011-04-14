@@ -35,6 +35,25 @@ sub test_routes {
     ];
   }
 
+  if (@path == 1 and $path[0] eq 'send-email') {
+    my $count = 0;
+
+    $storage->iterate_jobs('send-email', sub {
+      my ($job) = @_;
+      my $email = Email::Simple->new($job->payload->{email});
+
+      Moonpig->env->send_email($email, $job->{payload}->{env});
+      $job->mark_complete;
+      $count++;
+    });
+
+    return [
+      200,
+      [ 'Content-type' => 'application/json' ],
+      [ $JSON->encode({ result => 'email queue processed', sent => $count }) ],
+    ];
+  }
+
   if (@path == 1 and $path[0] eq 'time') {
     return [
       200,

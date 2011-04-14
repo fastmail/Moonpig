@@ -8,9 +8,13 @@ with 'Moonpig::Role::Env';
 
 use namespace::autoclean;
 
-sub handle_send_email {
+sub handle_queue_email {
   my ($self, $event, $arg) = @_;
 
+  confess "unimplemented";
+}
+
+sub send_email {
   confess "unimplemented";
 }
 

@@ -47,17 +47,38 @@ sub build_email_sender {
   Email::Sender::Transport::Test->new;
 }
 
-sub handle_send_email {
+sub process_email_queue {
+  my ($self) = @_;
+
+  my $count = 0;
+
+  $self->storage->iterate_jobs('send-email', sub {
+    my ($job) = @_;
+    my $email = Email::Simple->new($job->payload('email'));
+
+    my $env = JSON->new->decode( $job->payload('env') );
+    Moonpig->env->send_email($email, $env);
+    $job->mark_complete;
+    $count++;
+  });
+
+  return $count;
+}
+
+sub send_email {
+  my ($self, $email, $env) = @_;
+  $self->email_sender->send_email($email, $env);
+}
+
+# XXX: Bogus, we should make this queue like everything else.
+sub handle_queue_email {
   my ($self, $event, $arg) = @_;
 
   # XXX: validate email -- rjbs, 2010-12-08
-
-  my $sender = $self->email_sender;
-
-  $self->email_sender->send_email(
-    $event->payload->{email},
-    $event->payload->{env},
-  );
+  $self->storage->queue_job('send-email', {
+    email => $event->payload->{email}->as_string,
+    env   => JSON->new->ascii->encode($event->payload->{env}),
+  });
 }
 
 has _clock_state => (

@@ -33,7 +33,11 @@ has done_callback => (
 has payloads => (
   is  => 'ro',
   isa => 'HashRef',
+  traits   => [ 'Hash' ],
   required => 1,
+  handles  => {
+    payload => 'get',
+  },
 );
 
 1;

@@ -202,7 +202,7 @@ sub queue_job {
       }
     });
   } else {
-    Moonpig::X->throw("queue_job outside of read-write transactio");
+    Moonpig::X->throw("queue_job outside of read-write transaction");
   }
 }
 
