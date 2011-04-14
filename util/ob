@@ -1,0 +1,11 @@
+#!/icg/bin/perl
+# -*- cperl -*-
+
+use lib 'lib';
+use Moonpig;
+use Moonpig::Storage;
+use Moonpig::App::Ob;
+use Data::Dumper;
+
+my $ob = Moonpig::App::Ob->new();
+$ob->run;
