@@ -1,7 +1,11 @@
 package Moonpig::App::Ob;
+use Moonpig::App::Ob::Config;
+use Moonpig::App::Ob::Commands;
+use Moonpig::App::Ob::CommandArgs;
+use Moonpig::Types qw(Factory);
 
 use Moose;
-use Moose::Util::TypeConstraints qw(duck_type);
+use Moose::Util::TypeConstraints qw(duck_type class_type);
 use Term::ReadLine;
 
 has app_id => (
@@ -35,10 +39,28 @@ has command_table => (
   isa => 'HashRef[CodeRef]',
   traits => [ qw(Hash) ],
   handles => { install_command => 'set',
-               get_command => 'get',
+               get_implementation => 'get',
                known_command => 'exists',
              },
-  default => sub { {} },
+  default => sub {
+    no warnings 'qw';
+    $_[0]->_gen_command_table(qw(exit,quit,q dump,eval reload))
+  },
+);
+
+has command_arg_factory => (
+  is => 'ro',
+  isa => Factory,
+  default => "Moonpig::App::Ob::CommandArgs",
+);
+
+
+has config => (
+  is => 'ro',
+  isa => class_type('Moonpig::App::Ob::Config'),
+  lazy => 1,
+  default => sub { Moonpig::App::Ob::Config->new() },
+  handles => [ qw(env) ],
 );
 
 sub readline {
@@ -55,30 +77,51 @@ sub output {
 
 sub find_command {
   my ($self, $input) = @_;
-  my ($command, @args) = split /\s+/, $input;
-  if ($self->known_command($command)) {
-    return sub { $self->get_command($command)->(@args) };
-  } else {
-    return;
-  }
+  my ($command_name, @args) = split /\s+/, $input;
+  $command_name = 'eval' unless $self->known_command($command_name);
+  return $self->command_arg_factory->new({
+    code => $self->get_implementation($command_name),
+    primary => $command_name,
+    arg_list => [ @args ],
+    orig => $input,
+    hub => $self,
+  });
 }
 
 sub run {
   my ($self) = @_;
   while (defined ($_ = $self->readline)) {
-    if (my $cmd = $self->find_command($_)) {
-      $cmd->();
-    } else {
-      our $it;
-      local $it = $self->last_result;
-      my $res = eval($_);
-      if ($@) { warn $@ }
-      else {
-        $self->last_result($res);
-        $self->output($res, "\n")
-      }
+    $self->do_input($_);
+  }
+}
+
+sub do_input {
+  my ($self, $input) = @_;
+  my $res = $self->find_command($_)->run();
+  if ($@) { warn $@ }
+  elsif (defined $res) {
+    $self->last_result($res);
+    $self->output($res, "\n");
+  }
+}
+
+sub _gen_command_table {
+  my ($self, @items) = @_;
+  my $BAD = 0;
+  my %tab;
+  for my $item (@items) {
+    my ($cmd) = my @aliases = split /,/, $item;
+    unless (defined &{"Moonpig::App::Ob::Commands::$cmd"}) {
+      warn "Command '$cmd' not defined in Moonpig::App::Ob::Commands";
+      $BAD++;
+    }
+
+    for my $alias (@aliases) {
+      $tab{$alias} = \&{"Moonpig::App::Ob::Commands::$cmd"};
     }
   }
+  exit 1 if $BAD;
+  return \%tab;
 }
 
 no Moose;
