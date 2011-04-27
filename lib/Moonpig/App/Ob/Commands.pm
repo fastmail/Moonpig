@@ -20,6 +20,29 @@ sub dump {
   }
 }
 
+sub shell {
+  my ($args) = @_;
+  my @cmd = @{$args->arg_list};
+
+  if (! @cmd) {
+    my $shell = $ENV{SHELL} || (-x '/bin/bash' ? '/bin/bash' : '/bin/sh');
+    warn "Use 'exit' to return from shell\n";
+    my $rc = system $shell;
+    $rc == 0 or warn "shell failed\n";
+    return;
+  }
+
+  my $res = readpipe (join " ", @cmd);
+  my $status = $? >> 8;
+  my $sig = $? & 255;
+  if ($sig) {
+    warn "command died with signal $sig\n";
+  } elsif ($status) {
+    warn "command exited with non-zero status $status\n";
+  }
+  return $res;
+}
+
 sub reload {
   warn "reloading $0...\n";
   exec $0, @ARGV;
