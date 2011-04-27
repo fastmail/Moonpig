@@ -1,5 +1,12 @@
 package Moonpig::App::Ob::CommandArgs;
 
+{
+  package Ob;
+  use Moonpig::Util '-all';
+  use Carp 'croak';
+  # Special package for eval expression context
+}
+
 use Moose;
 use Carp qw(confess croak);
 
@@ -66,9 +73,14 @@ has hub => (
 
 sub eval {
   my ($self, $str, %opts) = @_;
-  our ($it, $ob);
+
+  package Ob;
+
+  our ($it, $ob, $st);
   local $ob = $self->hub;
   local $it = $ob->last_result;
+  local $st = $ob->storage;
+
   if ($opts{context} eq 'scalar') {
     no strict;
     my $res = eval($str);
@@ -84,4 +96,5 @@ sub run {
 }
 
 no Moose;
+
 1;

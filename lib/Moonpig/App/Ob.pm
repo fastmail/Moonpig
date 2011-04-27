@@ -61,7 +61,7 @@ has config => (
   isa => class_type('Moonpig::App::Ob::Config'),
   lazy => 1,
   default => sub { Moonpig::App::Ob::Config->new() },
-  handles => [ qw(env) ],
+  handles => [ qw(env storage) ],
 );
 
 sub readline {
