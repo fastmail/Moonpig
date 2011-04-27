@@ -1,4 +1,6 @@
 package Moonpig::App::Ob::Commands;
+use strict;
+use warnings;
 
 sub exit { warn "bye\n"; exit 0 }
 
@@ -18,6 +20,26 @@ sub dump {
     warn $args->exception;
     return;
   }
+}
+
+sub help {
+  my ($args) = @_;
+  my $tab = $args->hub->command_table;
+  my $rtab = {};
+  while (my ($cname, $code) = each %$tab) {
+    push @{$rtab->{$code}}, $cname;
+  }
+  my @res;
+  for my $aliases (values %$rtab) {
+    warn " > $aliases = (@$aliases)\n";
+    my @words = sort @$aliases;
+    if (@words> 1) {
+      push @res, $words[0] . " (" . join(", ", @words[1..$#words]) . ")";
+    } else {
+      push @res, $words[0];
+    }
+  }
+  return join "\n", sort(@res), "";
 }
 
 sub shell {
