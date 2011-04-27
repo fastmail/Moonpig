@@ -98,11 +98,14 @@ sub run {
 sub do_input {
   my ($self, $input, $output_rt) = @_;
   $output_rt ||= sub { $self->output(@_, "\n") };
-  my $res = $self->find_command($_)->run();
+  my ($res, @extra) = $self->find_command($_)->run();
   if ($@) { warn $@ }
   else {
     $self->last_result($res);
     $output_rt->($res);
+  }
+  for my $callback (@extra) {
+    $callback->();
   }
 }
 
