@@ -43,6 +43,12 @@ sub help {
   return join "\n", sort(@res), "";
 }
 
+sub reload {
+  warn "reloading $0...\n";
+  exec $0, @ARGV;
+  die "exec $0: $!";
+}
+
 sub shell {
   my ($args) = @_;
   my @cmd = @{$args->arg_list};
@@ -66,10 +72,14 @@ sub shell {
   return $res;
 }
 
-sub reload {
-  warn "reloading $0...\n";
-  exec $0, @ARGV;
-  die "exec $0: $!";
+sub store {
+  my ($args) = @_;
+  my @argl = $args->list_value;
+  unless (@argl) {
+    warn "Usage: store ledger...\n";
+    return "";
+  }
+  $args->hub->storage->_store_ledger($_) for @argl;
 }
 
 sub generate {

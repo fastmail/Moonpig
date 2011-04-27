@@ -45,7 +45,7 @@ has command_table => (
   default => sub {
     no warnings 'qw';
     $_[0]->_gen_command_table(qw(exit,quit,q dump,eval,x reload shell,sh,!
-                                 help,?,h generate,gen
+                                 help,?,h store,st generate,gen
                                ))
   },
 );

@@ -42,6 +42,40 @@ sub orig_args {
   return $args;
 }
 
+has _list_eval_res => (
+  is => 'ro',
+  lazy => 1,
+  init_arg => undef,
+  default => sub {
+    my ($self) = @_;
+    my @res;
+    for my $i (0 .. $#{$self->arg_list}) {
+      my $val = $self->eval($_[0]->arg_list->[$i], context => 'scalar');
+      if ($@) {
+        return [ "$@ in argument $i", @res ];
+      } else {
+        push @res, $val;
+      }
+    }
+    return [ undef, @res ];
+  },
+);
+
+sub list_value {
+  my ($self) = @_;
+  my @r = @{$self->_list_eval_res};
+  shift @r;
+  return @r;
+}
+
+sub list_exception {
+  $_[0]->_list_eval_res->[0];
+}
+
+sub list_eval_ok {
+  defined $_[0]->list_exception;
+}
+
 has _eval_res => (
   is => 'ro',
   lazy => 1,
