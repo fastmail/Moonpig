@@ -1,6 +1,7 @@
 package Moonpig::App::Ob::Commands;
 use strict;
 use warnings;
+use Moonpig::Util qw(class);
 
 sub exit { warn "bye\n"; exit 0 }
 
@@ -69,6 +70,32 @@ sub reload {
   warn "reloading $0...\n";
   exec $0, @ARGV;
   die "exec $0: $!";
+}
+
+sub generate {
+  my ($args) = @_;
+  my ($subcommand) = $args->arg_list->[0] || 'help';
+  if ($subcommand eq 'ledger') {
+    return class('Ledger')->new({ contact => _gen_contact() });
+  } elsif ($subcommand eq 'contact') {
+    return _gen_contact();
+  } else {
+    my $me = $args->primary;
+    warn "Usage: $me [ledger|contact]\n";
+    return "";
+  }
+}
+
+{
+  my $N = 'a';
+  sub _gen_contact {
+    my $name = "\U$N\E Jones";
+    my $email = qq{$N\@example.com};
+    $N++;
+    return class('Contact')->new({ name => $name,
+                                   email_addresses => [ $email ],
+                                 });
+  }
 }
 
 1;

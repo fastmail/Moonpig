@@ -1,10 +1,11 @@
 package Moonpig::App::Ob::Config;
 use Moose;
+use Moonpig;
 use Moonpig::Env::Test;
 use Moose::Util::TypeConstraints qw(role_type);
 
 sub env {
-  Moonpig::Env->new;
+  Moonpig->env;
 }
 
 sub storage {
