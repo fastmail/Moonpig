@@ -44,7 +44,7 @@ has command_table => (
              },
   default => sub {
     no warnings 'qw';
-    $_[0]->_gen_command_table(qw(exit,quit,q dump,eval reload))
+    $_[0]->_gen_command_table(qw(exit,quit,q dump,eval,x reload))
   },
 );
 
@@ -53,7 +53,6 @@ has command_arg_factory => (
   isa => Factory,
   default => "Moonpig::App::Ob::CommandArgs",
 );
-
 
 has config => (
   is => 'ro',
@@ -91,17 +90,19 @@ sub find_command {
 sub run {
   my ($self) = @_;
   while (defined ($_ = $self->readline)) {
+    next unless /\S/;
     $self->do_input($_);
   }
 }
 
 sub do_input {
-  my ($self, $input) = @_;
+  my ($self, $input, $output_rt) = @_;
+  $output_rt ||= sub { $self->output(@_, "\n") };
   my $res = $self->find_command($_)->run();
   if ($@) { warn $@ }
-  elsif (defined $res) {
+  else {
     $self->last_result($res);
-    $self->output($res, "\n");
+    $output_rt->($res);
   }
 }
 

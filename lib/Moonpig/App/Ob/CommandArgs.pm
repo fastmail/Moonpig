@@ -70,6 +70,7 @@ sub eval {
   local $ob = $self->hub;
   local $it = $ob->last_result;
   if ($opts{context} eq 'scalar') {
+    no strict;
     my $res = eval($str);
     return $res;
   } else {

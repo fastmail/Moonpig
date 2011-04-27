@@ -7,7 +7,7 @@ sub dump {
   require Data::Dumper;
   if ($args->eval_ok) {
     my $s = $args->value;
-    $s = Data::Dumper::Dumper($s) if $args->primary eq "dump";
+    $s = Data::Dumper::Dumper($s) if $args->primary =~ /^(dump|x)$/;
     return $s;
   } else {
     warn $args->exception;
