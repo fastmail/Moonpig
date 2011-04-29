@@ -17,7 +17,7 @@ has app_id => (
 
 has output_fh => (
   is => 'rw',
-  isa => 'FileHandle',
+#  isa => 'FileHandle',
   default => sub { $_[0]->term_readline->OUT || \*STDOUT },
   lazy => 1,
 );

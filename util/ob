@@ -1,4 +1,4 @@
-#!/icg/bin/perl
+#!/usr/bin/env perl
 # -*- cperl -*-
 
 use lib 'lib';
