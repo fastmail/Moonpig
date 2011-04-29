@@ -45,6 +45,7 @@ sub help {
 
   while (my $name = each %Ob::) {
     next unless defined &{"Ob::$name"};
+    next if $name =~ /^_/;
     my $code = \&{"Ob::$name"};
     push @{$rtab->{$code}}, $name;
   }

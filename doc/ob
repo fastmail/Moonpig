@@ -1,0 +1,70 @@
+
+Some commands are defined in Ob::Command, but if ob doesn't recognize
+a command name as the first word in the input, it just evals the
+entire line.  The eval is done in package "Ob".  Many commands are
+simply implemented as perl functions in Ob, defined in module
+Ob::Functions.  For example,
+
+       guid "0D1D1228-70FD-11E0-B66B-C9E193C68B93"
+
+is evaled, and just calls Ob::guid, which calls the storage object's
+->ledger_guids method.
+
+Strictures are turned off during the eval. The eval is done in list
+context.  In the eval context, some package variables are defined:
+
+   $ob is the application object itself.
+   $st is the storage object.
+   @it is an array of the values returned by the last successful eval.
+   $it is \@it, unless @it contained only one item, in which case it
+     is that item.
+
+The default output routine replaces undefined values with the string
+"<undef>".  If the eval yields zero or one values, the value is simply
+printed.  If it yields two or more values, they are printed on
+separate numbered lines.  Numbers start at 0, so that if you see
+
+         ob> @names
+          0 Fred
+          1 Bill
+          2 Oscar
+
+then you can access "Bill" as $it[1] and "Oscard" as $it[2].
+
+Commands
+
+  ! (sh, shell)
+    With no arguments, run a subshell.  With arguments, execute the
+    remainder of the input as a shell command and set $it to the
+    resulting stdout.
+
+  ? (h, help)
+    List known commands and Ob:: functions.
+
+  d, x, dump
+    Evaluate Perl expressions and dump with Data::Dumper.  $it is set
+    to the value of the expressions, not to the output of
+    Data::Dumper.
+
+  exit (q, quit)
+
+  gen ["contact" | "ledger"]
+  generate ["contact" | "ledger"]
+    Construct and return a new contact or ledger object.
+
+  guid guid_expressions...
+  xid xid_expressions...
+    Retrieve specified ledgers from storage
+
+  guids
+    List guids of ledgers already in storage
+
+  reload
+    Re-exec the application after a source code change
+
+  store ledger...
+  st ledger...
+    Store these ledgers into storage.
+
+
+
