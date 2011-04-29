@@ -1,0 +1,23 @@
+%# vim:set ft=mason:
+<%args>
+$params
+</%args>
+<%perl>
+my $payment_p = $params->{payment};
+my $client    = $m->schema->resultset('Client')->find($payment_p->{client_id});
+
+# XXX: We need semantics for how we post new payments. -- rjbs, 2011-04-29
+#
+# $m->mp_request(
+#   POST => sprintf(
+#     '/ledger/xid/%s/credits',
+#     username_xid($client->username),
+#   ),
+#   {
+#     amount  => $payment_p->{amount},
+#     # something about this being 'Simulated' not 'CCard' etc
+#   },
+# );
+
+$m->redirect('/dashboard?username=' . $client->username);
+</%perl>

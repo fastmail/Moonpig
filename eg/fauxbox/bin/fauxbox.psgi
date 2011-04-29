@@ -10,7 +10,12 @@ use File::Spec;
 use HTML::Mason::PSGIHandler;
 use Plack::Util;
 
-use Fauxbox::Mason::Commands { into => 'HTML::Mason::Commands' };
+{
+  package HTML::Mason::Commands;
+  use Fauxbox::Mason::Commands;
+  use List::Util qw(reduce);
+}
+
 use Fauxbox::Mason::Request;
 use Fauxbox::Schema;
 
