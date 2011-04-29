@@ -36,14 +36,21 @@ sub exit { warn "bye\n"; exit 0 }
 
 sub help {
   my ($args) = @_;
-  my $tab = $args->hub->command_table;
   my $rtab = {};
+
+  my $tab = $args->hub->command_table;
   while (my ($cname, $code) = each %$tab) {
     push @{$rtab->{$code}}, $cname;
   }
+
+  while (my $name = each %Ob::) {
+    next unless defined &{"Ob::$name"};
+    my $code = \&{"Ob::$name"};
+    push @{$rtab->{$code}}, $name;
+  }
+
   my @res;
   for my $aliases (values %$rtab) {
-    warn " > $aliases = (@$aliases)\n";
     my @words = sort @$aliases;
     if (@words> 1) {
       push @res, $words[0] . " (" . join(", ", @words[1..$#words]) . ")";

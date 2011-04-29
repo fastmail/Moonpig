@@ -2,6 +2,7 @@
 package Ob;  # note weird package declaration
 # This is the package in which unrecognized commands are evaluated as Perl
 # expressions.
+use namespace::autoclean;
 
 our $ob;
 
