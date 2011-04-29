@@ -86,13 +86,15 @@ sub readline {
 
 sub output {
   my ($self, @str) = @_;
+  my $fh = $self->output_fh;
   if (@str < 2) {
-    print { $self->output_fh } map _flatten($_), @str;
+    print $fh map _flatten($_), @str;
   } else {
     for my $i (0 .. $#str) {
-      printf "%2d %s\n", $i, _flatten($str[$i]);
+      printf $fh "%2d %s\n", $i, _flatten($str[$i]);
     }
   }
+  print $fh "\n";
 }
 
 sub _flatten { defined($_[0]) ? $_[0] : "<undef>" }
