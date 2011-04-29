@@ -72,40 +72,4 @@ sub shell {
   return $res;
 }
 
-sub store {
-  my ($args) = @_;
-  my @argl = $args->list_value;
-  unless (@argl) {
-    warn "Usage: store ledger...\n";
-    return "";
-  }
-  $args->hub->storage->_store_ledger($_) for @argl;
-}
-
-sub generate {
-  my ($args) = @_;
-  my ($subcommand) = $args->arg_list->[0] || 'help';
-  if ($subcommand eq 'ledger') {
-    return class('Ledger')->new({ contact => _gen_contact() });
-  } elsif ($subcommand eq 'contact') {
-    return _gen_contact();
-  } else {
-    my $me = $args->primary;
-    warn "Usage: $me [ledger|contact]\n";
-    return "";
-  }
-}
-
-{
-  my $N = 'a';
-  sub _gen_contact {
-    my $name = "\U$N\E Jones";
-    my $email = qq{$N\@example.com};
-    $N++;
-    return class('Contact')->new({ name => $name,
-                                   email_addresses => [ $email ],
-                                 });
-  }
-}
-
 1;

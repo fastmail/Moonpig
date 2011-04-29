@@ -2,6 +2,7 @@ package Moonpig::App::Ob;
 use Moonpig::App::Ob::Config;
 use Moonpig::App::Ob::Commands;
 use Moonpig::App::Ob::CommandArgs;
+use Moonpig::App::Ob::Functions;
 use Moonpig::Types qw(Factory);
 
 use Moose;
@@ -45,7 +46,7 @@ has command_table => (
   default => sub {
     no warnings 'qw';
     $_[0]->_gen_command_table(qw(exit,quit,q dump,eval,x reload shell,sh,!
-                                 help,?,h store,st generate,gen
+                                 help,?,h
                                ))
   },
 );
