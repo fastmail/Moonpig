@@ -50,4 +50,18 @@ sub x {
 }
 *d = \&x;
 
+sub xid {
+  my (@args) = @_;
+  map $st->retrieve_ledger_for_xid($_), @args;
+}
+
+sub guid {
+  my (@args) = @_;
+  map $st->retrieve_ledger_for_guid($_), @args;
+}
+
+sub guids {
+  $st->ledger_guids;
+}
+
 1;
