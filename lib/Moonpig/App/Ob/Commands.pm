@@ -16,6 +16,7 @@ sub eval {
     local @it = @{$ob->last_result};
     local $st = $ob->storage;
 
+    no strict;
     eval $expr;
   };
 
@@ -23,6 +24,10 @@ sub eval {
     $args->hub->obwarn($@);
     return;
   } else {
+    if ($args->primary eq "dump") {
+      local $Ob::ob = $args->hub; # Awful hack
+      Ob::d(@res);
+    }
     return @res;
   }
 }
