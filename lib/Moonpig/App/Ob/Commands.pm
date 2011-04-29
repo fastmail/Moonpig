@@ -3,25 +3,31 @@ use strict;
 use warnings;
 use Moonpig::Util qw(class);
 
-sub exit { warn "bye\n"; exit 0 }
-
-sub dump {
+sub eval {
   my ($args) = @_;
-  my @extra;
-  if ($args->eval_ok) {
-    my $val = my $s = $args->value;
-    if ($args->primary =~ /^(dump|x)$/) {
-      require Data::Dumper;
-      # callback to use actual value, not string, as $it
-      @extra = (sub { $args->hub->last_result($val) });
-      $s = Data::Dumper::Dumper($val);
-    }
-    return ($s, @extra);
-  } else {
-    warn $args->exception;
+  my $expr = $args->orig_args;
+
+  my @res = do {
+    package Ob;
+
+    our ($it, @it, $ob, $st);
+    local $ob = $args->hub;
+    local $it = $ob->it;
+    local @it = @{$ob->last_result};
+    local $st = $ob->storage;
+
+    eval $expr;
+  };
+
+  if ($@) {
+    $args->hub->obwarn($@);
     return;
+  } else {
+    return @res;
   }
 }
+
+sub exit { warn "bye\n"; exit 0 }
 
 sub help {
   my ($args) = @_;

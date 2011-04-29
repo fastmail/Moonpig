@@ -41,4 +41,13 @@ sub store {
 }
 *st =\&store;
 
+
+sub x {
+  my (@args) = @_;
+  require Data::Dumper;
+  $ob->output(Data::Dumper::Dumper(@args));
+  return @args;
+}
+*d = \&x;
+
 1;

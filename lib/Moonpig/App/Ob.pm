@@ -24,9 +24,21 @@ has output_fh => (
 
 has last_result => (
   is => 'rw',
-  isa => 'Any',
+  isa => 'ArrayRef',
   init_arg => undef,
+  default => sub { [] },
+  traits => [ 'Array' ],
+  handles => {
+    result_count => 'count',
+  },
 );
+
+sub it {
+  my ($self) = @_;
+  if ($self->result_count == 0) { return }
+  elsif ($self->result_count == 1) { return $self->last_result->[0] }
+  else { return $self->last_result }
+}
 
 has term_readline => (
   is => 'ro',
@@ -45,7 +57,7 @@ has command_table => (
              },
   default => sub {
     no warnings 'qw';
-    $_[0]->_gen_command_table(qw(exit,quit,q dump,eval,x reload shell,sh,!
+    $_[0]->_gen_command_table(qw(exit,quit,q eval reload shell,sh,!
                                  help,?,h
                                ))
   },
@@ -74,7 +86,20 @@ sub readline {
 
 sub output {
   my ($self, @str) = @_;
-  print { $self->output_fh } map defined() ? $_ : "<undef>", @str;
+  if (@str < 2) {
+    print { $self->output_fh } map _flatten($_), @str;
+  } else {
+    for my $i (0 .. $#str) {
+      printf "%2d %s\n", $i, _flatten($str[$i]);
+    }
+  }
+}
+
+sub _flatten { defined($_[0]) ? $_[0] : "<undef>" }
+
+sub obwarn {
+  my ($self, @str) = @_;
+  print { $self->output_fh } @str;
 }
 
 sub find_command {
@@ -100,15 +125,12 @@ sub run {
 
 sub do_input {
   my ($self, $input, $output_rt) = @_;
-  $output_rt ||= sub { $self->output(@_, "\n") };
-  my ($res, @extra) = $self->find_command($_)->run();
+  $output_rt ||= sub { $self->output(@_) };
+  my (@res) = $self->find_command($_)->run();
   if ($@) { warn $@ }
   else {
-    $self->last_result($res);
-    $output_rt->($res);
-  }
-  for my $callback (@extra) {
-    $callback->();
+    $self->last_result([@res]);
+    $output_rt->(@res);
   }
 }
 

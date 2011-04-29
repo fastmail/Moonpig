@@ -42,53 +42,11 @@ sub orig_args {
   return $args;
 }
 
-has _eval_res => (
-  is => 'ro',
-  lazy => 1,
-  init_arg => undef,
-  default => sub {
-    my ($self) = @_;
-    my $val = $self->eval($_[0]->orig_args, context => 'scalar',);
-    [ $@, $val ];
-  },
-);
-
-sub value {
-  $_[0]->_eval_res->[1];
-}
-
-sub eval_ok {
-  defined $_[0]->exception;
-}
-
-sub exception {
-  $_[0]->_eval_res->[0];
-}
-
 has hub => (
   is => 'ro',
   weak_ref => 1,
   required => 1,
 );
-
-sub eval {
-  my ($self, $str, %opts) = @_;
-
-  package Ob;
-
-  our ($it, $ob, $st);
-  local $ob = $self->hub;
-  local $it = $ob->last_result;
-  local $st = $ob->storage;
-
-  if ($opts{context} eq 'scalar') {
-    no strict;
-    my $res = eval($str);
-    return $res;
-  } else {
-    croak "Unknown or missing 'context' option";
-  }
-};
 
 sub run {
   my ($self) = @_;
