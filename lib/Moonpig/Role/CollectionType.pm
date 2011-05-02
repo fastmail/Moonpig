@@ -15,6 +15,13 @@ require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
 
+# name of this kind of collection, typically something like "banks"
+parameter collection_name => (
+  is => 'ro',
+  isa => Str,
+  required => 1,
+);
+
 # name of the parent method that retrieves an array of items
 parameter item_array => (
   is => 'ro',

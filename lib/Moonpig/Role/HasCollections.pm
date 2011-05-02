@@ -50,6 +50,7 @@ parameter factory => (
     require Moonpig::Role::CollectionType;
 
     my $parameters = {
+      collection_name => $p->item_collection_name,
       item_roles => $p->item_roles,
       add_this_item => $p->add_this_thing,
       item_array => $p->accessor,
