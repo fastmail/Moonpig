@@ -31,6 +31,10 @@ with(
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
    },
+  'Moonpig::Role::HasCollections' => {
+    item => 'credit',
+    item_roles => [ 'Moonpig::Role::Credit' ],
+   },
   'Stick::Role::PublicResource::GetSelf',
 );
 
