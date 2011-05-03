@@ -95,6 +95,7 @@ sub _extra_instance_subroute {
     banks => $self->bank_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
+    rfps => $self->rfp_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
