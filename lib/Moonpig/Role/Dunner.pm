@@ -4,6 +4,8 @@ use Moose::Role;
 
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
+use Moonpig::Types qw(TimeInterval);
+use Moonpig::Util qw(days);
 
 use namespace::autoclean;
 
@@ -15,7 +17,11 @@ has last_request_for_payment => (
   predicate => 'has_last_request_for_payment',
 );
 
-sub dunning_frequency { 3 * 86400 }
+has dunning_frequency => (
+  is => 'rw',
+  isa => TimeInterval,
+  default => days(3),
+);
 
 sub perform_dunning {
   my ($self) = @_;
