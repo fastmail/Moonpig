@@ -8,7 +8,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
 Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
 
-_generate_subcomponent_methods(qw(bank consumer refund));
+_generate_subcomponent_methods(qw(bank consumer refund credit));
 
 with(
   'Moonpig::Role::HasGuid',
@@ -68,16 +68,6 @@ has contact => (
   required => 1,
 );
 
-has credits => (
-  isa     => ArrayRef[ Credit ],
-  default => sub { [] },
-  traits  => [ qw(Array) ],
-  handles => {
-    credits    => 'elements',
-    _add_credit => 'push',
-  },
-);
-
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
   is => 'ro',
@@ -92,17 +82,6 @@ sub transfer {
   ($args->{type} ||= 'transfer') eq 'transfer'
     or croak(ref($self) . "::transfer only makes standard-type transfers");
   return $self->accountant->create_transfer($args);
-}
-
-sub add_credit {
-  my ($self, $class, $arg) = @_;
-  $arg ||= {};
-
-  local $arg->{ledger} = $self;
-  my $credit = $class->new($arg);
-  $self->_add_credit($credit);
-
-  return $credit;
 }
 
 sub _extra_instance_subroute {
