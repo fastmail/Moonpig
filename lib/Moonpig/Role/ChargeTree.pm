@@ -182,6 +182,17 @@ sub add_charge_at {
   $self->find_or_create_path($path)->add_charge($charge);
 }
 
+sub gather_all_charges {
+  my ($self) = @_;
+
+  my @charges = (
+    $self->charges,
+    map {; $_->gather_all_charges } $self->subtrees
+  );
+
+  return @charges;
+}
+
 sub total_amount {
   my ($self) = @_;
 

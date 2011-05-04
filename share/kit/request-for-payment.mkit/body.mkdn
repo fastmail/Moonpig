@@ -15,10 +15,15 @@ TOTAL DUE:  {{
   for my $invoice (grep {; ! $_->is_paid } $request->invoices) {
     $x++;
     $OUT .= sprintf(
-      "    Line %3s: \$%0.2f\n",
+      "\n    Line %3s: \$%0.2f\n",
       $x,
       $invoice->total_amount / 100_000,
     );
+
+    for my $charge ($invoice->gather_all_charges) {
+      $OUT .= sprintf "      %s ... %-60s ... \$%0.2f\n",
+        $charge->date, $charge->description, $charge->amount / 100_000;
+    }
   }
   return '';
 }}

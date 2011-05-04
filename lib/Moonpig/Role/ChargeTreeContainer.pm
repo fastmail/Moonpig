@@ -22,7 +22,7 @@ role {
     is   => 'ro',
     does => 'Moonpig::Role::ChargeTree',
     default  => sub { class('ChargeTree')->new },
-    handles  => [ qw(add_charge_at total_amount) ],
+    handles  => [ qw(add_charge_at total_amount gather_all_charges) ],
   );
 
   method _objectify_charge => sub {
