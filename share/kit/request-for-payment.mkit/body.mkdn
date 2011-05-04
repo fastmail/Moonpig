@@ -1,5 +1,15 @@
 REQUEST ID: {{ $request->guid }}
 
+TOTAL DUE:  {{
+  require List::Util;
+  my $total = List::Util::reduce(
+    sub { $a + $b },
+    0, map { $_->total_amount } $request->invoices
+  );
+
+  sprintf '$%0.2f', $total / 100_000;
+}}
+
 {{
   my $x = 0;
   for my $invoice (grep {; ! $_->is_paid } $request->invoices) {
