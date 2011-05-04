@@ -65,7 +65,7 @@ sub _send_request_for_payment {
   $self->_set_last_request_for_payment($rfp);
 
   $self->handle_event(event('send-mkit', {
-    kit => 'generic',
+    kit => 'request-for-payment',
     arg => {
       subject => "PAYMENT IS DUE",
       body    => "YOU OWE US MONEY\n",
@@ -73,6 +73,7 @@ sub _send_request_for_payment {
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
+      request      => $rfp,
     },
   }));
 }
