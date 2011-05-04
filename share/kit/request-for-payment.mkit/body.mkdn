@@ -1,1 +1,8 @@
-{$body}
+REQUEST ID: {{ $request + 0 }}
+
+{{
+  for my $invoice ($request->invoices) {
+    $OUT .= sprintf('Invoice %s', $invoice);
+  }
+  return '';
+}}

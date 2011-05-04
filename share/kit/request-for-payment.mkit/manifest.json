@@ -1,6 +1,11 @@
 {
   "kit_reader": "SWAK",
-  "renderer"  : "Text::Template",
+  "renderer"  : [
+    "Text::Template",
+    {
+      "template_args": { "DELIMITERS": [ "{{", "}}" ] }
+    }
+  ],
   "assembler" : [
     "Markdown",
     {
@@ -9,8 +14,8 @@
     }
   ],
   "header": [
-    { "Subject": "{$subject}" },
-    { "To":      "{ join q{,}, @to_addresses }" },
+    { "Subject": "{{$subject}}" },
+    { "To":      "{{ join q{,}, @to_addresses }}" },
     { "From":    "\"Moonpig Support\" <moonpig@example.com>" }
   ],
   "validator": [
@@ -20,7 +25,7 @@
         "type": "//rec",
         "required": {
           "subject"     : "//str",
-          "body"        : "//str",
+          "request"     : "/perl/obj",
           "to_addresses": { "type": "//arr", "contents": "//str" }
         }
       }

@@ -68,7 +68,6 @@ sub _send_request_for_payment {
     kit => 'request-for-payment',
     arg => {
       subject => "PAYMENT IS DUE",
-      body    => "YOU OWE US MONEY\n",
 
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
