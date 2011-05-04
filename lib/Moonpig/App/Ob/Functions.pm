@@ -53,12 +53,14 @@ sub x {
 
 sub xid {
   my (@args) = @_;
-  map $st->retrieve_ledger_for_xid($_), @args;
+  my @ledgers = map $st->retrieve_ledger_for_xid($_), @args;
+  return wantarray ? @ledgers : $ledgers[0];
 }
 
 sub guid {
   my (@args) = @_;
-  map $st->retrieve_ledger_for_guid($_), @args;
+  my @ledgers = map $st->retrieve_ledger_for_guid($_), @args;
+  return wantarray ? @ledgers : $ledgers[0];
 }
 
 sub guids {
