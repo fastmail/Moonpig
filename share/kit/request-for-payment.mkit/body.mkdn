@@ -1,8 +1,14 @@
-REQUEST ID: {{ $request + 0 }}
+REQUEST ID: {{ $request->guid }}
 
 {{
-  for my $invoice ($request->invoices) {
-    $OUT .= sprintf('Invoice %s', $invoice);
+  my $x = 0;
+  for my $invoice (grep {; ! $_->is_paid } $request->invoices) {
+    $x++;
+    $OUT .= sprintf(
+      "    Line %3s: \$%0.2f\n",
+      $x,
+      $invoice->total_amount / 100_000,
+    );
   }
   return '';
 }}

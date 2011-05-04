@@ -7,6 +7,7 @@ use MooseX::Types::Moose qw(ArrayRef);
 
 with(
   'Moonpig::Role::StubBuild',
+  'Moonpig::Role::HasGuid', # XXX: Possibly temporary -- rjbs, 2011-05-04
 );
 
 use namespace::autoclean;
