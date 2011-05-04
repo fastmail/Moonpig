@@ -1,7 +1,7 @@
 {
   "kit_reader": "SWAK",
   "renderer"  : "Text::Template",
-  "assembler" : [ 
+  "assembler" : [
     "Markdown",
     {
       "html_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.html",
