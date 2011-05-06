@@ -7,6 +7,13 @@ sub eval {
   my ($args) = @_;
   my $expr = $args->orig_args;
 
+  my $maxdepth = $args->hub->config->get('maxdepth') || -1;
+  if ($args->primary =~ /\A(x|dump|d)\z/) {
+    if ($expr =~ s/\A\s*([0-9]+)\s+//) {
+      $maxdepth = $1;
+    }
+  }
+
   my @res = do {
     package Ob;
 
@@ -20,14 +27,21 @@ sub eval {
     eval $expr;
   };
 
+  my $fh = $args->hub->output_fh;
+
   if ($@) {
     $args->hub->obwarn($@);
     return;
-  } else {
-    if ($args->primary eq "dump") {
-      local $Ob::ob = $args->hub; # Awful hack
-      Ob::d(@res);
-    }
+  } elsif ($args->primary =~ /^dd/) { # use data::dumper
+    print $fh Data::Dumper::Dumper(@res);
+    $args->hub->suppress_next_output(1);
+    return @res;
+  } {
+    print Moonpig::App::Ob::Dumper
+      ->new({ $args->hub->dump_options, maxdepth => $maxdepth })
+        ->dump_values(@res)
+          ->result;
+    $args->hub->suppress_next_output(1);
     return @res;
   }
 }

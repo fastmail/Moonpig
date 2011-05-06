@@ -42,15 +42,6 @@ sub store {
 }
 *st =\&store;
 
-
-sub x {
-  my (@args) = @_;
-  require Data::Dumper;
-  $ob->output(Data::Dumper::Dumper(@args));
-  return @args;
-}
-*d = \&x;
-
 sub xid {
   my (@args) = @_;
   my @ledgers = map $st->retrieve_ledger_for_xid($_), @args;
