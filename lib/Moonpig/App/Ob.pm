@@ -74,7 +74,7 @@ has config => (
   isa => class_type('Moonpig::App::Ob::Config'),
   lazy => 1,
   default => sub { Moonpig::App::Ob::Config->new() },
-  handles => [ qw(env storage) ],
+  handles => [ qw(env storage dump_options set get) ],
 );
 
 sub readline {

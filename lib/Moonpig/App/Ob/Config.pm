@@ -12,4 +12,16 @@ sub storage {
   $_[0]->env->storage
 }
 
+has _dump_options => (
+  isa => 'HashRef',
+  is => 'ro',
+  default => sub { {} },
+  traits => [ 'Hash' ],
+  handles => {
+    set     => 'set',
+    get     => 'get',
+    dump_options   => 'elements',
+  },
+);
+
 1;
