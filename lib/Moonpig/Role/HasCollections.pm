@@ -3,6 +3,7 @@ use Moonpig::Util qw(class);
 use Moonpig::Types qw(Factory);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Str ArrayRef HashRef Defined);
+use Moose::Util::TypeConstraints;
 
 requires 'ledger';
 
@@ -26,6 +27,12 @@ parameter collection_roles => (
   isa => ArrayRef [ Str ],
   default => sub { [] },
 );
+
+parameter is => (
+  isa => subtype(Str, { where => sub { /\Ar[ow]\z/ } }),
+  default => 'rw',
+);
+
 
 # method that handles POST requests to this collection
 parameter post_action => (
@@ -56,7 +63,7 @@ parameter factory => (
                   map "Collection::$_", @{$p->collection_roles},
                  );
     return $c;
-  },
+  }
 );
 
 # Name for the item collection class
@@ -103,7 +110,7 @@ role {
 
   # the accessor method is required
   requires $accessor;
-  requires $add_this_thing;
+  requires $add_this_thing if $p->is eq "rw";
 
   # build collection constructor
   method $constructor => sub {
