@@ -1,0 +1,57 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use lib 'eg/fauxbox/lib';
+
+use File::Path qw(remove_tree);
+use File::Spec;
+use JSON;
+use LWP::UserAgent;
+
+$ENV{FAUXBOX_ROOT} = 'eg/fauxbox';
+my $db_path = File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'var');
+
+$ENV{FAUXBOX_STORAGE_ROOT} = $db_path;
+
+require Fauxbox::Schema;
+
+die "db path $db_path does not exist as dir\n" unless -d $db_path;
+
+my $schema = Fauxbox::Schema->shared_connection;
+
+my $account_rs = $schema->resultset('Account')->search;
+
+my $ua = LWP::UserAgent->new;
+my $JSON = JSON->new;
+
+while (my $account = $account_rs->next) {
+  my $xid = sprintf 'fauxbox:account:%u', $account->id;
+  my $res = $ua->get("http://localhost:5001/ledger/xid/$xid");
+  next if $res->is_success;
+
+  print "account $xid not fount\n";
+
+  my $payload = $JSON->encode($arg);
+
+  # my $new_res = $ua->pos
+
+  #   $res = $UA->post(
+  #     $target,
+  #     'Content-Type' => 'application/json',
+  #     Content => $payload,
+  #   );
+  # $m->mp_request(
+  #   POST => sprintf(
+  #     '/ledger/xid/%s/consumers',
+  #     username_xid($client->username),
+  #   ),
+  #   {
+  #     template      => 'fauxboxbasic',
+  #     template_args => {
+  #       xid         => 'fauxbox:account:' . $account->id,
+  #       make_active => 1,
+  #     },
+  #   },
+  # );
+}
