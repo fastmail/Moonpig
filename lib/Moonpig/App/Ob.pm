@@ -126,6 +126,7 @@ sub obwarn {
 
 sub find_command {
   my ($self, $input) = @_;
+  $input =~ s/^\s+//;
   my ($command_name, @args) = split /\s+/, $input;
   $command_name = 'eval' unless $self->known_command($command_name);
   return $self->command_arg_factory->new({
