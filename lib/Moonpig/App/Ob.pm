@@ -77,6 +77,13 @@ has config => (
   handles => [ qw(env storage dump_options set get) ],
 );
 
+has suppress_next_output => (
+  is => 'rw',
+  isa => 'Num',
+  init_arg => undef,
+  default => 0,
+);
+
 sub readline {
   my ($self) = @_;
   my $prompt = $self->app_id . "> ";
@@ -84,8 +91,21 @@ sub readline {
   return my $in = $rl->readline($prompt);
 }
 
+sub replace_output {
+  my ($self, @str) = @_;
+  my $res = $self->output(@str);
+  $self->suppress_next_output(1);
+  return $res;
+}
+
 sub output {
   my ($self, @str) = @_;
+
+  if ($self->suppress_next_output) {
+    $self->suppress_next_output(0);
+    return;
+  }
+
   my $fh = $self->output_fh;
   if (@str < 2) {
     print $fh map _flatten($_), @str;
