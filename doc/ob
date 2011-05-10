@@ -19,6 +19,18 @@ context.  In the eval context, some package variables are defined:
    $it is \@it, unless @it contained only one item, in which case it
      is that item.
 
+If the output exceeds 10 lines, it is truncated.  You can force
+display of the complete output by explicitly using the "d" command.
+You can also change the default of 10  by executing
+
+    $ob->maxlines(50)
+
+or whatever.
+
+The recursive dump will skip the internal details of certain objects
+such as DateTimes, unless these are the top-level result.  This is not
+yet configurable.
+
 The default output routine replaces undefined values with the string
 "<undef>".  If the eval yields zero or one values, the value is simply
 printed.  If it yields two or more values, they are printed on
@@ -29,7 +41,7 @@ separate numbered lines.  Numbers start at 0, so that if you see
           1 Bill
           2 Oscar
 
-then you can access "Bill" as $it[1] and "Oscard" as $it[2].
+then you can access "Bill" as $it[1] and "Oscar" as $it[2].
 
 Commands
 
@@ -41,10 +53,13 @@ Commands
   ? (h, help)
     List known commands and Ob:: functions.
 
-  d, x, dump
-    Evaluate Perl expressions and dump with Data::Dumper.  $it is set
+  d, x, dump, eval
+    Evaluate Perl expressions and dump with Ob::Dumper.  $it is set
     to the value of the expressions, not to the output of
-    Data::Dumper.
+    Ob::Dumper.
+
+  dd, ddump
+    Like 'd', but use Data::Dumper instead of Ob::Dumper.
 
   exit (q, quit)
 
@@ -52,6 +67,7 @@ Commands
   generate ["contact" | "ledger"]
     Construct and return a new contact or ledger object.
 
+  ledger guid-or-xid-expressions...
   guid guid_expressions...
   xid xid_expressions...
     Retrieve specified ledgers from storage
@@ -65,6 +81,4 @@ Commands
   store ledger...
   st ledger...
     Store these ledgers into storage.
-
-
 
