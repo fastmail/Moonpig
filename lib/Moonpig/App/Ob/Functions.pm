@@ -3,8 +3,12 @@ package Ob;  # note weird package declaration
 # This is the package in which unrecognized commands are evaluated as Perl
 # expressions.
 use namespace::autoclean;
+use strict;
+use warnings;
 
-our $ob;
+# These variables will be set up in package Ob when these functions
+# are invoked via Moonpig::App::Ob::Commands::eval
+our ($ob, $st);
 
 sub generate {
   my ($subcommand, @args) = @_;
@@ -52,6 +56,19 @@ sub guid {
   my (@args) = @_;
   my @ledgers = map $st->retrieve_ledger_for_guid($_), @args;
   return wantarray ? @ledgers : $ledgers[0];
+}
+
+sub guid_or_xid {
+  my ($id) = @_;
+  return guid($id) || xid($id) || do {
+    warn "Can't find ledger for '$id'\n";
+    return;
+  };
+}
+
+sub ledger {
+  my (@args) = @_;
+  grep defined, map guid_or_xid($_), @args;
 }
 
 sub guids {
