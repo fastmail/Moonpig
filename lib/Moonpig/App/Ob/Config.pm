@@ -24,4 +24,10 @@ has _dump_options => (
   },
 );
 
+has maxlines => (
+  isa => 'Num',
+  is => 'rw',
+  default => 10,
+);
+
 1;

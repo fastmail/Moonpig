@@ -42,11 +42,12 @@ sub eval {
       ->new({ $args->hub->dump_options, maxdepth => $maxdepth })
         ->dump_values(@res)
           ->result;
-    if ($args->primary eq '_internal_eval' && ($output =~ tr/\n//) > 10 ) {
+    my $len = $output =~ tr/\n//;
+    if ($args->primary eq '_internal_eval' && $len > $args->hub->maxlines ) {
       my @lines = split /\n/, $output;
-      $output = join "\n", @lines[0..9], "";
+      $output = join "\n", @lines[0.. $args->hub->maxlines - 1], "";
       $args->hub->output($output);
-      $args->hub->output("  WARNING: output truncated; use 'x \$it' to see all");
+      $args->hub->output("  WARNING: $len-line output truncated; use 'x \$it' to see all");
     } else {
       $args->hub->output($output);
     }
@@ -63,6 +64,7 @@ sub help {
 
   my $tab = $args->hub->command_table;
   while (my ($cname, $code) = each %$tab) {
+    next if $cname =~ /^_/;
     push @{$rtab->{$code}}, $cname;
   }
 
