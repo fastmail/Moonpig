@@ -1,7 +1,7 @@
 package Moonpig::App::Ob::Dumper;
 use strict;
 use warnings;
-use Scalar::Util 'reftype';
+use Scalar::Util qw(blessed reftype);
 
 use Sub::Exporter -setup => {
   exports => [ 'Dump' ],
@@ -91,6 +91,28 @@ has path => (
   init_arg => undef,
 );
 
+has prune_criteria => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  default => sub { [ qr/^DateTime/,
+                     qr/^Moonpig::DateTime$/,
+                     qr/^Moonpig::Events::EventHandlerRegistry/
+                    ] },
+);
+
+sub prune_this {
+  my ($self, $this) = @_;
+  for my $prune_criterion (@{$self->prune_criteria}) {
+    if (ref($prune_criterion) eq "Regexp") {
+      return 1 if blessed($this) =~ $prune_criterion;
+    } else {
+      my $ref = ref($prune_criterion);
+      die "Unknown prune_criterion type '$ref' for '$prune_criterion'";
+    }
+  }
+  return 0;
+}
+
 sub ap {
   my ($self, @strs) = @_;
   $self->result(join "", $self->result, @strs);
@@ -134,8 +156,12 @@ sub dump_value {
 sub recurse {
   my ($self, $into, $code) = @_;
   $self->aplines($into);
-
   return if $self->at_maxdepth;
+
+  if ($self->depth > 1 && not $self->recurse_into($into)) {
+    return $self;
+  }
+
   if ($self->has_seen($into)) {
     $self->aplines("  ...");
     return $self;
@@ -154,6 +180,12 @@ sub recurse {
   $self->cur_indent($old_indent);
   $self->depth($old_depth);
   return $self;
+}
+
+sub recurse_into {
+  my ($self, $what) = @_;
+  return 0 if blessed($what) && $self->prune_this($what);
+  return 1;
 }
 
 sub dump_array {
