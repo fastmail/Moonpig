@@ -4,8 +4,8 @@ use warnings;
 use Scalar::Util 'reftype';
 
 use Sub::Exporter -setup => {
-  exports => [ 'dump' ],
-  groups => { default => [ 'dump' ] },
+  exports => [ 'Dump' ],
+  groups => { default => [ 'Dump' ] },
 };
 
 use Moose;
@@ -109,14 +109,14 @@ sub at_maxdepth {
   $self->depth == $self->maxdepth;
 }
 
-sub dump {
+sub Dump {
   my $self = __PACKAGE__->new();
   return $self->dump_value(@_)->result;
 }
 
 sub dump_values {
   my $self = shift;
-  if (@_ == 0) { return }
+  if (@_ == 0) { $self }
   elsif (@_ == 1) { $self->dump_value($_[0]) }
   else { $self->dump_array([ @_ ]) }
 }
@@ -151,7 +151,6 @@ sub recurse {
   $code->();
 
   pop @{$self->path};
-  delete $self->seen->{$into};
   $self->cur_indent($old_indent);
   $self->depth($old_depth);
   return $self;

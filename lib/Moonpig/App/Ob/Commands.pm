@@ -2,6 +2,7 @@ package Moonpig::App::Ob::Commands;
 use strict;
 use warnings;
 use Moonpig::Util qw(class);
+use Moonpig::App::Ob::Dumper;
 
 sub eval {
   my ($args) = @_;
