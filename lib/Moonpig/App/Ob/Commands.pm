@@ -38,10 +38,18 @@ sub eval {
     $args->hub->suppress_next_output(1);
     return @res;
   } {
-    print Moonpig::App::Ob::Dumper
+    my $output = Moonpig::App::Ob::Dumper
       ->new({ $args->hub->dump_options, maxdepth => $maxdepth })
         ->dump_values(@res)
           ->result;
+    if ($args->primary eq '_internal_eval' && ($output =~ tr/\n//) > 10 ) {
+      my @lines = split /\n/, $output;
+      $output = join "\n", @lines[0..9], "";
+      $args->hub->output($output);
+      $args->hub->output("  WARNING: output truncated; use 'x \$it' to see all");
+    } else {
+      $args->hub->output($output);
+    }
     $args->hub->suppress_next_output(1);
     return @res;
   }

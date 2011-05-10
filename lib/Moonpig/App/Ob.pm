@@ -57,8 +57,10 @@ has command_table => (
              },
   default => sub {
     no warnings 'qw';
-    $_[0]->_gen_command_table(qw(exit,quit,q eval,dump,x,d,ddump,dd
-                                 reload shell,sh,! help,?,h
+    $_[0]->_gen_command_table(qw(exit,quit,q
+                                 eval,dump,x,d,ddump,dd,_internal_eval
+                                 reload shell,sh,!
+                                 help,?,h
                                ))
   },
 );
@@ -128,7 +130,7 @@ sub find_command {
   my ($self, $input) = @_;
   $input =~ s/^\s+//;
   my ($command_name, @args) = split /\s+/, $input;
-  $command_name = 'eval' unless $self->known_command($command_name);
+  $command_name = '_internal_eval' unless $self->known_command($command_name);
   return $self->command_arg_factory->new({
     code => $self->get_implementation($command_name),
     primary => $command_name,
