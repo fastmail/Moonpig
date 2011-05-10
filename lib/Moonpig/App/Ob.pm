@@ -57,7 +57,9 @@ has command_table => (
              },
   default => sub {
     no warnings 'qw';
-    $_[0]->_gen_command_table(qw(exit,quit,q eval,dump reload shell,sh,!
+    $_[0]->_gen_command_table(qw(exit,quit,q
+                                 eval,dump,x,d,ddump,dd,_internal_eval
+                                 reload shell,sh,!
                                  help,?,h
                                ))
   },
@@ -74,7 +76,14 @@ has config => (
   isa => class_type('Moonpig::App::Ob::Config'),
   lazy => 1,
   default => sub { Moonpig::App::Ob::Config->new() },
-  handles => [ qw(env storage) ],
+  handles => [ qw(env storage dump_options set get maxlines) ],
+);
+
+has suppress_next_output => (
+  is => 'rw',
+  isa => 'Num',
+  init_arg => undef,
+  default => 0,
 );
 
 sub readline {
@@ -84,8 +93,21 @@ sub readline {
   return my $in = $rl->readline($prompt);
 }
 
+sub replace_output {
+  my ($self, @str) = @_;
+  my $res = $self->output(@str);
+  $self->suppress_next_output(1);
+  return $res;
+}
+
 sub output {
   my ($self, @str) = @_;
+
+  if ($self->suppress_next_output) {
+    $self->suppress_next_output(0);
+    return;
+  }
+
   my $fh = $self->output_fh;
   if (@str < 2) {
     print $fh map _flatten($_), @str;
@@ -106,8 +128,9 @@ sub obwarn {
 
 sub find_command {
   my ($self, $input) = @_;
+  $input =~ s/^\s+//;
   my ($command_name, @args) = split /\s+/, $input;
-  $command_name = 'eval' unless $self->known_command($command_name);
+  $command_name = '_internal_eval' unless $self->known_command($command_name);
   return $self->command_arg_factory->new({
     code => $self->get_implementation($command_name),
     primary => $command_name,

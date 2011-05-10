@@ -2,10 +2,18 @@ package Moonpig::App::Ob::Commands;
 use strict;
 use warnings;
 use Moonpig::Util qw(class);
+use Moonpig::App::Ob::Dumper;
 
 sub eval {
   my ($args) = @_;
   my $expr = $args->orig_args;
+
+  my $maxdepth = $args->hub->config->get('maxdepth') || -1;
+  if ($args->primary =~ /\A(x|dump|d)\z/) {
+    if ($expr =~ s/\A\s*([0-9]+)\s+//) {
+      $maxdepth = $1;
+    }
+  }
 
   my @res = do {
     package Ob;
@@ -20,14 +28,30 @@ sub eval {
     eval $expr;
   };
 
+  my $fh = $args->hub->output_fh;
+
   if ($@) {
     $args->hub->obwarn($@);
     return;
-  } else {
-    if ($args->primary eq "dump") {
-      local $Ob::ob = $args->hub; # Awful hack
-      Ob::d(@res);
+  } elsif ($args->primary =~ /^dd/) { # use data::dumper
+    print $fh Data::Dumper::Dumper(@res);
+    $args->hub->suppress_next_output(1);
+    return @res;
+  } {
+    my $output = Moonpig::App::Ob::Dumper
+      ->new({ $args->hub->dump_options, maxdepth => $maxdepth })
+        ->dump_values(@res)
+          ->result;
+    my $len = $output =~ tr/\n//;
+    if ($args->primary eq '_internal_eval' && $len > $args->hub->maxlines ) {
+      my @lines = split /\n/, $output;
+      $output = join "\n", @lines[0.. $args->hub->maxlines - 1], "";
+      $args->hub->output($output);
+      $args->hub->output("  WARNING: $len-line output truncated; use 'x \$it' to see all");
+    } else {
+      $args->hub->output($output);
     }
+    $args->hub->suppress_next_output(1);
     return @res;
   }
 }
@@ -40,6 +64,7 @@ sub help {
 
   my $tab = $args->hub->command_table;
   while (my ($cname, $code) = each %$tab) {
+    next if $cname =~ /^_/;
     push @{$rtab->{$code}}, $cname;
   }
 
