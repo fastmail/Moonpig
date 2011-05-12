@@ -24,7 +24,9 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime' ],
+        roles => [
+          qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::Account)
+        ],
         arg   => {
           cost_amount        => dollars(20),
           cost_period        => days(365),
