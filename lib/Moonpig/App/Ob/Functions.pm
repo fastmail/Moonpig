@@ -68,7 +68,12 @@ sub guid_or_xid {
 
 sub ledger {
   my (@args) = @_;
-  grep defined, map guid_or_xid($_), @args;
+  my @L = grep defined, map guid_or_xid($_), @args;
+
+  return @L if wantarray;
+
+  warn "Found more than one ledger, but called in scalar context." if @L > 1;
+  return $L[0];
 }
 
 sub guids {
