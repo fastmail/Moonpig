@@ -66,6 +66,8 @@ sub class {
     }
 
     $name =~ s/::/_/g if @all_names;
+    $name =~ s/^=//;
+
     push @all_names, $name;
   }
 
