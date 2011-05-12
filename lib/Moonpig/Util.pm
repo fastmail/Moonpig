@@ -93,6 +93,7 @@ sub _rewrite_prefix {
   return String::RewritePrefix->rewrite(
     {
      ''    => 'Moonpig::Role::',
+     '='   => '',
      't::' => 't::lib::Role::',
     },
     @in
