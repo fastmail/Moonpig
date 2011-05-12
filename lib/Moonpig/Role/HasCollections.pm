@@ -5,8 +5,6 @@ use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Str ArrayRef HashRef Defined);
 use Moose::Util::TypeConstraints;
 
-requires 'ledger';
-
 # Name of the sort of thing this collection will contain
 # e.g., "refund".
 parameter item => (isa => Str, required => 1);
@@ -77,7 +75,7 @@ parameter item_collection_name => (
   },
 );
 
-# Name of ledger method that returns an arrayref of the things
+# Name of parent method that returns an arrayref of the things
 # default "thing_array"
 parameter accessor => (
   isa => Str,
@@ -93,7 +91,7 @@ parameter constructor => (
   default => sub { $_[0]->item . "_collection" },
 );
 
-# Names of ledger method that inserts a new item
+# Names of parent method that inserts a new item
 parameter add_this_thing => (
   isa => Str,
   lazy => 1,
@@ -114,10 +112,10 @@ role {
 
   # build collection constructor
   method $constructor => sub {
-    my ($parent, $opts) = @_;
+    my ($owner, $opts) = @_;
     $p->factory->new({
       options => $opts,
-      ledger => $parent->ledger
+      owner => $owner,
     });
   };
 };

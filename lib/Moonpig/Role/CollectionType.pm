@@ -2,8 +2,8 @@ package Moonpig::Role::CollectionType;
 use List::Util qw(min);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::Role::Parameterized;
-use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Str);
-use Moonpig::Types qw(Ledger PositiveInt);
+use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Object Str);
+use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Scalar::Util qw(blessed);
 use Carp 'confess';
@@ -11,14 +11,14 @@ require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
 
-# name of the ledger method that retrieves an array of items
+# name of the parent method that retrieves an array of items
 parameter item_array => (
   is => 'ro',
   isa => Str,
   required => 1,
 );
 
-# name of the ledger method that adds a new item of this type to a ledger
+# name of the parent method that adds a new item of this type to the parent
 parameter add_this_item => (
   is => 'ro',
   isa => Str,
@@ -70,6 +70,12 @@ role {
   my $item_type = item_type($p);
   my $post_action = $p->post_action;
 
+  has owner => (
+    isa => Object,
+    is => 'ro',
+    required => 1,
+  );
+
   method _subroute => sub {
     my ($self, @args) = @_;
     confess "Can't route collection class, instances only"
@@ -95,12 +101,6 @@ role {
     }
   };
 
-  has ledger => (
-    is   => 'ro',
-    isa  => Ledger,
-    required => 1,
-  );
-
   with (qw(Stick::Role::PublicResource
            Stick::Role::Routable
            Stick::Role::Routable::AutoInstance
@@ -108,7 +108,8 @@ role {
         ));
 
   method items => sub {
-    return $_[0]->ledger->$item_array;
+    my ($self) = @_;
+    return $self->owner->$item_array;
   };
 
   has default_page_size => (
@@ -165,13 +166,13 @@ role {
 
   publish add => { new_item => $item_type } => sub {
     my ($self, $arg) = @_;
-    $self->ledger->$add_this_item($arg->{new_item});
+    $self->owner->$add_this_item($arg->{new_item});
   };
 
   method resource_post => sub {
     my ($self, @args) = @_;
     $self->$post_action(@args);
-   }
+   };
 };
 
 1;

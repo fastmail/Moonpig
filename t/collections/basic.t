@@ -107,7 +107,7 @@ test "ledger gc" => sub {
   my ($self) = @_;
   my $rc = $self->ledger->refund_collection();
   $self->scrub_ledger;
-  ok($rc->ledger, "was ledger prematurely garbage-collected?");
+  ok($rc->owner, "was ledger prematurely garbage-collected?");
 };
 
 run_me;
