@@ -26,21 +26,21 @@ my $canTransfer = Moonpig::Role::CanTransfer->meta->generate_role(
 #  Expected class name
 #  Expected methods - at least one from each role please
 my @tests = (
-  [ [ 'Consumer::ByTime' ],
-      'MC::Consumer::ByTime',
+  [ [ 'Consumer::ByTime::FixedCost' ],
+      'MC::Consumer::ByTime::FixedCost',
     [ 'remaining_life' ] ],
 
   [ [ [ ChargeTreeContainer => Bill => { charges_handle_events => 0 } ] ],
       'MC::Bill',
     [ 'charge_tree' ] ],
 
-  [ [ 'Consumer::ByTime', [ ChargeTreeContainer => Smitty => { charges_handle_events => 0 } ] ],
-      'MC::Consumer::ByTime::Smitty',
+  [ [ 'Consumer::ByTime::FixedCost', [ ChargeTreeContainer => Smitty => { charges_handle_events => 0 } ] ],
+      'MC::Consumer::ByTime::FixedCost::Smitty',
     [ 'remaining_life', 'charge_tree' ] ],
 
   [ [ [ ChargeTreeContainer => Smitty => { charges_handle_events => 0 } ],
-      'Consumer::ByTime' ],
-      'MC::Smitty::Consumer_ByTime',
+      'Consumer::ByTime::FixedCost' ],
+      'MC::Smitty::Consumer_ByTime_FixedCost',
     [ 'remaining_life', 'charge_tree' ] ],
   );
 

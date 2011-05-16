@@ -9,7 +9,7 @@ use Moonpig::Util -all;
 requires 'ledger';
 
 my %reasonable_defaults = (
-  'Moonpig::Class::Consumer::ByTime' => {
+  'Moonpig::Class::Consumer::ByTime::FixedCost' => {
     charge_description => "test charge",
     charge_path_prefix => ["test"],
     description        => "test consumer",

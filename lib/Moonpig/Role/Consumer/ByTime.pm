@@ -9,7 +9,6 @@ use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
-use namespace::autoclean;
 
 use Moonpig::Logger '$Logger';
 
@@ -58,11 +57,7 @@ has charge_description => (
 # How much I cost to own, in millicents per period
 # e.g., a pobox account will have dollars(20) here, and cost_period
 # will be one year
-has cost_amount => (
-  is => 'ro',
-  required => 1,
-  isa => PositiveMillicents,
-);
+requires 'cost_amount';
 
 #  XXX this is period in days, which is not quite right, since a
 #  charge of $10 per month or $20 per year is not any fixed number of

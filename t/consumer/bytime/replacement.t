@@ -14,7 +14,7 @@ use t::lib::Logger;
 
 use Moonpig::Env::Test;
 
-my $CLASS = class('Consumer::ByTime');
+my $CLASS = class('Consumer::ByTime::FixedCost');
 
 has ledger => (
   is   => 'rw',

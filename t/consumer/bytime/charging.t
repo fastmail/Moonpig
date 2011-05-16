@@ -11,7 +11,7 @@ use Test::Routine;
 
 use t::lib::Logger;
 
-my $CLASS = class('Consumer::ByTime');
+my $CLASS = class('Consumer::ByTime::FixedCost');
 
 has ledger => (
   is => 'rw',

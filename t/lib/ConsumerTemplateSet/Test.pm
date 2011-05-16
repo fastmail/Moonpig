@@ -19,7 +19,7 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime' ],
+        roles => [ 'Consumer::ByTime::FixedCost' ],
         arg   => {
           xid         => 'urn:uuid:' . guid_string,
           old_age     => days(30),

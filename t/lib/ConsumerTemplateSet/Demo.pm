@@ -13,7 +13,7 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime' ],
+        roles => [ 'Consumer::ByTime::FixedCost' ],
         arg   => {
           cost_amount        => dollars(50),
           cost_period        => days(365),

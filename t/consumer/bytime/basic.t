@@ -12,7 +12,7 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-my $CLASS = class('Consumer::ByTime');
+my $CLASS = class('Consumer::ByTime::FixedCost');
 
 has ledger => (
   is   => 'rw',
@@ -37,7 +37,7 @@ test "constructor" => sub {
 
   ok(
     exception {
-      Moonpig::Consumer::ByTime->new({
+      $CLASS->new({
         ledger             => $self->test_ledger,
        });
     },
