@@ -222,7 +222,7 @@ sub dump_scalar {
   return $self;
 }
 
-sub dump_scalarref {
+sub dump_scalar_ref {
   my ($self, $sr) = @_;
   $self->recurse($sr,
                  sub { $self->dump_value($$sr) });
