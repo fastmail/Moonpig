@@ -158,7 +158,7 @@ sub recurse {
   $self->aplines($into);
   return if $self->at_maxdepth;
 
-  if ($self->depth > 1 && not $self->recurse_into($into)) {
+  if ($self->depth > 0 && not $self->recurse_into($into)) {
     return $self;
   }
 
