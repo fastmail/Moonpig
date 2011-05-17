@@ -9,8 +9,10 @@
   <body>
     <h1><a href='/'>Fauxbox!</a></h1>
     <table>
-      <tr><th>Moon time</th><td><% $m->mp_time %>   </th></tr>
-      <tr><th>Real time</th><td><% $m->real_time %> </td></tr>
+% my $diff = $m->mp_time - $m->real_time;
+% $diff = "+$diff" if $diff > 0;
+      <tr><th>Moon time</th><td><% scalar localtime($m->mp_time) %> <% $diff ? "(${diff}s)" : "" %>   </th></tr>
+      <tr><th>Real time</th><td><% scalar localtime($m->real_time) %> </td></tr>
     </table>
     <% $m->call_next %>
   </body>
