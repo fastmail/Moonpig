@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 
+use lib 'lib';
 use lib 'eg/fauxbox/lib';
 
 my $root = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
