@@ -81,22 +81,15 @@ test "charge" => sub {
 };
 
 {
-  package Increasing::Cost;
+  package CostsTodaysDate;
   use Moose::Role;
   use Moonpig::Util qw(dollars);
   use Moonpig::Types qw(PositiveMillicents);
-  has current_cost => (
-    reader => '_current_cost',
-    writer => 'set_current_cost',
-    isa    => PositiveMillicents,
-    default => dollars(10),
-  );
 
-  sub cost_amount {
-    my ($self) = @_;
-    my $value = $self->_current_cost;
-    $self->set_current_cost( $value + dollars(1) );
-    return $value;
+  sub cost_amount_on {
+    my ($self, $date) = @_;
+
+    return dollars( $date->day );
   }
 }
 
@@ -104,8 +97,6 @@ test "variable charge" => sub {
   my ($self) = @_;
 
   my @eq;
-
-  plan tests => 4 + 5 + 2;
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
@@ -126,7 +117,7 @@ test "variable charge" => sub {
     });
 
     my $c = $self->test_consumer(
-      class('Consumer::ByTime', '=Increasing::Cost'),
+      class('Consumer::ByTime', '=CostsTodaysDate'),
       {
         # These would come from defaults if this wasn't a weird-o class. --
         # rjbs, 2011-05-17
@@ -155,9 +146,8 @@ test "variable charge" => sub {
     }
 
     # We should be charging across five days, no matter the pattern, starting
-    # with $10/day.  So, 10+11+12+13+14 = 60 total charge.
-    diag $b->unapplied_amount;
-    is($b->unapplied_amount, dollars(440));
+    # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
+    is($b->unapplied_amount, dollars(485), '$15 charged by charging the date');
   }
 };
 
