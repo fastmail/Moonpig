@@ -16,7 +16,9 @@ my $CLASS = class('Consumer::ByTime::FixedCost');
 has ledger => (
   is => 'rw',
   does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
+  lazy => 1,
+  default => sub { $_[0]->test_ledger },
+  clearer => 'clear_ledger',
 );
 sub ledger;  # Work around bug in Moose 'requires';
 
@@ -25,6 +27,8 @@ with(
   't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
  );
+
+after run_test => sub { $_[0]->clear_ledger };
 
 test "charge" => sub {
   my ($self) = @_;
@@ -73,6 +77,87 @@ test "charge" => sub {
 
       is($b->unapplied_amount, dollars(10 - $day));
     }
+  }
+};
+
+{
+  package Increasing::Cost;
+  use Moose::Role;
+  use Moonpig::Util qw(dollars);
+  use Moonpig::Types qw(PositiveMillicents);
+  has current_cost => (
+    reader => '_current_cost',
+    writer => 'set_current_cost',
+    isa    => PositiveMillicents,
+    default => dollars(10),
+  );
+
+  sub cost_amount {
+    my ($self) = @_;
+    my $value = $self->_current_cost;
+    $self->set_current_cost( $value + dollars(1) );
+    return $value;
+  }
+}
+
+test "variable charge" => sub {
+  my ($self) = @_;
+
+  my @eq;
+
+  plan tests => 4 + 5 + 2;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+
+  for my $test (
+    # description, [ days to charge on ]
+    [ 'normal', [ 1, 2, 3, 4, 5 ], ],
+    [ 'double', [ 1, 1, 2, 2, 3, 3, 5, 5 ], ],
+    [ 'missed', [ 2, 5 ], ],
+  ) {
+    Moonpig->env->stop_clock_at($jan1);
+    my ($name, $schedule) = @$test;
+    note("testing with heartbeat schedule '$name'");
+
+    my $b = class('Bank')->new({
+      ledger => $self->ledger,
+      amount => dollars(500),
+    });
+
+    my $c = $self->test_consumer(
+      class('Consumer::ByTime', '=Increasing::Cost'),
+      {
+        # These would come from defaults if this wasn't a weird-o class. --
+        # rjbs, 2011-05-17
+        charge_description => "test charge",
+        charge_path_prefix => ["test"],
+        description        => "test consumer",
+
+        ledger => $self->ledger,
+        bank => $b,
+        old_age => years(1000),
+        cost_period        => days(1),
+        replacement_mri    => Moonpig::URI->nothing(),
+    });
+
+    $c->clear_grace_until;
+
+    for my $day (@$schedule) {
+      my $tick_time = Moonpig::DateTime->new(
+        year => 2000, month => 1, day => $day
+      );
+
+      Moonpig->env->stop_clock_at($tick_time);
+
+      $self->heartbeat_and_send_mail($self->ledger);
+
+    }
+
+    # We should be charging across five days, no matter the pattern, starting
+    # with $10/day.  So, 10+11+12+13+14 = 60 total charge.
+    diag $b->unapplied_amount;
+    is($b->unapplied_amount, dollars(440));
   }
 };
 

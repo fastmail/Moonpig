@@ -31,7 +31,7 @@ sub test_consumer {
   }
 
   my %arg = (
-    %{$reasonable_defaults{$class}},
+    %{ $reasonable_defaults{$class} || {} },
     xid         => 'urn:uuid:' . guid_string,
     make_active => 1,
     ledger      => $self->ledger,
