@@ -169,7 +169,7 @@ sub charge {
 
     my $next_charge_date = $self->next_charge_date;
 
-    unless ($self->can_make_payment_for( $next_charge_date )) {
+    unless ($self->can_make_payment_on( $next_charge_date )) {
       $self->expire;
       return;
     }
@@ -229,7 +229,7 @@ sub reflect_on_mortality {
   }
 }
 
-sub can_make_payment_for {
+sub can_make_payment_on {
   my ($self, $date) = @_;
   return $self->amount_in_bank >= $self->calculate_charge_on($date);
 }
