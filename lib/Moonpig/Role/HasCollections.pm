@@ -108,7 +108,18 @@ role {
 
   # the accessor method is required
   requires $accessor;
-  requires $add_this_thing if $p->is eq "rw";
+
+  if ($p->is eq "rw") {
+    requires $add_this_thing;
+  } else {
+    method $add_this_thing => sub {
+      my ($self) = @_;
+      my $owner = $self->owner;
+      require Carp;
+      Carp::croak("Cannot modify read-only collection '$self' " .
+                    "belonging to $owner\n");
+    };
+  }
 
   # build collection constructor
   method $constructor => sub {
