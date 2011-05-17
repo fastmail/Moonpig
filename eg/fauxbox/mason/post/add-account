@@ -6,11 +6,14 @@ $params
 my $acct_p  = $params->{account};
 my $client  = $m->schema->resultset('Client')->find($acct_p->{client_id});
 
+my $time = $m->mp_request(GET => '/time')->{now};
+
 my $account;
 $m->schema->txn_do(sub {
   $account = $client->related_resultset('accounts')->create({
     alias => $acct_p->{alias},
     fwd   => $acct_p->{fwd},
+    ($acct_p->{premium} ? (premium_since => $time) : ()),
   });
 
   $account->create_related('active_flag', {});

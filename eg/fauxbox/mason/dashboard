@@ -78,6 +78,7 @@ $client
   should go to <% $m->widget->input({ id => 'account.fwd' }) %>
   <br />
   <% $m->widget->hidden({ id => 'account.client_id', value => $client->id }) %>
-  <% $m->widget->submit %>
+  <% $m->widget->submit({ id => 'account.premium', value => 'Add Premium' }) %>
+  <% $m->widget->submit({ value => 'Add Cheapo' }) %>
 </form>
 </%method>
