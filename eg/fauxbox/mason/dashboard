@@ -20,6 +20,23 @@ my $ledger = $m->mp_request(GET => "/ledger/xid/" . username_xid($username));
 <% Data::Dumper->Dump([ $ledger ]) |h %>
 </pre>
 
+<& SELF:tick, ledger_path => $ledger_path,
+              return_url => "/dashboard?username=$username" &>
+
+<%method tick>
+<%args>
+$ledger_path
+$return_url
+</%args>
+
+<form action='/post/elapse' method='post'>
+Let <% $m->widget->input({ size=>2, value=>1, id => 'days' }) %> day(s) elapse
+<% $m->widget->hidden({ name => "return_url", value => $return_url }) %>
+<% $m->widget->hidden({ name => "ledger_path", value => $ledger_path }) %>
+<% $m->widget->submit({ value => "now!" }) %><br />
+</form>
+</%method>
+
 <%method payment-due>
 <%args>
 $client
