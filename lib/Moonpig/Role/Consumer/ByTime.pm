@@ -57,7 +57,7 @@ has charge_description => (
 # How much I cost to own, in millicents per period
 # e.g., a pobox account will have dollars(20) here, and cost_period
 # will be one year
-requires 'cost_amount';
+requires 'cost_amount_on';
 
 #  XXX this is period in days, which is not quite right, since a
 #  charge of $10 per month or $20 per year is not any fixed number of
@@ -109,7 +109,8 @@ sub expire_date {
     confess "Can't calculate remaining life for unfunded consumer";
   my $remaining = $bank->unapplied_amount();
 
-  my $n_charge_periods_left = int($remaining / $self->cost_per_charge);
+  my $n_charge_periods_left
+    = int($remaining / $self->calculate_charge_on( Moonpig->env->now ));
 
   return $self->next_charge_date() +
       $n_charge_periods_left * $self->charge_frequency;
@@ -166,19 +167,19 @@ sub charge {
     # kingdom, maybe do nothing -- rjbs, 2011-01-17
     $self->reflect_on_mortality;
 
-    unless ($self->can_make_next_payment) {
+    my $next_charge_date = $self->next_charge_date;
+
+    unless ($self->can_make_payment_for( $next_charge_date )) {
       $self->expire;
       return;
     }
-
-    my $next_charge_date = $self->next_charge_date;
 
     $self->ledger->current_journal->charge({
       desc => $self->charge_description(),
       from => $self->bank,
       to   => $self,
       date => $next_charge_date,
-      amount    => $self->cost_per_charge(),
+      amount    => $self->calculate_charge_on( $next_charge_date ),
       charge_path => [
         @{$self->charge_path_prefix},
         split(/-/, $next_charge_date->ymd),
@@ -190,12 +191,12 @@ sub charge {
 }
 
 # how much do we charge each time we issue a new charge?
-sub cost_per_charge {
-  my ($self) = @_;
+sub calculate_charge_on {
+  my ($self, $date) = @_;
 
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
-  return $self->cost_amount / $n_periods;
+  return $self->cost_amount_on( $date ) / $n_periods;
 }
 
 sub reflect_on_mortality {
@@ -228,9 +229,9 @@ sub reflect_on_mortality {
   }
 }
 
-sub can_make_next_payment {
-  my ($self) = @_;
-  return $self->amount_in_bank >= $self->cost_per_charge;
+sub can_make_payment_for {
+  my ($self, $date) = @_;
+  return $self->amount_in_bank >= $self->calculate_charge_on($date);
 }
 
 sub template_like_this {
@@ -240,7 +241,12 @@ sub template_like_this {
     class => $self->meta->name,
     arg   => {
       charge_frequency   => $self->charge_frequency(),
-      cost_amount        => $self->cost_amount(),
+
+      # XXX: NO NO NO, this must be fixed. -- rjbs, 2011-05-17
+      # Right now, this is very FixedCost-specific.  We should maybe just move
+      # this to FixedCost, in fact...
+      cost_amount        => $self->cost_amount_on( Moonpig->env->now ),
+
       cost_period        => $self->cost_period(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),
@@ -267,7 +273,7 @@ sub _invoice {
   $invoice->add_charge_at(
     class('Charge::Bankable')->new({
       description => $self->charge_description, # really? -- rjbs, 2011-01-18
-      amount      => $self->cost_amount,
+      amount      => $self->cost_amount_on( Moonpig->env->now ),
       consumer    => $self,
     }),
     $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18

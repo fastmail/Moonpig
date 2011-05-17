@@ -15,7 +15,9 @@ has cost_amount => (
   isa => PositiveMillicents,
 );
 
-sub cost_amount; # <-- hate you, rjbs, 2011-05-16
+sub cost_amount_on {
+  $_[0]->cost_amount;
+}
 
 with(
   'Moonpig::Role::Consumer::ByTime',
