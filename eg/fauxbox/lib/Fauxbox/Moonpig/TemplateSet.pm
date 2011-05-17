@@ -25,10 +25,9 @@ sub templates {
 
       return {
         roles => [
-          qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::Account)
+          qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::BasicAccount)
         ],
         arg   => {
-          cost_amount        => dollars(20),
           cost_period        => days(365),
           old_age            => days(30),
           make_active        => 1,

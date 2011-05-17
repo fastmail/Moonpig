@@ -44,12 +44,29 @@ $client
 my @accounts = $client->accounts;
 if (@accounts) {
   print "<ul>\n";
-  printf "  <li>%s</li>\n", join(' ➜ ', $_->alias, $_->fwd) for @accounts;
+  $m->request_comp->call_method('account-summary', account => $_) for @accounts;
   print "</ul>\n";
 } else {
   print "<p>You have no accounts</p>\n"
 }
 </%perl>
+</%method>
+
+<%method account-summary>
+<%args>
+$account
+</%args>
+<li>
+% print join(' ➜ ', $account->alias, $account->fwd);
+% if ($account->is_premium) {
+  (premium!)
+% } else {
+  <form action='/post/add-premium' method='post'>
+  <% $m->widget->hidden({ id => 'account.id', value => $account->id }) %>
+  <% $m->widget->submit({ value => 'Add Premium' }) %>
+  </form>
+% }
+</li>
 </%method>
 
 <%method account-form>

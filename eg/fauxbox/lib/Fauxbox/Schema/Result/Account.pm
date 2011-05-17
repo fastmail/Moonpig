@@ -12,6 +12,23 @@ __PACKAGE__->add_columns(client_id => {
   data_type         => 'INTEGER',
 });
 
+__PACKAGE__->add_columns(premium_since => {
+  data_type         => 'INTEGER',
+  is_nullable       => 1,
+});
+
+sub is_premium {
+  my ($self) = @_;
+  return defined $self->premium_since;
+}
+
+sub was_premium_at {
+  my ($self, $datetime) = @_;
+  return unless defined $self->is_premium;
+  my $epoch = $datetime->epoch;
+  return $datetime >= $self->is_premium;
+}
+
 __PACKAGE__->add_columns(qw( alias fwd ));
 
 __PACKAGE__->set_primary_key('id');

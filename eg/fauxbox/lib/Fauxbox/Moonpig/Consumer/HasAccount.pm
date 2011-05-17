@@ -1,4 +1,4 @@
-package Fauxbox::Moonpig::Consumer::Account;
+package Fauxbox::Moonpig::Consumer::HasAccount;
 use Moose::Role;
 with(
   'Moonpig::Role::Consumer',
