@@ -12,7 +12,7 @@ my %reasonable_defaults = (
   'Moonpig::Class::Consumer::ByTime::FixedCost' => {
     charge_description => "test charge",
     charge_path_prefix => ["test"],
-    description        => "test consumer",
+    # description        => "test consumer",
   },
   'Moonpig::Class::Consumer::ByUsage' => {
     charge_path_prefix => ["test"],
@@ -51,7 +51,7 @@ sub test_consumer_pair {
 
   my $c1 = $self->test_consumer(
     $class,
-    { %reasonable_defaults,
+    { # %reasonable_defaults,
       ledger => $self->ledger,
       %args
     },
@@ -60,7 +60,7 @@ sub test_consumer_pair {
   my $c0 = $self->test_consumer(
     $class,
     {
-      %reasonable_defaults,
+      #%reasonable_defaults,
       ledger => $self->ledger,
       %$args,
       replacement => $c1
