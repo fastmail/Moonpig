@@ -11,6 +11,8 @@ use Moose::Util::TypeConstraints ();
 
 use Carp qw(croak);
 use Memoize;
+use MooseX::StrictConstructor::Trait::Class;
+use Moose::Util::MetaRole ();
 use Scalar::Util qw(refaddr);
 use String::RewritePrefix;
 
@@ -80,8 +82,15 @@ sub class {
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
   ));
-#  apply_all_roles($class, @role_class_names, @roles);
+
   apply_all_roles($class, @role_class_names, map $_->name, @roles);
+
+  $class = Moose::Util::MetaRole::apply_metaroles(
+    for => $class->name,
+    class_metaroles => {
+      class => [ 'MooseX::StrictConstructor::Trait::Class' ],
+    },
+  );
 
   $class->make_immutable;
 
