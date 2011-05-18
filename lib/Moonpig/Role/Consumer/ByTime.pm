@@ -3,6 +3,7 @@ package Moonpig::Role::Consumer::ByTime;
 
 use Carp qw(confess croak);
 use List::Util qw(reduce);
+use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
@@ -281,14 +282,20 @@ sub _invoice {
 
   my $invoice = $self->ledger->current_invoice;
 
-  $invoice->add_charge_at(
-    class('Charge::Bankable')->new({
-      description => $self->charge_description, # really? -- rjbs, 2011-01-18
-      amount      => $self->cost_amount_on( Moonpig->env->now ),
-      consumer    => $self,
-    }),
-    $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
-  );
+  my @costs = $self->costs_on( Moonpig->env->now );
+
+  my $iter = natatime 2, @costs;
+
+  while (my ($desc, $amt) = $iter->()) {
+    $invoice->add_charge_at(
+      class('Charge::Bankable')->new({
+        description => $desc,
+        amount      => $amt,
+        consumer    => $self,
+      }),
+      $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
+    );
+  }
 }
 
 1;
