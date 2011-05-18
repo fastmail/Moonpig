@@ -27,10 +27,9 @@ before run_test => sub {
 };
 
 sub refund {
-  my ($self, $amount) = @_;
+  my ($self) = @_;
   class("Refund")->new({
     ledger => $self->ledger,
-    amount => $amount || dollars(1),
   });
 }
 
