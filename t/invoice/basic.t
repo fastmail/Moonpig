@@ -28,18 +28,18 @@ test charge_close_and_send => sub {
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    {
+    class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
-    },
+    }),
     'test.charges.setup',
   );
 
   $invoice->add_charge_at(
-    {
+    class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (maintenance)',
       amount      => dollars(5),
-    },
+    }),
     'test.charges.maintenance',
   );
 
@@ -83,10 +83,10 @@ test underpayment => sub {
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    {
+    class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
-    },
+    }),
     'test.charges.setup',
   );
 
@@ -125,10 +125,10 @@ test overpayment  => sub {
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    {
+    class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
-    },
+    }),
     'test.charges.setup',
   );
 
@@ -208,10 +208,10 @@ test payment_by_two_credits => sub {
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
   $invoice->add_charge_at(
-    {
+    class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
-    },
+    }),
     'test.charges.setup',
   );
 
