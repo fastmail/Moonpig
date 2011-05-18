@@ -125,7 +125,7 @@ role {
   method $constructor => sub {
     my ($owner, $opts) = @_;
     $p->factory->new({
-      options => $opts,
+      # options => $opts,
       owner => $owner,
     });
   };
