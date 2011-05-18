@@ -41,8 +41,6 @@ sub _test_ledgers_and_xids {
         xid                => $xid{$key},
         make_active        => 1,
 
-        charge_path_prefix => '',
-        old_age            => 1,
         replacement_mri    => Moonpig::URI->nothing,
       },
     );
@@ -89,8 +87,6 @@ test "one-ledger-per-xid safety" => sub {
         xid                => $xid->{2},
         make_active        => 1,
 
-        charge_path_prefix => '',
-        old_age            => 1,
         replacement_mri    => Moonpig::URI->nothing,
       },
     );
@@ -147,8 +143,6 @@ test "registered abandoned xid" => sub {
       xid                => $xid->{1},
       make_active        => 1,
 
-      charge_path_prefix => '',
-      old_age            => 1,
       replacement_mri    => Moonpig::URI->nothing,
     },
   );
