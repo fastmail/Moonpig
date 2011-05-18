@@ -24,9 +24,10 @@ sub is_premium {
 
 sub was_premium_at {
   my ($self, $datetime) = @_;
-  return unless defined $self->is_premium;
+
+  return unless $self->is_premium;
   my $epoch = $datetime->epoch;
-  return $epoch >= $self->is_premium;
+  return $epoch >= $self->premium_since;
 }
 
 __PACKAGE__->add_columns(qw( alias fwd ));
