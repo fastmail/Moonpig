@@ -86,10 +86,10 @@ test "charge" => sub {
   use Moonpig::Util qw(dollars);
   use Moonpig::Types qw(PositiveMillicents);
 
-  sub cost_amount_on {
+  sub costs_on {
     my ($self, $date) = @_;
 
-    return dollars( $date->day );
+    return ('service charge' => dollars( $date->day ));
   }
 }
 

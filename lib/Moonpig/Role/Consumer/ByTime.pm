@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
+use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
@@ -54,10 +55,20 @@ has charge_description => (
   required => 1,
 );
 
-# How much I cost to own, in millicents per period
-# e.g., a pobox account will have dollars(20) here, and cost_period
-# will be one year
-requires 'cost_amount_on';
+# For any given date, what do we think the total costs of ownership for this
+# consumer are?  Example:
+# [ 'basic account' => dollars(50), 'allmail' => dollars(20), 'support' => .. ]
+# This is an arrayref so we can have ordered line items for display.
+requires 'costs_on';
+
+sub cost_amount_on {
+  my ($self, $date) = @_;
+
+  my %costs = $self->costs_on($date);
+  my $amount = reduce { $a + $b } 0, values %costs;
+
+  return $amount;
+}
 
 #  XXX this is period in days, which is not quite right, since a
 #  charge of $10 per month or $20 per year is not any fixed number of

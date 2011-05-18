@@ -15,8 +15,8 @@ has cost_amount => (
   isa => PositiveMillicents,
 );
 
-sub cost_amount_on {
-  $_[0]->cost_amount;
+sub costs_on {
+  return ($_[0]->charge_description, $_[0]->cost_amount);
 }
 
 with(
