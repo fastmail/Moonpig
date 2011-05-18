@@ -1,5 +1,6 @@
 package Moonpig::Consumer::TemplateRegistry;
 use Moose;
+use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 

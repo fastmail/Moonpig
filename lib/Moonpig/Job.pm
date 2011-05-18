@@ -1,5 +1,6 @@
 package Moonpig::Job;
 use Moose;
+use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 

@@ -5,6 +5,8 @@ with(
   'Stick::Role::PublicResource',
 );
 
+use MooseX::StrictConstructor;
+
 use Moonpig;
 use Moonpig::Util qw(class);
 

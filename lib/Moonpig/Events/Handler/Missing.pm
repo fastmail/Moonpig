@@ -3,6 +3,8 @@ package Moonpig::Events::Handler::Missing;
 use Moose;
 with 'Moonpig::Role::EventHandler';
 
+use MooseX::StrictConstructor;
+
 use Moonpig::X;
 
 use namespace::autoclean;

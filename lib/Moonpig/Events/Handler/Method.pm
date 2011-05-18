@@ -8,6 +8,8 @@ with(
   'MooseX::OneArgNew' => { type => Identifier, init_arg => 'method_name' },
 );
 
+use MooseX::StrictConstructor;
+
 use namespace::autoclean;
 
 has method_name => (

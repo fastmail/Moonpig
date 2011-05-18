@@ -3,6 +3,8 @@ package Moonpig::Events::Handler::Code;
 use Moose;
 with 'Moonpig::Role::EventHandler';
 
+use MooseX::StrictConstructor;
+
 use MooseX::Types::Moose qw(CodeRef);
 
 use namespace::autoclean;

@@ -1,6 +1,7 @@
 package Moonpig::Env::Normal;
 # ABSTRACT: a standard, production environment for Moonpig
 use Moose;
+use MooseX::StrictConstructor;
 
 use Moonpig::DateTime;
 use Carp qw(confess);

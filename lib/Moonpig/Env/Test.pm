@@ -4,6 +4,8 @@ package Moonpig::Env::Test;
 use Moose;
 with 'Moonpig::Role::Env';
 
+use MooseX::StrictConstructor;
+
 use namespace::autoclean;
 
 # BEGIN HUGE AWFUL HACK -- rjbs, 2010-12-16

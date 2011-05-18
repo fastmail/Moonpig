@@ -1,6 +1,7 @@
 package Moonpig::Events::Event;
 # ABSTRACT: an event fired by one object for another to consume
 use Moose;
+use MooseX::StrictConstructor;
 
 # We had to make this a class, rather than a role, to +attr ident.  If we
 # really want, in the future, we can convert Notification into a parameterized

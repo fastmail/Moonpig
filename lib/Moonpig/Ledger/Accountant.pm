@@ -4,6 +4,7 @@ use Moonpig::TransferUtil ();
 use Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::Ledger::Accountant::Transfer;
 use Moose;
+use MooseX::StrictConstructor;
 
 with 'Role::Subsystem' => {
   ident  => 'ledger-accountant',

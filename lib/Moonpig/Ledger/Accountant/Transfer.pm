@@ -1,6 +1,7 @@
 package Moonpig::Ledger::Accountant::Transfer;
 use Carp qw(confess croak);
 use Moose;
+use MooseX::StrictConstructor;
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents Time TransferType);
 use Moonpig::TransferUtil qw(is_transfer_capable transfer_type_ok valid_type);
