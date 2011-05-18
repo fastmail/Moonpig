@@ -123,7 +123,6 @@ test "variable charge" => sub {
         # rjbs, 2011-05-17
         charge_description => "test charge",
         charge_path_prefix => ["test"],
-        description        => "test consumer",
 
         ledger => $self->ledger,
         bank => $b,
