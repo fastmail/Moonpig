@@ -31,7 +31,6 @@ sub templates {
           cost_period        => days(365),
           old_age            => days(30),
           make_active        => 1,
-          charge_description => 'Fauxbox Basic Service',
           charge_path_prefix => 'fauxbox.basic',
           replacement_mri    => "moonpig://consumer-template/$name",
         },
