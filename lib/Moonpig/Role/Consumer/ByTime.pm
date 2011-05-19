@@ -49,13 +49,6 @@ has charge_frequency => (
   default => sub { days(1) },
 );
 
-# Description for charge.  You will probably want to override this method
-has charge_description => (
-  is => 'ro',
-  isa => 'Str',
-  required => 1,
-);
-
 # For any given date, what do we think the total costs of ownership for this
 # consumer are?  Example:
 # [ 'basic account' => dollars(50), 'allmail' => dollars(20), 'support' => .. ]
@@ -186,29 +179,48 @@ sub charge {
       return;
     }
 
-    $self->ledger->current_journal->charge({
-      desc => $self->charge_description(),
-      from => $self->bank,
-      to   => $self,
-      date => $next_charge_date,
-      amount    => $self->calculate_charge_on( $next_charge_date ),
-      charge_path => [
-        @{$self->charge_path_prefix},
-        split(/-/, $next_charge_date->ymd),
-      ],
-    });
+    my @costs = $self->calculate_charges_on( $next_charge_date );
+
+    my $iter = natatime 2, @costs;
+
+    while (my ($desc, $amt) = $iter->()) {
+      $self->ledger->current_journal->charge({
+        desc => $desc,
+        from => $self->bank,
+        to   => $self,
+        date => $next_charge_date,
+        amount    => $amt,
+        charge_path => [
+          @{$self->charge_path_prefix},
+          split(/-/, $next_charge_date->ymd),
+        ],
+      });
+    }
 
     $self->last_charge_date($self->next_charge_date());
   }
 }
 
 # how much do we charge each time we issue a new charge?
-sub calculate_charge_on {
+sub calculate_charges_on {
   my ($self, $date) = @_;
 
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
-  return $self->cost_amount_on( $date ) / $n_periods;
+  my @costs = $self->costs_on( $date );
+
+  $costs[$_] /= $n_periods for grep { $_ % 2 } keys @costs;
+
+  return @costs;
+}
+
+sub calculate_charge_on {
+  my ($self, $date) = @_;
+  my @costs = $self->calculate_charges_on( $date );
+  my $charge = reduce { $a + $b }
+    0, map { $costs[$_] } grep { $_ % 2 } keys @costs;
+
+  return $charge;
 }
 
 sub reflect_on_mortality {

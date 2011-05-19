@@ -121,7 +121,6 @@ test "variable charge" => sub {
       {
         # These would come from defaults if this wasn't a weird-o class. --
         # rjbs, 2011-05-17
-        charge_description => "test charge",
         charge_path_prefix => ["test"],
 
         ledger => $self->ledger,

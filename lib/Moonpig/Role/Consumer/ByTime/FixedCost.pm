@@ -19,6 +19,13 @@ sub costs_on {
   return ($_[0]->charge_description, $_[0]->cost_amount);
 }
 
+# Description for charge.  You will probably want to override this method
+has charge_description => (
+  is => 'ro',
+  isa => 'Str',
+  required => 1,
+);
+
 with(
   'Moonpig::Role::Consumer::ByTime',
 );
