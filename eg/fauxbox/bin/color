@@ -1,9 +1,30 @@
 #!/usr/bin/env perl
 use strict;
 use Term::ANSIColor;
+use Memoize;
 
 $|++;
+memoize 'prefix_color';
+srand(2);
 
 sub END { print color('reset') };
 
-print color("bold $ARGV[0]"), $_, color('reset') while <STDIN>;
+while (<STDIN>) {
+    my ($prefix, $rest) = /^(\s*[^\w\s]+\s+)?(.*)$/s;
+    if ($prefix =~ /\S/) {
+        print color(prefix_color($prefix)), $prefix;
+        print color("bold $ARGV[0]"), $rest;
+    } else {
+        print color("bold $ARGV[0]"), $_;
+    }
+    print color('reset');
+}
+
+sub prefix_color {
+    my ($prefix) = @_;
+    my @c = qw(black  red  green  yellow  blue  magenta  cyan);
+    my $c;
+    do { $c = $c[rand @c] } until $c ne $ARGV[0];
+    $c = "bright_$c" if rand() < 0.5;
+    return $c;
+}
