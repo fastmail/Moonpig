@@ -1,12 +1,16 @@
 package Moonpig::Role::CollectionType;
+use strict;
+use warnings;
+
+use Carp 'confess';
 use List::Util qw(min);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::Role::Parameterized;
-use MooseX::Types::Moose qw(Any ArrayRef Defined HashRef Maybe Object Str);
+use MooseX::Types::Moose qw(Any ArrayRef Maybe Object Str Undef);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Scalar::Util qw(blessed);
-use Carp 'confess';
+
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
@@ -69,6 +73,7 @@ role {
   my $item_array = $p->item_array;
   my $item_type = item_type($p);
   my $post_action = $p->post_action;
+
 
   has owner => (
     isa => Object,
