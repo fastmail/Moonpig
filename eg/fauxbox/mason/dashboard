@@ -42,7 +42,9 @@ Let <% $m->widget->input({ size=>2, value=>1, id => 'days' }) %> day(s) elapse
 $client
 </%args>
 <%perl>
-# my $last_rfp = $ledger->last_request_for_payment;
+my $last_rfp = $m->mp_request(GET => "$ledger_path/rfps/last");
+my $invoice_c = $m->mp_request(GET => "$ledger_path/rfps/last/invoices");
+my @invoice_guids = @{$invoice_c->{value}{items} || []};
 # my $total = reduce {$a+$b}, 0, map { $_->total_amount } $last_rfp->invoices;
 </%perl>
 <form action='/post/make-payment' method='post'>
