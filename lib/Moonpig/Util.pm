@@ -28,13 +28,9 @@ use Sub::Exporter -setup => [ qw(
   same_object
 ) ];
 
- memoize(class => (NORMALIZER =>
-                     sub { my @items = map ref() ? $_->[1] : $_, @_;
-                           my $k = join $; => @items;
-                           return $k;
-                         },
-                   LIST_CACHE => 'MERGE',
-                  ));
+memoize(class => (NORMALIZER => \&make_key,
+                  LIST_CACHE => 'MERGE',
+                 ));
 
 use Moose::Util qw(apply_all_roles);
 my $nonce = "00";
@@ -97,6 +93,33 @@ sub class {
   $CLASS_ROLES{ $name } = \@orig_args;
 
   return $class->name;
+}
+
+sub make_key {
+  my @args = @_;
+  my @k;
+  while (@args) {
+    my $arg = shift @args;
+    if (ref $arg) {
+      my ($role_name, $moniker, $params) = @$arg;
+      push @k, "$moniker : { " . hash_to_string($params) . " }";
+    } else {
+      push @k, $arg;
+    }
+  }
+  my $key = join "; ", @k;
+  return $key;
+}
+
+sub hash_to_string {
+  my ($h) = @_;
+  my @k;
+  for my $k (sort keys %$h) {
+    my $v = ! defined($h->{$k}) ? "<undef>" :
+              ref($h->{$k}) ? join("-", @{$h->{$k}}) : $h->{$k};
+    push @k, "$k => $v";
+  }
+  join ", " => @k;
 }
 
 sub _rewrite_prefix {
