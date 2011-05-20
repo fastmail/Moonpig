@@ -93,6 +93,11 @@ sub reload {
   die "exec $0: $!";
 }
 
+sub wait {
+  my ($args) = @_;
+  die "Unimplemented\n";
+}
+
 sub shell {
   my ($args) = @_;
   my @cmd = @{$args->arg_list};
