@@ -25,7 +25,7 @@ test "store and retrieve" => sub {
   my $pid = fork;
   Carp::croak("error forking") unless defined $pid;
 
-  my $xid = 'yoyodyne://account/' . guid_string;
+  my $xid = 'yoyodyne:account:' . guid_string;
 
   if ($pid) {
     wait;

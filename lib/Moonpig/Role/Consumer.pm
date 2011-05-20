@@ -23,7 +23,7 @@ implicit_event_handlers {
 };
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(ChargePath Ledger Millicents MRI TimeInterval);
+use Moonpig::Types qw(ChargePath Ledger Millicents MRI TimeInterval XID);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
@@ -132,7 +132,7 @@ sub amount_in_bank {
 
 has xid => (
   is  => 'ro',
-  isa => 'Str',
+  isa => XID,
   required => 1,
 );
 

@@ -14,9 +14,7 @@ use MooseX::Types -declare => [ qw(
 
   ChargePath ChargePathPart ChargePathStr
 
-  GUID
-
-  MRI
+  GUID MRI XID
 
   Time TimeInterval
 
@@ -94,6 +92,10 @@ coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
 # GUID
 
 subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
+
+my $simple_str_colonchain = qr/ (?: $simple_str \: )* $simple_str ? /x;
+
+subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
 
 ################################################################
 #

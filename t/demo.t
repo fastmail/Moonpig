@@ -25,7 +25,7 @@ use namespace::autoclean;
 has xid => (
   is      => 'ro',
   isa     => 'Str',
-  default => sub { 'yoyodyne://account/' . guid_string },
+  default => sub { 'yoyodyne:account:' . guid_string },
 );
 
 has invoices_to_pay => (
