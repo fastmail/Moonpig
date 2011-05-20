@@ -96,7 +96,8 @@ has prune_criteria => (
   isa => 'ArrayRef',
   default => sub { [ qr/^DateTime/,
                      qr/^Moonpig::DateTime$/,
-                     qr/^Moonpig::Events::EventHandlerRegistry/
+                     qr/^Moonpig::Events::EventHandlerRegistry/,
+                     qr/^Moonpig::Class::Ledger$/,
                     ] },
 );
 
