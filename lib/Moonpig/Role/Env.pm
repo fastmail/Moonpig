@@ -19,6 +19,8 @@ use Moonpig::Behavior::EventHandlers;
 
 use namespace::autoclean;
 
+requires 'register_object';
+
 requires 'handle_queue_email';
 
 sub format_guid { return $_[1] }

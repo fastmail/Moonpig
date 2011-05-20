@@ -34,6 +34,30 @@ use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
 
+has object_registry => (
+  is   => 'ro',
+  isa  => 'HashRef',
+  init_arg => undef,
+  default  => sub {  {}  },
+);
+
+sub register_object {
+  my ($self, $obj) = @_;
+
+  $self->object_registry->{ $obj->guid } = {
+    weak_ref   => $obj,
+    string     => "$obj",
+    ident      => $obj->ident,
+    guid       => $obj->guid,
+    class      => ref($obj),
+    created_at => Moonpig->env->now,
+  };
+
+  Scalar::Util::weaken( $self->object_registry->{ $obj->guid }->{weak_ref} );
+
+  return;
+}
+
 sub storage_class {
   require Moonpig::Storage::Spike;
   'Moonpig::Storage::Spike';
