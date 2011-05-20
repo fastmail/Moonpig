@@ -28,4 +28,8 @@ sub now {
   return Moonpig::DateTime->now();
 }
 
+sub register_object {
+  # do nothing
+}
+
 1;
