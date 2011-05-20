@@ -30,28 +30,25 @@ while (my $account = $account_rs->next) {
   my $res = $ua->get("http://localhost:5001/ledger/xid/$xid");
   next if $res->is_success;
 
-  print "account $xid not fount\n";
+  if ($res->code == 404) {
+    print "account $xid not fount\n";
+  } else {
+    print "error finding $xid: " . $res->as_string;
+    next;
+  }
 
-  my $payload = $JSON->encode($arg);
+  my $payload = $JSON->encode({
+    template      => 'fauxboxbasic',
+    template_args => {
+      xid         => 'fauxbox:account:' . $account->id,
+      make_active => 1,
+    },
+  });
 
-  # my $new_res = $ua->pos
-
-  #   $res = $UA->post(
-  #     $target,
-  #     'Content-Type' => 'application/json',
-  #     Content => $payload,
-  #   );
-  # $m->mp_request(
-  #   POST => sprintf(
-  #     '/ledger/xid/%s/consumers',
-  #     username_xid($client->username),
-  #   ),
-  #   {
-  #     template      => 'fauxboxbasic',
-  #     template_args => {
-  #       xid         => 'fauxbox:account:' . $account->id,
-  #       make_active => 1,
-  #     },
-  #   },
-  # );
+  my $client_xid = sprintf 'fauxbox:username:%s', $account->client->username;
+  my $create_res = $ua->post(
+    sprintf('/ledger/xid/%s/consumers', $client_xid),
+    'Content-Type' => 'application/json',
+    Content => $payload,
+  );
 }
