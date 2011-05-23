@@ -239,6 +239,15 @@ role {
     my ($self, @args) = @_;
     $self->$post_action(@args);
    };
+
+  method STICK_PACK => sub {
+    my ($self) = @_;
+
+    return {
+      what   => $collection_name,
+      owner  => $self->owner->guid,
+      items  => [ map $_->guid, $self->all ] };
+  }
 };
 
 1;
