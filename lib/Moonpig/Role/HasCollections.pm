@@ -39,6 +39,12 @@ parameter post_action => (
   default => 'add',
 );
 
+parameter default_sort_key => (
+  isa => Str,
+  is => 'ro',
+  required => 0,
+);
+
 # Class name or factory object for the collection itself.
 # e.g., "Moonpig::Class::RefundCollection", which will do
 #   Moonpig::Role::CollectionType
@@ -55,6 +61,7 @@ parameter factory => (
       add_this_item => $p->add_this_thing,
       item_array => $p->accessor,
       post_action => $p->post_action,
+      default_sort_key => $p->default_sort_key,
     };
 
     my $c = class([ 'CollectionType',
