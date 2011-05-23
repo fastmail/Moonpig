@@ -8,6 +8,8 @@ with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::Payable',
+  'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
 );
 
 use Moonpig::Behavior::EventHandlers;

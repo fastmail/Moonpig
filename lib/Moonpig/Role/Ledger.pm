@@ -8,7 +8,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
 Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
 
-_generate_subcomponent_methods(qw(bank consumer refund));
+_generate_subcomponent_methods(qw(bank consumer refund credit));
 
 with(
   'Moonpig::Role::HasGuid',
@@ -30,6 +30,12 @@ with(
   'Moonpig::Role::HasCollections' => {
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
+   },
+  'Moonpig::Role::HasCollections' => {
+    item => 'credit',
+    item_roles => [ 'Moonpig::Role::Credit' ],
+    collection_roles => [ 'CreditExtras' ],
+    post_action => 'accept_payment',
    },
   'Stick::Role::PublicResource::GetSelf',
 );
@@ -68,16 +74,6 @@ has contact => (
   required => 1,
 );
 
-has credits => (
-  isa     => ArrayRef[ Credit ],
-  default => sub { [] },
-  traits  => [ qw(Array) ],
-  handles => {
-    credits    => 'elements',
-    _add_credit => 'push',
-  },
-);
-
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
   is => 'ro',
@@ -94,17 +90,6 @@ sub transfer {
   return $self->accountant->create_transfer($args);
 }
 
-sub add_credit {
-  my ($self, $class, $arg) = @_;
-  $arg ||= {};
-
-  local $arg->{ledger} = $self;
-  my $credit = $class->new($arg);
-  $self->_add_credit($credit);
-
-  return $credit;
-}
-
 sub _extra_instance_subroute {
   my ($self, $path, $npr) = @_;
   my ($first) = @$path;
@@ -112,6 +97,9 @@ sub _extra_instance_subroute {
     banks => $self->bank_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
+    rfps => $self->rfp_collection,
+    credits => $self->credit_collection,
+    invoices => $self->invoice_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
@@ -514,6 +502,11 @@ sub _class_subroute {
 publish published_guid => { -path => 'gguid' } => sub {
   my ($self) = @_;
   return $self->guid;
+};
+
+publish heartbeat => { -http_method => 'post', -path => 'heartbeat' } => sub {
+  my ($self) = @_;
+  $self->handle_event( event('heartbeat') );
 };
 
 sub STICK_PACK {

@@ -25,11 +25,11 @@ $BASE_URI =~ s{/$}{};
 sub mp_time {
   my ($self) = @_;
   my $time = $self->mp_request(GET => '/time')->{now};
-  return DateTime->from_epoch(epoch => $time, time_zone => 'America/New_York');
+  return $time;
 }
 
 sub real_time {
-  return DateTime->now(time_zone => 'America/New_York');
+  return time();
 }
 
 sub mp_request {

@@ -15,6 +15,13 @@ require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
 
+# name of this kind of collection, typically something like "banks"
+parameter collection_name => (
+  is => 'ro',
+  isa => Str,
+  required => 1,
+);
+
 # name of the parent method that retrieves an array of items
 parameter item_array => (
   is => 'ro',
@@ -48,6 +55,13 @@ parameter post_action => (
   default => 'add',
 );
 
+# Method that is used to sort the collection (numerically)
+parameter default_sort_key => (
+  isa => 'Str|Undef',
+  is => 'ro',
+  default => undef(),
+);
+
 sub item_type {
   my ($p) = @_;
   my @roles = map role_type($_), @{$p->item_roles};
@@ -69,10 +83,17 @@ role {
   require Stick::Role::Routable::AutoInstance;
   Stick::Role::Routable::AutoInstance->VERSION(0.20110331);
 
-  my $add_this_item = $p->add_this_item;
-  my $item_array = $p->item_array;
-  my $item_type = item_type($p);
-  my $post_action = $p->post_action;
+  BEGIN {
+    require Carp;
+    Carp->import(qw(carp confess croak));
+  }
+
+  my $add_this_item   = $p->add_this_item;
+  my $collection_name = $p->collection_name;
+  my $def_sort_key    = $p->default_sort_key;
+  my $item_array      = $p->item_array;
+  my $item_type       = item_type($p);
+  my $post_action     = $p->post_action;
 
 
   has owner => (
@@ -101,6 +122,12 @@ role {
     } elsif ($first eq "xid") {
       splice @$path, 0, 2;
       return $self->find_by_xid({xid => $second});
+    } elsif ($first eq "last") {
+      splice @$path, 0, 1;
+      return $self->last;
+    } elsif ($first eq "first") {
+      splice @$path, 0, 1;
+      return $self->first;
     } else {
       return;
     }
@@ -131,6 +158,40 @@ role {
   publish count => { } => sub {
     my ($self) = @_;
     return scalar @{$self->items};
+  };
+
+  has sort_key => (
+    is => 'rw',
+
+    # I would like to use method_name_for here, to warn early if the
+    # method name is invalid, but that doesn't work in roles (see
+    # tinker/method-name-for). MJD 20110523
+    isa => Str | Undef,
+    required => 0,
+    default => $def_sort_key,
+  );
+
+  publish all_sorted => { } => sub {
+    my ($self) = @_;
+    my $meth = $self->sort_key
+      or confess "No sort key defined for collection '$collection_name' (self=$self)";
+    my @all = $self->all;
+    return () unless @all;
+    $all[0]->can($meth)
+      or croak "Objects ($all[0]) in collection '$collection_name' don't support a '$meth' sort key";
+    return sort { $a->$meth <=> $b->$meth } @all;
+  };
+
+  publish first => { -path => 'first' } => sub {
+    my ($self) = @_;
+    my ($first) = $self->all_sorted;
+    return $first;
+  };
+
+  publish last => { -path => 'last' } => sub {
+    my ($self) = @_;
+    my ($last) = reverse $self->all_sorted;
+    return $last;
   };
 
   # Page numbers start at 1.
@@ -178,6 +239,15 @@ role {
     my ($self, @args) = @_;
     $self->$post_action(@args);
    };
+
+  method STICK_PACK => sub {
+    my ($self) = @_;
+
+    return {
+      what   => $collection_name,
+      owner  => $self->owner->guid,
+      items  => [ map $_->guid, $self->all ] };
+  }
 };
 
 1;

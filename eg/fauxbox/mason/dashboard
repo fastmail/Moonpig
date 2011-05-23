@@ -3,31 +3,67 @@
 $username
 </%args>
 <%init>
+require Moonpig::App::Ob::Dumper;
+Moonpig::App::Ob::Dumper->import('Dump');
 my $client = $m->schema->resultset('Client')->find({ username => $username });
-my $ledger = $m->mp_request(GET => "/ledger/xid/" . username_xid($username));
+my $ledger_path = "/ledger/xid/" . username_xid($username);
+my $ledger = $m->mp_request(GET => $ledger_path);
 </%init>
 
 <h2>Your Dashboard!</h2>
 <h3>currently logged in as <% $client->username %>
 
-<& SELF:payment-due,  client => $client &>
+<h3>Ledger</h3>
+<pre>
+<% Dump($ledger) |h %>
+</pre>
+
+<& SELF:tick, ledger_path => $ledger_path,
+              return_url => "/dashboard?username=$username" &>
+
+<& SELF:payment-due,  client => $client, ledger_path => $ledger_path &>
 
 <& SELF:account-list, client => $client &>
 
 <& SELF:account-form, client => $client &>
 
-<pre>
-<% Data::Dumper->Dump([ $ledger ]) |h %>
-</pre>
+<%method tick>
+<%args>
+$ledger_path
+$return_url
+</%args>
+
+<form action='/post/elapse' method='post'>
+Let <% $m->widget->input({ size=>2, value=>1, id => 'days' }) %> day(s) elapse
+<% $m->widget->hidden({ name => "return_url", value => $return_url }) %>
+<% $m->widget->hidden({ name => "ledger_path", value => $ledger_path }) %>
+<% $m->widget->submit({ value => "now!" }) %><br />
+</form>
+</%method>
 
 <%method payment-due>
 <%args>
 $client
+$ledger_path
 </%args>
 <%perl>
-# my $last_rfp = $ledger->last_request_for_payment;
+my $last_rfp = $m->mp_request(GET => "$ledger_path/rfps/last");
+my $invoice_c = $m->mp_request(GET => "$ledger_path/rfps/last/invoices");
+my @invoice_guids = @{$invoice_c->{value}{items} || []};
 # my $total = reduce {$a+$b}, 0, map { $_->total_amount } $last_rfp->invoices;
+# return unless $last_rfp and $total > 0;
 </%perl>
+
+<h2>last_rfp</h2>
+<pre><% Dump($last_rfp) | h %></pre>
+
+<h2>invoices</h2>
+% for my $inv_guid (@invoice_guids) {
+%   my $invoice = $m->mp_request(GET => "$ledger_path/invoices/guid/$inv_guid");
+<h3><% $inv_guid %></h3>
+<pre><% Dump($invoice) | h %></pre>
+% }
+
 <form action='/post/make-payment' method='post'>
   Accept payment of: $
   <% $m->widget->input({ id => 'payment.amount' }) %><br />

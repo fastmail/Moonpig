@@ -5,19 +5,33 @@ $params
 <%perl>
 my $payment_p = $params->{payment};
 my $client    = $m->schema->resultset('Client')->find($payment_p->{client_id});
-
-# XXX: We need semantics for how we post new payments. -- rjbs, 2011-04-29
-#
-# $m->mp_request(
-#   POST => sprintf(
-#     '/ledger/xid/%s/credits',
-#     username_xid($client->username),
-#   ),
-#   {
-#     amount  => $payment_p->{amount},
-#     # something about this being 'Simulated' not 'CCard' etc
-#   },
-# );
-
-$m->redirect('/dashboard?username=' . $client->username);
+my $amount    = $payment_p->{amount};
 </%perl>
+
+<h2>Payment amount = <% $amount %></h2>
+
+<%perl>
+my $result = $m->mp_request(
+  POST => sprintf(
+    '/ledger/xid/%s/credits/accept_payment',
+    username_xid($client->username),
+  ),
+   {
+     amount => int($payment_p->{amount} * 100_000),  # convert to millicents
+     type   => 'Simulated',
+   },
+  );
+my $credit = $result->{value};
+</%perl>
+
+<h2>Credit posted</h2>
+
+<ul>
+  <li> guid: <% $credit->{guid} %>
+  <li> original amount: <% sprintf '$ %.2f',  $credit->{amount} / 100_000 %>
+  <li> amount remaining: <% sprintf '$ %.2f', $credit->{unapplied_amount} / 100_000 %>
+</ul>
+
+
+# $m->redirect('/dashboard?username=' . $client->username);
+<p><a href="/dashboard?username=<% $client->username %>">Continue</a></p>

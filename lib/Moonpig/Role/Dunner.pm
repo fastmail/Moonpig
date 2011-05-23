@@ -9,12 +9,41 @@ use Moonpig::Util qw(days);
 
 use namespace::autoclean;
 
-has last_request_for_payment => (
-  does      => 'Moonpig::Role::RequestForPayment',
-  init_arg  => undef, # must be set by the RFP sender -- rjbs, 2011-01-18
-  reader    => 'last_request_for_payment',
-  writer    => '_set_last_request_for_payment',
-  predicate => 'has_last_request_for_payment',
+has rfp_history => (
+  is => 'ro',
+  isa => 'ArrayRef',
+  default => sub { [] },
+  init_arg => undef,
+  traits => [ 'Array' ],
+  handles => {
+    has_last_request_for_payment => 'count',
+    last_request_for_payment => [ get => -1 ],
+    last_rfp => [ get => -1 ],
+  },
+);
+
+# We can't provide these in the rpf_history attribute declaration
+# because they need to be in place before the the with HasCollections
+# declaration below, and rfp_history is not constructed until role
+# composition time. 20110503 mjd
+sub rfp_array { shift()->rfp_history(@_) }
+sub add_this_rfp {
+  my ($self, $rfp) = @_;
+  push @{$self->rfp_history}, $rfp;
+}
+
+with(
+  'Moonpig::Role::HasCollections' => {
+    item => 'rfp',
+    item_roles => [ 'Moonpig::Role::RequestForPayment' ],
+    default_sort_key => 'sent_at',
+   },
+  'Moonpig::Role::HasCollections' => {
+    item => 'invoice',
+    item_roles => [ 'Moonpig::Role::Invoice' ],
+    default_sort_key => 'created_at',
+    is => 'ro',
+   },
 );
 
 has dunning_frequency => (
@@ -62,7 +91,7 @@ sub _send_request_for_payment {
     invoices => $invoices,
   });
 
-  $self->_set_last_request_for_payment($rfp);
+  $self->add_this_rfp($rfp);
 
   $self->handle_event(event('send-mkit', {
     kit => 'request-for-payment',
@@ -75,6 +104,11 @@ sub _send_request_for_payment {
       request      => $rfp,
     },
   }));
+}
+
+sub invoice_array {
+  my ($self) = @_;
+  [ map $_->invoices, @{$self->rfp_collection->items} ]
 }
 
 1;

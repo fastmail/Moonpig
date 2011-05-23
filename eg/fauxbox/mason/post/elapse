@@ -1,0 +1,17 @@
+%# vim:set ft=mason:
+<%args>
+$params
+</%args>
+<%perl>
+use Data::Dumper::HTML qw(dumper_html);
+my $days = $params->{days};
+
+for my $i (1 .. $days) {
+  $m->mp_request(
+      GET => sprintf('/advance-clock/%d', 86400));
+  $m->mp_request(
+      POST => sprintf("%s/heartbeat", $params->{ledger_path}), {});
+}
+
+$m->redirect($params->{return_url});
+</%perl>

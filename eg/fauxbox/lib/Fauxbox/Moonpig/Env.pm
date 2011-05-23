@@ -14,9 +14,10 @@ sub send_email {
 
   # Too bad we don't have a muxing transport. -- rjbs, 2011-04-14
   my @senders = (
-    Email::Sender::Transport::SMTP->new({
-      helo => 'moonpig.fauxbox.com',
-    }),
+    $ENV{FAUXBOX_NO_SMTP} ? () : (
+      Email::Sender::Transport::SMTP->new({
+        helo => 'moonpig.fauxbox.com',
+      })),
     Email::Sender::Transport::Maildir->new({
       dir => File::Spec->catdir($ENV{FAUXBOX_ROOT}, qw(var Maildir)),
     }),
