@@ -38,6 +38,12 @@ with(
     item_roles => [ 'Moonpig::Role::RequestForPayment' ],
     default_sort_key => 'sent_at',
    },
+  'Moonpig::Role::HasCollections' => {
+    item => 'invoice',
+    item_roles => [ 'Moonpig::Role::Invoice' ],
+    default_sort_key => 'created_at',
+    is => 'ro',
+   },
 );
 
 has dunning_frequency => (
@@ -98,6 +104,11 @@ sub _send_request_for_payment {
       request      => $rfp,
     },
   }));
+}
+
+sub invoice_array {
+  my ($self) = @_;
+  [ map $_->invoices, @{$self->rfp_collection->items} ]
 }
 
 1;
