@@ -16,6 +16,8 @@ use MooseX::Types -declare => [ qw(
 
   GUID MRI XID
 
+  Tag TagSet
+
   Time TimeInterval
 
   TransferCapable TransferType
@@ -92,6 +94,15 @@ subtype ChargePath, as ArrayRef[ ChargePathPart ];
 subtype ChargePathStr, as Str, where { /\A$colon_dot_chain\z/ };
 
 coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
+
+################################################################
+#
+# Tags
+
+# XXX: TagSet should be an actual Set, but MooseX::Types::Set::Object is a pain
+# and I don't feel like fixing it right this second. -- rjbs, 2011-05-23
+subtype Tag, as Str, where { /\A $simple_str \z/x };
+subtype TagSet, as ArrayRef[ Tag ];
 
 ################################################################
 #

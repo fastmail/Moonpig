@@ -4,7 +4,7 @@ use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);
 use Moonpig;
-use Moonpig::Types qw(PositiveMillicents);
+use Moonpig::Types qw(PositiveMillicents TagSet);
 
 use namespace::autoclean;
 
@@ -25,6 +25,15 @@ has date => (
   is      => 'ro',
   isa     => 'DateTime',
   default  => sub { Moonpig->env->now() },
+);
+
+has tags => (
+  isa => TagSet,
+  default => sub {  []  },
+  traits  => [ 'Array' ],
+  handles => {
+    tags => 'elements',
+  },
 );
 
 1;
