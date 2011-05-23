@@ -7,7 +7,13 @@ use MooseX::Types::Moose qw(ArrayRef);
 
 with(
   'Moonpig::Role::StubBuild',
-  'Moonpig::Role::HasGuid', # XXX: Possibly temporary -- rjbs, 2011-05-04
+  'Moonpig::Role::HasGuid',
+  'Stick::Role::PublicResource::GetSelf',
+  'Moonpig::Role::HasCollections' => {
+    item => 'invoice',
+    item_roles => [ 'Moonpig::Role::Invoice' ],
+    is => 'ro',
+   },
 );
 
 use namespace::autoclean;
@@ -29,6 +35,8 @@ has invoices => (
   },
 );
 
+sub invoice_array { [ $_[0]->invoices ] }
+
 sub latest_invoice {
   my ($self) = @_;
   my $latest = (
@@ -45,5 +53,23 @@ after BUILD => sub {
   confess "can't send a RequestForPayment with 0 invoices"
     unless $self->invoice_count > 0;
 };
+
+sub _subroute {
+  my ($self, $path) = @_;
+  my $path1 = shift @$path;
+  return unless $path1 eq "invoices";
+  return $self->invoice_collection;
+}
+
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return {
+    guid   => $self->guid,
+    sent_at => $self->sent_at,
+    invoices => [ map $_->guid, $self->invoices ],
+  };
+}
+
 
 1;
