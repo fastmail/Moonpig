@@ -34,6 +34,8 @@ with(
   'Moonpig::Role::HasCollections' => {
     item => 'credit',
     item_roles => [ 'Moonpig::Role::Credit' ],
+    collection_roles => [ 'CreditExtras' ],
+    post_action => 'accept_payment',
    },
   'Stick::Role::PublicResource::GetSelf',
 );
@@ -96,6 +98,7 @@ sub _extra_instance_subroute {
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
     rfps => $self->rfp_collection,
+    credits => $self->credit_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
