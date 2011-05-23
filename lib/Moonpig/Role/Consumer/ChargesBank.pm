@@ -18,6 +18,11 @@ has charge_path_prefix => (
   required => 1,
 );
 
+sub charge_path {
+  my ($self) = @_;
+  return [ @{ $self->charge_path_prefix }, $self->xid ];
+}
+
 # When the object has less than this long to live, it will
 # start posting low-balance events to its successor, or to itself if
 # it has no successor

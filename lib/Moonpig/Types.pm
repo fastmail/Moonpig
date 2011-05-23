@@ -64,13 +64,19 @@ subtype Factory, as Str | Object;
 #
 # Events
 
-my $simple_str       = qr/[-a-z0-9]+/i;
-my $simple_str_chain = qr/ (?: $simple_str \. )* $simple_str ? /x;
+my $simple_str            = qr/[-a-z0-9]+/i;
+my $simple_str_dotchain   = qr/ (?: $simple_str \. )* $simple_str ? /x;
+my $simple_str_colonchain = qr/ (?: $simple_str \: )* $simple_str ? /x;
+
+my $colon_dot_chain = qr/
+  (?: $simple_str_colonchain \. )*
+  $simple_str_colonchain ?
+/x;
 
 class_type Event, { class => 'Moonpig::Events::Event' };
 
-subtype EventName,        as Str, where { /\A$simple_str_chain\z/ };
-subtype EventHandlerName, as Str, where { /\A$simple_str_chain\z/ };
+subtype EventName,        as Str, where { /\A$simple_str_dotchain\z/ };
+subtype EventHandlerName, as Str, where { /\A$simple_str_dotchain\z/ };
 
 role_type EventHandler, { role => 'Moonpig::Role::EventHandler' };
 
@@ -80,10 +86,10 @@ subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
 #
 # ChargePath
 
-subtype ChargePathPart, as Str, where { /\A$simple_str\z/ };
+subtype ChargePathPart, as Str, where { /\A$simple_str_colonchain\z/ };
 subtype ChargePath, as ArrayRef[ ChargePathPart ];
 
-subtype ChargePathStr, as Str, where { /\A$simple_str_chain\z/ };
+subtype ChargePathStr, as Str, where { /\A$colon_dot_chain\z/ };
 
 coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
 
@@ -92,8 +98,6 @@ coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
 # GUID
 
 subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
-
-my $simple_str_colonchain = qr/ (?: $simple_str \: )* $simple_str ? /x;
 
 subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
 

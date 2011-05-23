@@ -160,9 +160,7 @@ sub create_charge_for_hold {
     to   => $self,
     date => $now,
     amount    => $hold->amount,
-    charge_path => [
-      @{$self->charge_path_prefix}, split(/-/, $now->ymd),
-     ],
+    charge_path => $self->charge_path,
   });
   $hold->delete;
 }

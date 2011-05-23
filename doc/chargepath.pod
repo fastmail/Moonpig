@@ -2,7 +2,7 @@
 Moonpig::Role::Consumer::ByTime and
 Moonpig::Role::Consumer::ByUsage create their charges at
 
-    [ $self->charge_path_prefix ] . year . month . day
+    [ $self->charge_path_prefix ] . xid
 
 where charge_path_prefix is a mandatory but unspecified path.
 

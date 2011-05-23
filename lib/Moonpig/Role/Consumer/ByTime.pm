@@ -190,10 +190,7 @@ sub charge {
         to   => $self,
         date => $next_charge_date,
         amount    => $amt,
-        charge_path => [
-          @{$self->charge_path_prefix},
-          split(/-/, $next_charge_date->ymd),
-        ],
+        charge_path => $self->charge_path,
       });
     }
 
@@ -305,7 +302,7 @@ sub _invoice {
         amount      => $amt,
         consumer    => $self,
       }),
-      $self->charge_path_prefix, # XXX certainly wrong? -- rjbs, 2011-01-18
+      $self->charge_path,
     );
   }
 }
