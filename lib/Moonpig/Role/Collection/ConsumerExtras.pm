@@ -10,12 +10,14 @@ publish add_from_template => { -http_method => 'post',
                                template_args => HashRef,
                              } => sub {
   my ($self, $arg) = @_;
-  my $new_consumer =
-    $self->owner->add_consumer_from_template(
-      $arg->{template},
-      $arg->{template_args},
-   );
-  return $new_consumer;
+  return Moonpig->env->storage->do_rw(sub {
+    my $new_consumer =
+      $self->owner->add_consumer_from_template(
+        $arg->{template},
+        $arg->{template_args},
+       );
+    return $new_consumer;
+  });
 };
 
 1;
