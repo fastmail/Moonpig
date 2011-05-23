@@ -25,7 +25,7 @@ my $account_rs = $schema->resultset('Account')->search;
 my $ua = LWP::UserAgent->new;
 my $JSON = JSON->new;
 
-while (my $account = $account_rs->next) {
+ACCOUNT: while (my $account = $account_rs->next) {
   my $xid = sprintf 'fauxbox:account:%u', $account->id;
   my $res = $ua->get("http://localhost:5001/ledger/xid/$xid");
   next if $res->is_success;
@@ -34,7 +34,15 @@ while (my $account = $account_rs->next) {
     print "account $xid not fount\n";
   } else {
     print "error finding $xid: " . $res->as_string;
-    next;
+    next ACCOUNT;
+  }
+
+  my $client_xid = sprintf 'fauxbox:username:%s', $account->client->username;
+
+  for ($client_xid) {
+    my $res = $ua->get($_);
+    print "*** ERROR: NO LEDGER FOR $_\n";
+    next ACCOUNT;
   }
 
   my $payload = $JSON->encode({
@@ -45,7 +53,6 @@ while (my $account = $account_rs->next) {
     },
   });
 
-  my $client_xid = sprintf 'fauxbox:username:%s', $account->client->username;
   my $create_res = $ua->post(
     sprintf('/ledger/xid/%s/consumers', $client_xid),
     'Content-Type' => 'application/json',
