@@ -122,6 +122,12 @@ role {
     } elsif ($first eq "xid") {
       splice @$path, 0, 2;
       return $self->find_by_xid({xid => $second});
+    } elsif ($first eq "last") {
+      splice @$path, 0, 1;
+      return $self->last;
+    } elsif ($first eq "first") {
+      splice @$path, 0, 1;
+      return $self->first;
     } else {
       return;
     }
@@ -176,13 +182,13 @@ role {
     return sort { $a->$meth <=> $b->$meth } @all;
   };
 
-  publish first => { } => sub {
+  publish first => { -path => 'first' } => sub {
     my ($self) = @_;
     my ($first) = $self->all_sorted;
     return $first;
   };
 
-  publish last => { } => sub {
+  publish last => { -path => 'last' } => sub {
     my ($self) = @_;
     my ($last) = reverse $self->all_sorted;
     return $last;
