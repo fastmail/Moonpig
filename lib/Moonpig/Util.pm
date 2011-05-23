@@ -38,6 +38,8 @@ my $nonce = "00";
 
 my %CLASS_ROLES;
 
+my $SERIAL = "AA";
+
 sub class {
   my (@args) = @_;
   my @orig_args = @args;
@@ -75,6 +77,9 @@ sub class {
 
   Class::MOP::load_class($_) for @role_class_names;
 
+  if ($name->can('meta')) {
+    $name .= "_" . $SERIAL++;
+  }
   my $class = Moose::Meta::Class->create( $name => (
     superclasses => [ 'Moose::Object' ],
   ));
