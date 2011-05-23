@@ -504,6 +504,11 @@ publish published_guid => { -path => 'gguid' } => sub {
   return $self->guid;
 };
 
+publish heartbeat => { -http_method => 'post', -path => 'heartbeat' } => sub {
+  my ($self) = @_;
+  $self->handle_event( event('heartbeat') );
+};
+
 sub STICK_PACK {
   my ($self) = @_;
 
