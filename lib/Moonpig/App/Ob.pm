@@ -39,13 +39,19 @@ sub BUILD {
   my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
   $self->last_result( [ @ledgers ] );
 
-  if (@guids == 0) {
-    $self->obwarn("No ledgers in storage.");
-  } elsif (@guids == 1) {
-    $self->obwarn("\$it = ledger $guids[0]");
+  $self->_initial_display(\@guids);
+}
+
+sub _initial_display {
+  my ($self, $ledger_guids) = @_;
+
+  if (@$ledger_guids == 0) {
+    $self->obwarn("No ledgers in storage\n");
+  } elsif (@$ledger_guids == 1) {
+    $self->output("\$it = ledger $$->ledger_guids[0]");
   } else {
-    for my $i (0 .. $#guids) {
-      $self->output(sprintf "\$it[%d] = ledger %s", $i, $guids[$i]);
+    for my $i (0 .. $#$ledger_guids) {
+      $self->output(sprintf "\$it[%d] = ledger %s", $i, $ledger_guids->[$i]);
     }
   }
 }
