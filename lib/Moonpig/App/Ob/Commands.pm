@@ -83,7 +83,43 @@ sub reload {
 
 sub wait {
   my ($args) = @_;
-  die "Unimplemented\n";
+  my %unit = ( s => 1, m => 60, h => 3600, d => 86_400 );
+  my $argl = $args->arg_list;
+  my $prim = $args->primary;
+
+  if ($args->count == 0) {
+    Moonpig->env->stop_clock;
+    $args->hub->obwarn("Moonpig clock stopped at " . Moonpig->env->now);
+    return;
+  } elsif ($args->count > 1) {
+    $args->hub->obwarn("usage: $prim [duration]");
+    return;
+  }
+  my $time = $argl->[0];
+
+  my ($n, $u) = $time =~ /^(\d+)([a-z])?$/;
+  $u ||= 's';
+  if (! defined($n)) {
+    $args->hub->obwarn("usage: $prim [duration]");
+    return;
+  } elsif (! exists $unit{$u}) {
+    $args->hub->obwarn("Unknown time unit '$u'; ignoring");
+    return;
+  } else {
+    $n *= $unit{$u};
+  }
+
+  Moonpig->env->stop_clock;
+  Moonpig->env->elapse_time($n);
+  Moonpig->env->restart_clock;
+  $args->hub->obwarn("Moonpig clock advanced $n sec\n",
+                     "Time is now " . Moonpig->env->now);
+}
+
+sub resume {
+  my ($args) = @_;
+  Moonpig->env->restart_clock;
+  $args->hub->obwarn("Moonpig clock restarted\n");
 }
 
 sub shell {
