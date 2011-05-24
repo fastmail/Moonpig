@@ -2,6 +2,7 @@ package Moonpig::App::Ob::Dumper;
 use strict;
 use warnings;
 use Scalar::Util qw(blessed reftype);
+use overload ();
 
 use Sub::Exporter -setup => {
   exports => [ 'Dump' ],
@@ -15,6 +16,13 @@ has undef => (
   isa => 'Str',
   default => '<undef>',
 );
+
+has empty => (
+  is => 'rw',
+  isa => 'Str',
+  default => '(-)',
+);
+
 
 has maxdepth => (
   is => 'rw',
@@ -147,16 +155,18 @@ sub dump_values {
 sub dump_value {
   my ($self, $val) = @_;
   my $rt = reftype $val;
-  if (! defined $rt) { $self->dump_scalar($val) }
-  elsif ($rt eq "ARRAY") { $self->dump_array($val) }
-  elsif ($rt eq "HASH") { $self->dump_hash($val) }
-  elsif ($rt eq "SCALAR" || $rt eq "REF") { $self->dump_scalar_ref($val) }
-  else { $self->dump_scalar($val) }
+  my $ovl = ref($val) && overload::Overloaded($val) ? overload::StrVal($val)
+    : undef();
+  if (! defined $rt) { $self->dump_scalar($val, $ovl) }
+  elsif ($rt eq "ARRAY") { $self->dump_array($val, $ovl) }
+  elsif ($rt eq "HASH") { $self->dump_hash($val, $ovl) }
+  elsif ($rt eq "SCALAR" || $rt eq "REF") { $self->dump_scalar_ref($val, $ovl) }
+  else { $self->dump_scalar($val, $ovl) }
 }
 
 sub recurse {
-  my ($self, $into, $code) = @_;
-  $self->aplines($into);
+  my ($self, $into, $display, $code) = @_;
+  $self->aplines($display);
   return if $self->at_maxdepth;
 
   if ($self->depth > 0 && not $self->recurse_into($into)) {
@@ -190,10 +200,11 @@ sub recurse_into {
 }
 
 sub dump_array {
-  my ($self, $ar) = @_;
-  my $empty = @$ar ? "" : " (empty)";
+  my ($self, $ar, $ovl) = @_;
+  my @display = defined($ovl) ? ($ovl, "('$ar')") : ($ar);
+  @$ar == 0 and push @display, $self->empty;
 
-  $self->recurse($ar . $empty,
+  $self->recurse($ar, join(" ", @display),
     sub {
       for my $i (0 .. $#$ar) {
         $self->next_prefix("$i ");
@@ -204,10 +215,11 @@ sub dump_array {
 }
 
 sub dump_hash {
-  my ($self, $ha) = @_;
-  my $empty = %$ha ? "" : " (empty)";
+  my ($self, $ha, $ovl) = @_;
+  my @display = defined($ovl) ? ($ovl, "('$ha')") : ($ha);
+  keys(%$ha) == 0 and push @display, $self->empty;
 
-  $self->recurse($ha . $empty,
+  $self->recurse($ha, join(" ", @display),
     sub {
       for my $k (sort keys %$ha) {
         $self->next_prefix("'$k' => ");
@@ -218,18 +230,20 @@ sub dump_hash {
 }
 
 sub dump_scalar {
-  my ($self, $sc) = @_;
+  my ($self, $sc, $ovl) = @_;
+  my @display = defined($ovl) ? ($ovl, "('$sc')") : ($sc);
   if (not defined $sc) {
     $self->aplines($self->undef);
   } else {
-    $self->aplines($sc);
+    $self->aplines(join(" ", @display));
   }
   return $self;
 }
 
 sub dump_scalar_ref {
-  my ($self, $sr) = @_;
-  $self->recurse($sr,
+  my ($self, $sr, $ovl) = @_;
+  my @display = defined($ovl) ? ($ovl, "('$sr')") : ($sr);
+  $self->recurse($sr, join(" ", @display),
                  sub { $self->dump_value($$sr) });
 }
 
