@@ -100,8 +100,10 @@ has command_table => (
     no warnings 'qw';
     $_[0]->_gen_command_table(qw(exit,quit,q
                                  eval,dump,x,d,ddump,dd,_internal_eval
-                                 reload shell,sh,!
-                                 wait,z
+                                 reload
+                                 shell,sh,!
+                                 store,st
+                                 wait,z resume
                                  help,?,h
                                ))
   },

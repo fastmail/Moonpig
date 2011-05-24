@@ -37,16 +37,6 @@ sub generate {
   }
 }
 
-sub store {
-  my (@argl) = @_;
-  unless (@argl) {
-    warn "Usage: store ledger...\n";
-    return "";
-  }
-  $ob->storage->_store_ledger($_) for @argl;
-}
-*st =\&store;
-
 sub xid {
   my (@args) = @_;
   my @ledgers = map $st->retrieve_ledger_for_xid($_), @args;

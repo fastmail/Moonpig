@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Moonpig::Util qw(class);
 use Moonpig::App::Ob::Dumper;
+use Scalar::Util qw(blessed);
 
 sub eval {
   my ($args) = @_;
@@ -120,6 +121,38 @@ sub resume {
   my ($args) = @_;
   Moonpig->env->restart_clock;
   $args->hub->obwarn("Moonpig clock restarted\n");
+}
+
+sub store {
+  my ($args) = @_;
+  my @vals = $args->hub->eval($args->orig_args);
+  if ($@) {
+    $args->hub->obwarn($@);
+    return;
+  }
+
+  if (@vals == 0) {
+    my $prim = $args->primary;
+    $args->hub->obwarn( qq{usage: $prim ["clock" | ledgers...]} );
+    return;
+  } elsif (@vals == 1 && $vals[0] eq 'clock') {
+    $args->hub->storage->_store_time();
+    $args->hub->obwarn("Saved current time.\n");
+  } else {
+    my $stored = 0;
+    for my $ledger (@vals) {
+      unless (blessed($ledger) && $ledger->can('does')
+                && $ledger->does('Moonpig::Role::Ledger')) {
+        $args->hub->obwarn("<$ledger> is not a ledger; skipping\n");
+        next;
+      }
+      $args->hub->storage->_store_ledger($ledger);
+      $stored++;
+    }
+    my $ledgers = $stored == 1 ? "ledger" : "ledgers";
+    $args->hub->obwarn("$stored $ledgers stored\n") if $stored;
+  }
+  return;
 }
 
 sub shell {
