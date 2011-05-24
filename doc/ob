@@ -18,6 +18,7 @@ context.  In the eval context, some package variables are defined:
    @it is an array of the values returned by the last successful eval.
    $it is \@it, unless @it contained only one item, in which case it
      is that item.
+   $env is Moonpig->env
 
 If the output exceeds 10 lines, it is truncated.  You can force
 display of the complete output by explicitly using the "d" command.
@@ -81,4 +82,25 @@ Commands
   store ledger...
   st ledger...
     Store these ledgers into storage.
+
+TIME MANAGEMENT
+
+  wait [duration]
+  z [duration]
+    With no argument, stop the clock; 'resume' starts the clock again.
+    With an argument, advance the clock by the specified amount of time. 
+    Plain numbers are taken to be seconds, but you can also use an
+    argument of the form "30s", "10m", "6h", "3d" for seconds,
+    minutes, hours, or days.
+
+    Note that the new time setting will not persist in the database
+    unless you also use the "store clock" command.
+
+  resume
+    Restart the clock.
+
+  store clock
+  st clock
+    Store the current clock setting to the database.
+
 

@@ -2,9 +2,10 @@
 package Ob;  # note weird package declaration
 # This is the package in which unrecognized commands are evaluated as Perl
 # expressions.
-use namespace::autoclean;
 use strict;
 use warnings;
+use Moonpig::Util '-all';
+use Carp 'croak';
 
 # These variables will be set up in package Ob when these functions
 # are invoked via Moonpig::App::Ob::Commands::eval
@@ -35,16 +36,6 @@ sub generate {
                                  });
   }
 }
-
-sub store {
-  my (@argl) = @_;
-  unless (@argl) {
-    warn "Usage: store ledger...\n";
-    return "";
-  }
-  $ob->storage->_store_ledger($_) for @argl;
-}
-*st =\&store;
 
 sub xid {
   my (@args) = @_;

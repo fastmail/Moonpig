@@ -26,12 +26,53 @@ has last_result => (
   is => 'rw',
   isa => 'ArrayRef',
   init_arg => undef,
-  default => sub { [] },
   traits => [ 'Array' ],
   handles => {
     result_count => 'count',
   },
 );
+
+sub BUILD {
+  my ($self) = @_;
+  my $st = $self->storage;
+  my @guids = $st->ledger_guids();
+  my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
+  $self->last_result( [ @ledgers ] );
+  $st->_reinstate_stored_time();
+
+  $self->_initial_display(\@guids);
+}
+
+sub _initial_display {
+  my ($self, $ledger_guids) = @_;
+
+  {
+    my $mp_time = Moonpig->env->now;
+    my $offset = $mp_time->epoch - time();
+    my $d = int($offset / 86_400);
+    my $s = $offset - $d * 86_400;
+    if ($offset) {
+      $self->output(join " ",
+                    "Moonpig time : $mp_time",
+                    $d ? "$d days" : (),
+                    $s ? "$s seconds" : (),
+                    "ahead.");
+    } else {
+      $self->output("Moonpig time == real time");
+    }
+  }
+
+
+  if (@$ledger_guids == 0) {
+    $self->obwarn("No ledgers in storage\n");
+  } elsif (@$ledger_guids == 1) {
+    $self->output("\$it = ledger $$->ledger_guids[0]");
+  } else {
+    for my $i (0 .. $#$ledger_guids) {
+      $self->output(sprintf "\$it[%d] = ledger %s", $i, $ledger_guids->[$i]);
+    }
+  }
+}
 
 sub it {
   my ($self) = @_;
@@ -59,7 +100,10 @@ has command_table => (
     no warnings 'qw';
     $_[0]->_gen_command_table(qw(exit,quit,q
                                  eval,dump,x,d,ddump,dd,_internal_eval
-                                 reload shell,sh,!
+                                 reload
+                                 shell,sh,!
+                                 store,st
+                                 wait,z resume
                                  help,?,h
                                ))
   },
@@ -177,6 +221,22 @@ sub _gen_command_table {
   exit 1 if $BAD;
   return \%tab;
 }
+
+sub eval {
+  my ($self, $expr) = @_;
+  package Ob;
+
+  our ($env, $it, @it, $ob, $st);
+  local $ob = $self;
+  local $it = $ob->it;
+  local @it = @{$ob->last_result};
+  local $st = $ob->storage;
+  local $env = Moonpig->env;
+
+  no strict;
+  eval $expr;
+}
+
 
 no Moose;
 
