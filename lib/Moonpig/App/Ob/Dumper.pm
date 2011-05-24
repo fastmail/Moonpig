@@ -191,7 +191,9 @@ sub recurse_into {
 
 sub dump_array {
   my ($self, $ar) = @_;
-  $self->recurse($ar,
+  my $empty = @$ar ? "" : " (empty)";
+
+  $self->recurse($ar . $empty,
     sub {
       for my $i (0 .. $#$ar) {
         $self->next_prefix("$i ");
@@ -203,7 +205,9 @@ sub dump_array {
 
 sub dump_hash {
   my ($self, $ha) = @_;
-  $self->recurse($ha,
+  my $empty = %$ha ? "" : " (empty)";
+
+  $self->recurse($ha . $empty,
     sub {
       for my $k (sort keys %$ha) {
         $self->next_prefix("'$k' => ");
