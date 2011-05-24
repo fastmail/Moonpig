@@ -196,6 +196,22 @@ sub _gen_command_table {
   return \%tab;
 }
 
+sub eval {
+  my ($self, $expr) = @_;
+  package Ob;
+
+  our ($env, $it, @it, $ob, $st);
+  local $ob = $self;
+  local $it = $ob->it;
+  local @it = @{$ob->last_result};
+  local $st = $ob->storage;
+  local $env = Moonpig->env;
+
+  no strict;
+  eval $expr;
+}
+
+
 no Moose;
 
 1;

@@ -15,19 +15,7 @@ sub eval {
     }
   }
 
-  my @res = do {
-    package Ob;
-
-    our ($it, @it, $ob, $st);
-    local $ob = $args->hub;
-    local $it = $ob->it;
-    local @it = @{$ob->last_result};
-    local $st = $ob->storage;
-
-    no strict;
-    eval $expr;
-  };
-
+  my @res = $args->hub->eval($expr);
   my $fh = $args->hub->output_fh;
 
   if ($@) {
