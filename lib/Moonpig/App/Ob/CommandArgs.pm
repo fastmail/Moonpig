@@ -28,6 +28,11 @@ has arg_list => (
   default => sub { [] },
 );
 
+sub count {
+  my ($self) = @_;
+  return scalar @{$self->arg_list};
+}
+
 has orig => (
   is => 'ro',
   isa => 'Str',
