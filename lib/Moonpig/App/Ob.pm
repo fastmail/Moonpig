@@ -38,12 +38,30 @@ sub BUILD {
   my @guids = $st->ledger_guids();
   my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
   $self->last_result( [ @ledgers ] );
+  $st->_reinstate_stored_time();
 
   $self->_initial_display(\@guids);
 }
 
 sub _initial_display {
   my ($self, $ledger_guids) = @_;
+
+  {
+    my $mp_time = Moonpig->env->now;
+    my $offset = $mp_time->epoch - time();
+    my $d = int($offset / 86_400);
+    my $s = $offset - $d * 86_400;
+    if ($offset) {
+      $self->output(join " ",
+                    "Moonpig time : $mp_time",
+                    $d ? "$d days" : (),
+                    $s ? "$s seconds" : (),
+                    "ahead.");
+    } else {
+      $self->output("Moonpig time == real time");
+    }
+  }
+
 
   if (@$ledger_guids == 0) {
     $self->obwarn("No ledgers in storage\n");
