@@ -26,12 +26,29 @@ has last_result => (
   is => 'rw',
   isa => 'ArrayRef',
   init_arg => undef,
-  default => sub { [] },
   traits => [ 'Array' ],
   handles => {
     result_count => 'count',
   },
 );
+
+sub BUILD {
+  my ($self) = @_;
+  my $st = $self->storage;
+  my @guids = $st->ledger_guids();
+  my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
+  $self->last_result( [ @ledgers ] );
+
+  if (@guids == 0) {
+    $self->obwarn("No ledgers in storage.");
+  } elsif (@guids == 1) {
+    $self->obwarn("\$it = ledger $guids[0]");
+  } else {
+    for my $i (0 .. $#guids) {
+      $self->output(sprintf "\$it[%d] = ledger %s", $i, $guids[$i]);
+    }
+  }
+}
 
 sub it {
   my ($self) = @_;
