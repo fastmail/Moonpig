@@ -2,7 +2,6 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Stick::Util qw(ppack);
 use Moonpig::Util qw(class dollars event);
 
 with(

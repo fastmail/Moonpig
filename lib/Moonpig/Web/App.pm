@@ -5,7 +5,7 @@ package Moonpig::Web::App;
 use JSON;
 use Moonpig;
 use Moonpig::Util qw(event);
-use Stick::Util qw(ppack);
+use Stick::Util qw(json_pack);
 use Try::Tiny;
 
 use Plack::Request;
@@ -102,7 +102,7 @@ sub app {
         return [
           200,
           [ 'Content-type' => 'application/json' ],
-          [ $JSON->encode( ppack($result) ) ],
+          [ json_pack($result) ],
         ];
       });
     } catch {
