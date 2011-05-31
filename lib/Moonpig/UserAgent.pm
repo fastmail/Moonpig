@@ -13,7 +13,7 @@ has UA => (
   is => 'ro',
   lazy => 1,
   default => sub {
-    require 'LWP::UserAgent';
+    require LWP::UserAgent;
     LWP::UserAgent->new($_[0]->agent_string);
   },
   handles => [ qw(get post) ],
@@ -86,6 +86,16 @@ sub qualify_path {
   # otherwise qualify it with base_uri.
   return defined URI->new($path)->scheme ? URI->new($path)
     : URI->new($self->base_uri . $path);
+}
+
+sub set_test_callback {
+  my ($self, $cb) = @_;
+  $self->UA->add_handler(request_send => $cb);
+}
+
+sub clear_test_callback {
+  my ($self) = @_;
+  $self->UA->remove_handler('request_send');
 }
 
 1;
