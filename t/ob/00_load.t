@@ -10,7 +10,7 @@ test "load and ->new module" => sub {
   my ($self) = @_;
   local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
 
-  my $ob = Moonpig::App::Ob->new();
+  my $ob = Moonpig::App::Ob->new({ output_fh => undef });
   ok($ob);
 };
 

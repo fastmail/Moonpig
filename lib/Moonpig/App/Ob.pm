@@ -152,7 +152,7 @@ sub output {
     return;
   }
 
-  my $fh = $self->output_fh;
+  return unless my $fh = $self->output_fh;
   if (@str < 2) {
     print $fh map _flatten($_), @str;
   } else {
@@ -167,7 +167,8 @@ sub _flatten { defined($_[0]) ? $_[0] : "<undef>" }
 
 sub obwarn {
   my ($self, @str) = @_;
-  print { $self->output_fh } @str;
+  return unless my $fh = $self->output_fh;
+  print $fh @str;
 }
 
 sub find_command {
