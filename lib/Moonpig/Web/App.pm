@@ -5,7 +5,7 @@ package Moonpig::Web::App;
 use JSON;
 use Moonpig;
 use Moonpig::Util qw(event);
-use Stick::Util qw(json_pack);
+use Stick::Util 0.20110525 qw(json_pack);
 use Try::Tiny;
 
 use Plack::Request;
