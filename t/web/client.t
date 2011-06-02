@@ -9,6 +9,14 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';
 
+with ('t::lib::Role::UsesStorage');
+around run_test => sub {
+  my ($orig) = shift;
+  my ($self) = shift;
+  local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
+  return $self->$orig(@_);
+};
+
 my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $json = JSON->new;
 

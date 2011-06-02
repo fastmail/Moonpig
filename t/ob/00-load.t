@@ -3,8 +3,9 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 
-with ('t::lib::Role::UsesStorage');
 BEGIN { use_ok('Moonpig::App::Ob') }
+
+with ('t::lib::Role::UsesStorage');
 
 test "load and ->new module" => sub {
   my ($self) = @_;
