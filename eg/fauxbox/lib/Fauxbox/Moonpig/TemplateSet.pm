@@ -35,6 +35,23 @@ sub templates {
         },
       }
     },
+
+    fauxboxtrivial => sub {
+      my ($name) = @_;
+
+      return {
+        roles => [
+          qw(Consumer::ByTime Consumer::ByTime::FixedCost)
+        ],
+        arg   => {
+          cost_period        => days(365),
+          old_age            => days(30),
+          charge_path_prefix => 'fauxbox.basic',
+          replacement_mri    => "moonpig://consumer-template/$name",
+          charge_description => "test charge",
+        },
+      }
+    },
   };
 }
 
