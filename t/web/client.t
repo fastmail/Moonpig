@@ -5,6 +5,7 @@ use Moonpig::Env::Test;
 use Moonpig::UserAgent;
 use Moonpig::Web::App;
 use Plack::Test;
+use Test::Deep;
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';
@@ -32,10 +33,9 @@ test "raw HTTP response" => sub {
       my $resp = $ua->get($ua->qualify_path('/time'));
       is($resp->content_type, "application/json", "content-type");
       ok(my $result = $json->decode($resp->content), "response contains JSON");
-      is(keys(%$result), 1, "one key");
-      my $time = $result->{now};
-      ok(defined $time, "response contains time");
-      ok(time() - $time < 5, "response is current time");
+      cmp_deeply($result,
+                 { now => num(time, 5) },
+                 "response contains current time");
     };
 };
 
@@ -46,10 +46,9 @@ test "basic response" => sub {
       my $cb = shift;
       $ua->set_test_callback($cb);
       my $result = $ua->mp_get('/time');
-      is(keys(%$result), 1, "one key");
-      my $time = $result->{now};
-      ok(defined $time, "response contains time");
-      ok(time() - $time < 5, "response is current time");
+      cmp_deeply($result,
+                 { now => num(time, 5) },
+                 "response contains current time");
     };
 };
 
