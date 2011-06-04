@@ -45,6 +45,7 @@ my $price = dollars(20);
 
 sub setup_account {
   my ($self) = @_;
+  my %rv;
 
   my $signup_info =
     { name => "Fred Flooney",
@@ -61,7 +62,7 @@ sub setup_account {
       my $cb = shift;
       $ua->set_test_callback($cb);
 
-      my $ledger_guid = do {
+      $rv{ledger_guid} = do {
         my $result = $ua->mp_post('/ledgers', $signup_info);
         cmp_deeply($result,
                    { value =>
@@ -69,9 +70,10 @@ sub setup_account {
                          active_xids => { $u_xid => $guid_re },
                          guid => $guid_re
                         } } );
+        $result->{value}{guid};
       };
 
-      my $account_guid = do {
+      $rv{account_guid} = do {
         my $account_info = {
           template      => 'fauxboxtrivial',
           template_args => {
@@ -83,15 +85,12 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
+        cmp_deeply($result, { value => $guid_re });
 
-
-        cmp_deeply($result,
-                   {
-                     value => $guid_re });
         $result->{value};
       };
 
-      {
+      @rv{qw(rfp_guid invoice_guid)} = do {
         $self->elapse(1);
         my $last_rfp = $ua->mp_get("$ledger_path/rfps/last");
         cmp_deeply($last_rfp,
@@ -121,15 +120,19 @@ sub setup_account {
                          is_paid => $JSON::XS::false,
                          total_amount => $price,
                        } } );
-      }
-    }
+
+        ($rfp_guid, $invoice_guid);
+      };
+    };
+
+  return \%rv;
 }
 
 
 test "single payment" => sub {
   my ($self) = @_;
 
-  $self->setup_account;
+  my $v1 = $self->setup_account;
 
   my $credit = $ua->mp_post(
     "$ledger_path/credits/accept_payment",
