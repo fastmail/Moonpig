@@ -41,7 +41,7 @@ my $ledger_path = "/ledger/xid/$u_xid";
 my $guid_re = re('^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$');
 my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');
 
-test "sign up" => sub {
+sub setup_account {
   my ($self) = @_;
 
   my $signup_info =
@@ -50,7 +50,7 @@ test "sign up" => sub {
       consumers => {
         $u_xid => {
           template => 'username'
-        },
+         },
       },
     };
 
@@ -63,7 +63,8 @@ test "sign up" => sub {
         my $result = $ua->mp_post('/ledgers', $signup_info);
         cmp_deeply($result,
                    { value =>
-                       { active_xids => { $u_xid => $guid_re },
+                       {
+                         active_xids => { $u_xid => $guid_re },
                          guid => $guid_re
                         } } );
       };
@@ -83,7 +84,8 @@ test "sign up" => sub {
 
 
         cmp_deeply($result,
-                   { value => $guid_re });
+                   {
+                     value => $guid_re });
         $result->{value};
       };
 
@@ -118,24 +120,29 @@ test "sign up" => sub {
                          total_amount => dollars(20),
                        } } );
       }
+    }
+}
 
-      {
-        my $credit = $ua->mp_post(
-          "$ledger_path/credits/accept_payment",
-          {
-            amount => dollars(20),
-            type => 'Simulated',
-          });
-        cmp_deeply($credit,
-                   { value =>
-                       { amount => dollars(20),
-                         created_at => $date_re,
-                         guid => $guid_re,
-                         type => "Credit::Simulated",
-                         unapplied_amount => dollars(0),
-                       } } );
-      }
-    };
+
+test "single payment" => sub {
+  my ($self) = @_;
+
+  $self->setup_account;
+
+  my $credit = $ua->mp_post(
+    "$ledger_path/credits/accept_payment",
+    {
+      amount => dollars(20),
+      type => 'Simulated',
+    });
+  cmp_deeply($credit,
+             { value =>
+                 { amount => dollars(20),
+                   created_at => $date_re,
+                   guid => $guid_re,
+                   type => "Credit::Simulated",
+                   unapplied_amount => dollars(0),
+                 } } );
 };
 
 sub elapse {
