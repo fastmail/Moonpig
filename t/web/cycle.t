@@ -41,6 +41,8 @@ my $ledger_path = "/ledger/xid/$u_xid";
 my $guid_re = re('^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$');
 my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');
 
+my $price = dollars(20);
+
 sub setup_account {
   my ($self) = @_;
 
@@ -75,7 +77,7 @@ sub setup_account {
           template_args => {
             xid         => $a_xid,
             make_active => 1,
-            cost_amount => dollars(20),
+            cost_amount => $price,
           },
         };
 
@@ -117,7 +119,7 @@ sub setup_account {
                          guid => $invoice_guid,
                          is_closed => $JSON::XS::true,
                          is_paid => $JSON::XS::false,
-                         total_amount => dollars(20),
+                         total_amount => $price,
                        } } );
       }
     }
@@ -132,12 +134,12 @@ test "single payment" => sub {
   my $credit = $ua->mp_post(
     "$ledger_path/credits/accept_payment",
     {
-      amount => dollars(20),
+      amount => $price,
       type => 'Simulated',
     });
   cmp_deeply($credit,
              { value =>
-                 { amount => dollars(20),
+                 { amount => $price,
                    created_at => $date_re,
                    guid => $guid_re,
                    type => "Credit::Simulated",
