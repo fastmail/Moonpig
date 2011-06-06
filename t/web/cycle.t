@@ -6,7 +6,7 @@ use Moonpig::UserAgent;
 use Moonpig::Util qw(dollars);
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep;
+use Test::Deep qw(cmp_deeply re);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';

@@ -4,7 +4,7 @@ use Moonpig::Env::Test;
 use Moonpig::UserAgent;
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep;
+use Test::Deep qw(cmp_deeply num re);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';
