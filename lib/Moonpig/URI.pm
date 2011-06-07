@@ -30,7 +30,7 @@ sub as_string {
   my ($self) = @_;
   my $s = "moonpig://" . $self->path;
   my $qs = $self->query_string;
-  defined($qs) and $s .= "?$qs";
+  $s .= "?$qs" if defined($qs) && $qs ne "";
   return $s;
 }
 
