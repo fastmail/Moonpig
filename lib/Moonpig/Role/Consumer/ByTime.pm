@@ -14,6 +14,10 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 
 use Moonpig::Logger '$Logger';
 
+require Stick::Publisher;
+Stick::Publisher->VERSION(0.20110324);
+use Stick::Publisher::Publish 0.20110324;
+
 with(
   'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::StubBuild',
@@ -106,9 +110,7 @@ sub last_charge_exists {
   return defined($self->last_charge_date);
 }
 
-# For a detailed explanation of the logic here, please see the log
-# message for 1780fc0a39313eef5adb9936d76dc994f6fa90cd - 2011-01-13 mjd
-sub expire_date {
+publish expire_date => { } => sub {
   my ($self) = @_;
   my $bank = $self->bank ||
     confess "Can't calculate remaining life for unfunded consumer";
@@ -119,7 +121,7 @@ sub expire_date {
 
   return $self->next_charge_date() +
       $n_charge_periods_left * $self->charge_frequency;
-}
+};
 
 # returns amount of life remaining, in seconds
 sub remaining_life {
@@ -227,7 +229,7 @@ sub calculate_charge_on {
 }
 
 sub reflect_on_mortality {
-  my ($self, $tick_time) = @_;
+  my ($self) = @_;
 
   return unless $self->has_bank;
 
@@ -235,19 +237,17 @@ sub reflect_on_mortality {
   # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
-  my $remaining_life = $self->remaining_life($tick_time);
+  my $remaining_life = $self->remaining_life();
 
   if ($remaining_life <= $self->old_age) {
 
-    # If it has a replacement R, it should advise R that R will need
-    # to take over soon
-    unless ($self->has_replacement and $remaining_life) {
+    # If it has no replacement yet, it should create one
+    unless ($self->has_replacement and $remaining_life > 0) {
       # Otherwise it should create a replacement R
       $self->handle_event(
         event(
           'consumer-create-replacement',
           {
-            timestamp => $tick_time,
             mri       => $self->replacement_mri,
           }
         )
