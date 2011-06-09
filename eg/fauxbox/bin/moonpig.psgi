@@ -22,10 +22,12 @@ $null->add_callback(sub {
 });
 $Logger->dispatcher->add($null);
 
-my $root = $ENV{MOONPIG_STORAGE_ROOT}
-         = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
+unless (exists $ENV{MOONPIG_STORAGE_ROOT}) {
+  $ENV{MOONPIG_STORAGE_ROOT} = 'eg/fauxbox/var';
+}
+my $root = $ENV{MOONPIG_STORAGE_ROOT};
 
-mkdir $root unless -d $root;
+-d $root or mkdir $root or die "mkdir $root: $!";
 
 use Moonpig::Web::App;
 use Fauxbox::Moonpig::Env;

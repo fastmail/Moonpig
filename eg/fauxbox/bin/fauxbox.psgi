@@ -5,7 +5,10 @@ use warnings;
 use lib 'lib';
 use lib 'eg/fauxbox/lib';
 
-my $root = $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
+unless (exists $ENV{FAUXBOX_STORAGE_ROOT}) {
+  $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
+}
+my $root = $ENV{FAUXBOX_STORAGE_ROOT};
 
 use File::Spec;
 use HTML::Mason::PSGIHandler;
