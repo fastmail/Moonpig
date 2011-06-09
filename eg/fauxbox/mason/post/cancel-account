@@ -1,0 +1,21 @@
+%# vim:set ft=mason:
+<%args>
+$params
+</%args>
+<%perl>
+my $acct_p  = $params->{account};
+my $account = $m->schema->resultset('Account')->find($acct_p->{id});
+
+$m->mp_request(POST => $account->consumer_uri('cancel'), {});
+
+$m->redirect('/dashboard?username=' . $account->client->username);
+</%perl>
+
+%# <h2>Consumer URI</h2>
+%# <pre>
+%# % $account->consumer_uri('cancel');
+%# </pre>
+%#
+%# <form method=get action="/dashboard?username=<%$account->client->username%>">
+%# <input type=submit value="continue">
+%# </form>

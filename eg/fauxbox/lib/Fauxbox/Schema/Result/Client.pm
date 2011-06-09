@@ -19,4 +19,16 @@ __PACKAGE__->has_many(
   { 'foreign.client_id' => 'self.id' },
 );
 
+sub ledger_uri {
+  my ($self, $extra) = @_;
+  my $base = sprintf "/ledger/xid/%s", $self->xid;
+  $base .= "/$extra" if defined $extra;
+  return $base;
+}
+
+sub xid {
+  my ($self) = @_;
+  return sprintf "fauxbox:username:%s", $self->username;
+}
+
 1;
