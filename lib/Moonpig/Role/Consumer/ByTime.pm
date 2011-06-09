@@ -86,7 +86,7 @@ has last_charge_date => (
 after become_active => sub {
   my ($self) = @_;
 
-  $self->grace_until( Moonpig->env->now  +  days(3) );
+  $self->grace_until( Moonpig->env->now  +  $self->grace_period_duration );
 
   unless ($self->has_last_charge_date) {
     $self->last_charge_date( $self->now() - $self->charge_frequency );
@@ -142,6 +142,12 @@ has grace_until => (
   isa => Time,
   clearer   => 'clear_grace_until',
   predicate => 'has_grace_until',
+);
+
+has grace_period_duration => (
+  is  => 'rw',
+  isa => TimeInterval,
+  default => days(3),
 );
 
 sub in_grace_period {
