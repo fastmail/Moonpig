@@ -3,7 +3,7 @@ use JSON;
 use Moonpig::App::Ob::Dumper qw();
 use Moonpig::Env::Test;
 use Moonpig::UserAgent;
-use Moonpig::Util qw(dollars);
+use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;
 use Plack::Test;
 use Test::Deep qw(cmp_deeply re);
@@ -75,11 +75,13 @@ sub setup_account {
 
       $rv{account_guid} = do {
         my $account_info = {
-          template      => 'fauxboxtrivial',
+          template      => 'fauxboxtest',
           template_args => {
             xid         => $a_xid,
             make_active => 1,
             cost_amount => $price,
+            old_age     => days(2),
+            charge_frequency => days(1),
           },
         };
 
