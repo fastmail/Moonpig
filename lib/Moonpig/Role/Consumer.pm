@@ -1,6 +1,10 @@
 package Moonpig::Role::Consumer;
 # ABSTRACT: something that uses up money stored in a bank
 use Moose::Role;
+
+use Stick::Publisher 0.20110324;
+use Stick::Publisher::Publish 0.20110324;
+
 with(
   'Moonpig::Role::CanExpire',
   'Moonpig::Role::HandlesEvents',
@@ -9,7 +13,11 @@ with(
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
   'Stick::Role::PublicResource',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
+
+sub _class_subroute { return }
 
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
@@ -124,6 +132,16 @@ sub create_own_replacement {
 
   return;
 }
+
+publish cancel => { -http_method => 'post' } => sub {
+  my ($self) = @_;
+  if ($self->replacement) {
+    $self->replacement->expire
+  } else {
+    $self->replacement_mri(Moonpig::URI->nothing);
+  }
+  return;
+};
 
 sub amount_in_bank {
   my ($self) = @_;
