@@ -60,6 +60,7 @@ sub mp_request {
 
   if ($method eq 'get') {
     $res = $self->get($target);
+    return undef if $res->code == 404;
   } elsif ($method eq'post') {
     my $payload = $self->encode($arg);
 
@@ -70,8 +71,7 @@ sub mp_request {
     );
   }
 
-  return undef if $res->code == 404;
-
+  # eventually there should be exceptions here for all 2xx codes
   unless ($res->code == 200) {
     die "unexpected response from moonpig:\n" . $res->as_string;
   }

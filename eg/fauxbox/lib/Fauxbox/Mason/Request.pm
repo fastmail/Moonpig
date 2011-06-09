@@ -42,6 +42,7 @@ sub mp_request {
 
   if ($method eq 'get') {
     $res = $UA->get($target);
+    return undef if $res->code == 404;
   } elsif ($method eq'post') {
     my $payload = $JSON->encode($arg);
 
@@ -51,8 +52,6 @@ sub mp_request {
       Content => $payload,
     );
   }
-
-  return undef if $res->code == 404;
 
   unless ($res->code == 200) {
     die "unexpected response from moonpig:\n" . $res->as_string;
