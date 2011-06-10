@@ -95,7 +95,6 @@ role {
   my $item_type       = item_type($p);
   my $post_action     = $p->post_action;
 
-
   has owner => (
     isa => Object,
     is => 'ro',
@@ -122,6 +121,9 @@ role {
     } elsif ($first eq "xid") {
       splice @$path, 0, 2;
       return $self->find_by_xid({xid => $second});
+    } elsif ($first eq "active") {
+      splice @$path, 0, 2;
+      return $self->find_active_by_xid({xid => $second});
     } elsif ($first eq "last") {
       splice @$path, 0, 1;
       return $self->last;
@@ -219,16 +221,29 @@ role {
   publish find_by_guid => { guid => Str } => sub {
     my ($self, $arg) = @_;
     my $guid = $arg->{guid};
-    my ($item) = grep { $_->guid eq $guid } $self->all;
-    return $item;
+    my (@items) = grep { $_->guid eq $guid } $self->all;
+    die "Found multiple objects in collection '$collection_name' with guid $guid"
+      if @items > 1;
+    return $items[0];
   };
 
   publish find_by_xid => { xid => Str } => sub {
     my ($self, $arg) = @_;
     my $xid = $arg->{xid};
-    my ($item) = grep { $_->xid eq $xid } $self->all;
-    return $item;
-  };
+    my (@items) = grep { $_->xid eq $xid } $self->all;
+    die "Found multiple objects in collection '$collection_name' with xid $xid"
+      if @items > 1;
+    return $items[0];
+ };
+
+  publish find_active_by_xid => { xid => Str } => sub {
+    my ($self, $arg) = @_;
+    my $xid = $arg->{xid};
+    my (@items) = grep { $_->xid eq $xid && $_->is_active } $self->all;
+    die "Found multiple active objects in collection '$collection_name' with xid $xid"
+      if @items > 1;
+    return $items[0];
+ };
 
   publish add => { new_item => $item_type } => sub {
     my ($self, $arg) = @_;

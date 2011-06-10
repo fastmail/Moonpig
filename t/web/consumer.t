@@ -146,7 +146,7 @@ test cancel_early => sub {
          "replacement MRI is not 'nothing'");
   }
 
-  $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
+  $ua->mp_post("$ledger_path/consumers/active/$a_xid/cancel", {});
 
   {
     $ledger = Moonpig->env->storage
