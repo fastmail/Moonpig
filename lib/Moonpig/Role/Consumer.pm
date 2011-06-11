@@ -27,6 +27,11 @@ implicit_event_handlers {
         method_name => 'create_own_replacement',
       ),
     },
+    'cancel' => {
+      cancel_service => Moonpig::Events::Handler::Method->new(
+        method_name => 'cancel_service',
+      ),
+    },
   };
 };
 
@@ -133,15 +138,21 @@ sub create_own_replacement {
   return;
 }
 
-publish cancel => { -http_method => 'post' } => sub {
+publish handle_cancel => { -http_method => 'post', -path => 'cancel' } => sub {
   my ($self) = @_;
-  if ($self->replacement) {
+  $self->handle_event(event('cancel'));
+  return;
+};
+
+sub cancel_service {
+  my ($self) = @_;
+  if ($self->has_replacement) {
     $self->replacement->expire
   } else {
     $self->replacement_mri(Moonpig::URI->nothing);
   }
   return;
-};
+}
 
 sub amount_in_bank {
   my ($self) = @_;
