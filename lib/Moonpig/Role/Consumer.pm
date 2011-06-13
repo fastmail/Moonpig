@@ -187,6 +187,9 @@ sub is_active {
   $self->ledger->_is_consumer_active($self);
 }
 
+# note that this might be called before the consumer is added to the ledger.
+# So don't expect that $self->ledger->active_consumer_for_xid($self->xid)
+# will return $self here. 20110610 MJD
 sub become_active {
   my ($self) = @_;
 

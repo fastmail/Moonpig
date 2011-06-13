@@ -243,7 +243,6 @@ sub reflect_on_mortality {
 
     # If it has no replacement yet, it should create one
     unless ($self->has_replacement and $remaining_life > 0) {
-      # Otherwise it should create a replacement R
       $self->handle_event(
         event(
           'consumer-create-replacement',
