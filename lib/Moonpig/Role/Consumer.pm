@@ -1,6 +1,10 @@
 package Moonpig::Role::Consumer;
 # ABSTRACT: something that uses up money stored in a bank
 use Moose::Role;
+
+use Stick::Publisher 0.20110324;
+use Stick::Publisher::Publish 0.20110324;
+
 with(
   'Moonpig::Role::CanExpire',
   'Moonpig::Role::HandlesEvents',
@@ -9,7 +13,11 @@ with(
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
   'Stick::Role::PublicResource',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
+
+sub _class_subroute { return }
 
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
@@ -17,6 +25,11 @@ implicit_event_handlers {
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
         method_name => 'create_own_replacement',
+      ),
+    },
+    'cancel' => {
+      cancel_service => Moonpig::Events::Handler::Method->new(
+        method_name => 'cancel_service',
       ),
     },
   };
@@ -125,6 +138,22 @@ sub create_own_replacement {
   return;
 }
 
+publish handle_cancel => { -http_method => 'post', -path => 'cancel' } => sub {
+  my ($self) = @_;
+  $self->handle_event(event('cancel'));
+  return;
+};
+
+sub cancel_service {
+  my ($self) = @_;
+  if ($self->has_replacement) {
+    $self->replacement->expire
+  } else {
+    $self->replacement_mri(Moonpig::URI->nothing);
+  }
+  return;
+}
+
 sub amount_in_bank {
   my ($self) = @_;
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
@@ -158,6 +187,9 @@ sub is_active {
   $self->ledger->_is_consumer_active($self);
 }
 
+# note that this might be called before the consumer is added to the ledger.
+# So don't expect that $self->ledger->active_consumer_for_xid($self->xid)
+# will return $self here. 20110610 MJD
 sub become_active {
   my ($self) = @_;
 

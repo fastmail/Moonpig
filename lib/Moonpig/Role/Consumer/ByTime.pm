@@ -14,6 +14,10 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 
 use Moonpig::Logger '$Logger';
 
+require Stick::Publisher;
+Stick::Publisher->VERSION(0.20110324);
+use Stick::Publisher::Publish 0.20110324;
+
 with(
   'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::StubBuild',
@@ -86,7 +90,7 @@ has last_charge_date => (
 after become_active => sub {
   my ($self) = @_;
 
-  $self->grace_until( Moonpig->env->now  +  days(3) );
+  $self->grace_until( Moonpig->env->now  +  $self->grace_period_duration );
 
   unless ($self->has_last_charge_date) {
     $self->last_charge_date( $self->now() - $self->charge_frequency );
@@ -106,9 +110,7 @@ sub last_charge_exists {
   return defined($self->last_charge_date);
 }
 
-# For a detailed explanation of the logic here, please see the log
-# message for 1780fc0a39313eef5adb9936d76dc994f6fa90cd - 2011-01-13 mjd
-sub expire_date {
+publish expire_date => { } => sub {
   my ($self) = @_;
   my $bank = $self->bank ||
     confess "Can't calculate remaining life for unfunded consumer";
@@ -119,7 +121,7 @@ sub expire_date {
 
   return $self->next_charge_date() +
       $n_charge_periods_left * $self->charge_frequency;
-}
+};
 
 # returns amount of life remaining, in seconds
 sub remaining_life {
@@ -142,6 +144,12 @@ has grace_until => (
   isa => Time,
   clearer   => 'clear_grace_until',
   predicate => 'has_grace_until',
+);
+
+has grace_period_duration => (
+  is  => 'rw',
+  isa => TimeInterval,
+  default => days(3),
 );
 
 sub in_grace_period {
@@ -221,7 +229,7 @@ sub calculate_charge_on {
 }
 
 sub reflect_on_mortality {
-  my ($self, $tick_time) = @_;
+  my ($self) = @_;
 
   return unless $self->has_bank;
 
@@ -229,19 +237,16 @@ sub reflect_on_mortality {
   # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
 
   # if this object does not have long to live...
-  my $remaining_life = $self->remaining_life($tick_time);
+  my $remaining_life = $self->remaining_life();
 
   if ($remaining_life <= $self->old_age) {
 
-    # If it has a replacement R, it should advise R that R will need
-    # to take over soon
-    unless ($self->has_replacement and $remaining_life) {
-      # Otherwise it should create a replacement R
+    # If it has no replacement yet, it should create one
+    unless ($self->has_replacement and $remaining_life > 0) {
       $self->handle_event(
         event(
           'consumer-create-replacement',
           {
-            timestamp => $tick_time,
             mri       => $self->replacement_mri,
           }
         )

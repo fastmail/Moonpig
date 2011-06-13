@@ -4,7 +4,6 @@ package Moonpig::Role::Consumer::Dummy;
 use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);
@@ -18,7 +17,6 @@ with(
 );
 
 use Moonpig::Behavior::EventHandlers;
-use Moonpig::Types qw(Millicents Time TimeInterval);
 
 use namespace::autoclean;
 

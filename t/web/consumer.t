@@ -18,16 +18,6 @@ use strict;
 
 with ('t::lib::Role::UsesStorage');
 
-around run_test => sub {
-  my ($orig) = shift;
-  my ($self) = shift;
-  local $ENV{FAUXBOX_STORAGE_ROOT} =
-    local $ENV{MOONPIG_STORAGE_ROOT} = $self->tempdir;
-#  warn "# Using tempdir $ENV{FAUXBOX_STORAGE_ROOT}\n";
-#  print STDERR "Pausing... ";
-#  my $x = <STDIN>;
-  return $self->$orig(@_);
-};
 
 my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $json = JSON->new;
@@ -79,9 +69,6 @@ sub setup_account {
           template_args => {
             xid         => $a_xid,
             make_active => 1,
-            cost_amount => $price,
-            old_age     => days(2),
-            charge_frequency => days(1),
           },
         };
 
@@ -93,7 +80,7 @@ sub setup_account {
       };
 
       @rv{qw(rfp_guid invoice_guid)} = do {
-        $self->elapse(1);
+        $self->elapse(0.5);
         my $last_rfp = $ua->mp_get("$ledger_path/rfps/last");
         cmp_deeply($last_rfp,
                    { value =>
@@ -130,45 +117,100 @@ sub setup_account {
   return \%rv;
 }
 
-
-test "single payment" => sub {
+test clobber_replacement => sub {
   my ($self) = @_;
+  my ($ledger, $consumer);
 
   my $v1 = $self->setup_account;
-
   my $credit = $ua->mp_post(
     "$ledger_path/credits/accept_payment",
     {
       amount => $price,
       type => 'Simulated',
     });
-  cmp_deeply($credit,
-             { value =>
-                 { amount => $price,
-                   created_at => $date_re,
-                   guid => $guid_re,
-                   type => "Credit::Simulated",
-                   unapplied_amount => dollars(0),
-                 } } );
+  $self->elapse(3);
+
+  $ledger = Moonpig->env->storage
+    ->retrieve_ledger_for_guid($v1->{ledger_guid});
+  $consumer = $ledger->active_consumer_for_xid($a_xid);
+  my $consumer_guid = $consumer->guid;
+
+  ok($consumer->replacement, "account has a replacement");
+  ok($consumer->has_replacement, "account has a replacement (predicate)");
+  isnt($consumer->replacement->guid, $consumer->guid,
+       "replacement is different");
+  ok($consumer->replacement->does("Moonpig::Role::Consumer::ByTime"),
+       "replacement is another ByTime");
+  ok(! $consumer->replacement->bank, "replacement is unfunded");
+  ok(! $consumer->replacement->is_expired, "replacement has not yet expired");
+
+  $ua->mp_post("$ledger_path/consumers/active/$a_xid/cancel", {});
+  $ledger = Moonpig->env->storage
+    ->retrieve_ledger_for_guid($v1->{ledger_guid});
+  $consumer = $ledger->consumer_collection
+    ->find_by_guid({ guid => $consumer_guid });
+
+  ok($consumer->replacement->is_expired, "replacement has expired");
 };
 
 sub elapse {
   my ($self, $days) = @_;
-  $days ||= 1;
-  for (1 .. $days) {
-    $ua->mp_get("/advance_clock/86400");
+  while ($days >= 1) {
+    $ua->mp_get("/advance-clock/86400");
+    $ua->mp_post("$ledger_path/heartbeat", {});
+    $days--;
+  }
+  if ($days > 0) {
+    $ua->mp_get(sprintf "/advance-clock/%d", $days * 86400);
     $ua->mp_post("$ledger_path/heartbeat", {});
   }
 }
 
-sub Dump {
-  my ($what) = @_;
-  my $text = Moonpig::App::Ob::Dumper::Dump($what);
-  $text =~ s/^/# /gm;
-  warn $text;
+test cancel_early => sub {
+  my ($self) = @_;
+  my ($ledger, $consumer);
+
+  my $v1 = $self->setup_account;
+  my $credit = $ua->mp_post(
+    "$ledger_path/credits/accept_payment",
+    {
+      amount => $price,
+      type => 'Simulated',
+    });
+  $self->elapse(1);
+
+  {
+    $ledger = Moonpig->env->storage
+      ->retrieve_ledger_for_guid($v1->{ledger_guid});
+    $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
+    ok(! $consumer->replacement, "account has no replacement yet");
+    isnt($consumer->replacement_mri->as_string, "moonpig://nothing",
+         "replacement MRI is not 'nothing'");
+  }
+
+  $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
+
+  {
+    $ledger = Moonpig->env->storage
+      ->retrieve_ledger_for_guid($v1->{ledger_guid});
+    $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
+    is($consumer->replacement_mri->as_string, "moonpig://nothing",
+       "replacement MRI is NOW 'nothing'");
+  }
+};
+
+sub now {
+  my ($self) = @_;
+  my $res = $ua->mp_get("/time");
+  return $res->{now};
 }
 
 sub username_xid { "test:username:$_[0]" }
+
+sub pause {
+  print STDERR "Pausing... ";
+  my $x = <STDIN>;
+}
 
 run_me;
 done_testing;

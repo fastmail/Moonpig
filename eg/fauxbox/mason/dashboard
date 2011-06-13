@@ -102,6 +102,10 @@ $account
   <% $m->widget->submit({ value => 'Add Premium' }) %>
   </form>
 % }
+<form action='/post/cancel-account' method='post'>
+  <% $m->widget->hidden({ id => 'account.id', value => $account->id }) %>
+  <% $m->widget->submit({ value => 'Cancel' }) %>
+</form>
 </li>
 </%method>
 

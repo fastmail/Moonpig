@@ -36,7 +36,7 @@ sub templates {
       }
     },
 
-    fauxboxtrivial => sub {
+    fauxboxtest => sub {
       my ($name) = @_;
 
       return {
@@ -44,9 +44,12 @@ sub templates {
           qw(Consumer::ByTime Consumer::ByTime::FixedCost)
         ],
         arg   => {
-          cost_period        => days(365),
-          old_age            => days(30),
-          charge_path_prefix => 'fauxbox.basic',
+          cost_amount => dollars(20),
+          cost_period => days(5),
+          old_age     => days(2),
+          charge_frequency => days(1),
+          grace_period_duration => days(1),
+          charge_path_prefix => 'fauxbox.speedy',
           replacement_mri    => "moonpig://consumer-template/$name",
           charge_description => "test charge",
         },

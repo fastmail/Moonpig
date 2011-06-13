@@ -30,6 +30,19 @@ sub was_premium_at {
   return $epoch >= $self->premium_since;
 }
 
+sub xid {
+  my ($self) = @_;
+  sprintf "fauxbox:account:%d", $self->id;
+}
+
+sub consumer_uri {
+  my ($self, $extra) = @_;
+  my $base = sprintf "%s/consumers/xid/%s%s%s",
+    $self->client->ledger_uri, $self->xid;
+  $base .= "/$extra" if defined $extra;
+  return $base;
+}
+
 __PACKAGE__->add_columns(qw( alias fwd ));
 
 __PACKAGE__->set_primary_key('id');
@@ -46,5 +59,7 @@ __PACKAGE__->has_many(
     'foreign.alias' => 'self.alias',
   },
 );
+
+
 
 1;

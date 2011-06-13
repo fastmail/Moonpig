@@ -32,17 +32,6 @@ has last_result => (
   },
 );
 
-sub BUILD {
-  my ($self) = @_;
-  my $st = $self->storage;
-  my @guids = $st->ledger_guids();
-  my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
-  $self->last_result( [ @ledgers ] );
-  $st->_reinstate_stored_time();
-
-  $self->_initial_display(\@guids);
-}
-
 sub _initial_display {
   my ($self, $ledger_guids) = @_;
 
@@ -66,7 +55,7 @@ sub _initial_display {
   if (@$ledger_guids == 0) {
     $self->obwarn("No ledgers in storage\n");
   } elsif (@$ledger_guids == 1) {
-    $self->output("\$it = ledger $$->ledger_guids[0]");
+    $self->output("\$it = ledger $ledger_guids->[0]");
   } else {
     for my $i (0 .. $#$ledger_guids) {
       $self->output(sprintf "\$it[%d] = ledger %s", $i, $ledger_guids->[$i]);
@@ -187,6 +176,13 @@ sub find_command {
 
 sub run {
   my ($self) = @_;
+  my $st = $self->storage;
+  my @guids = $st->ledger_guids();
+  my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
+  $self->last_result( [ @ledgers ] );
+  $st->_reinstate_stored_time();
+  $self->_initial_display(\@guids);
+
   while (defined ($_ = $self->readline)) {
     next unless /\S/;
     $self->do_input($_);
@@ -238,6 +234,31 @@ sub eval {
   eval $expr;
 }
 
+sub parse_ARGV {
+  my ($self, $argv) = @_;
+  my @argv = @$argv;
+  my $BAD = 0;
+  while (@argv) {
+    if ($argv[0] eq '-d') {
+      $ENV{$_} = $argv[1] for qw(FAUXBOX_STORAGE_ROOT MOONPIG_STORAGE_ROOT);
+      splice @argv, 0, 2;
+    } else {
+      $self->obwarn("Unknown option '$argv[0]'\n");
+      shift @argv;
+      $BAD++;
+    }
+  }
+  if ($BAD) {
+    $self->usage();
+    exit 1;
+  }
+  return $self;
+}
+
+sub usage {
+  my ($self) = @_;
+  $self->obwarn("Usage: ob [-d db-dir]\n");
+}
 
 no Moose;
 
