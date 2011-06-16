@@ -4,7 +4,9 @@ use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Consumer
   Millicents PositiveMillicents
+
   Credit
+  Charge
 
   Invoice
 
@@ -59,6 +61,7 @@ coerce Millicents, from Num, via { int };
 coerce PositiveMillicents, from Num, via { int };
 
 role_type Credit, { role => 'Moonpig::Role::Credit' };
+role_type Charge, { role => 'Moonpig::Role::Charge' };
 
 subtype Factory, as Str | Object;
 
