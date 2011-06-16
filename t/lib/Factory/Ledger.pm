@@ -27,6 +27,23 @@ sub test_ledger {
   return $ledger;
 }
 
+sub rnd {
+  my (@items) = @_;
+  return $items[int(rand(1000)) % @items];
+}
+
+sub random_contact {
+  my ($self) = @_;
+  my @first = qw(John Mary William Anna James Margaret George Helen Charles Elizabeth);
+  my @last = qw(Smith Johnson Williams Jones Brown Davis Miller Wilson Moore Taylor);
+  my @names = (rnd(@first), rnd('A' .. 'Z') . ".", rnd(@last));
+  my $inits = join "", map substr($_, 0, 1), @names;
+  return class('Contact')->new({
+    name => join(" ", @names),
+    email_addresses => [ "\L$inits\@example.com" ],
+  });
+}
+
 sub add_bank_to {
   my ($self, $ledger, $args) = @_;
 
