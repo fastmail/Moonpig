@@ -6,6 +6,7 @@ use namespace::autoclean;
 
 use Moonpig;
 
+use List::Util qw(reduce);
 use Moonpig::Types qw(Charge);
 use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(ArrayRef);
@@ -32,9 +33,9 @@ role {
     },
   );
 
-  method add_charge   => sub { ... };
-  method total_amount => sub { ... };
-  method all_charges  => sub { ... };
+  method total_amount => sub {
+    reduce { $a + $b } 0, map { $_->amount } $_[0]->all_charges
+  };
 
   method _objectify_charge => sub {
     my ($self, $input) = @_;

@@ -230,7 +230,6 @@ for my $thing (qw(journal invoice)) {
     Class::MOP::load_class($class);
 
     my $thing = $class->new({
-      charge_tree => class('ChargeTree')->new,
       ledger      => $self,
     });
 
