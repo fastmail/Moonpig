@@ -527,6 +527,54 @@ publish heartbeat => { -http_method => 'post', -path => 'heartbeat' } => sub {
   $self->handle_event( event('heartbeat') );
 };
 
+# merge all my stuff to some other ledger $target
+# XXX what about atomicity?
+sub move_xid_to {
+  my ($self, $xid, $target) = @_;
+  my $cons = $self->active_consumer_for($xid)
+    or croak sprintf "Ledger %s has no active consumer for xid '%s'",
+      $self->guid, $xid;
+  my $amount = $cons->unapplied_amount;
+  Moonpig->env->storage->do_rw(
+    sub {
+      $self->current_journal->charge({
+        description => sprintf("Transferring management of '%s' to ledger %s",
+                               $xid, $target->guid),
+        from        => $cons->bank,
+        to          => $cons,
+        date        => Moonpig->env->now,
+        amount      => $amount,
+        charge_path => $cons->charge_path,
+      });
+      my $credit = $target->add_credit(
+        class('Credit::Transient'),
+        {
+          amount               => $amount,
+          source_bank_guid     => $cons->bank->guid,
+          source_consumer_guid => $cons->guid,
+          source_ledger_guid   => $self->guid,
+        });
+      my $new_cons = $cons->copy_to($target);
+      my $transient_invoice = class("Invoice")->new({
+        charge_tree => class("ChargeTree")->new,
+        ledger      => $target,
+      });
+      my $charge = $transient_invoice->add_charge_at(
+        class('Charge::Bankable')->new({
+          description => sprintf("Transferring management of '%s' from ledger %s",
+                                 $xid, $self->guid),
+          amount      => $amount,
+          consumer    => $new_cons,
+        }),
+        $new_cons->charge_path,
+      );
+      $target->apply_credits_to_invoice__( { credit => $credit,
+                                             amount => $amount },
+                                           $transient_invoice
+                                         );
+    });
+}
+
 sub STICK_PACK {
   my ($self) = @_;
 
