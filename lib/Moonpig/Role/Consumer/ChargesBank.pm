@@ -5,6 +5,7 @@ with(
   'Moonpig::Role::Consumer',
 );
 
+use Moonpig::Trait::Copy;
 use Moonpig::Types qw(ChargePath TimeInterval);
 
 use namespace::autoclean;
@@ -16,6 +17,7 @@ has charge_path_prefix => (
   isa => ChargePath,
   coerce => 1,
   required => 1,
+  traits => [ qw(Copy) ],
 );
 
 sub charge_path {
@@ -30,6 +32,7 @@ has old_age => (
   is => 'ro',
   required => 1,
   isa => TimeInterval,
+  traits => [ qw(Copy) ],
 );
 
 1;

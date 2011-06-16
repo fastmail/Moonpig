@@ -3,8 +3,8 @@ package Moonpig::Role::Consumer::ByTime::FixedCost;
 use Moose::Role;
 
 use Moonpig;
-
 use Moonpig::Logger '$Logger';
+use Moonpig::Trait::Copy;
 use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
@@ -13,6 +13,7 @@ has cost_amount => (
   is => 'ro',
   required => 1,
   isa => PositiveMillicents,
+  traits => [ qw(Copy) ],
 );
 
 sub costs_on {
@@ -24,6 +25,7 @@ has charge_description => (
   is => 'ro',
   isa => 'Str',
   required => 1,
+  traits => [ qw(Copy) ],
 );
 
 with(

@@ -13,6 +13,7 @@ use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
 use Moonpig::Logger '$Logger';
+use Moonpig::Trait::Copy;
 
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
@@ -51,6 +52,7 @@ has charge_frequency => (
   is => 'ro',
   isa     => TimeInterval,
   default => sub { days(1) },
+  traits => [ qw(Copy) ],
 );
 
 # For any given date, what do we think the total costs of ownership for this
@@ -78,6 +80,7 @@ has cost_period => (
    is => 'ro',
    required => 1,
    isa => TimeInterval,
+  traits => [ qw(Copy) ],
 );
 
 # Last time I charged the bank
@@ -85,6 +88,7 @@ has last_charge_date => (
   is   => 'rw',
   isa  => Time,
   predicate => 'has_last_charge_date',
+  traits => [ qw(Copy) ],
 );
 
 after become_active => sub {
@@ -144,12 +148,14 @@ has grace_until => (
   isa => Time,
   clearer   => 'clear_grace_until',
   predicate => 'has_grace_until',
+  traits => [ qw(Copy) ],
 );
 
 has grace_period_duration => (
   is  => 'rw',
   isa => TimeInterval,
   default => days(3),
+  traits => [ qw(Copy) ],
 );
 
 sub in_grace_period {

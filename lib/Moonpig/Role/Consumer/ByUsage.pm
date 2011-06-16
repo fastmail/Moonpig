@@ -5,6 +5,7 @@ use Carp qw(confess croak);
 use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Trait::Copy;
 use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
@@ -33,6 +34,7 @@ has cost_per_unit => (
   is => 'ro',
   isa => PositiveMillicents,
   required => 1,
+  traits => [ qw(Copy) ],
 );
 
 # create a replacement when the available funds are no longer enough
@@ -43,6 +45,7 @@ has low_water_mark => (
   is => 'ro',
   isa => Num,
   predicate => 'has_low_water_mark',
+  traits => [ qw(Copy) ],
 );
 
 # Return hold object on success, false on insuficient funds

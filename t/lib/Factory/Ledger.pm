@@ -10,8 +10,9 @@ use Moonpig::Util -all;
 use namespace::autoclean;
 
 sub test_ledger {
-  my ($self, $class) = @_;
+  my ($self, $class, $args) = @_;
   $class ||= class('Ledger');
+  $args ||= {};
 
   my $contact = class('Contact')->new({
     name => 'J. Fred Bloggs',
@@ -20,6 +21,7 @@ sub test_ledger {
 
   my $ledger = $class->new({
     contact => $contact,
+    %$args,
   });
 
   return $ledger;
@@ -42,7 +44,7 @@ sub add_consumer_to {
   my ($self, $ledger, $args) = @_;
 
   my $consumer = $ledger->add_consumer(
-    class(qw(Consumer::Dummy)),
+    $args->{class} || class(qw(Consumer::Dummy)),
     {
       xid             => 'urn:uuid:' . guid_string,
       make_active     => 1,

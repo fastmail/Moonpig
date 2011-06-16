@@ -4,6 +4,7 @@ use Moose::Role;
 
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
+use Moonpig::Trait::Copy;
 
 with(
   'Moonpig::Role::CanExpire',
@@ -102,6 +103,7 @@ has replacement_mri => (
   isa => MRI,
   required => 1,
   coerce => 1,
+  traits => [ qw(Copy) ],
 );
 
 # XXX this is for testing only; when we figure out replacement semantics
@@ -109,6 +111,7 @@ has is_replaceable => (
   is => 'ro',
   isa => 'Bool',
   default => 1,
+  traits => [ qw(Copy) ],
 );
 
 sub create_own_replacement {
@@ -163,6 +166,7 @@ has xid => (
   is  => 'ro',
   isa => XID,
   required => 1,
+  traits => [ qw(Copy) ],
 );
 
 before expire => sub {
@@ -213,6 +217,19 @@ sub terminate_service {
   ]);
 
   $self->ledger->mark_consumer_inactive__($self);
+}
+
+sub copy_attr_hash__ {
+  my ($self) = @_;
+  my %hash;
+  for my $attr ($self->meta->get_all_attributes) {
+    if ($attr->does("Moose::Meta::Attribute::Custom::Trait::Copy")) {
+      my $name = $attr->name;
+      my $read_method = $attr->get_read_method;
+      $hash{$name} = $self->$read_method();
+    }
+  }
+  return \%hash;
 }
 
 sub STICK_PACK {
