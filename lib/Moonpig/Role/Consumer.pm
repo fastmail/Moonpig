@@ -219,6 +219,25 @@ sub terminate_service {
   $self->ledger->mark_consumer_inactive__($self);
 }
 
+# Create a copy of myself in the specified ledger; return copy
+sub copy_to {
+  my ($self, $target) = @_;
+  my $copy;
+  Moonpig->env->storage->do_rw(
+    sub {
+      $copy = $target->add_consumer(
+        $self->meta->name,
+        $self->copy_attr_hash__
+      );
+      $copy->replacement($self->replacement->copy_to($target))
+        if $self->replacement;
+      $self->move_bank_to($copy);
+      $copy->become_active if $self->is_active;
+      $self->terminate_service;
+    });
+  return $copy;
+}
+
 sub copy_attr_hash__ {
   my ($self) = @_;
   my %hash;
@@ -230,6 +249,52 @@ sub copy_attr_hash__ {
     }
   }
   return \%hash;
+}
+
+sub move_bank_to {
+  my ($self, $new_consumer) = @_;
+  my $amount = $self->unapplied_amount;
+  return if $amount == 0;
+
+  my $ledger = $self->ledger;
+  my $new_ledger = $new_consumer->ledger;
+  Moonpig->env->storage->do_rw(
+    sub {
+      $ledger->current_journal->charge({
+        description => sprintf("Transfer management of '%s' to ledger %s",
+                               $self->xid, $new_ledger->guid),
+        from        => $self->bank,
+        to          => $self,
+        date        => Moonpig->env->now,
+        amount      => $amount,
+        charge_path => $self->charge_path,
+      });
+      my $credit = $new_ledger->add_credit(
+        class('Credit::Transient'),
+        {
+          amount               => $amount,
+          source_bank_guid     => $self->bank->guid,
+          source_consumer_guid => $self->guid,
+          source_ledger_guid   => $ledger->guid,
+        });
+      my $transient_invoice = class("Invoice")->new({
+        charge_tree => class("ChargeTree")->new,
+        ledger      => $new_ledger,
+      });
+      my $charge = $transient_invoice->add_charge_at(
+        class('Charge::Bankable')->new({
+          description => sprintf("Transfer management of '%s' from ledger %s",
+                                 $self->xid, $ledger->guid),
+          amount      => $amount,
+          consumer    => $new_consumer,
+        }),
+        $new_consumer->charge_path,
+       );
+      $new_ledger->apply_credits_to_invoice__( { credit => $credit,
+                                             amount => $amount },
+                                           $transient_invoice
+                                          );
+    });
 }
 
 sub STICK_PACK {
