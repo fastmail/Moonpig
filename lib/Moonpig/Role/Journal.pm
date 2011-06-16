@@ -8,7 +8,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::ChargeTreeContainer' => { charges_handle_events => 0 },
+  'Moonpig::Role::HasCharges' => { charges_handle_events => 0 },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
@@ -45,11 +45,10 @@ sub charge {
     description => $args->{desc},
     amount => $args->{amount},
     date => $args->{when} || Moonpig->env->now(),
+    # tags => [ $args->{charge_tags} ],
   });
 
-  $self->add_charge_at(
-    $charge, $args->{charge_path},
-  );
+  $self->add_charge($charge);
 
   $Logger->log([
     "adding charge at %s for %s",

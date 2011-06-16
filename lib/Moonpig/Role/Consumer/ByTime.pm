@@ -300,13 +300,13 @@ sub _invoice {
   my $iter = natatime 2, @costs;
 
   while (my ($desc, $amt) = $iter->()) {
-    $invoice->add_charge_at(
+    $invoice->add_charge(
       class('Charge::Bankable')->new({
         description => $desc,
         amount      => $amt,
         consumer    => $self,
+        # tags => [ $self->charge_tags ],
       }),
-      $self->charge_path,
     );
   }
 }
