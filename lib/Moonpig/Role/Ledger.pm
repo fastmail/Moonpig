@@ -1,6 +1,8 @@
 package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
+use Carp qw(confess croak);
+use List::Util qw(reduce);
 use Moose::Role;
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
@@ -299,23 +301,39 @@ sub process_credits {
     }
 
     if ($to_pay == 0) {
-      for my $to_apply (@to_apply) {
-        $self->create_transfer({
-          type   => 'credit_application',
-          from   => $to_apply->{credit},
-          to     => $invoice,
-          amount => $to_apply->{amount},
-        });
-      }
-
-      $Logger->log([ "marking %s paid", $invoice->ident ]);
-      $invoice->handle_event(event('paid'));
-      $invoice->mark_paid;
+      $self->apply_credits_to_invoice__( \@to_apply, $invoice );
     } else {
       # We can't successfully pay this invoice, so stop processing.
       return;
     }
   }
+}
+
+# Only call this if you are paying off the complete invoice!
+# $to_apply is an array of { credit => $credit_object, amount => $amount }
+# hashes.
+sub apply_credits_to_invoice__ {
+  my ($self, $to_apply, $invoice) = @_;
+
+  {
+    my $total = reduce { $a + $b } 0, map $_->{amount}, @$to_apply;
+    croak "credit application of $total did not mach invoiced amount of " .
+      $invoice->total_amount
+        unless $invoice->total_amount == $total;
+  }
+
+  for my $application (@$to_apply) {
+    $self->create_transfer({
+      type   => 'credit_application',
+      from   => $application->{credit},
+      to     => $invoice,
+      amount => $application->{amount},
+    });
+  }
+
+  $Logger->log([ "marking %s paid", $invoice->ident ]);
+  $invoice->handle_event(event('paid'));
+  $invoice->mark_paid;
 }
 
 implicit_event_handlers {
