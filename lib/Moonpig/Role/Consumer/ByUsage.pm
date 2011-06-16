@@ -5,7 +5,6 @@ use Carp qw(confess croak);
 use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);

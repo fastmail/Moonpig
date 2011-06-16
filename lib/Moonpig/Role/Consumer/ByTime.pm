@@ -7,7 +7,6 @@ use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
