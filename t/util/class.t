@@ -30,18 +30,18 @@ my @tests = (
       'MC::Consumer::ByTime::FixedCost',
     [ 'remaining_life' ] ],
 
-  [ [ [ ChargeTreeContainer => Bill => { charges_handle_events => 0 } ] ],
+  [ [ [ HasCharges => Bill => { charges_handle_events => 0 } ] ],
       'MC::Bill',
-    [ 'charge_tree' ] ],
+    [ 'all_charges' ] ],
 
-  [ [ 'Consumer::ByTime::FixedCost', [ ChargeTreeContainer => Smitty => { charges_handle_events => 0 } ] ],
+  [ [ 'Consumer::ByTime::FixedCost', [ HasCharges => Smitty => { charges_handle_events => 0 } ] ],
       'MC::Consumer::ByTime::FixedCost::Smitty',
-    [ 'remaining_life', 'charge_tree' ] ],
+    [ 'remaining_life', 'all_charges' ] ],
 
-  [ [ [ ChargeTreeContainer => Smitty => { charges_handle_events => 0 } ],
+  [ [ [ HasCharges => Smitty => { charges_handle_events => 0 } ],
       'Consumer::ByTime::FixedCost' ],
       'MC::Smitty::Consumer_ByTime_FixedCost',
-    [ 'remaining_life', 'charge_tree' ] ],
+    [ 'remaining_life', 'all_charges' ] ],
   );
 
 for my $test (@tests) {
