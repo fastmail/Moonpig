@@ -26,7 +26,7 @@ sub templates {
           cost_amount => dollars(100),
           cost_period => days(365),
           charge_description => 'boring test charge',
-          charge_path_prefix => 'a.b.c',
+          charge_tags        => [ 'a.b.c' ],
 
           # build the uri based on the $name -- rjbs, 2011-02-09
           replacement_mri    => "moonpig://consumer-template/$name",

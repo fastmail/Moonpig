@@ -32,7 +32,7 @@ sub template_like_this {
   return {
     class => $self->meta->name,
     arg   => {
-      charge_path_prefix => $self->charge_path_prefix(),
+      charge_tags        => $self->charge_tags,
       ledger             => $self->ledger(),
       old_age            => $self->old_age(),
       replacement_mri    => $self->replacement_mri(),

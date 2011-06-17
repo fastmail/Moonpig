@@ -196,8 +196,8 @@ sub charge {
         from => $self->bank,
         to   => $self,
         date => $next_charge_date,
-        amount    => $amt,
-        charge_path => $self->charge_path,
+        tags => $self->charge_tags,
+        amount => $amt,
       });
     }
 
@@ -277,7 +277,7 @@ sub template_like_this {
       replacement_mri    => $self->replacement_mri(),
       xid                => $self->xid,
       charge_description => $self->charge_description(),
-      charge_path_prefix => $self->charge_path_prefix(),
+      charge_tags        => $self->charge_tags,
       grace_until        => Moonpig->env->now  +  days(3),
     }
   };
@@ -305,7 +305,7 @@ sub _invoice {
         description => $desc,
         amount      => $amt,
         consumer    => $self,
-        # tags => [ $self->charge_tags ],
+        tags        => $self->charge_tags,
       }),
     );
   }
