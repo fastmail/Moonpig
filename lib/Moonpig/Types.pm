@@ -4,15 +4,15 @@ use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Consumer
   Millicents PositiveMillicents
+
   Credit
+  Charge
 
   Invoice
 
   Event
   EventName EventHandlerName EventHandler
   EventHandlerMap
-
-  ChargePath ChargePathPart ChargePathStr
 
   GUID MRI XID
 
@@ -59,6 +59,7 @@ coerce Millicents, from Num, via { int };
 coerce PositiveMillicents, from Num, via { int };
 
 role_type Credit, { role => 'Moonpig::Role::Credit' };
+role_type Charge, { role => 'Moonpig::Role::Charge' };
 
 subtype Factory, as Str | Object;
 
@@ -86,22 +87,11 @@ subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
 
 ################################################################
 #
-# ChargePath
-
-subtype ChargePathPart, as Str, where { /\A$simple_str_colonchain\z/ };
-subtype ChargePath, as ArrayRef[ ChargePathPart ];
-
-subtype ChargePathStr, as Str, where { /\A$colon_dot_chain\z/ };
-
-coerce ChargePath, from ChargePathStr, via { [ split /\./, $_ ] };
-
-################################################################
-#
 # Tags
 
 # XXX: TagSet should be an actual Set, but MooseX::Types::Set::Object is a pain
 # and I don't feel like fixing it right this second. -- rjbs, 2011-05-23
-subtype Tag, as Str, where { /\A $simple_str \z/x };
+subtype Tag, as Str; # XXX Fix this -- rjbs, 2011-06-17
 subtype TagSet, as ArrayRef[ Tag ];
 
 ################################################################

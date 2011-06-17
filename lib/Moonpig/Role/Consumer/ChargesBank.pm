@@ -5,23 +5,16 @@ with(
   'Moonpig::Role::Consumer',
 );
 
-use Moonpig::Types qw(ChargePath TimeInterval);
+use Moonpig::Types qw(TimeInterval);
+use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;
 
-# the date is appended to this to make the cost path
-# for this consumer's charges
-has charge_path_prefix => (
-  is => 'ro',
-  isa => ChargePath,
-  coerce => 1,
+has charge_tags => (
+  is  => 'ro',
+  isa => ArrayRef,
   required => 1,
 );
-
-sub charge_path {
-  my ($self) = @_;
-  return [ @{ $self->charge_path_prefix }, $self->xid ];
-}
 
 # When the object has less than this long to live, it will
 # start posting low-balance events to its successor, or to itself if

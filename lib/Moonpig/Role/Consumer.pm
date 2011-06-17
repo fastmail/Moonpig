@@ -36,7 +36,7 @@ implicit_event_handlers {
 };
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(ChargePath Ledger Millicents MRI TimeInterval XID);
+use Moonpig::Types qw(Ledger Millicents MRI TimeInterval XID);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';

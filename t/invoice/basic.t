@@ -26,20 +26,20 @@ test charge_close_and_send => sub {
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
-  $invoice->add_charge_at(
+  $invoice->add_charge(
     class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
+      # tags => [ 'test.charges.setup' ],
     }),
-    'test.charges.setup',
   );
 
-  $invoice->add_charge_at(
+  $invoice->add_charge(
     class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (maintenance)',
       amount      => dollars(5),
+      # tags => [ 'test.charges.maintenance' ],
     }),
-    'test.charges.maintenance',
   );
 
   is($invoice->total_amount, dollars(15), "invoice line items tally up");
@@ -81,12 +81,12 @@ test underpayment => sub {
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
-  $invoice->add_charge_at(
+  $invoice->add_charge(
     class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
+      # tags => [ 'test.charges.setup' ],
     }),
-    'test.charges.setup',
   );
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");
@@ -123,12 +123,12 @@ test overpayment  => sub {
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
-  $invoice->add_charge_at(
+  $invoice->add_charge(
     class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
+      # tags => [ 'test.charges.setup' ],
     }),
-    'test.charges.setup',
   );
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");
@@ -171,9 +171,10 @@ test create_bank_on_payment => sub {
     description => 'test charge (maintenance)',
     consumer    => $consumer,
     amount      => dollars(5),
+    # tags => [ 'test.charges.maintenance' ],
   });
 
-  $invoice->add_charge_at($charge, 'test.charges.maintenance');
+  $invoice->add_charge($charge);
 
   $self->heartbeat_and_send_mail($ledger);
 
@@ -206,12 +207,12 @@ test payment_by_two_credits => sub {
   my $paid_h = $self->make_event_handler('t::Test');
   $invoice->register_event_handler('paid', 'default', $paid_h);
 
-  $invoice->add_charge_at(
+  $invoice->add_charge(
     class(qw(Charge::HandlesEvents))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
+      # tags => [ 'test.charges.setup' ],
     }),
-    'test.charges.setup',
   );
 
   is($invoice->total_amount, dollars(10), "invoice line items tally up");

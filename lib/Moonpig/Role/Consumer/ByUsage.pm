@@ -5,7 +5,6 @@ use Carp qw(confess croak);
 use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(Num);
@@ -128,7 +127,7 @@ sub template_like_this {
   return {
     class => $self->meta->name,
     arg   => {
-      charge_path_prefix => $self->charge_path_prefix(),
+      charge_tags        => $self->charge_tags,
       cost_per_unit      => $self->cost_per_unit(),
       ledger             => $self->ledger(),
 
@@ -159,8 +158,8 @@ sub create_charge_for_hold {
     from => $hold->source,
     to   => $self,
     date => $now,
+    tags => $self->charge_tags,
     amount    => $hold->amount,
-    charge_path => $self->charge_path,
   });
   $hold->delete;
 }
