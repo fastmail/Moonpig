@@ -1,10 +1,12 @@
 
 use strict;
+use Moonpig::Env::Test;
 use Moonpig::URI;
-use Moonpig::Util qw(class days dollars cents years);
+use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
+use t::lib::ConsumerTemplateSet::Test;
 
 with qw(t::lib::Factory::Ledger
         t::lib::Role::UsesStorage);
@@ -72,7 +74,27 @@ test with_bank => sub {
 };
 
 test with_replacement => sub {
-  ok(1);
+  my ($self) = @_;
+  my $cons_a = $self->add_consumer_to(
+    $ledger_a,
+    { class => class("Consumer::Dummy"),
+      replacement_mri => "moonpig://consumer-template/boring" });
+  $cons_a->handle_event(
+    event("consumer-create-replacement",
+          { mri => $cons_a->replacement_mri }));
+  ok($cons_a->has_replacement, "consumer now has replacement");
+  my $repl_a = $cons_a->replacement;
+  ok($repl_a->does("Moonpig::Role::Consumer::ByTime"),
+     "replacement is as expected");
+  is($repl_a->xid, $cons_a->xid, "xids match");
+  my $cons_b = $cons_a->copy_to($ledger_b);
+  ok($cons_b->has_replacement, "copy has replacement");
+  my $repl_b = $cons_b->replacement;
+  isnt($repl_a->guid, $repl_b->guid, "copy of replacement is fresh");
+  ok(not ($repl_a->is_active xor $repl_b->is_active),
+     "replacements activations  match");
+  ok($repl_b->does("Moonpig::Role::Consumer::ByTime"),
+     "replacement copy is as expected");
 };
 
 

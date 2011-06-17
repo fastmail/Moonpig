@@ -59,13 +59,15 @@ sub add_bank_to {
 
 sub add_consumer_to {
   my ($self, $ledger, $args) = @_;
+  my $class = delete $args->{class} || class("Consumer::Dummy");
 
   my $consumer = $ledger->add_consumer(
-    $args->{class} || class(qw(Consumer::Dummy)),
+    $class,
     {
       xid             => 'urn:uuid:' . guid_string,
       make_active     => 1,
       replacement_mri => Moonpig::URI->nothing(),
+      %$args,
     },
   );
 
