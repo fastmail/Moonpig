@@ -71,9 +71,6 @@ sub add_consumer_to {
     },
   );
 
-  $consumer->_set_bank($args->{bank})
-    if $args->{bank};
-
   return $consumer;
 }
 

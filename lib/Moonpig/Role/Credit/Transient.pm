@@ -10,6 +10,8 @@ with(
   'Moonpig::Role::Credit',
 );
 
+sub as_string { "transient credit" }
+
 has [qw(source_ledger_guid source_consumer_guid source_bank_guid)] => (
   is => 'ro',
   isa => GUID,

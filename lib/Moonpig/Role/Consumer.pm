@@ -262,7 +262,7 @@ sub move_bank_to {
   Moonpig->env->storage->do_rw(
     sub {
       $ledger->current_journal->charge({
-        description => sprintf("Transfer management of '%s' to ledger %s",
+        desc        => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
         from        => $self->bank,
         to          => $self,
@@ -291,10 +291,10 @@ sub move_bank_to {
         }),
         $new_consumer->charge_path,
        );
-      $new_ledger->apply_credits_to_invoice__( { credit => $credit,
-                                             amount => $amount },
-                                           $transient_invoice
-                                          );
+      $new_ledger->apply_credits_to_invoice__(
+        [{ credit => $credit,
+           amount => $amount }],
+        $transient_invoice);
     });
 }
 

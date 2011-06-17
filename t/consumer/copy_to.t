@@ -70,7 +70,57 @@ test bytime => sub {
 };
 
 test with_bank => sub {
-  ok(1);
+  my ($self) = @_;
+  my $xid = "eat:more:possum";
+
+  my $bank_a = $self->add_bank_to($ledger_a);
+  my $cons_a = $self->add_consumer_to($ledger_a,
+    { class => class("Consumer::ByTime::FixedCost"),
+      bank => $bank_a,
+
+      charge_description => "monkey meat",
+      charge_path_prefix => [ ],
+      cost_amount => cents(1234),
+      cost_period => years(1),
+      old_age => days(3),
+      replacement_mri => Moonpig::URI->nothing,
+      xid => $xid,
+      make_active => 1,
+    });
+  is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
+
+  my $cons_b = $cons_a->copy_to($ledger_b);
+  my $bank_b = $cons_b->bank;
+  ok($bank_b, "bank is in new ledger");
+  isnt($bank_b->guid, $bank_a->guid, "bank was copied");
+
+  is($cons_a->unapplied_amount, 0, "all monies transferred out of cons A");
+  is($cons_b->unapplied_amount, dollars(100),
+     "cons B fully funded");
+
+  my ($xfer_a, $d3) = $ledger_a->accountant->from_bank($bank_a)->all;
+  ok($xfer_a && ! $d3, "found unique bank transfer in source ledger");
+  is($xfer_a->target, $cons_a, "... checked its target");
+  my ($charge_a, $d4) = $ledger_a->current_journal->gather_all_charges;
+  ok($charge_a && ! $d4, "found unique charge on source ledger");
+  like($charge_a->description,
+       qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
+       "...checked its description");
+
+  my ($cred_b, $d1) = $ledger_b->credits;
+  ok($cred_b && ! $d1, "found unique credit in target ledger");
+  is($cred_b->as_string, "transient credit", "...checked its credit type");
+  is($cred_b->amount, dollars(100), "credit amount");
+  my ($xfer_b, $d2) = $ledger_b->accountant->from_credit($cred_b)->all;
+  ok($xfer_b && ! $d2, "found unique credit transfer in target ledger");
+  my ($invoice_b) = $xfer_b->target;
+  ok($invoice_b, "found transient invoice in target ledger");
+  cmp_ok($invoice_b->is_paid, "==", 1, "invoice should be paid");
+  my ($charge_b, $d5) = $invoice_b->gather_all_charges;
+  ok($charge_b && ! $d5, "found unique charge on target invoice from consumer");
+  like($charge_b->description,
+       qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,
+       "...checked its description");
 };
 
 test with_replacement => sub {
