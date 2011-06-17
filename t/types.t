@@ -3,7 +3,7 @@ use warnings;
 
 use Test::More;
 
-use Moonpig::Types qw(ChargePath Millicents Time);
+use Moonpig::Types qw(Millicents Time);
 
 use Scalar::Util qw(refaddr);
 
@@ -12,18 +12,6 @@ use Scalar::Util qw(refaddr);
   my $amt = Millicents->assert_coerce($val);
   is("$amt", "1", "we truncate away fractional amounts");
 }
-
-is_deeply(
-  ChargePath->assert_coerce('foo.bar.baz'),
-  [ qw(foo bar baz) ],
-  "can convert dotted-string to cost path array",
-);
-
-is_deeply(
-  ChargePath->assert_coerce(''),
-  [ ],
-  "can convert empty-tring to (empty) cost path array",
-);
 
 {
   my $datetime = DateTime->now;

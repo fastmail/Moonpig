@@ -1,12 +1,15 @@
-package Moonpig::Role::ChargeTreeContainer;
-# ABSTRACT: something that acts as the head of a cost tree
+package Moonpig::Role::HasCharges;
+# ABSTRACT: something that has a set of charges associated with it
 use MooseX::Role::Parameterized;
 
 use namespace::autoclean;
 
 use Moonpig;
 
+use List::Util qw(reduce);
+use Moonpig::Types qw(Charge);
 use Moonpig::Util qw(class);
+use MooseX::Types::Moose qw(ArrayRef);
 use Stick::Types qw(StickBool);
 use Stick::Util qw(true false);
 
@@ -18,12 +21,21 @@ parameter charges_handle_events => (
 role {
   my $p = shift;
 
-  has charge_tree => (
-    is   => 'ro',
-    does => 'Moonpig::Role::ChargeTree',
-    default  => sub { class('ChargeTree')->new },
-    handles  => [ qw(add_charge_at total_amount gather_all_charges) ],
+  has charges => (
+    is  => 'ro',
+    isa => ArrayRef[ Charge ],
+    init_arg => undef,
+    default  => sub {  []  },
+    traits   => [ 'Array' ],
+    handles  => {
+      all_charges => 'elements',
+      _add_charge => 'push',
+    },
   );
+
+  method total_amount => sub {
+    reduce { $a + $b } 0, map { $_->amount } $_[0]->all_charges
+  };
 
   method _objectify_charge => sub {
     my ($self, $input) = @_;
@@ -32,11 +44,12 @@ role {
     my $class = $p->charges_handle_events
               ? class('Charge::HandlesEvents')
               : class('Charge');
+
     $class->new($input);
   };
 
-  around add_charge_at => sub {
-    my ($orig, $self, $charge_input, $path) = @_;
+  method add_charge => sub {
+    my ($self, $charge_input) = @_;
 
     my $charge = $self->_objectify_charge( $charge_input );
 
@@ -45,7 +58,7 @@ role {
     Moonpig::X->throw("bad charge type")
       if $handles xor $p->charges_handle_events;
 
-    $self->$orig($charge, $path);
+    $self->_add_charge($charge);
 
     return $charge;
   };

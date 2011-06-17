@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::ChargeTreeContainer' => { charges_handle_events => 1 },
+  'Moonpig::Role::HasCharges' => { charges_handle_events => 1 },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
@@ -56,7 +56,7 @@ implicit_event_handlers {
 sub _pay_charges {
   my ($self, $event) = @_;
 
-  $self->charge_tree->apply_to_all_charges(sub { $_->handle_event($event) });
+  $_->handle_event($event) for $self->all_charges;
 }
 
 sub STICK_PACK {

@@ -20,7 +20,7 @@ TOTAL DUE:  {{
       $invoice->total_amount / 100_000,
     );
 
-    for my $charge ($invoice->gather_all_charges) {
+    for my $charge ($invoice->all_charges) {
       $OUT .= sprintf "      %s ... %-60s ... \$%0.2f\n",
         $charge->date, $charge->description, $charge->amount / 100_000;
     }

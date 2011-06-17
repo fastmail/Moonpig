@@ -7,7 +7,6 @@ use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Types qw(ChargePath);
 use Moonpig::Util qw(class days event);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
@@ -203,8 +202,8 @@ sub charge {
         from => $self->bank,
         to   => $self,
         date => $next_charge_date,
-        amount    => $amt,
-        charge_path => $self->charge_path,
+        tags => $self->charge_tags,
+        amount => $amt,
       });
     }
 
@@ -284,7 +283,7 @@ sub template_like_this {
       replacement_mri    => $self->replacement_mri(),
       xid                => $self->xid,
       charge_description => $self->charge_description(),
-      charge_path_prefix => $self->charge_path_prefix(),
+      charge_tags        => $self->charge_tags,
       grace_until        => Moonpig->env->now  +  days(3),
     }
   };
@@ -307,13 +306,13 @@ sub _invoice {
   my $iter = natatime 2, @costs;
 
   while (my ($desc, $amt) = $iter->()) {
-    $invoice->add_charge_at(
+    $invoice->add_charge(
       class('Charge::Bankable')->new({
         description => $desc,
         amount      => $amt,
         consumer    => $self,
+        tags        => $self->charge_tags,
       }),
-      $self->charge_path,
     );
   }
 }

@@ -122,7 +122,7 @@ test commit_hold => sub {
   is($self->consumer->units_remaining, 13, "still 13 left in bank");
   @journals = $self->ledger->journals;
   is(@journals, 1, "now one journal");
-  is($journals[0]->charge_tree->total_amount, cents(35),
+  is($journals[0]->total_amount, cents(35),
      "total charges now \$.35");
 };
 

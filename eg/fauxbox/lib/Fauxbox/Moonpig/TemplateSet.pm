@@ -28,10 +28,10 @@ sub templates {
           qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::BasicAccount)
         ],
         arg   => {
-          cost_period        => days(365),
-          old_age            => days(30),
-          charge_path_prefix => 'fauxbox.basic',
-          replacement_mri    => "moonpig://consumer-template/$name",
+          cost_period     => days(365),
+          old_age         => days(30),
+          charge_tags     => [ 'fauxbox.basic' ],
+          replacement_mri => "moonpig://consumer-template/$name",
         },
       }
     },
@@ -47,9 +47,9 @@ sub templates {
           cost_amount => dollars(20),
           cost_period => days(5),
           old_age     => days(2),
+          charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
-          charge_path_prefix => 'fauxbox.speedy',
           replacement_mri    => "moonpig://consumer-template/$name",
           charge_description => "test charge",
         },

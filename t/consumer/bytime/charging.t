@@ -121,13 +121,12 @@ test "variable charge" => sub {
       {
         # These would come from defaults if this wasn't a weird-o class. --
         # rjbs, 2011-05-17
-        charge_path_prefix => ["test"],
-
-        ledger => $self->ledger,
-        bank => $b,
-        old_age => years(1000),
-        cost_period        => days(1),
-        replacement_mri    => Moonpig::URI->nothing(),
+        charge_tags     => [ "test" ],
+        ledger          => $self->ledger,
+        bank            => $b,
+        old_age         => years(1000),
+        cost_period     => days(1),
+        replacement_mri => Moonpig::URI->nothing(),
     });
 
     $c->clear_grace_until;
