@@ -52,7 +52,7 @@ test bytime => sub {
     my $consumer = $ledger_a->add_consumer(
       class("Consumer::ByTime::FixedCost"),
       { charge_description => "monkey meat",
-        charge_path_prefix => [ ],
+        charge_tags => [ ],
         cost_amount => cents(1234),
         cost_period => years(1),
         old_age => days(3),
@@ -79,7 +79,7 @@ test with_bank => sub {
       bank => $bank_a,
 
       charge_description => "monkey meat",
-      charge_path_prefix => [ ],
+      charge_tags => [ ],
       cost_amount => cents(1234),
       cost_period => years(1),
       old_age => days(3),
@@ -101,7 +101,7 @@ test with_bank => sub {
   my ($xfer_a, $d3) = $ledger_a->accountant->from_bank($bank_a)->all;
   ok($xfer_a && ! $d3, "found unique bank transfer in source ledger");
   is($xfer_a->target, $cons_a, "... checked its target");
-  my ($charge_a, $d4) = $ledger_a->current_journal->gather_all_charges;
+  my ($charge_a, $d4) = $ledger_a->current_journal->all_charges;
   ok($charge_a && ! $d4, "found unique charge on source ledger");
   like($charge_a->description,
        qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
@@ -116,7 +116,7 @@ test with_bank => sub {
   my ($invoice_b) = $xfer_b->target;
   ok($invoice_b, "found transient invoice in target ledger");
   cmp_ok($invoice_b->is_paid, "==", 1, "invoice should be paid");
-  my ($charge_b, $d5) = $invoice_b->gather_all_charges;
+  my ($charge_b, $d5) = $invoice_b->all_charges;
   ok($charge_b && ! $d5, "found unique charge on target invoice from consumer");
   like($charge_b->description,
        qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,

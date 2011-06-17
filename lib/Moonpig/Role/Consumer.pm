@@ -268,7 +268,7 @@ sub move_bank_to {
         to          => $self,
         date        => Moonpig->env->now,
         amount      => $amount,
-        charge_path => $self->charge_path,
+        tags        => [ @{$self->charge_tags}, "transient" ],
       });
       my $credit = $new_ledger->add_credit(
         class('Credit::Transient'),
@@ -279,17 +279,16 @@ sub move_bank_to {
           source_ledger_guid   => $ledger->guid,
         });
       my $transient_invoice = class("Invoice")->new({
-        charge_tree => class("ChargeTree")->new,
-        ledger      => $new_ledger,
+         ledger      => $new_ledger,
       });
-      my $charge = $transient_invoice->add_charge_at(
+      my $charge = $transient_invoice->add_charge(
         class('Charge::Bankable')->new({
           description => sprintf("Transfer management of '%s' from ledger %s",
                                  $self->xid, $ledger->guid),
           amount      => $amount,
           consumer    => $new_consumer,
+          tags        => [ @{$new_consumer->charge_tags}, "transient" ],
         }),
-        $new_consumer->charge_path,
        );
       $new_ledger->apply_credits_to_invoice__(
         [{ credit => $credit,
