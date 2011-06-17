@@ -242,7 +242,8 @@ sub copy_attr_hash__ {
   my ($self) = @_;
   my %hash;
   for my $attr ($self->meta->get_all_attributes) {
-    if ($attr->does("Moose::Meta::Attribute::Custom::Trait::Copy")) {
+    if ($attr->does("Moose::Meta::Attribute::Custom::Trait::Copy")
+          && $attr->has_value($self)) {
       my $name = $attr->name;
       my $read_method = $attr->get_read_method;
       $hash{$name} = $self->$read_method();

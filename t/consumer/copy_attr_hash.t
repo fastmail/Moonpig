@@ -23,25 +23,35 @@ test dummy => sub {
 test by_time => sub {
   my ($self) = @_;
   my $ledger = $self->test_ledger();
-  my $consumer = $ledger->add_consumer(
-    class("Consumer::ByTime::FixedCost"),
-    {
-      xid             => 'urn:uuid:' . guid_string,
-      replacement_mri => Moonpig::URI->nothing(),
-      charge_description => "dummy",
-      charge_path_prefix => [],
-      cost_amount => dollars(1),
-      cost_period => years(1),
-      old_age => years(1),
-    });
 
-  my $h = $consumer->copy_attr_hash__();
-  cmp_deeply([keys %$h],
-             bag(@basic, @charges_bank,
-                 qw(charge_description charge_frequency
-                    cost_amount cost_period
-                    last_charge_date
-                    grace_period_duration grace_until)));
+  for my $make_active (0, 1) {
+    my $test_name = $make_active ? "active consumer" : "inactive consumer";
+
+    my $consumer = $ledger->add_consumer(
+      class("Consumer::ByTime::FixedCost"),
+      {
+        xid             => 'urn:uuid:' . guid_string,
+        replacement_mri => Moonpig::URI->nothing(),
+        charge_description => "dummy",
+        charge_path_prefix => [],
+        cost_amount => dollars(1),
+        cost_period => years(1),
+        old_age => years(1),
+        make_active => $make_active,
+      });
+
+    my $h = $consumer->copy_attr_hash__();
+    cmp_deeply([keys %$h],
+               bag(@basic, @charges_bank,
+                   qw(charge_description charge_frequency
+                      cost_amount cost_period grace_period_duration
+                    ),
+                   $make_active ? qw(grace_until last_charge_date)
+                     : (),
+                  ),
+               $test_name,
+              );
+  }
 };
 
 test byusage => sub {
