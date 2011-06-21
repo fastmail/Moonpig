@@ -50,7 +50,7 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Types qw(Credit Consumer);
+use Moonpig::Types qw(Credit Consumer GUID XID);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
@@ -526,15 +526,18 @@ publish heartbeat => { -http_method => 'post', -path => 'heartbeat' } => sub {
   $self->handle_event( event('heartbeat') );
 };
 
-# merge all my stuff to some other ledger $target
-# XXX what about atomicity?
-sub move_xid_to {
-  my ($self, $xid, $target) = @_;
+# hand off responsibility for this xid to the target ledger
+publish move_xid_to => { -http_method => 'post', -path => 'handoff',
+                         target_ledger => GUID, xid => XID } => sub {
+  my ($self, $args) = @_;
+  my ($xid, $guid) = @{$args}{qw(xid target_ledger)};
+  my $target = Moonpig->env->storage->retrieve_ledger_for_guid($guid)
+    or croak "Can't find any ledger for guid $guid";
   my $cons = $self->active_consumer_for($xid)
     or croak sprintf "Ledger %s has no active consumer for xid '%s'",
       $self->guid, $xid;
-  $cons->copy_to($target);
-}
+  return $cons->copy_to($target);
+};
 
 sub STICK_PACK {
   my ($self) = @_;

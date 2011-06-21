@@ -219,7 +219,12 @@ sub terminate_service {
   $self->ledger->mark_consumer_inactive__($self);
 }
 
-# Create a copy of myself in the specified ledger; return copy
+# Create a copy of myself in the specified ledger; commit suicide,
+# and return the copy.
+# This method is called "copy_to" and not "move_to" by analogy with
+# Unix "cp" (which it is like) and not "mv" (which it is not).  The
+# original consumer object is not merely relinked into the new ledger;
+# it is copied there.
 sub copy_to {
   my ($self, $target) = @_;
   my $copy;
