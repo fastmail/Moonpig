@@ -6,7 +6,6 @@ use Moonpig;
 
 with(
   'Moonpig::Role::HandlesEvents',
-  'Moonpig::Role::TracksTime',
   'Stick::Role::Routable::ClassAndInstance',
 );
 
@@ -20,7 +19,7 @@ use Moonpig::Behavior::EventHandlers;
 use namespace::autoclean;
 
 requires 'register_object';
-
+requires 'now';
 requires 'handle_queue_email';
 
 sub format_guid { return $_[1] }
