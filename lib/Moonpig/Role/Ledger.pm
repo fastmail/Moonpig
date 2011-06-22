@@ -39,6 +39,12 @@ with(
     collection_roles => [ 'CreditExtras' ],
     post_action => 'accept_payment',
    },
+  'Moonpig::Role::HasCollection' => {
+    item => 'invoice',
+    item_roles => [ 'Moonpig::Role::Invoice' ],
+    default_sort_key => 'created_at',
+    is => 'ro',
+   },
   'Stick::Role::PublicResource::GetSelf',
 );
 
@@ -99,7 +105,6 @@ sub _extra_instance_subroute {
     banks => $self->bank_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
-    rfps => $self->rfp_collection,
     credits => $self->credit_collection,
     invoices => $self->invoice_collection,
   );
@@ -258,6 +263,10 @@ sub latest_invoice {
   )[0];
 
   return $latest;
+}
+
+sub invoice_array {
+  [ $_[0]->invoices ]
 }
 
 sub process_credits {
