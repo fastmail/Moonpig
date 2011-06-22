@@ -14,6 +14,7 @@ with(
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
   'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
 );

@@ -44,13 +44,13 @@ with(
 
 use Moose::Util::TypeConstraints;
 use MooseX::SetOnce;
-use MooseX::Types::Moose qw(ArrayRef HashRef);
+use MooseX::Types::Moose qw(ArrayRef HashRef Str);
 
 use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Types qw(Credit Consumer GUID XID);
+use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
@@ -533,10 +533,34 @@ publish move_xid_to => { -http_method => 'post', -path => 'handoff',
   my ($xid, $guid) = @{$args}{qw(xid target_ledger)};
   my $target = Moonpig->env->storage->retrieve_ledger_for_guid($guid)
     or croak "Can't find any ledger for guid $guid";
-  my $cons = $self->active_consumer_for($xid)
+  my $cons = $self->active_consumer_for_xid($xid)
     or croak sprintf "Ledger %s has no active consumer for xid '%s'",
       $self->guid, $xid;
   return $cons->copy_to($target);
+};
+
+# hand off responsibility for this xid to a fresh ledger
+publish split_xid => { -http_method => 'post', -path => 'split',
+                       xid => XID,
+                       contact_name => Str,
+                       contact_email_addresses => EmailAddresses,
+                     } => sub {
+  my ($self, $args) = @_;
+
+  my ($xid) = $args->{xid};
+  my $cons = $self->active_consumer_for_xid($xid)
+    or croak sprintf "Ledger %s has no active consumer for xid '%s'",
+      $self->guid, $xid;
+
+  return Moonpig->env->storage->do_rw(
+    sub {
+      my $contact = class('Contact')->new({
+        name => $args->{contact_name},
+        email_addresses => $args->{contact_email_addresses} });
+      my $target = class('Ledger')->new({ contact => $contact });
+      Moonpig->env->storage->save_ledger($target);
+      return $cons->copy_to($target);
+    });
 };
 
 sub STICK_PACK {
