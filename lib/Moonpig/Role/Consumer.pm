@@ -14,6 +14,7 @@ with(
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::CanTransfer' => { transferer_type => "consumer" },
   'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
 );
@@ -236,9 +237,13 @@ sub copy_to {
       );
       $copy->replacement($self->replacement->copy_to($target))
         if $self->replacement;
-      $self->move_bank_to($copy);
-      $copy->become_active if $self->is_active;
-      $self->terminate_service;
+      $self->move_bank_to__($copy);
+      { # We have to terminate service before activating service, or else the same xid would be
+        # active in both ledgers at once, which is forbidden
+        my $was_active = $self->is_active;
+        $self->terminate_service;
+        $copy->become_active if $was_active;
+      }
     });
   return $copy;
 }
@@ -257,7 +262,12 @@ sub copy_attr_hash__ {
   return \%hash;
 }
 
-sub move_bank_to {
+# "Move" my bank to a different consumer.  This will work even if the
+# consumer is in a different ledger.  It works by entering a charge to
+# my bank for its entire remaining funds, then creating a credit in
+# the recipient consumer's ledger and using the credit to set up a
+# fresh bank for the recipient.
+sub move_bank_to__ {
   my ($self, $new_consumer) = @_;
   my $amount = $self->unapplied_amount;
   return if $amount == 0;
