@@ -16,10 +16,21 @@ has _last_dunning => (
   traits => [ 'Array' ],
   predicate => 'has_ever_dunned',
   handles   => {
-    last_dunned_invoice => [ get => 0 ],
-    last_dunning_time   => [ get => 1 ],
+    last_dunning_time    => [ get => 1 ],
   },
 );
+
+sub last_dunned_invoices {
+  my ($self) = @_;
+  return unless $self->has_ever_dunned;
+  return @{ $self->_last_dunning->[0] };
+}
+
+sub last_dunned_invoice {
+  my ($self) = @_;
+  return unless $self->has_ever_dunned;
+  return $self->_last_dunning->[0][0];
+}
 
 has dunning_frequency => (
   is => 'rw',
@@ -46,10 +57,10 @@ sub perform_dunning {
           and $now - $self->last_dunning_time > $self->dunning_frequency;
   }
 
-  $self->_send_request_for_payment(\@invoices);
+  $self->_send_invoice(\@invoices);
 }
 
-sub _send_request_for_payment {
+sub _send_invoice {
   my ($self, $invoices) = @_;
 
   $_->close for grep { $_->is_open } @$invoices;
@@ -60,10 +71,10 @@ sub _send_request_for_payment {
     $self->ident,
   ]);
 
-  $self->_last_dunning( [ $invoices->[0], Moonpig->env->now ] );
+  $self->_last_dunning( [ $invoices, Moonpig->env->now ] );
 
   $self->handle_event(event('send-mkit', {
-    kit => 'request-for-payment',
+    kit => 'invoice',
     arg => {
       subject => "PAYMENT IS DUE",
 
