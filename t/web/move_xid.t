@@ -122,6 +122,19 @@ test split => sub {
   my $ledger_b_guid = $ua->mp_get("/ledger/xid/$a_xid")->{value}{guid};
   isnt($ledger_b_guid, $ledger_a_guid, "$a_xid is in a different ledger");
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
+  # TODO: check to make sure the new ledger has the right contact info
+
+  note "Splitting nonexistent sservice should fail";
+  isnt( exception {
+    $ua->mp_post(
+      "/ledger/guid/$ledger_a_guid/split",
+      {
+        xid => $a_xid,
+        contact_name => "Mr. Hand",
+        contact_email_addresses => [ "mrhand\@example.com" ],
+      }) },
+    undef,
+    "properly refusing to split out unmanaged xid");
 };
 
 test handoff => sub {
@@ -162,6 +175,17 @@ test handoff => sub {
     });
   ok($result, "web service returns new consumer $result->{value}");
   $self->check_xid($a_xid, $ledger_a_guid, $ledger_b_guid);
+
+  note "Transferring responsibility incorrectly";
+  isnt( exception {
+    $ua->mp_post(
+      "/ledger/guid/$ledger_b_guid/handoff",
+      {
+        xid => $a_xid,
+        target_ledger => $ledger_a_guid,
+      }) },
+    undef,
+    "properly refusing to transfer management of unmanaged xid");
 };
 
 sub elapse {
@@ -197,6 +221,5 @@ sub Dump {
   warn $text;
 }
 
-warn "################################################################\n";
 run_me;
 done_testing;
