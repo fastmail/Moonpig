@@ -168,9 +168,9 @@ sub do_ro {
 
 has _ledger_queue => (
   is  => 'ro',
-  isa => 'HashRef',
+  isa => 'ArrayRef',
   init_arg => undef,
-  default  => sub {  {}  },
+  default  => sub {  []  },
 );
 
 sub queue_job {
@@ -278,7 +278,7 @@ sub save_ledger {
   # -- rjbs, 2011-04-11
   if ($self->_has_update_mode) {
     if ($self->_in_update_mode) {
-      $self->_ledger_queue->{ $ledger->guid } = $ledger;
+      $self->_queue_changed_ledger($ledger);
     } else {
       Moonpig::X->throw("save ledger inside read-only transaction");
     }
@@ -287,15 +287,24 @@ sub save_ledger {
   }
 }
 
+sub _queue_changed_ledger {
+  my ($self, $ledger) = @_;
+  my $q = $self->_ledger_queue;
+  # put the new ledger at the end
+  # if it was in there already, remove it and put it at the end
+  @$q = grep { $_->guid ne $ledger->guid } @$q;
+  push @$q, $ledger;
+}
+
 sub _execute_saves {
   my ($self) = @_;
 
   $self->txn(sub {
-    for my $guid (keys %{ $self->_ledger_queue }) {
-      my $ledger = delete $self->_ledger_queue->{ $guid };
+    for my $ledger (@{ $self->_ledger_queue }) {
       $self->_store_ledger($ledger);
     }
   });
+  @{ $self->_ledger_queue } = ();
 }
 
 sub _store_ledger {
