@@ -54,7 +54,7 @@ sub perform_dunning {
   if ($self->has_ever_dunned) {
     my $now = Moonpig->env->now;
     return if $self->last_dunned_invoice->guid eq $invoices[0]->guid
-          and $now - $self->last_dunning_time > $self->dunning_frequency;
+          and $now - $self->last_dunning_time <= $self->dunning_frequency;
   }
 
   $self->_send_invoice(\@invoices);
