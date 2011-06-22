@@ -42,6 +42,7 @@ with(
   'Moonpig::Role::HasCollection' => {
     item => 'invoice',
     item_roles => [ 'Moonpig::Role::Invoice' ],
+    collection_roles => [ 'InvoiceExtras' ],
     default_sort_key => 'created_at',
     is => 'ro',
    },
