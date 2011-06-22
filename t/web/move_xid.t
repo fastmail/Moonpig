@@ -124,6 +124,46 @@ test split => sub {
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
 };
 
+test handoff => sub {
+  my ($self) = @_;
+  my ($ledger, $consumer);
+
+  my $v1 = $self->setup_account;
+  my $ledger_a_guid = $v1->{ledger_guid};
+  my $cons_a_guid = $v1->{account_guid};
+  my $result;
+
+  $self->check_xid($a_xid, $ledger_a_guid);
+  my $ledger_b_guid = do {
+    my $result = $ua->mp_post(
+      '/ledgers',
+      { name => "Ted 'Theodore' Logan",
+        email_addresses => [ 'ttl@example.com' ],
+      });
+    $result->{value}{guid};
+  };
+
+  note "Transferring responsibility for $a_xid to ledger $ledger_b_guid\n";
+  $result = $ua->mp_post(
+    "/ledger/guid/$ledger_a_guid/handoff",
+    {
+      xid => $a_xid,
+      target_ledger => $ledger_b_guid,
+    });
+  ok($result, "web service returns new consumer $result->{value}");
+  $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
+
+  note "Transferring responsibility back";
+  $result = $ua->mp_post(
+    "/ledger/guid/$ledger_b_guid/handoff",
+    {
+      xid => $a_xid,
+      target_ledger => $ledger_a_guid,
+    });
+  ok($result, "web service returns new consumer $result->{value}");
+  $self->check_xid($a_xid, $ledger_a_guid, $ledger_b_guid);
+};
+
 sub elapse {
   my ($self, $days) = @_;
   while ($days >= 1) {
