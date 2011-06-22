@@ -59,7 +59,8 @@ sub setup_account {
                        {
                          active_xids => { $u_xid => $guid_re },
                          guid => $guid_re
-                        } } );
+                        } },
+                   "Created ledger");
         $result->{value}{guid};
       };
       $ledger_path = sprintf "/ledger/guid/%s", $rv{ledger_guid};
@@ -75,13 +76,28 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, { value => $guid_re });
+        cmp_deeply($result, { value => $guid_re }, "added consumer");
 
         $result->{value};
       };
     };
 
   return \%rv;
+}
+
+sub check_xid {
+  my ($self, $xid, $here, $not_here) = @_;
+  # $here and $not_here are guids of ledgers in which the specified $xid
+  # should be found, and should NOT be found, respectively.
+  # $not_here may be undef, in which case those tests are skipped.
+
+  isnt($ua->mp_get("/ledger/guid/$here/consumers/active/$xid"), undef,
+       "$xid consumer in expected ledger");
+  is($ua->mp_get("/ledger/xid/$xid")->{value}{guid}, $here, "ledger for $xid as expected");
+  if (defined $not_here) {
+    is($ua->mp_get("/ledger/guid/$not_here/consumers/active/$xid"), undef,
+       "$xid absent from other ledger");
+  }
 }
 
 test split => sub {
@@ -91,26 +107,21 @@ test split => sub {
   my $v1 = $self->setup_account;
   my $ledger_a_guid = $v1->{ledger_guid};
   my $cons_a_guid = $v1->{account_guid};
-  isnt($ua->mp_get("/ledger/guid/$ledger_a_guid"), undef, "found original ledger");
-  isnt($ua->mp_get("$ledger_path/consumers/active/$a_xid"), undef, "$a_xid in original ledger");
-  is($ua->mp_get("/ledger/xid/$a_xid")->{value}{guid}, $ledger_a_guid, "$a_xid in original ledger");
 
-  my $new_consumer = $ua->mp_post(
+  $self->check_xid($a_xid, $ledger_a_guid);
+
+  note "Splitting responsibility for $a_xid to new ledger\n";
+  my $result = $ua->mp_post(
     "$ledger_path/split",
     {
       xid => $a_xid,
       contact_name => "Bill S. Preston",
       contact_email_addresses => [ "bspesq\@example.com" ],
     });
-  ok($new_consumer);
-  my $new_consumer_guid = $new_consumer->{value};
-
-  is($ua->mp_get("$ledger_path/consumers/active/$a_xid"), undef,
-     "$a_xid no longer in original ledger");
+  ok($result, "web service returns new consumer $result->{value}");
   my $ledger_b_guid = $ua->mp_get("/ledger/xid/$a_xid")->{value}{guid};
-  isnt($ledger_b_guid, $ledger_a_guid, "$a_xid no longer in original ledger");
-  isnt($ua->mp_get("/ledger/guid/$ledger_b_guid/consumers/active/$a_xid"), undef,
-       "$a_xid found in new ledger");
+  isnt($ledger_b_guid, $ledger_a_guid, "$a_xid is in a different ledger");
+  $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
 };
 
 sub elapse {
