@@ -1,3 +1,5 @@
+use Test::Routine;
+use Test::Routine::Util '-all';
 
 use JSON;
 use Moonpig::App::Ob::Dumper qw();
@@ -8,16 +10,11 @@ use Moonpig::Web::App;
 use Plack::Test;
 use Test::Deep qw(cmp_deeply re);
 use Test::More;
-use Test::Routine;
-use Test::Routine::Util '-all';
 
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 
-use strict;
-
 with ('t::lib::Role::UsesStorage');
-
 
 my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $json = JSON->new;
