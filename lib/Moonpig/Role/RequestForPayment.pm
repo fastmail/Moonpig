@@ -9,7 +9,7 @@ with(
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::HasGuid',
   'Stick::Role::PublicResource::GetSelf',
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'invoice',
     item_roles => [ 'Moonpig::Role::Invoice' ],
     is => 'ro',

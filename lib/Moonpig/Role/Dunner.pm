@@ -23,7 +23,7 @@ has rfp_history => (
 );
 
 # We can't provide these in the rpf_history attribute declaration
-# because they need to be in place before the the with HasCollections
+# because they need to be in place before the the with HasCollection
 # declaration below, and rfp_history is not constructed until role
 # composition time. 20110503 mjd
 sub rfp_array { shift()->rfp_history(@_) }
@@ -33,12 +33,12 @@ sub add_this_rfp {
 }
 
 with(
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'rfp',
     item_roles => [ 'Moonpig::Role::RequestForPayment' ],
     default_sort_key => 'sent_at',
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'invoice',
     item_roles => [ 'Moonpig::Role::Invoice' ],
     default_sort_key => 'created_at',

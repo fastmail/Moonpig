@@ -19,21 +19,21 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'refund',
     item_roles => [ 'Moonpig::Role::Refund' ],
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
     collection_roles => [ 'ConsumerExtras' ],
     post_action => 'add_from_template',
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'credit',
     item_roles => [ 'Moonpig::Role::Credit' ],
     collection_roles => [ 'CreditExtras' ],
