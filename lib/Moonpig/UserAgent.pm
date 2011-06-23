@@ -73,7 +73,10 @@ sub mp_request {
 
   # eventually there should be exceptions here for all 2xx codes
   unless ($res->code == 200) {
-    die "unexpected response from moonpig:\n" . $res->as_string;
+    my $error = sprintf "unexpected response from Moonpig:\n"
+                      . "request : %s %s\n"
+                      . "response: \n%s", uc $method, $target, $res->as_string;
+    die $error;
   }
 
   return $self->decode($res->content);
