@@ -189,7 +189,7 @@ test cancel_early => sub {
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
     is($consumer->replacement_mri->as_string, "moonpig://nothing",
-       "replacement MRI is NOW 'nothing'");
+       "replacement MRI has been changed to 'nothing'");
   }
 };
 
