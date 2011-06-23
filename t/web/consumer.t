@@ -8,7 +8,7 @@ use Moonpig::UserAgent;
 use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep qw(cmp_deeply re);
+use Test::Deep qw(cmp_deeply re bool);
 use Test::More;
 
 use lib 'eg/fauxbox/lib';
@@ -71,45 +71,42 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, { value => $guid_re });
+        cmp_deeply($result, { value => $guid_re }, "ledger has one consumer");
 
         $result->{value};
       };
 
-      @rv{qw(rfp_guid invoice_guid)} = do {
-        $self->elapse(0.5);
-        my $last_rfp = $ua->mp_get("$ledger_path/rfps/last");
-        cmp_deeply($last_rfp,
-                   { value =>
-                       { guid => $guid_re,
-                         invoices => [ $guid_re ],
-                         sent_at => $date_re,
-                       } } );
+      $self->elapse(0.5);
 
-        my $rfp_guid = $last_rfp->{value}{guid};
-        my $invoice_guid = $last_rfp->{value}{invoices}[0];
+      my $invoices = $ua->mp_get("$ledger_path/invoices/unpaid");
 
-        my $invoice_c = $ua->mp_get("$ledger_path/rfps/last/invoices");
-        cmp_deeply($invoice_c,
-                   { value =>
-                       { items => [ $invoice_guid ],
-                         owner => $rfp_guid,
-                         what => "InvoiceCollection"
-                        } } );
+      cmp_deeply(
+        $invoices,
+        {
+          value => [
+            {
+              date => $date_re,
+              guid => $guid_re,
+              is_paid   => bool(0),
+              is_closed => bool(1),
+              total_amount => dollars(20),
+            },
+          ],
+        },
+        "there is one unpaid invoice -- what we expect",
+      );
 
-        my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
-        cmp_deeply($invoice,
-                   { value =>
-                       { date => $date_re,
-                         guid => $invoice_guid,
-                         is_closed => $JSON::XS::true,
-                         is_paid => $JSON::XS::false,
-                         total_amount => $price,
-                       } } );
-
-        ($rfp_guid, $invoice_guid);
-      };
-    };
+      my $invoice_guid = $invoices->{value}[0]{guid};
+      my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
+      cmp_deeply($invoice,
+                 { value =>
+                     { date => $date_re,
+                       guid => $invoice_guid,
+                       is_closed => $JSON::XS::true,
+                       is_paid => $JSON::XS::false,
+                       total_amount => $price,
+                     } } );
+  };
 
   return \%rv;
 }
