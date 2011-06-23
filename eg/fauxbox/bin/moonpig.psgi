@@ -22,8 +22,8 @@ $null->add_callback(sub {
 });
 $Logger->dispatcher->add($null);
 
-unless (exists $ENV{MOONPIG_STORAGE_ROOT}) {
-  $ENV{MOONPIG_STORAGE_ROOT} = 'eg/fauxbox/var';
+for (map {; "$_\_STORAGE_ROOT" } qw(MOONPIG FAUXBOX)) {
+  $ENV{$_} = 'eg/fauxbox/var' unless exists $ENV{$_};
 }
 my $root = $ENV{MOONPIG_STORAGE_ROOT};
 
