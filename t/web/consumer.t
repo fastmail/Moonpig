@@ -89,7 +89,7 @@ sub setup_account {
               guid => $guid_re,
               is_paid   => bool(0),
               is_closed => bool(1),
-              total_amount => dollars(20),
+              total_amount => $price,
             },
           ],
         },
