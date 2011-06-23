@@ -19,25 +19,32 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'refund',
     item_roles => [ 'Moonpig::Role::Refund' ],
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
     collection_roles => [ 'ConsumerExtras' ],
     post_action => 'add_from_template',
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
    },
-  'Moonpig::Role::HasCollections' => {
+  'Moonpig::Role::HasCollection' => {
     item => 'credit',
     item_roles => [ 'Moonpig::Role::Credit' ],
     collection_roles => [ 'CreditExtras' ],
     post_action => 'accept_payment',
+   },
+  'Moonpig::Role::HasCollection' => {
+    item => 'invoice',
+    item_roles => [ 'Moonpig::Role::Invoice' ],
+    collection_roles => [ 'InvoiceExtras' ],
+    default_sort_key => 'created_at',
+    is => 'ro',
    },
   'Stick::Role::PublicResource::GetSelf',
 );
@@ -99,7 +106,6 @@ sub _extra_instance_subroute {
     banks => $self->bank_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
-    rfps => $self->rfp_collection,
     credits => $self->credit_collection,
     invoices => $self->invoice_collection,
   );
@@ -258,6 +264,10 @@ sub latest_invoice {
   )[0];
 
   return $latest;
+}
+
+sub invoice_array {
+  [ $_[0]->invoices ]
 }
 
 sub process_credits {

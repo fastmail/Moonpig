@@ -9,42 +9,28 @@ use Moonpig::Util qw(days);
 
 use namespace::autoclean;
 
-has rfp_history => (
-  is => 'ro',
+has _last_dunning => (
+  is  => 'rw',
   isa => 'ArrayRef',
-  default => sub { [] },
   init_arg => undef,
   traits => [ 'Array' ],
-  handles => {
-    has_last_request_for_payment => 'count',
-    last_request_for_payment => [ get => -1 ],
-    last_rfp => [ get => -1 ],
+  predicate => 'has_ever_dunned',
+  handles   => {
+    last_dunning_time    => [ get => 1 ],
   },
 );
 
-# We can't provide these in the rpf_history attribute declaration
-# because they need to be in place before the the with HasCollections
-# declaration below, and rfp_history is not constructed until role
-# composition time. 20110503 mjd
-sub rfp_array { shift()->rfp_history(@_) }
-sub add_this_rfp {
-  my ($self, $rfp) = @_;
-  push @{$self->rfp_history}, $rfp;
+sub last_dunned_invoices {
+  my ($self) = @_;
+  return unless $self->has_ever_dunned;
+  return @{ $self->_last_dunning->[0] };
 }
 
-with(
-  'Moonpig::Role::HasCollections' => {
-    item => 'rfp',
-    item_roles => [ 'Moonpig::Role::RequestForPayment' ],
-    default_sort_key => 'sent_at',
-   },
-  'Moonpig::Role::HasCollections' => {
-    item => 'invoice',
-    item_roles => [ 'Moonpig::Role::Invoice' ],
-    default_sort_key => 'created_at',
-    is => 'ro',
-   },
-);
+sub last_dunned_invoice {
+  my ($self) = @_;
+  return unless $self->has_ever_dunned;
+  return $self->_last_dunning->[0][0];
+}
 
 has dunning_frequency => (
   is => 'rw',
@@ -63,20 +49,18 @@ sub perform_dunning {
 
   return unless @invoices;
 
-  if ($self->has_last_request_for_payment) {
-    my $rfp = $self->last_request_for_payment;
-
-    if ($rfp->latest_invoice->guid eq $invoices[0]->guid) {
-      my $ago = Moonpig->env->now - $rfp->sent_at;
-
-      return unless $ago > $self->dunning_frequency;
-    }
+  # Don't send a request for payment if we sent the last request recently and
+  # there has been no invoicing since then. -- rjbs, 2011-06-22
+  if ($self->has_ever_dunned) {
+    my $now = Moonpig->env->now;
+    return if $self->last_dunned_invoice->guid eq $invoices[0]->guid
+          and $now - $self->last_dunning_time <= $self->dunning_frequency;
   }
 
-  $self->_send_request_for_payment(\@invoices);
+  $self->_send_invoice(\@invoices);
 }
 
-sub _send_request_for_payment {
+sub _send_invoice {
   my ($self, $invoices) = @_;
 
   $_->close for grep { $_->is_open } @$invoices;
@@ -87,28 +71,19 @@ sub _send_request_for_payment {
     $self->ident,
   ]);
 
-  my $rfp = class(qw(RequestForPayment))->new({
-    invoices => $invoices,
-  });
-
-  $self->add_this_rfp($rfp);
+  $self->_last_dunning( [ $invoices, Moonpig->env->now ] );
 
   $self->handle_event(event('send-mkit', {
-    kit => 'request-for-payment',
+    kit => 'invoice',
     arg => {
       subject => "PAYMENT IS DUE",
 
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
-      request      => $rfp,
+      invoices     => $invoices,
     },
   }));
-}
-
-sub invoice_array {
-  my ($self) = @_;
-  [ map $_->invoices, @{$self->rfp_collection->items} ]
 }
 
 1;

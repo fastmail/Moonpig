@@ -47,17 +47,13 @@ $client
 $ledger_path
 </%args>
 <%perl>
-my $last_rfp = $m->mp_request(GET => "$ledger_path/rfps/last");
-my $invoice_c = $m->mp_request(GET => "$ledger_path/rfps/last/invoices");
-my @invoice_guids = @{$invoice_c->{value}{items} || []};
+my $invoices = $m->mp_request(GET => "$ledger_path/invoices/unpaid");
+my @invoice_guids = map {; $_->{guid} } @{$invoices->{value} || []};
 # my $total = reduce {$a+$b}, 0, map { $_->total_amount } $last_rfp->invoices;
 # return unless $last_rfp and $total > 0;
 </%perl>
 
-<h2>last_rfp</h2>
-<pre><% Dump($last_rfp) | h %></pre>
-
-<h2>invoices</h2>
+<h2>unpaid invoices</h2>
 % for my $inv_guid (@invoice_guids) {
 %   my $invoice = $m->mp_request(GET => "$ledger_path/invoices/guid/$inv_guid");
 <h3><% $inv_guid %></h3>

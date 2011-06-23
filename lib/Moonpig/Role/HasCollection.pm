@@ -1,4 +1,4 @@
-package Moonpig::Role::HasCollections;
+package Moonpig::Role::HasCollection;
 use Moonpig::Util qw(class);
 use Moonpig::Types qw(Factory);
 use MooseX::Role::Parameterized;

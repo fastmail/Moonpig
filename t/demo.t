@@ -60,11 +60,11 @@ sub pay_any_open_invoice {
     grep { ! $_->is_open and ! $_->is_paid } $ledger->invoices
   ) {
     # There are unpaid invoices!
-    my $last_rfp = $ledger->last_request_for_payment;
+    my @invoices = $ledger->last_dunned_invoices;
 
     # 4. pay and apply payment to invoice
 
-    my $total = sum map { $_->total_amount } $last_rfp->invoices;
+    my $total = sum map { $_->total_amount } @invoices;
 
     $ledger->add_credit(
       class(qw(Credit::Simulated)),

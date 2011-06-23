@@ -1,10 +1,10 @@
-REQUEST ID: {{ $request->guid }}
+REQUEST ID: ...
 
 TOTAL DUE:  {{
   require List::Util;
   my $total = List::Util::reduce(
     sub { $a + $b },
-    0, map { $_->total_amount } $request->invoices
+    0, map { $_->total_amount } @invoices
   );
 
   sprintf '$%0.2f', $total / 100_000;
@@ -12,7 +12,7 @@ TOTAL DUE:  {{
 
 {{
   my $x = 0;
-  for my $invoice (grep {; ! $_->is_paid } $request->invoices) {
+  for my $invoice (grep {; ! $_->is_paid } @invoices) {
     $x++;
     $OUT .= sprintf(
       "\n    Line %3s: \$%0.2f\n",
