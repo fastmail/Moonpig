@@ -305,15 +305,21 @@ sub _invoice {
 
   my $iter = natatime 2, @costs;
 
+  my $made_bankable = 0;
+
   while (my ($desc, $amt) = $iter->()) {
+    my $role = $made_bankable ? 'Charge::HandlesEvents' : 'Charge::Bankable';
+
     $invoice->add_charge(
-      class('Charge::Bankable')->new({
+      class( $role )->new({
         description => $desc,
         amount      => $amt,
-        consumer    => $self,
         tags        => $self->charge_tags,
+        (! $made_bankable ? (consumer    => $self) : ()),
       }),
     );
+
+    $made_bankable++;
   }
 }
 
