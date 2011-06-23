@@ -308,7 +308,7 @@ sub _invoice {
   my $made_bankable = 0;
 
   while (my ($desc, $amt) = $iter->()) {
-    my $role = $made_bankable ? 'Charge::HandlesEvents' : 'Charge::Bankable';
+    my $role = $made_bankable ?  'InvoiceCharge' : 'InvoiceCharge::Bankable';
 
     $invoice->add_charge(
       class( $role )->new({

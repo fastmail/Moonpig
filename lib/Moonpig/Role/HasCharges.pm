@@ -7,14 +7,15 @@ use namespace::autoclean;
 use Moonpig;
 
 use List::Util qw(reduce);
-use Moonpig::Types qw(Charge);
+use Moonpig::Types;
 use Moonpig::Util qw(class);
+use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
 use Stick::Types qw(StickBool);
 use Stick::Util qw(true false);
 
-parameter charges_handle_events => (
-  isa      => 'Bool',
+parameter charge_role => (
+  isa      => enum([qw(InvoiceCharge JournalCharge)]),
   required => 1,
 );
 
@@ -23,7 +24,7 @@ role {
 
   has charges => (
     is  => 'ro',
-    isa => ArrayRef[ Charge ],
+    isa => ArrayRef[ "Moonpig::Types::" . $p->charge_role ],
     init_arg => undef,
     default  => sub {  []  },
     traits   => [ 'Array' ],
@@ -41,9 +42,7 @@ role {
     my ($self, $input) = @_;
     return $input if blessed $input;
 
-    my $class = $p->charges_handle_events
-              ? class('Charge::HandlesEvents')
-              : class('Charge');
+    my $class = class( $p->charge_role );
 
     $class->new($input);
   };
@@ -53,10 +52,8 @@ role {
 
     my $charge = $self->_objectify_charge( $charge_input );
 
-    my $handles = $charge->does('Moonpig::Role::HandlesEvents');
-
     Moonpig::X->throw("bad charge type")
-      if $handles xor $p->charges_handle_events;
+      unless $charge->does( 'Moonpig::Role::' . $p->charge_role );
 
     $self->_add_charge($charge);
 

@@ -8,7 +8,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::HasCharges' => { charges_handle_events => 0 },
+  'Moonpig::Role::HasCharges' => { charge_role => 'JournalCharge' },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
@@ -60,7 +60,7 @@ sub charge {
 }
 
 sub charge_factory {
-  class('Charge');
+  class('JournalCharge');
 }
 
 1;

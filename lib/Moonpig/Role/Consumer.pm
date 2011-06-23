@@ -297,7 +297,7 @@ sub move_bank_to__ {
          ledger      => $new_ledger,
       });
       my $charge = $transient_invoice->add_charge(
-        class('Charge::Bankable')->new({
+        class('InvoiceCharge::Bankable')->new({
           description => sprintf("Transfer management of '%s' from ledger %s",
                                  $self->xid, $ledger->guid),
           amount      => $amount,

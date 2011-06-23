@@ -6,9 +6,9 @@ use MooseX::Types -declare => [ qw(
   Millicents PositiveMillicents
 
   Credit
-  Charge
 
-  Invoice
+  Invoice InvoiceCharge
+  Journal JournalCharge
 
   Event
   EventName EventHandlerName EventHandler
@@ -49,6 +49,10 @@ role_type Ledger, { role => 'Moonpig::Role::Ledger' };
 role_type Consumer, { role => 'Moonpig::Role::Consumer' };
 
 role_type Invoice, { role => 'Moonpig::Role::Invoice' };
+role_type InvoiceCharge, { role => 'Moonpig::Role::InvoiceCharge' };
+
+role_type Journal, { role => 'Moonpig::Role::Journal' };
+role_type JournalCharge, { role => 'Moonpig::Role::JournalCharge' };
 
 subtype PositiveInt, as Int, where { $_ > 0 };
 
@@ -59,7 +63,6 @@ coerce Millicents, from Num, via { int };
 coerce PositiveMillicents, from Num, via { int };
 
 role_type Credit, { role => 'Moonpig::Role::Credit' };
-role_type Charge, { role => 'Moonpig::Role::Charge' };
 
 subtype Factory, as Str | Object;
 

@@ -30,15 +30,15 @@ my @tests = (
       'MC::Consumer::ByTime::FixedCost',
     [ 'remaining_life' ] ],
 
-  [ [ [ HasCharges => Bill => { charges_handle_events => 0 } ] ],
+  [ [ [ HasCharges => Bill => { charge_role => 'InvoiceCharge' } ] ],
       'MC::Bill',
     [ 'all_charges' ] ],
 
-  [ [ 'Consumer::ByTime::FixedCost', [ HasCharges => Smitty => { charges_handle_events => 0 } ] ],
+  [ [ 'Consumer::ByTime::FixedCost', [ HasCharges => Smitty => { charge_role => 'InvoiceCharge' } ] ],
       'MC::Consumer::ByTime::FixedCost::Smitty',
     [ 'remaining_life', 'all_charges' ] ],
 
-  [ [ [ HasCharges => Smitty => { charges_handle_events => 0 } ],
+  [ [ [ HasCharges => Smitty => { charge_role => 'InvoiceCharge' } ],
       'Consumer::ByTime::FixedCost' ],
       'MC::Smitty::Consumer_ByTime_FixedCost',
     [ 'remaining_life', 'all_charges' ] ],

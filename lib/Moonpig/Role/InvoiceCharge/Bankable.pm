@@ -1,10 +1,9 @@
-package Moonpig::Role::Charge::Bankable;
+package Moonpig::Role::InvoiceCharge::Bankable;
 # ABSTRACT: a charge that, when paid, creates a bank for the paid amount
 use Moose::Role;
 
 with(
-  'Moonpig::Role::Charge',
-  'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::InvoiceCharge',
 );
 
 use Moonpig::Behavior::EventHandlers;

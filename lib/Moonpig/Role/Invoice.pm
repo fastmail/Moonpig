@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::HasCharges' => { charges_handle_events => 1 },
+  'Moonpig::Role::HasCharges' => { charge_role => 'InvoiceCharge' },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
