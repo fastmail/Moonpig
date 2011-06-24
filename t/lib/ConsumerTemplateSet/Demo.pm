@@ -13,9 +13,9 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedCost' ],
+        roles => [ '=t::lib::Role::Consumer::ByTime::NFixedCosts' ],
         arg   => {
-          cost_amount        => dollars(50),
+          cost_amounts       => [ dollars(40), dollars(10) ],
           cost_period        => days(365),
           charge_frequency   => days(7), # less frequent to make logs simpler
           charge_description => 'yoyodyne service',
