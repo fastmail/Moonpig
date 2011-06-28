@@ -102,12 +102,7 @@ sub create_hold_for_units {
     if ($self->units_remaining <= $low_water_mark ||
           $self->estimated_lifetime <= $self->old_age) {
       # XXX code duplicated between ByTime and here
-      if ($self->has_replacement) {
-        $self->replacement->handle_event(
-          event('low-funds',
-                { remaining_life => $self->estimated_lifetime }
-               ));
-      } else {
+      unless ($self->has_replacement) {
         $self->handle_event(event('consumer-create-replacement',
                                   { timestamp => Moonpig->env->now,
                                     mri => $self->replacement_mri,
