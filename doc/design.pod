@@ -121,12 +121,34 @@ contains related utility functions.
 When queried for transfers, accountants return TransferSets that
 represent collections of transfers.  These are supposed to be opaque
 objects, so please do not poke inside them.  They support methods for
-querying the collection and extracting subsets.  $transfer_set->all
+querying the collection and extracting subsets.
+C<< $transfer_set->all >>
 returns a list of the transfers the set contains.  But if you need to
 deal with transfers directly, consider adding a new TransferSet method
-that does what you want.  For example, instead of using ->all and then
+that does what you want.  For example, instead of using C<< ->all >> and then
 looping over the transfers to calculate the total amount, there is a
-$transfer_set->total method that does this opaquely.
+C<< $transfer_set->total >> method that does this opaquely.
+
+=head4 Holds
+
+Some transfers are committed in two stages.  The first stage creates a
+"hold" which reserves the money to be transferred so that it cannot be
+transferred by someone else, and then the second stage performs the
+actual transfer.  A hold can also be rolled back, aborting the
+transfer and releasing the held funds for some other use.
+
+The typical use case here is that a list owner wants to send a message
+to 1,000,000 users.  The mailing software first acquires a hold for
+the required amount of money, failing (and refusing to send the
+message) if funds are insufficient.  Once it acquires the hold, it
+puts in the order to send the message.  After the message is
+delivered, the held transfer is executed; if the message delivery
+failed for some later reason, the hold is released.
+
+Example code is in C<< Consumer::ByUsage >>.  The Accountant has a
+C<commit_hold> method that converts a hold into a regular transfer.
+To delete a hold, use C<< Accountant->delete_transfer >> or
+C<< $hold->delete >>.
 
 =head3 Refund
 
