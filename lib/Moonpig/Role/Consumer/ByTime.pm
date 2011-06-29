@@ -247,6 +247,7 @@ sub reflect_on_mortality {
   if ($remaining_life <= $self->old_age) {
 
     # If it has no replacement yet, it should create one
+    # XXX code duplicated between ByUsage and here
     unless ($self->has_replacement and $remaining_life > 0) {
       $self->handle_event(
         event(

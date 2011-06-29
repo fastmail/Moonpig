@@ -156,6 +156,10 @@ test low_water_replacement => sub {
          "replacement created at or below LW mark");
   cmp_ok($self->consumer->units_remaining + $q, '>', $lwm,
          "replacement created just below LW mark");
+
+  # Make sure hold creation works even after the replacement exists
+  # (This caused a failure until commit 918a10cce.)
+  $self->consumer->create_hold_for_units(1);
 };
 
 sub jan {
