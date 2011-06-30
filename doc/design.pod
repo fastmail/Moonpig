@@ -29,16 +29,6 @@ span of time.  It is represented as a charge container.  A journal can be
 marked as closed, at which time new transfers will be recorded on a new
 journal.
 
-=head3 Bank
-
-A bank represents a pool of funds converted from a credit or customer
-payment, and generally associated with a consumer.  The consumer will perform
-transfers as needed to pay for its continued operation.
-
-The bank has some initial value, corresponding to the amount received on
-payment.  At any given moment, it has as much remaining value as its initial
-value minus and transfers or holds.
-
 =head3 Consumer
 
 A consumer represents a service for which a consumer pays.  At present there
@@ -57,6 +47,16 @@ Consumers will generally have an event handler that fires when they're first
 made.  This handler will make a request for payment by adding a new charge to
 an invoice.  The charge, when paid, will set up an initial bank for the
 consumer.
+
+=head3 Bank
+
+A bank represents a pool of funds converted from a credit or customer
+payment, and generally associated with a consumer.  The consumer will perform
+transfers as needed to pay for its continued operation.
+
+The bank has some initial value, corresponding to the amount received on
+payment.  At any given moment, it has as much remaining value as its initial
+value minus and transfers or holds.
 
 =head3 Credit
 
@@ -121,16 +121,132 @@ contains related utility functions.
 When queried for transfers, accountants return TransferSets that
 represent collections of transfers.  These are supposed to be opaque
 objects, so please do not poke inside them.  They support methods for
-querying the collection and extracting subsets.  $transfer_set->all
+querying the collection and extracting subsets.
+C<< $transfer_set->all >>
 returns a list of the transfers the set contains.  But if you need to
 deal with transfers directly, consider adding a new TransferSet method
-that does what you want.  For example, instead of using ->all and then
+that does what you want.  For example, instead of using C<< ->all >> and then
 looping over the transfers to calculate the total amount, there is a
-$transfer_set->total method that does this opaquely.
+C<< $transfer_set->total >> method that does this opaquely.
 
-=head3 RateSchedule
+=head4 Holds
+
+Some transfers are committed in two stages.  The first stage creates a
+"hold" which reserves the money to be transferred so that it cannot be
+transferred by someone else, and then the second stage performs the
+actual transfer.  A hold can also be rolled back, aborting the
+transfer and releasing the held funds for some other use.
+
+The typical use case here is that a list owner wants to send a message
+to 1,000,000 users.  The mailing software first acquires a hold for
+the required amount of money, failing (and refusing to send the
+message) if funds are insufficient.  Once it acquires the hold, it
+puts in the order to send the message.  After the message is
+delivered, the held transfer is executed; if the message delivery
+failed for some later reason, the hold is released.
+
+Example code is in C<< Consumer::ByUsage >>.  The Accountant has a
+C<commit_hold> method that converts a hold into a regular transfer.
+To delete a hold, use C<< Accountant->delete_transfer >> or
+C<< $hold->delete >>.
 
 =head3 Refund
+
+A refund object records a refund that was issued to a customer.  Money
+can be transferred from a credit to a refund.
+
+=head2 Payment cycle
+
+Suppose a user requests a service.  The following sequence of events
+occurs for a C<ByTime> service, but is typical:
+
+=over 4
+
+=item 1.
+
+The customer requests a new service.
+
+=item 2.
+
+A consumer is created in their ledger.
+
+=item 3.
+
+When the consumer is created, it receives a C<created> event which
+dispatches to its C<_invoice> method.  This method immediately enters
+one or more charges on the ledger's current invoice.
+
+=item 4.
+
+Moonpig requests payment of the invoice, which may include other
+unpaid items.
+
+=item 5.
+
+The customer pays the invoice.  This is handled through
+C<< Collection::CreditExtras->accept_payment >>, which creates the credit
+and then asks the ledger to process its outstanding credits.
+
+=item 6.
+
+The ledger's C<process_credits> method runs through the unpaid
+invoices looking for unpaid charges.  When it finds an invoice that
+can be paid in full, it transfers funds from the credit or credits to
+the invoice and then marks the invoice paid.
+
+=item 7.
+
+To mark an invoice paid, the ledger sends it the C<paid> event.  The
+invoice distributes this event to all of its subsidiary charges.
+
+=item 8.
+
+Because one of the invoice charges composes the "Bankable" role, it
+creates a bank for the appropriate amount and associates it to the
+consumer.
+
+The consumer is now set up.
+
+=item 9.
+
+Periodically, the Ledger receves a C<hearbeat> event.  It
+redistributes this event to all its components, including the
+consumer.
+
+=item 10.
+
+The C<heartbeat> event in a consumer dispatches to the C<charge>
+method.  A consumer may have a grace period during which it doesn't
+charge; this is to allow customers to start receiving service right
+away and to pay a little later.  But if the consumer decides it's time
+to charge, it does up to three independent things:
+
+=over 4
+
+=item 1.
+
+If it decides that it's likely to run out of funds soon, and it has no
+replacement, it sends itself a C<consumer-create-replacement>
+event. The handler for this event creates a replacement consumer.
+This replacement consumer sends an invoice just as described above,
+and things proceed from there.
+
+=item 2.
+
+If the consumer's bank is exhausted, it calls its C<expire> method.
+If it has a replacement consumer, C<expire> tells the ledger that the
+replacement is now managing this service.  If not, it tells the ledger
+to terminate the service.
+
+=item 3.
+
+The consumer enters a charge on the ledger's current journal.  The
+ledger's accountant uses this record when asked to compute the amount
+of money still in the consumer's bank.
+
+=back
+
+=back
 
 =head2 External interface, XIDs, and Moonpig::URI
 
@@ -228,24 +344,33 @@ C<DateTime> which changes a small amount of behavior:
 
 =over 4
 
-=item All C<Moonpig::DateTime> values represent UTC times.
+=item
 
-=item The C<new> constructor allows a single argument, which is taken
-to be an epoch time.  (That is, C<< Moonpig::DateTime->new( $epoch )
->> is equivalent to C<< Moonpig::DateTime->from_epoch( epoch => $epoch
-) >>.
+All C<Moonpig::DateTime> values represent UTC times.
 
-=item The overloading has been changed.  Subtracting one C<DateTime>
-from another yields a C<DateTime::Duration>.  But subtracting one
+=item
+
+The C<new> constructor allows a single argument, which is taken to be
+an epoch time.  (That is, C<< Moonpig::DateTime->new( $epoch ) >> is
+equivalent to C<< Moonpig::DateTime->from_epoch( epoch => $epoch ) >>.
+
+=item
+
+The overloading has been changed.  Subtracting one C<DateTime> from
+another yields a C<DateTime::Duration>.  But subtracting one
 C<Moonpig::DateTime> from another yields an ordinary number, the
 number of epoch seconds between the two dates.
 
-=item Corresponding to this, addition is overloaded for
-C<Moonpig::DateTime> objects so that adding a C<Moonpig::Datetime> to
-a number interprets the number as a number of seconds to add.  One may
-also add any object that supports an C<< ->as_seconds >> method.
+=item
 
-=item C<Moonpig::DateTime> provides C<< $a->precedes($b) >> and
+Corresponding to this, addition is overloaded for C<Moonpig::DateTime>
+objects so that adding a C<Moonpig::Datetime> to a number interprets
+the number as a number of seconds to add.  One may also add any object
+that supports an C<< ->as_seconds >> method.
+
+=item
+
+C<Moonpig::DateTime> provides C<< $a->precedes($b) >> and
 C<< $a->follows($b) >> for more readable comparisons of dates.
 
 =back
@@ -256,12 +381,13 @@ type, which is a plain number, represented as a number of seconds.
 =head3 Money
 
 All money is accounted in exact integral numbers of "millicents".  One
-millicent ('mc') is 1/1000 of a cent, or 10^{-5} dollars.
+millicent ('mc') is 1/1000 of a cent, or 1e-5 dollars.
 
-Charges for non-integral amounts are rounded *down* to the nearest
+Charges for non-integral amounts are rounded B<down> to the nearest
 millicent, giving the customer the benefit of the roundoff error, such
 as it is.  An account that costs $20.00 per year is typically charged
 in 365 daily increments of 5749 mc each, totalling $19.99 and 835mc.
+The customer gets about 1/6 of a cent for free.
 
 Unadorned numeric values are taken to be in millicents.
 C<Moonpig::Util> provides  C<dollars> and C<cents> functions to
