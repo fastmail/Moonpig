@@ -97,6 +97,13 @@ my $sql = <<'END_SQL';
       PRIMARY KEY (job_id, ident),
       FOREIGN KEY (job_id) REFERENCES jobs (id)
     );
+
+    CREATE TABLE job_logs (
+      id INTEGER PRIMARY KEY,
+      job_id INTEGER NOT NULL,
+      logged_at INTEGER NOT NULL,
+      message TEXT NOT NULL
+    );
 END_SQL
 
 my $SCHEMA_MD5 = md5_hex($sql);
@@ -245,20 +252,29 @@ sub iterate_jobs {
       # need to do much work inside larger transaction -- that's the point!
       # They will do outside work and mark the job done. -- rjbs, 2011-04-14
       my $job = Moonpig::Job->new({
-        job_id  => $job_row->{id},
+        job_id   => $job_row->{id},
+        job_type => $job_row->{type},
         payloads => $payloads,
+        log_callback  => sub {
+          my ($self, $message) = @_;
+          $conn->run(sub { $_->do(
+            "INSERT INTO jobs (job_id, logged_at, message)
+            VALUES (?, ?, ?)",
+            undef, $job_row->{id}, Moonpig->env->now->epoch, $message,
+          )});
+        },
         lock_callback => sub {
           my ($self) = @_;
           $conn->run(sub { $_->do(
-            "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-            undef, time, $job_row->{id},
+            "UPDATE jobs SET locked_at = ? WHERE id = ?",
+            undef, Moonpig->env->now->epoch, $job_row->{id},
           )});
         },
         done_callback => sub {
           my ($self) = @_;
           $conn->run(sub { $_->do(
             "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-            undef, time, $job_row->{id},
+            undef, Moonpig->env->now->epoch, $job_row->{id},
           )});
         },
       });

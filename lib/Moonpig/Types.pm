@@ -10,6 +10,8 @@ use MooseX::Types -declare => [ qw(
   Invoice InvoiceCharge
   Journal JournalCharge
 
+  SimplePath
+
   Event
   EventName EventHandlerName EventHandler
   EventHandlerMap
@@ -87,6 +89,8 @@ subtype EventHandlerName, as Str, where { /\A$simple_str_dotchain\z/ };
 role_type EventHandler, { role => 'Moonpig::Role::EventHandler' };
 
 subtype EventHandlerMap, as HashRef[ HashRef[ EventHandler ] ];
+
+subtype SimplePath, as Str, where { /\A$simple_str_dotchain\z/ };
 
 ################################################################
 #

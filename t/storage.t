@@ -68,19 +68,19 @@ test "store and retrieve" => sub {
 
 test "job queue" => sub {
   Moonpig->env->storage->do_rw(sub {
-    Moonpig->env->storage->queue_job('test.job.0' => {
+    Moonpig->env->storage->queue_job('test.job.a' => {
       foo => $^T,
       bar => 'serious business',
     });
 
-    Moonpig->env->storage->queue_job('test.job.1' => {
+    Moonpig->env->storage->queue_job('test.job.b' => {
       proc => $$,
       bar  => "..!",
     });
   });
 
   my @jobs_done;
-  Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
+  Moonpig->env->storage->iterate_jobs('test.job.a' => sub {
     my ($job) = @_;
     isa_ok($job, 'Moonpig::Job');
     is($job->job_id, 1, "cheating: we know we number jobs from 1");
@@ -94,7 +94,7 @@ test "job queue" => sub {
     );
     push @jobs_done, $job->job_id;
 
-    Moonpig->env->storage->iterate_jobs('test.job.0' => sub {
+    Moonpig->env->storage->iterate_jobs('test.job.a' => sub {
       my ($job) = @_;
       push @jobs_done, $job->job_id;
       $job->mark_complete;
@@ -103,7 +103,7 @@ test "job queue" => sub {
     $job->mark_complete;
   });
 
-  Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+  Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
     my ($job) = @_;
     isa_ok($job, 'Moonpig::Job');
     is($job->job_id, 2, "cheating: we know we number jobs from 1");
@@ -117,7 +117,7 @@ test "job queue" => sub {
     );
     push @jobs_done, $job->job_id;
 
-    Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
       my ($job) = @_;
       push @jobs_done, $job->job_id;
       $job->mark_complete;
@@ -126,7 +126,7 @@ test "job queue" => sub {
     $job->mark_complete;
   });
 
-  Moonpig->env->storage->iterate_jobs('test.job.1' => sub {
+  Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
     my ($job) = @_;
     push @jobs_done, $job->job_id;
     $job->mark_complete;
