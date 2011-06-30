@@ -2,7 +2,6 @@ package Moonpig::Role::Consumer::ByUsage;
 # ABSTRACT: a consumer that charges when told to
 
 use Carp qw(confess croak);
-use List::Util qw(reduce);
 use Moonpig;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Trait::Copy;

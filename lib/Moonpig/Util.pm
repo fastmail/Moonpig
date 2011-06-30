@@ -26,6 +26,8 @@ use Sub::Exporter -setup => [ qw(
   days weeks months years
 
   same_object
+
+  sum
 ) ];
 
 memoize(class => (NORMALIZER => \&make_key,
@@ -184,6 +186,11 @@ sub same_object {
   defined($rb) or croak("arg 2 to $me was not a reference");
 
   $ra == $rb;
+}
+
+sub sum {
+  require List::Util;
+  return List::Util::reduce(sub { $a + $b }, 0, @_);
 }
 
 1;

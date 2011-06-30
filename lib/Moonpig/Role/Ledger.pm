@@ -2,7 +2,6 @@ package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
 use Carp qw(confess croak);
-use List::Util qw(reduce);
 use Moose::Role;
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
@@ -61,11 +60,10 @@ use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(class event);
+use Moonpig::Util qw(class event sum);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
-use List::Util qw(reduce);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
@@ -325,7 +323,7 @@ sub apply_credits_to_invoice__ {
   my ($self, $to_apply, $invoice) = @_;
 
   {
-    my $total = reduce { $a + $b } 0, map $_->{amount}, @$to_apply;
+    my $total = sum(map $_->{amount}, @$to_apply);
     croak "credit application of $total did not mach invoiced amount of " .
       $invoice->total_amount
         unless $invoice->total_amount == $total;
@@ -484,7 +482,7 @@ sub _collect_spare_change {
 
   delete $consider{ $_->bank->guid } for @consumers;
 
-  my $total = reduce { $a + $b } 0, map { $_->[1] } values %consider;
+  my $total = sum(map { $_->[1] } values %consider);
 
   return unless $total > 0;
 

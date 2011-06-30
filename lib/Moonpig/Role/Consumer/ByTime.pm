@@ -2,12 +2,11 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
-use List::Util qw(reduce);
 use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
-use Moonpig::Util qw(class days event);
+use Moonpig::Util qw(class days event sum);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
@@ -64,7 +63,7 @@ sub cost_amount_on {
   my ($self, $date) = @_;
 
   my %costs = $self->costs_on($date);
-  my $amount = reduce { $a + $b } 0, values %costs;
+  my $amount = sum(values %costs);
 
   return $amount;
 }
@@ -227,8 +226,7 @@ sub calculate_charges_on {
 sub calculate_charge_on {
   my ($self, $date) = @_;
   my @costs = $self->calculate_charges_on( $date );
-  my $charge = reduce { $a + $b }
-    0, map { $costs[$_] } grep { $_ % 2 } keys @costs;
+  my $charge = sum(map { $costs[$_] } grep { $_ % 2 } keys @costs);
 
   return $charge;
 }

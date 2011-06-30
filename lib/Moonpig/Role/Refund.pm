@@ -8,8 +8,6 @@ with(
   'Moonpig::Role::Payable',
 );
 
-use List::Util qw(reduce);
-
 use namespace::autoclean;
 
 sub amount {

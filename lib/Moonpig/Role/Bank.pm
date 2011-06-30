@@ -8,7 +8,6 @@ with(
  'Moonpig::Role::CanTransfer' => { transferer_type => "bank" },
 );
 
-use List::Util qw(reduce);
 use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Ledger PositiveMillicents);
 

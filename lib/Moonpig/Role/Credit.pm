@@ -8,8 +8,6 @@ with(
   'Moonpig::Role::CanTransfer' => { transferer_type => "credit" },
 );
 
-use List::Util qw(reduce);
-
 use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;

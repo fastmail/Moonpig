@@ -6,9 +6,8 @@ use namespace::autoclean;
 
 use Moonpig;
 
-use List::Util qw(reduce);
 use Moonpig::Types;
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class sum);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
 use Stick::Types qw(StickBool);
@@ -35,7 +34,7 @@ role {
   );
 
   method total_amount => sub {
-    reduce { $a + $b } 0, map { $_->amount } $_[0]->all_charges
+    sum(map { $_->amount } $_[0]->all_charges);
   };
 
   method _objectify_charge => sub {
