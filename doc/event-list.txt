@@ -57,12 +57,11 @@ fail-over:
     - terminate-service
 
 paid:
-  sent to: charge
+  sent to: invoice
   sent by: ledger
-  why: when the charge is paid
+  why: when the invoice is paid
   known handlers:
-    Charge/HandlesEvents: noop
-    InvoiceCharge/Bankable: create-bank → _bank_credit
+    Invoice: create_banks → _bank_credit
 
 queue-email:
   sent to: environment
@@ -90,3 +89,4 @@ terminate-service:
     consumer: default → terminate_service
   see also:
     - fail-over
+

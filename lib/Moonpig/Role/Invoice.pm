@@ -14,7 +14,7 @@ with(
 
 use Moonpig::Behavior::EventHandlers;
 
-use Moonpig::Util qw(event);
+use Moonpig::Util qw(class event sum);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
@@ -48,15 +48,39 @@ sub is_unpaid {
 implicit_event_handlers {
   return {
     'paid' => {
-      redistribute => Moonpig::Events::Handler::Method->new('_pay_charges'),
+      create_banks => Moonpig::Events::Handler::Method->new('_create_banks'),
     }
   };
 };
 
-sub _pay_charges {
-  my ($self, $event) = @_;
+sub _bankable_charges_by_consumer {
+  my ($self) = @_;
+  my %res;
+  for my $charge ( grep { $_->does("Moonpig::Role::InvoiceCharge::Bankable") }
+                     $self->all_charges ) {
+    push @{$res{$charge->consumer->guid}}, $charge;
+  }
+  return \%res;
+}
 
-  $_->handle_event($event) for $self->all_charges;
+sub _create_banks {
+  my ($self, $event) = @_;
+  my $by_consumer = $self->_bankable_charges_by_consumer;
+
+  while (my ($consumer_guid, $charges) = each %$by_consumer) {
+    # XXX This method path is too long.  The consumer collection should handle
+    # ->find_consumer_by_guid.
+    my $consumer = $self->ledger->consumer_collection->find_by_guid({ guid => $consumer_guid });
+    my $total = sum(map $_->amount, @$charges);
+
+    my $bank = $self->ledger->add_bank(
+      class(qw(Bank)),
+      {
+        amount => $total,
+      });
+
+    $consumer->_set_bank($bank);
+  }
 }
 
 sub STICK_PACK {
