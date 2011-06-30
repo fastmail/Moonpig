@@ -63,6 +63,13 @@ paid:
   known handlers:
     Invoice: create_banks → _bank_credit
 
+paid:
+  sent to: charge
+  sent by: invoice
+  why: when the invoice is paid
+  known handlers:
+    InvoiceCharge: default ⇒ noop
+
 queue-email:
   sent to: environment
   sent by: ledger 

@@ -7,4 +7,12 @@ with(
 
 use namespace::autoclean;
 
+implicit_event_handlers {
+  return {
+    'paid' => {
+      'default' => Moonpig::Events::Handler::Noop->new,
+    },
+  }
+};
+
 1;

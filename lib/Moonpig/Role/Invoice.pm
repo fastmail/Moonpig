@@ -48,10 +48,16 @@ sub is_unpaid {
 implicit_event_handlers {
   return {
     'paid' => {
+      redistribute => Moonpig::Events::Handler::Method->new('_pay_charges'),
       create_banks => Moonpig::Events::Handler::Method->new('_create_banks'),
     }
   };
 };
+
+sub _pay_charges {
+  my ($self, $event) = @_;
+  $_->handle_event($event) for $self->all_charges;
+}
 
 sub _bankable_charges_by_consumer {
   my ($self) = @_;
