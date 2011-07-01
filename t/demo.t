@@ -149,6 +149,10 @@ test "end to end demo" => sub {
   my $ledger = $self->test_ledger;
   $self->ledger( $ledger );
 
+  Moonpig->env->storage->do_rw(sub {
+    Moonpig->env->save_ledger($ledger);
+  });
+
   my $consumer = $ledger->add_consumer_from_template(
     'demo-service',
     {

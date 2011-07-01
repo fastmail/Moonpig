@@ -16,6 +16,19 @@ use Moonpig::Env::Test;
 
 my $CLASS = class('Consumer::ByTime::FixedCost');
 
+sub fresh_ledger {
+  my ($self) = @_;
+
+  my $ledger;
+
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = $self->test_ledger;
+    Moonpig->env->save_ledger($ledger);
+  });
+
+  return $ledger;
+}
+
 has ledger => (
   is   => 'rw',
   does => 'Moonpig::Role::Ledger',
@@ -58,7 +71,7 @@ test "with_successor" => sub {
     my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
     Moonpig->env->stop_clock_at($jan1);
 
-    $self->ledger($self->test_ledger);
+    $self->ledger($self->fresh_ledger);
 
     my ($name, $schedule, $n_warnings) = @$test;
 
@@ -122,7 +135,7 @@ test "without_successor" => sub {
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   Moonpig->env->stop_clock_at($jan1);
 
-  $self->ledger($self->test_ledger);
+  $self->ledger($self->fresh_ledger);
   $self->ledger->register_event_handler(
     'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
   );
@@ -181,7 +194,7 @@ test "without_successor" => sub {
 
 test "irreplaceable" => sub {
   my ($self) = @_;
-  $self->ledger($self->test_ledger);
+  $self->ledger($self->fresh_ledger);
   plan tests => 3;
 
   # Pretend today is 2000-01-01 for convenience

@@ -385,10 +385,7 @@ sub _send_mkit {
     $event->payload->{arg},
   );
 
-  Moonpig->env->handle_event(event('queue-email' => {
-    email => $email,
-    env   => { to => $to, from => $from },
-  }));
+  $self->queue_email($email, { to => $to, from => $from });
 }
 
 # {
@@ -570,6 +567,27 @@ publish split_xid => { -http_method => 'post', -path => 'split',
       return $cons->copy_to($target);
     });
 };
+
+# XXX: Bogus, we should make this queue like everything else.
+sub queue_email {
+  my ($self, $email, $env) = @_;
+
+  # XXX: validate email -- rjbs, 2010-12-08
+  $self->queue_job('send-email', {
+    email => $email->as_string,
+    env   => JSON->new->ascii->encode($env),
+  });
+}
+
+sub queue_job {
+  my ($self, $type, $payloads) = @_;
+
+  Moonpig->env->storage->queue_job__({
+    ledger   => $self,
+    type     => $type,
+    payloads => $payloads,
+  });
+}
 
 sub STICK_PACK {
   my ($self) = @_;

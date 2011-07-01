@@ -16,10 +16,23 @@ before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
 
+sub fresh_ledger {
+  my ($self) = @_;
+
+  my $ledger;
+
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = $self->test_ledger;
+    Moonpig->env->save_ledger($ledger);
+  });
+
+  return $ledger;
+}
+
 test charge_close_and_send => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = $self->fresh_ledger;
 
   my $invoice = $ledger->current_invoice;
 
@@ -74,7 +87,7 @@ test charge_close_and_send => sub {
 test underpayment => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = $self->fresh_ledger;
 
   my $invoice = $ledger->current_invoice;
 
@@ -116,7 +129,7 @@ test underpayment => sub {
 test overpayment  => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = $self->fresh_ledger;
 
   my $invoice = $ledger->current_invoice;
 
@@ -158,7 +171,7 @@ test overpayment  => sub {
 test create_bank_on_payment => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = $self->fresh_ledger;
 
   my $consumer = $self->add_consumer_to($ledger);
 
@@ -200,7 +213,7 @@ test create_bank_on_payment => sub {
 test payment_by_two_credits => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = $self->fresh_ledger;
 
   my $invoice = $ledger->current_invoice;
 

@@ -19,6 +19,19 @@ use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
+sub fresh_ledger {
+  my ($self) = @_;
+
+  my $ledger;
+
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = $self->test_ledger;
+    Moonpig->env->save_ledger($ledger);
+  });
+
+  return $ledger;
+}
+
 test "store and retrieve" => sub {
   my ($self) = @_;
 
@@ -39,7 +52,7 @@ test "store and retrieve" => sub {
       die("error with child: " . Dumper(\%waitpid));
     }
   } else {
-    my $ledger = __PACKAGE__->test_ledger;
+    my $ledger = $self->test_ledger;
 
     my $consumer = $ledger->add_consumer_from_template(
       'demo-service',
@@ -67,13 +80,17 @@ test "store and retrieve" => sub {
 };
 
 test "job queue" => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->fresh_ledger;
+
   Moonpig->env->storage->do_rw(sub {
-    Moonpig->env->storage->queue_job('test.job.a' => {
+    $ledger->queue_job('test.job.a' => {
       foo => $^T,
       bar => 'serious business',
     });
 
-    Moonpig->env->storage->queue_job('test.job.b' => {
+    $ledger->queue_job('test.job.b' => {
       proc => $$,
       bar  => "..!",
     });
@@ -133,6 +150,35 @@ test "job queue" => sub {
   });
 
   is_deeply(\@jobs_done, [ 1, 2 ], "completed jobs are completed");
+};
+
+test "job lock and unlock" => sub {
+  my ($self) = @_;
+
+  my $ledger = $self->fresh_ledger;
+
+  Moonpig->env->storage->do_rw(sub {
+    $ledger->queue_job('test.job.a' => {
+      foo => $^T,
+      bar => 'serious business',
+    });
+  });
+
+  Moonpig->env->storage->do_rw(sub {
+    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
+      my ($job) = @_;
+      $job->log("I got handled by a stupid no-op handler.");
+    });
+  });
+
+  Moonpig->env->storage->do_rw(sub {
+    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
+      my ($job) = @_;
+      # assert that the job has the log, is not locked
+    });
+  });
+
+  pass;
 };
 
 run_me;

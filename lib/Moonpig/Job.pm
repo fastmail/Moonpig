@@ -2,7 +2,7 @@ package Moonpig::Job;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Moonpig::Types qw(SimplePath);
+use Moonpig::Types qw(Ledger SimplePath);
 
 use namespace::autoclean;
 
@@ -16,6 +16,15 @@ has job_type => (
   is  => 'ro',
   isa => SimplePath,
   required => 1,
+);
+
+has ledger => (
+  is  => 'ro',
+  isa => Ledger,
+  required => 1,
+  handles  => {
+    ledger_guid => 'guid',
+  },
 );
 
 my %callback = (

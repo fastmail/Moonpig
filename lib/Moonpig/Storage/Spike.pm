@@ -84,6 +84,7 @@ my $sql = <<'END_SQL';
 
     CREATE TABLE jobs (
       id INTEGER PRIMARY KEY,
+      ledger_guid TEXT NOT NULL,
       type TEXT NOT NULL,
       created_at INTEGER NOT NULL,
       locked_at INTEGER,
@@ -180,23 +181,24 @@ has _ledger_queue => (
   default  => sub {  []  },
 );
 
-sub queue_job {
-  my ($self, $type, $payloads) = @_;
-  $payloads ||= {};
+sub queue_job__ {
+  my ($self, $arg) = @_;
+  $arg->{payloads} ||= {};
 
   if ($self->_has_update_mode and $self->_in_update_mode) {
     $self->txn(sub {
       my $dbh = $_;
       $dbh->do(
-        q{INSERT INTO jobs (type, created_at) VALUES (?, ?)},
+        q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
         undef,
-        $type,
+        $arg->{type},
+        $arg->{ledger}->guid,
         Moonpig->env->now->epoch,
       );
 
       my $job_id = $dbh->sqlite_last_insert_rowid;
 
-      for my $ident (keys %$payloads) {
+      for my $ident (keys %{ $arg->{payloads} }) {
         # XXX: barf on reference payloads? -- rjbs, 2011-04-13
         $dbh->do(
           q{
@@ -206,7 +208,7 @@ sub queue_job {
           undef,
           $job_id,
           $ident,
-          $payloads->{ $ident },
+          $arg->{payloads}->{ $ident },
         );
       }
     });
@@ -251,7 +253,17 @@ sub iterate_jobs {
       # it won't be updated in other job iterators!  I general, jobs should not
       # need to do much work inside larger transaction -- that's the point!
       # They will do outside work and mark the job done. -- rjbs, 2011-04-14
+
+      my $ledger = $self->retrieve_ledger_for_guid($job_row->{ledger_guid});
+      unless ($ledger) {
+        Moonpig::X->throw({
+          ident   => "no ledger found for job",
+          payload => { ledger_guid => $job_row->{ledger_guid} },
+        });
+      }
+
       my $job = Moonpig::Job->new({
+        ledger   => $ledger,
         job_id   => $job_row->{id},
         job_type => $job_row->{type},
         payloads => $payloads,

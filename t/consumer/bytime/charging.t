@@ -13,11 +13,24 @@ use t::lib::Logger;
 
 my $CLASS = class('Consumer::ByTime::FixedCost');
 
+sub fresh_ledger {
+  my ($self) = @_;
+
+  my $ledger;
+
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = $self->test_ledger;
+    Moonpig->env->save_ledger($ledger);
+  });
+
+  return $ledger;
+}
+
 has ledger => (
   is => 'rw',
   does => 'Moonpig::Role::Ledger',
   lazy => 1,
-  default => sub { $_[0]->test_ledger },
+  default => sub { $_[0]->fresh_ledger },
   clearer => 'clear_ledger',
 );
 sub ledger;  # Work around bug in Moose 'requires';
@@ -163,7 +176,7 @@ test grace_period => sub {
       my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
       Moonpig->env->stop_clock_at($jan1);
 
-      $self->ledger( $self->test_ledger );
+      $self->ledger( $self->fresh_ledger );
 
       my $c = $self->test_consumer(
         $CLASS,

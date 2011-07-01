@@ -20,17 +20,8 @@ use namespace::autoclean;
 
 requires 'register_object';
 requires 'now';
-requires 'handle_queue_email';
 
 sub format_guid { return $_[1] }
-
-implicit_event_handlers {
-  return {
-    'queue-email' => {
-      default => Moonpig::Events::Handler::Method->new('handle_queue_email'),
-    }
-  };
-};
 
 has storage => (
   is   => 'ro',

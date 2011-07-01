@@ -96,17 +96,6 @@ sub send_email {
   $self->email_sender->send_email($email, $env);
 }
 
-# XXX: Bogus, we should make this queue like everything else.
-sub handle_queue_email {
-  my ($self, $event, $arg) = @_;
-
-  # XXX: validate email -- rjbs, 2010-12-08
-  $self->storage->queue_job('send-email', {
-    email => $event->payload->{email}->as_string,
-    env   => JSON->new->ascii->encode($event->payload->{env}),
-  });
-}
-
 has _clock_state => (
   is => 'rw',
   isa => enum([ qw(wallclock stopped offset) ]),
