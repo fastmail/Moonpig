@@ -264,30 +264,6 @@ sub can_make_payment_on {
   return $self->amount_in_bank >= $self->calculate_charge_on($date);
 }
 
-sub template_like_this {
-  my ($self) = @_;
-
-  return {
-    class => $self->meta->name,
-    arg   => {
-      charge_frequency   => $self->charge_frequency(),
-
-      # XXX: NO NO NO, this must be fixed. -- rjbs, 2011-05-17
-      # Right now, this is very FixedCost-specific.  We should maybe just move
-      # this to FixedCost, in fact...
-      cost_amount        => $self->cost_amount_on( Moonpig->env->now ),
-
-      cost_period        => $self->cost_period(),
-      old_age            => $self->old_age(),
-      replacement_mri    => $self->replacement_mri(),
-      xid                => $self->xid,
-      charge_description => $self->charge_description(),
-      charge_tags        => $self->charge_tags,
-      grace_until        => Moonpig->env->now  +  days(3),
-    }
-  };
-}
-
 # My predecessor is running out of money
 sub predecessor_running_out {
   my ($self, $event, $args) = @_;

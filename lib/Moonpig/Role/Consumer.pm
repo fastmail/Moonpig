@@ -312,6 +312,14 @@ sub move_bank_to__ {
     });
 }
 
+sub template_like_this {
+  my ($self) = @_;
+  return {
+    class => $self->meta->name,
+    arg   => $self->copy_attr_hash__,
+  };
+}
+
 sub STICK_PACK {
   my ($self) = @_;
   return $self->guid;

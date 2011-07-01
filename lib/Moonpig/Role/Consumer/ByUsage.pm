@@ -118,26 +118,6 @@ sub units_remaining {
   int($self->unapplied_amount / $self->cost_per_unit);
 }
 
-sub template_like_this {
-  my ($self) = @_;
-
-  return {
-    class => $self->meta->name,
-    arg   => {
-      charge_tags        => $self->charge_tags,
-      cost_per_unit      => $self->cost_per_unit(),
-      ledger             => $self->ledger(),
-
-    $self->has_low_water_mark ?
-     (low_water_mark     => $self->low_water_mark()) : (),
-
-      old_age            => $self->old_age(),
-      replacement_mri    => $self->replacement_mri(),
-      xid                => $self->xid,
-    },
-  };
-}
-
 sub create_charge_for_hold {
   my ($self, $hold, $description) = @_;
 

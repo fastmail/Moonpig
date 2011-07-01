@@ -26,18 +26,4 @@ implicit_event_handlers {
   };
 };
 
-sub template_like_this {
-  my ($self) = @_;
-
-  return {
-    class => $self->meta->name,
-    arg   => {
-      charge_tags        => $self->charge_tags,
-      ledger             => $self->ledger(),
-      old_age            => $self->old_age(),
-      replacement_mri    => $self->replacement_mri(),
-    },
-  };
-}
-
 1;
