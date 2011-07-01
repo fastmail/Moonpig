@@ -263,6 +263,13 @@ sub iterate_jobs {
             undef, $job_row->{id}, Moonpig->env->now->epoch, $message,
           )});
         },
+        unlock_callback => sub {
+          my ($self) = @_;
+          $conn->run(sub { $_->do(
+            "UPDATE jobs SET locked_at = NULL WHERE id = ?",
+            undef, $job_row->{id},
+          )});
+        },
         lock_callback => sub {
           my ($self) = @_;
           $conn->run(sub { $_->do(

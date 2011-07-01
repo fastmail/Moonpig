@@ -18,36 +18,24 @@ has job_type => (
   required => 1,
 );
 
-has lock_callback => (
-  is  => 'ro',
-  isa => 'CodeRef',
-  required => 1,
-  traits   => [ 'Code' ],
-  handles  => {
-    lock        => 'execute_method',
-    extend_lock => 'execute_method',
-  },
+my %callback = (
+  lock   => [ qw(lock extend_lock) ],
+  unlock => [ qw(unlock)           ],
+  done   => [ qw(mark_complete)    ],
+  log    => [ qw(log)              ],
 );
 
-has done_callback => (
-  is  => 'ro',
-  isa => 'CodeRef',
-  required => 1,
-  traits   => [ 'Code' ],
-  handles  => {
-    mark_complete => 'execute_method',
-  },
-);
-
-has log_callback => (
-  is  => 'ro',
-  isa => 'CodeRef',
-  required => 1,
-  traits   => [ 'Code' ],
-  handles  => {
-    log => 'execute_method',
-  },
-);
+for my $key (keys %callback) {
+  has "$key\_callback" => (
+    is  => 'ro',
+    isa => 'CodeRef',
+    required => 1,
+    traits   => [ 'Code' ],
+    handles  => {
+      map {; $_ => 'execute_method' } ($key, @{ $callback{ $key } })
+    },
+  );
+}
 
 has payloads => (
   is  => 'ro',
