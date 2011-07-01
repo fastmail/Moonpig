@@ -28,10 +28,11 @@ has ledger => (
 );
 
 my %callback = (
-  lock   => [ qw(lock extend_lock) ],
-  unlock => [ qw(unlock)           ],
-  done   => [ qw(mark_complete)    ],
-  log    => [ qw(log)              ],
+  lock     => [ qw(lock extend_lock) ],
+  unlock   => [ qw(unlock)           ],
+  log      => [ qw(log)              ],
+  get_logs => [ qw(get_logs)      ],
+  done     => [ qw(mark_complete)    ],
 );
 
 for my $key (keys %callback) {

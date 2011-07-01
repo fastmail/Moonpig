@@ -158,27 +158,35 @@ test "job lock and unlock" => sub {
   my $ledger = $self->fresh_ledger;
 
   Moonpig->env->storage->do_rw(sub {
-    $ledger->queue_job('test.job.a' => {
+    $ledger->queue_job('test.job' => {
       foo => $^T,
       bar => 'serious business',
     });
   });
 
+  my $message = "I got handled by a stupid no-op handler.";
+
   Moonpig->env->storage->do_rw(sub {
-    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
+    Moonpig->env->storage->iterate_jobs('test.job' => sub {
       my ($job) = @_;
-      $job->log("I got handled by a stupid no-op handler.");
+      $job->log($message);
     });
   });
 
+  my $ran = 0;
   Moonpig->env->storage->do_rw(sub {
-    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
+    Moonpig->env->storage->iterate_jobs('test.job' => sub {
       my ($job) = @_;
-      # assert that the job has the log, is not locked
+      $ran = 1;
+
+      my $logs = $job->get_logs;
+
+      is(@$logs, 1, "we have a log for this job");
+      is($logs->[0]{message}, $message, "it's the right message");
     });
   });
 
-  pass;
+  ok($ran, "the job was unlocked after the previous work");
 };
 
 run_me;

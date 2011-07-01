@@ -217,6 +217,51 @@ sub queue_job__ {
   }
 }
 
+sub __job_callbacks {
+  my ($self, $conn, $job_row) = @_;
+
+  return (
+    log_callback  => sub {
+      my ($self, $message) = @_;
+      $conn->run(sub { $_->do(
+        "INSERT INTO job_logs (job_id, logged_at, message)
+        VALUES (?, ?, ?)",
+        undef, $job_row->{id}, Moonpig->env->now->epoch, $message,
+      )});
+    },
+    get_logs_callback => sub {
+      my ($self) = @_;
+
+      $conn->run(sub { $_->selectall_arrayref(
+        "SELECT * FROM job_logs WHERE job_id = ? ORDER BY logged_at",
+        { Slice => {} },
+        $job_row->{id},
+      )});
+    },
+    unlock_callback => sub {
+      my ($self) = @_;
+      $conn->run(sub { $_->do(
+        "UPDATE jobs SET locked_at = NULL WHERE id = ?",
+        undef, $job_row->{id},
+      )});
+    },
+    lock_callback => sub {
+      my ($self) = @_;
+      $conn->run(sub { $_->do(
+        "UPDATE jobs SET locked_at = ? WHERE id = ?",
+        undef, Moonpig->env->now->epoch, $job_row->{id},
+      )});
+    },
+    done_callback => sub {
+      my ($self) = @_;
+      $conn->run(sub { $_->do(
+        "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
+        undef, Moonpig->env->now->epoch, $job_row->{id},
+      )});
+    },
+  );
+}
+
 sub iterate_jobs {
   my ($self, $type, $code) = @_;
   my $conn = $self->_conn;
@@ -267,38 +312,12 @@ sub iterate_jobs {
         job_id   => $job_row->{id},
         job_type => $job_row->{type},
         payloads => $payloads,
-        log_callback  => sub {
-          my ($self, $message) = @_;
-          $conn->run(sub { $_->do(
-            "INSERT INTO jobs (job_id, logged_at, message)
-            VALUES (?, ?, ?)",
-            undef, $job_row->{id}, Moonpig->env->now->epoch, $message,
-          )});
-        },
-        unlock_callback => sub {
-          my ($self) = @_;
-          $conn->run(sub { $_->do(
-            "UPDATE jobs SET locked_at = NULL WHERE id = ?",
-            undef, $job_row->{id},
-          )});
-        },
-        lock_callback => sub {
-          my ($self) = @_;
-          $conn->run(sub { $_->do(
-            "UPDATE jobs SET locked_at = ? WHERE id = ?",
-            undef, Moonpig->env->now->epoch, $job_row->{id},
-          )});
-        },
-        done_callback => sub {
-          my ($self) = @_;
-          $conn->run(sub { $_->do(
-            "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-            undef, Moonpig->env->now->epoch, $job_row->{id},
-          )});
-        },
+
+        $self->__job_callbacks($conn, $job_row),
       });
       $job->lock;
       $code->($job);
+      $job->unlock;
     }
   });
 }
