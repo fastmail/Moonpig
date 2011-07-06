@@ -16,14 +16,6 @@ with(
   'Moonpig::Role::StubBuild',
 );
 
-use Moonpig::Behavior::EventHandlers;
-
 use namespace::autoclean;
-
-implicit_event_handlers {
-  return {
-    heartbeat => { },
-  };
-};
 
 1;
