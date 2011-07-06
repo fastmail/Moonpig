@@ -19,7 +19,7 @@ use Stick::Publisher::Publish 0.20110324;
 
 with(
   'Moonpig::Role::Consumer::ChargesBank',
-  'Moonpig::Role::StubBuild',
+  'Moonpig::Role::Consumer::AutoInvoicing',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -35,11 +35,6 @@ implicit_event_handlers {
         method_name => 'charge',
       ),
     },
-    created => {
-      'initial-invoice' => Moonpig::Events::Handler::Method->new(
-        method_name => '_invoice',
-      ),
-    },
   };
 };
 
@@ -52,12 +47,6 @@ has charge_frequency => (
   default => sub { days(1) },
   traits => [ qw(Copy) ],
 );
-
-# For any given date, what do we think the total costs of ownership for this
-# consumer are?  Example:
-# [ 'basic account' => dollars(50), 'allmail' => dollars(20), 'support' => .. ]
-# This is an arrayref so we can have ordered line items for display.
-requires 'costs_on';
 
 sub cost_amount_on {
   my ($self, $date) = @_;
@@ -269,27 +258,6 @@ sub predecessor_running_out {
   my ($self, $event, $args) = @_;
   my $remaining_life = $event->payload->{remaining_life}  # In seconds
     or confess("predecessor didn't advise me how long it has to live");
-}
-
-sub _invoice {
-  my ($self) = @_;
-
-  my $invoice = $self->ledger->current_invoice;
-
-  my @costs = $self->costs_on( Moonpig->env->now );
-
-  my $iter = natatime 2, @costs;
-
-  while (my ($desc, $amt) = $iter->()) {
-    $invoice->add_charge(
-      class( "InvoiceCharge::Bankable" )->new({
-        description => $desc,
-        amount      => $amt,
-        tags        => $self->charge_tags,
-        consumer    => $self,
-      }),
-    );
-  }
 }
 
 1;
