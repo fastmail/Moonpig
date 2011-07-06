@@ -6,6 +6,7 @@ use List::MoreUtils qw(natatime);
 
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
+use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
 
 with(
