@@ -2,6 +2,7 @@ package Fauxbox::Moonpig::Consumer::HasAccount;
 use Moose::Role;
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::CanExpire',
 );
 
 use namespace::autoclean;
@@ -20,5 +21,9 @@ sub account {
 
   return $account;
 }
+
+after expire => sub {
+  # create job to deactivate the account in fauxbox
+};
 
 1;
