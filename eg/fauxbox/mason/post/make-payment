@@ -11,7 +11,7 @@ my $amount    = $payment_p->{amount};
 <h2>Payment amount = <% $amount %></h2>
 
 <%perl>
-my $result = $m->mp_request(
+my $credit = $m->mp_request(
   POST => sprintf(
     '/ledger/xid/%s/credits/accept_payment',
     username_xid($client->username),
@@ -21,7 +21,6 @@ my $result = $m->mp_request(
      type   => 'Simulated',
    },
   );
-my $credit = $result->{value};
 </%perl>
 
 <h2>Credit posted</h2>

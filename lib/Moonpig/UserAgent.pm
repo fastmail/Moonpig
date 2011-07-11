@@ -79,7 +79,7 @@ sub mp_request {
     die $error;
   }
 
-  return $self->decode($res->content);
+  return $self->decode($res->content)->{value};
 }
 
 sub qualify_path {

@@ -64,13 +64,14 @@ sub setup_account {
 
       $rv{ledger_guid} = do {
         my $result = $ua->mp_post('/ledgers', $signup_info);
-        cmp_deeply($result,
-                   { value =>
-                       {
-                         active_xids => { $u_xid => $guid_re },
-                         guid => $guid_re
-                        } } );
-        $result->{value}{guid};
+        cmp_deeply(
+          $result,
+          {
+            active_xids => { $u_xid => $guid_re },
+            guid        => $guid_re
+          }
+        );
+        $result->{guid};
       };
 
       $rv{account_guid} = do {
@@ -87,9 +88,9 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, { value => $guid_re });
+        cmp_deeply($result, $guid_re);
 
-        $result->{value};
+        $result;
       };
 
       $self->elapse(1);
@@ -98,30 +99,30 @@ sub setup_account {
 
       cmp_deeply(
         $invoices,
-        {
-          value => [
-            {
-              date => $date_re,
-              guid => $guid_re,
-              is_paid   => bool(0),
-              is_closed => bool(1),
-              total_amount => $price,
-            },
-          ],
-        },
+        [
+          {
+            date => $date_re,
+            guid => $guid_re,
+            is_paid   => bool(0),
+            is_closed => bool(1),
+            total_amount => $price,
+          },
+        ],
         "there is one unpaid invoice -- what we expect",
       );
 
-      my $invoice_guid = $invoices->{value}[0]{guid};
+      my $invoice_guid = $invoices->[0]{guid};
       my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
-      cmp_deeply($invoice,
-                 { value =>
-                     { date => $date_re,
-                       guid => $invoice_guid,
-                       is_closed => bool(1),
-                       is_paid => bool(0),
-                       total_amount => $price,
-                     } } );
+      cmp_deeply(
+        $invoice,
+        {
+          date         => $date_re,
+          guid         => $invoice_guid,
+          is_closed    => bool(1),
+          is_paid      => bool(0),
+          total_amount => $price,
+        },
+      );
     };
 
   return \%rv;
@@ -139,14 +140,17 @@ test "single payment" => sub {
       amount => $price,
       type => 'Simulated',
     });
-  cmp_deeply($credit,
-             { value =>
-                 { amount => $price,
-                   created_at => $date_re,
-                   guid => $guid_re,
-                   type => "Credit::Simulated",
-                   unapplied_amount => dollars(0),
-                 } } );
+
+  cmp_deeply(
+    $credit,
+    {
+      amount           => $price,
+      created_at       => $date_re,
+      guid             => $guid_re,
+      type             => "Credit::Simulated",
+      unapplied_amount => dollars(0),
+    },
+  );
 };
 
 sub elapse {

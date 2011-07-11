@@ -51,13 +51,14 @@ sub setup_account {
 
       $rv{ledger_guid} = do {
         my $result = $ua->mp_post('/ledgers', $signup_info);
-        cmp_deeply($result,
-                   { value =>
-                       {
-                         active_xids => { $u_xid => $guid_re },
-                         guid => $guid_re
-                        } } );
-        $result->{value}{guid};
+        cmp_deeply(
+          $result,
+          {
+            active_xids => { $u_xid => $guid_re },
+            guid => $guid_re
+          }
+        );
+        $result->{guid};
       };
 
       $rv{account_guid} = do {
@@ -71,9 +72,9 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, { value => $guid_re }, "ledger has one consumer");
+        cmp_deeply($result, $guid_re, "ledger has one consumer");
 
-        $result->{value};
+        $result;
       };
 
       $self->elapse(0.5);
@@ -82,30 +83,30 @@ sub setup_account {
 
       cmp_deeply(
         $invoices,
-        {
-          value => [
-            {
-              date => $date_re,
-              guid => $guid_re,
-              is_paid   => bool(0),
-              is_closed => bool(1),
-              total_amount => $price,
-            },
-          ],
-        },
+        [
+          {
+            date => $date_re,
+            guid => $guid_re,
+            is_paid   => bool(0),
+            is_closed => bool(1),
+            total_amount => $price,
+          },
+        ],
         "there is one unpaid invoice -- what we expect",
       );
 
-      my $invoice_guid = $invoices->{value}[0]{guid};
+      my $invoice_guid = $invoices->[0]{guid};
       my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
-      cmp_deeply($invoice,
-                 { value =>
-                     { date => $date_re,
-                       guid => $invoice_guid,
-                       is_closed => $JSON::XS::true,
-                       is_paid => $JSON::XS::false,
-                       total_amount => $price,
-                     } } );
+      cmp_deeply(
+        $invoice,
+        {
+          date => $date_re,
+          guid => $invoice_guid,
+          is_closed => $JSON::XS::true,
+          is_paid => $JSON::XS::false,
+          total_amount => $price,
+        },
+      );
   };
 
   return \%rv;

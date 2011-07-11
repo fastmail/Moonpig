@@ -33,7 +33,7 @@ test "raw HTTP response" => sub {
       is($resp->content_type, "application/json", "content-type");
       ok(my $result = $json->decode($resp->content), "response contains JSON");
       cmp_deeply($result,
-                 { now => num(time, 5) },
+                 { value => { now => num(time, 5) } },
                  "response contains current time");
     };
 };

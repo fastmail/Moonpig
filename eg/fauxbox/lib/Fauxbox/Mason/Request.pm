@@ -7,7 +7,7 @@ BEGIN { our @ISA = qw(HTML::Mason::Request::PSGI) }
 use Data::Dumper ();
 use HTML::Widget::Factory;
 use JSON;
-use LWP::UserAgent;
+use Moonpig::UserAgent;
 use Fauxbox::Schema;
 use DateTime;
 
@@ -18,9 +18,7 @@ sub widget { $WIDGET_FACTORY; }
 
 my $BASE_URI = $ENV{FAUXBOX_MOONPIG_URI} || die "no FAUXBOX_MOONPIG_URI";
 
-my $UA = LWP::UserAgent->new;
-
-$BASE_URI =~ s{/$}{};
+my $ua = Moonpig::UserAgent->new({ base_uri => $BASE_URI });
 
 sub mp_time {
   my ($self) = @_;
@@ -33,31 +31,9 @@ sub real_time {
 }
 
 sub mp_request {
-  my ($self, $method, $path, $arg) = @_;
+  my $self = shift;
 
-  my $target = $BASE_URI . $path;
-  $method = lc $method;
-
-  my $res;
-
-  if ($method eq 'get') {
-    $res = $UA->get($target);
-    return undef if $res->code == 404;
-  } elsif ($method eq'post') {
-    my $payload = $JSON->encode($arg);
-
-    $res = $UA->post(
-      $target,
-      'Content-Type' => 'application/json',
-      Content => $payload,
-    );
-  }
-
-  unless ($res->code == 200) {
-    die "unexpected response from moonpig:\n" . $res->as_string;
-  }
-
-  return $JSON->decode($res->content);
+  $ua->mp_request(@_);
 }
 
 sub dump {

@@ -54,14 +54,15 @@ sub setup_account {
 
       $rv{ledger_guid} = do {
         my $result = $ua->mp_post('/ledgers', $signup_info);
-        cmp_deeply($result,
-                   { value =>
-                       {
-                         active_xids => { $u_xid => $guid_re },
-                         guid => $guid_re
-                        } },
-                   "Created ledger");
-        $result->{value}{guid};
+        cmp_deeply(
+          $result,
+          {
+            active_xids => { $u_xid => $guid_re },
+            guid        => $guid_re
+          },
+          "Created ledger"
+        );
+        $result->{guid};
       };
       $ledger_path = sprintf "/ledger/guid/%s", $rv{ledger_guid};
 
@@ -76,9 +77,9 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, { value => $guid_re }, "added consumer");
+        cmp_deeply($result, $guid_re, "added consumer");
 
-        $result->{value};
+        $result;
       };
     };
 
@@ -93,7 +94,7 @@ sub check_xid {
 
   isnt($ua->mp_get("/ledger/guid/$here/consumers/active/$xid"), undef,
        "$xid consumer in expected ledger");
-  is($ua->mp_get("/ledger/xid/$xid")->{value}{guid}, $here, "ledger for $xid as expected");
+  is($ua->mp_get("/ledger/xid/$xid")->{guid}, $here, "ledger for $xid as expected");
   if (defined $not_here) {
     is($ua->mp_get("/ledger/guid/$not_here/consumers/active/$xid"), undef,
        "$xid absent from other ledger");
@@ -118,8 +119,8 @@ test split => sub {
       contact_name => "Bill S. Preston",
       contact_email_addresses => [ "bspesq\@example.com" ],
     });
-  ok($result, "web service returns new consumer $result->{value}");
-  my $ledger_b_guid = $ua->mp_get("/ledger/xid/$a_xid")->{value}{guid};
+  ok($result, "web service returns new consumer $result");
+  my $ledger_b_guid = $ua->mp_get("/ledger/xid/$a_xid")->{guid};
   isnt($ledger_b_guid, $ledger_a_guid, "$a_xid is in a different ledger");
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
   # TODO: check to make sure the new ledger has the right contact info
@@ -153,7 +154,7 @@ test handoff => sub {
       { name => "Ted 'Theodore' Logan",
         email_addresses => [ 'ttl@example.com' ],
       });
-    $result->{value}{guid};
+    $result->{guid};
   };
 
   note "Transferring responsibility for $a_xid to ledger $ledger_b_guid\n";
@@ -163,7 +164,7 @@ test handoff => sub {
       xid => $a_xid,
       target_ledger => $ledger_b_guid,
     });
-  ok($result, "web service returns new consumer $result->{value}");
+  ok($result, "web service returns new consumer $result");
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
 
   note "Transferring responsibility back";
@@ -173,7 +174,7 @@ test handoff => sub {
       xid => $a_xid,
       target_ledger => $ledger_a_guid,
     });
-  ok($result, "web service returns new consumer $result->{value}");
+  ok($result, "web service returns new consumer $result");
   $self->check_xid($a_xid, $ledger_a_guid, $ledger_b_guid);
 
   note "Transferring responsibility incorrectly";

@@ -31,7 +31,7 @@ sub test_routes {
     return [
       200,
       [ 'Content-type' => 'application/json' ],
-      [ $JSON->encode({ result => 'heartbeats processed' }) ],
+      [ $JSON->encode({ value => { result => 'heartbeats processed' } }) ],
     ];
   }
 
@@ -41,7 +41,12 @@ sub test_routes {
     return [
       200,
       [ 'Content-type' => 'application/json' ],
-      [ $JSON->encode({ result => 'email queue processed', sent => $count }) ],
+      [
+        $JSON->encode({ value => {
+          result => 'email queue processed',
+          sent   => $count,
+        } })
+      ],
     ];
   }
 
@@ -49,7 +54,7 @@ sub test_routes {
     return [
       200,
       [ 'Content-type' => 'application/json' ],
-      [ $JSON->encode({ now => Moonpig->env->now->epoch }) ],
+      [ $JSON->encode({ value => { now => Moonpig->env->now->epoch } }) ],
     ];
   }
 
@@ -63,7 +68,7 @@ sub test_routes {
     return [
       200,
       [ 'Content-type' => 'application/json' ],
-      [ $JSON->encode({ now => Moonpig->env->now->epoch }) ],
+      [ $JSON->encode({ value => { now => Moonpig->env->now->epoch } }) ],
     ];
   }
 }
