@@ -98,6 +98,7 @@ sub STICK_PACK {
     is_paid      => $self->is_paid,
     is_closed    => $self->is_closed,
     date         => $self->date,
+    charges      => [ map {; ppack($_) } $self->all_charges ],
   });
 }
 

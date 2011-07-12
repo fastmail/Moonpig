@@ -322,7 +322,7 @@ sub template_like_this {
 
 sub STICK_PACK {
   my ($self) = @_;
-  return $self->guid;
+  return { guid => $self->guid };
 }
 
 1;

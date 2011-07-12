@@ -1,0 +1,18 @@
+.dump {
+  font-family: monospace;
+  border: thin black solid;
+  padding: 1em;
+  background-color: #edc;
+}
+
+.contact table {
+  border: thin black solid;
+}
+
+.guid {
+  font-family: monospace;
+}
+
+.total th {
+  text-align: right;
+}

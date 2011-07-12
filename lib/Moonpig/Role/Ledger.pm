@@ -595,6 +595,16 @@ sub STICK_PACK {
   return {
     guid    => $self->guid,
     contact => ppack($self->contact),
+    credits => {
+      items => [
+        map { ppack($_) } $self->credits
+      ],
+    },
+    open_invoices => {
+      items => [
+        map { ppack($_) } grep { $_->is_unpaid } $self->invoices
+      ],
+    },
     active_xids => {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
         $self->xids_handled

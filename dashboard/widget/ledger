@@ -1,0 +1,94 @@
+<%args>
+$ledger
+</%args>
+
+<div class='ledger'>
+  <& SELF:contact, contact => $ledger->{contact} &>
+  <& SELF:active-consumers, active_consumers => $ledger->{active_xids} &>
+  <& SELF:open-invoices, ledger => $ledger, invoices => $ledger->{open_invoices}{items} &>
+  <& SELF:credits, credits => $ledger->{credits}{items} &>
+
+  <div class='dump'>
+  <h2>Raw Ledger Data</h2>
+  <% dumper_html($ledger) %>
+  </div>
+</div>
+
+<%method credits>
+<%args>
+$credits
+</%args>
+<div class='credits'>
+  <h2>Payment History</h2>
+  <table>
+% for my $credit (sort { $b->{created_at} cmp $a->{created_at} } @$credits) {
+    <tr>
+      <th class='guid'><% $credit->{guid} |h %></th>
+      <td><% $credit->{type} |h %></td>
+      <td><% $credit->{created_at} |h %></td>
+      <td><% mc($credit->{amount}) |h %></td>
+      <td><% mc($credit->{unapplied_amount}) |h %></td>
+    </tr>
+% }
+  </table>
+</div>
+</%method>
+
+<%method active-consumers>
+<%args>
+$active_consumers
+</%args>
+<div class='consumers'>
+  <h2>Active Consumers</h2>
+  <table>
+% for my $xid (sort keys %$active_consumers) {
+    <tr><th><% $xid |h %></th><td>...</td></tr>
+% }
+  </table>
+</div>
+</%method>
+
+<%method open-invoices>
+<%args>
+$ledger
+$invoices
+</%args>
+<div class='invoices'>
+  <h2>Open Invoice</h2>
+% my $total = 0;
+% $total += $_->{total_amount} for @$invoices;
+  <table>
+% for my $invoice (sort { $b->{date} cmp $a->{date} } @$invoices) {
+    <tr>
+      <th class='guid'>
+        <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a></th>
+      <td><% $invoice->{date} |h %></td>
+      <td><% mc($invoice->{total_amount}) |h %></td>
+    </tr>
+% }
+    <tr class='total'>
+      <th>Total</th>
+      <td></td>
+      <td><% mc($total) |h %></td>
+    </tr>
+  </table>
+</div>
+</%method>
+
+<%method contact>
+<%args>
+$contact
+</%args>
+% my @emails = @{ $contact->{email} };
+% my $email_count = @emails;
+<div class='contact'>
+  <h2>Ledger Contact</h2>
+  <table>
+    <tr><th>Name</th><td><% $contact->{name} |h %></td></tr>
+    <tr><th rowspan='<% $email_count %>'>Email</th><td><% $emails[0] |h %></td></tr>
+% for my $i (1 .. $#emails) {
+    <tr><th></th><td><% $emails[ $i ] |h %></td></tr>
+% }
+  </table>
+</div>
+</%method>

@@ -36,7 +36,7 @@ sub STICK_PACK {
 
   return {
     name  => $self->name,
-    email => $self->email_addresses,
+    email => [ $self->email_addresses ],
   };
 }
 

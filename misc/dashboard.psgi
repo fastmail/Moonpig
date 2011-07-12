@@ -11,6 +11,8 @@ use Plack::Builder;
 {
   package HTML::Mason::Commands;
   use Data::Dumper::HTML qw(dumper_html);
+
+  sub mc { sprintf '$%.02f', ((shift) / 100_000) }
 }
 
 use namespace::autoclean;

@@ -51,6 +51,4 @@ sub type {
   return $type;
 }
 
-
-
 1;

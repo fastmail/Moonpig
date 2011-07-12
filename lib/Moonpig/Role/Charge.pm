@@ -36,4 +36,16 @@ has tags => (
   },
 );
 
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return {
+    description => $self->description,
+    amount      => $self->amount,
+    date        => $self->date,
+    tags        => $self->tags,
+  }
+}
+
+
 1;
