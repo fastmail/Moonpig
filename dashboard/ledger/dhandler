@@ -1,0 +1,9 @@
+% my $guid   = $m->dhandler_arg;
+% my $ledger = $m->mp_request(GET => "/ledger/guid/$guid");
+<&| /page/full, title => "Moonpig Ledger $guid" &>
+
+<div class='dump'>
+<% dumper_html($ledger) %>
+</div>
+
+</&>

@@ -1,0 +1,14 @@
+<&| /page/full, title => 'Moonpig Dashboard' &>
+
+<& /widget/search-box,
+  id    => 'ledger-guid',
+  label => 'Ledger by GUID',
+&>
+<script>
+$("#ledger-guid").submit(function () {
+  window.location.href = '/ledger/' + $(this).find("input").first().val();
+  return true;
+});
+</script>
+
+</&>
