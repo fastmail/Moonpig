@@ -31,4 +31,13 @@ has email_addresses => (
   required => 1,
 );
 
+sub STICK_PACK {
+  my ($self) = @_;
+
+  return {
+    name  => $self->name,
+    email => $self->email_addresses,
+  };
+}
+
 1;

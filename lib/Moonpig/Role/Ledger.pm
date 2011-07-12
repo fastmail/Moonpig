@@ -593,7 +593,8 @@ sub STICK_PACK {
   my ($self) = @_;
 
   return {
-    guid => $self->guid,
+    guid    => $self->guid,
+    contact => ppack($self->contact),
     active_xids => {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
         $self->xids_handled
