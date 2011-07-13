@@ -96,11 +96,6 @@ after become_active => sub {
   ]);
 };
 
-sub last_charge_exists {
-  my ($self) = @_;
-  return defined($self->last_charge_date);
-}
-
 publish expire_date => { } => sub {
   my ($self) = @_;
   my $bank = $self->bank ||
