@@ -1,4 +1,5 @@
 package t::lib::Factory::Ledger;
+use strict;
 
 use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
@@ -41,18 +42,19 @@ sub build_consumers {
     $name_by_guid{$stuff->{$c_name}->guid} = $c_name;
   }
 
-  # find the ones that are *not* replacements and activate them unless otherwise specified
-  { my %consumer = map { $stuff{$_}->guid => $stuff{$_} } keys %args;
+  # find the ones that are *not* replacements and activate them unless
+  # otherwise specified
+  { my %consumer = map { $stuff->{$_}->guid => $stuff->{$_} } keys %$args;
     # delete all the consumers that are replacements
     for my $consumer (values %consumer) {
       $consumer->replacement && delete $consumer{$consumer->replacement->guid};
     }
     # iterate over non-replacements, activating each
     for my $consumer (values %consumer) {
-      my $name = $name_by_guid{$consumer_guid};
+      my $name = $name_by_guid{$consumer->guid};
       # activate by default, or if the arg value is true
       if (! exists $args->{$name}{make_active} || $args->{$name}{make_active}) {
-        $consumer->make_active;
+        $consumer->become_active;
       }
     }
   }
@@ -79,6 +81,7 @@ sub build_consumer {
   my $consumer = $stuff->{ledger}->add_consumer(
     class($class),
     { charge_tags => [],
+      charge_description => "test consumer",
       xid => "test:consumer:$name",
       %$args,
     });
