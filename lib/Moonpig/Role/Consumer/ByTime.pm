@@ -98,6 +98,9 @@ after become_active => sub {
 
 publish expire_date => { } => sub {
   my ($self) = @_;
+
+  $self->has_last_charge_date ||
+    confess "Can't calculate remaining life for inactive consumer";
   my $bank = $self->bank ||
     confess "Can't calculate remaining life for unfunded consumer";
   my $remaining = $bank->unapplied_amount();
@@ -118,6 +121,8 @@ sub remaining_life {
 
 sub next_charge_date {
   my ($self) = @_;
+  croak "Inactive consumer has no next_charge_date yet"
+    unless $self->has_last_charge_date;
   return $self->last_charge_date + $self->charge_frequency;
 }
 
