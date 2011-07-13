@@ -15,7 +15,7 @@ use Try::Tiny;
 my $CLASS = "Consumer::ByTime::FixedCost";
 my $___ = class($CLASS); # Load it
 
-use t::lib::Factory;
+use t::lib::Factory qw(build);
 
 # todo: warning if no bank
 #       suicide
@@ -26,7 +26,7 @@ test "constructor_a" => sub {
   my ($self) = @_;
   plan tests => 1;
 
-  my $stuff = t::lib::Factory->build();
+  my $stuff = build();
 
   ok(
     exception {
@@ -38,11 +38,11 @@ test "constructor_a" => sub {
   );
 };
 
-sub build {
+sub setup {
   my ($self, $c_extra) = @_;
   $c_extra ||= {};
 
-  return t::lib::Factory->build(
+  return build(
     consumer => { class => $CLASS,
                   cost_amount        => dollars(1),
                   cost_period        => days(1),
@@ -58,7 +58,7 @@ sub build {
 test "constructor_b" => sub {
   my ($self) = @_;
   plan tests => 1;
-  my $stuff = $self->build();
+  my $stuff = $self->setup();
   ok($stuff->{consumer});
 };
 
@@ -68,14 +68,14 @@ test expire_date => sub {
   plan tests => 4;
 
   {
-    my $stuff = $self->build;
+    my $stuff = $self->setup;
     my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
        "stock consumer expires in three days");
   }
 
   {
-    my $stuff = $self->build({
+    my $stuff = $self->setup({
       cost_amount      => dollars(3),
     });
     my $exp = $stuff->{consumer}->expire_date;
@@ -84,7 +84,7 @@ test expire_date => sub {
   }
 
   {
-    my $stuff = $self->build({
+    my $stuff = $self->setup({
       cost_period        => days(7),
     });
 
@@ -104,7 +104,7 @@ test expire_date => sub {
         second => 0,
        ));
 
-    my $stuff = $self->build();
+    my $stuff = $self->setup();
 
     my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, "1969-04-05",
@@ -127,7 +127,7 @@ test "basic_event" => sub {
   my ($self) = @_;
   plan tests => 1;
 
-  my $stuff = $self->build({
+  my $stuff = $self->setup({
     cost_amount        => dollars(1),
   });
   my $c = $stuff->{consumer};

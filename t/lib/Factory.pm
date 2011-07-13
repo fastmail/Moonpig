@@ -8,37 +8,39 @@ use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util -all;
 
-use namespace::autoclean;
+use Sub::Exporter -setup => {
+  exports => [ qw(build) ], # The other stuff is really not suitable for exportation
+};
 
 sub build {
-  my ($self, %args) = @_;
+  my (%args) = @_;
   my %stuff;
 
-  $stuff{ledger} = $self->build_ledger($args{ledger});
+  $stuff{ledger} = build_ledger($args{ledger});
   delete $args{ledger};
 
-  $self->build_consumers(\%args, \%stuff);
+  build_consumers(\%args, \%stuff);
 
   return \%stuff;
 }
 
 sub build_ledger {
-  my ($self, $args) = @_;
+  my ($args) = @_;
   my %args = %{$args || {}};
   my $class = delete $args{class} || class('Ledger');
-  $args{contact} ||= $self->build_contact;
+  $args{contact} ||= build_contact();
   return $class->new(\%args);
 }
 
 sub build_consumers {
-  my ($self, $args, $stuff) = @_;
+  my ($args, $stuff) = @_;
 
   my %name_by_guid; # backwards mapping from guid of created consumer to name
   # create all required consumers
   for my $c_name (keys %$args) {
     next if exists $stuff->{$c_name};
     my %c_args = %{$args->{$c_name}};
-    $stuff->{$c_name} = $self->build_consumer($c_name, \%c_args, $stuff);
+    $stuff->{$c_name} = build_consumer($c_name, \%c_args, $stuff);
     $name_by_guid{$stuff->{$c_name}->guid} = $c_name;
   }
 
@@ -61,18 +63,18 @@ sub build_consumers {
 }
 
 sub build_consumer {
-  my ($self, $name, $args, $stuff) = @_;
+  my ($name, $args, $stuff) = @_;
   my $become_active = delete $args->{make_active};
 
   # If this consumer will have a replacement, build that first
   my $replacement_name = $args->{replacement};
   if (defined($replacement_name) && ! exists $stuff->{$replacement_name}) {
-    $args->{replacement} =  $self->build_consumer($replacement_name, $args, $stuff);
+    $args->{replacement} =  build_consumer($replacement_name, $args, $stuff);
   }
 
   my $bank;
   if (exists $args->{bank} && $args->{bank} > 0) {
-    $args->{bank} = $self->build_bank({ amount => $args->{bank} }, $stuff);
+    $args->{bank} = build_bank({ amount => $args->{bank} }, $stuff);
   }
 
   my $class = delete $args->{class}
@@ -91,7 +93,7 @@ sub build_consumer {
 }
 
 sub build_bank {
-  my ($self, $args, $stuff) = @_;
+  my ($args, $stuff) = @_;
 
   return $stuff->{ledger}->add_bank(
     class("Bank"),
