@@ -77,15 +77,31 @@ sub build_consumer {
     $args->{bank} = build_bank({ amount => $args->{bank} }, $stuff);
   }
 
-  my $class = delete $args->{class}
-    or croak "Arguments for consumer '$name' have no 'class'\n";
-  $class = "Consumer::$class" unless $class =~ /^Consumer::/;
-  my $consumer = $stuff->{ledger}->add_consumer(
-    class($class),
-    { charge_tags => [],
-      xid => "test:consumer:$name",
-      %$args,
-    });
+  my $class = delete $args->{class};
+  my $template = delete $args->{template};
+
+  my $consumer;
+  if ($class) {
+    croak "Arguments for consumer '$name' have both 'class' and 'template'\n"
+      if $template;
+
+    $class = "Consumer::$class" unless $class =~ /^Consumer::/;
+    $consumer = $stuff->{ledger}->add_consumer(
+      class($class),
+      { charge_tags => [],
+        xid => "test:consumer:$name",
+        %$args,
+      });
+  } elsif ($template) {
+    $consumer = $stuff->{ledger}->add_consumer_from_template(
+      $template,
+      { charge_tags => [],
+        xid => "test:consumer:$name",
+        %$args,
+      });
+  } else {
+    croak "Arguments for consumer '$name' have neither 'class' nor 'template'\n";
+  }
 
   $consumer->become_active if $become_active;
 

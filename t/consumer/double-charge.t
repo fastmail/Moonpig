@@ -3,14 +3,10 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 
-with(
-  't::lib::Factory::Ledger',
-  't::lib::Role::UsesStorage',
-);
+use t::lib::Factory qw(build);
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
+with(
+  't::lib::Role::UsesStorage',
 );
 
 use Moonpig::Env::Test;
@@ -22,21 +18,20 @@ use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
+my ($ledger, $consumer);
+
 test "check amounts" => sub {
   my ($self) = @_;
 
   Moonpig->env->stop_clock;
 
-  my $ledger = $self->test_ledger;
-  $self->ledger( $ledger );
-
-  my $consumer = $ledger->add_consumer_from_template(
-    'demo-service',
-    {
-      xid                => "test:thing:xid",
-      make_active        => 1,
-    },
-  );
+  my $stuff = build(
+      consumer => {
+          template    => 'demo-service',
+          xid         => "test:thing:xid",
+          make_active => 1,
+      });
+  ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
 
   my $inv;
   Moonpig->env->storage->do_rw(
@@ -67,7 +62,7 @@ test "check amounts" => sub {
 sub payable_invoice {
   my ($self) = @_;
   my ($inv) = grep { ! $_->is_open and ! $_->is_paid }
-    $self->ledger->invoices;
+    $ledger->invoices;
   return $inv;
 }
 
