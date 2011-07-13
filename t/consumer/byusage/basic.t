@@ -8,7 +8,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use t::lib::Factory::Ledger;
+use t::lib::Factory;
 use t::lib::Logger;
 
 my ($Ledger, $Consumer);
@@ -35,7 +35,7 @@ sub create_consumer {
   my ($self, $args) = @_;
   $args ||= {};
 
-  my $stuff = t::lib::Factory::Ledger->build(
+  my $stuff = t::lib::Factory->build(
     consumer => { class => 'ByUsage',
                   bank => dollars(1),
                   cost_per_unit => cents(5),

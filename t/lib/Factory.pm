@@ -1,4 +1,4 @@
-package t::lib::Factory::Ledger;
+package t::lib::Factory;
 use strict;
 
 use Carp qw(confess croak);

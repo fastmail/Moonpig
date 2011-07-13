@@ -15,7 +15,7 @@ use Try::Tiny;
 my $CLASS = "Consumer::ByTime::FixedCost";
 my $___ = class($CLASS); # Load it
 
-use t::lib::Factory::Ledger;
+use t::lib::Factory;
 
 # todo: warning if no bank
 #       suicide
@@ -26,7 +26,7 @@ test "constructor_a" => sub {
   my ($self) = @_;
   plan tests => 1;
 
-  my $stuff = t::lib::Factory::Ledger->build();
+  my $stuff = t::lib::Factory->build();
 
   ok(
     exception {
@@ -42,7 +42,7 @@ sub build {
   my ($self, $c_extra) = @_;
   $c_extra ||= {};
 
-  return t::lib::Factory::Ledger->build(
+  return t::lib::Factory->build(
     consumer => { class => $CLASS,
                   cost_amount        => dollars(1),
                   cost_period        => days(1),
