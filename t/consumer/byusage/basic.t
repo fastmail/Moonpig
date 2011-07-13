@@ -8,71 +8,51 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
-  lazy => 1,
-  clearer => 'scrub_ledger',
-);
-sub ledger;  # Work around bug in Moose 'requires';
+use t::lib::Factory qw(build);
+use t::lib::Logger;
 
-has consumer => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Consumer::ByUsage',
-  default => sub { $_[0]->test_consumer('ByUsage') },
-  lazy => 1,
-  clearer => 'discard_consumer',
-  predicate => 'has_consumer',
-);
-
+my ($Ledger, $Consumer);
 has hold => (
   is   => 'rw',
   isa => 'Moonpig::Ledger::Accountant::Transfer',
   clearer => 'discard_hold',
 );
 
-with(
-  't::lib::Factory::Consumers',
-  't::lib::Factory::Ledger',
-);
-
-use t::lib::Logger;
-
 before run_test => sub {
   my ($self) = @_;
-  $self->discard_consumer;
-  $self->discard_hold;
+  $self->discard_ledger();
+  $self->discard_hold();
   Moonpig->env->email_sender->clear_deliveries;
+  $self->create_consumer();
 };
+
+sub discard_ledger {
+  undef $Ledger;
+  undef $Consumer;
+}
 
 sub create_consumer {
   my ($self, $args) = @_;
   $args ||= {};
-  return if $self->has_consumer;
 
-  my $b = class('Bank')->new({
-    ledger => $self->ledger,
-    amount => dollars(1),
-  });
+  my $stuff = build(
+    consumer => { class => 'ByUsage',
+                  bank => dollars(1),
+                  cost_per_unit => cents(5),
+                  old_age => days(30),
+                  replacement_mri => Moonpig::URI->nothing(),
+                  make_active => 1,
+                  %$args,
+                },
+  );
 
-  $self->consumer(
-    $self->test_consumer(
-      'ByUsage',
-      { bank => $b,
-        ledger => $self->ledger,
-        cost_per_unit      => cents(5),
-        old_age            => days(30),
-        replacement_mri    => Moonpig::URI->nothing(),
-        make_active        => 1,
-        %$args,
-      }));
+  $Consumer = $stuff->{consumer};
+  $Ledger   = $stuff->{ledger};
 
-  ok($self->consumer, "set up consumer");
-  ok($self->consumer->does('Moonpig::Role::Consumer::ByUsage'),
+  ok($Consumer, "set up consumer");
+  ok($Consumer->does('Moonpig::Role::Consumer::ByUsage'),
      "consumer is correct type");
-  is($self->consumer->bank, $b, "consumer has bank");
-  is($self->consumer->unapplied_amount, dollars(1), "bank contains \$1");
+  is($Consumer->unapplied_amount, dollars(1), "its bank contains \$1");
 }
 
 test "consumer creation" => sub {
@@ -84,43 +64,43 @@ sub successful_hold {
   my ($self, $n_units) = @_;
   $n_units ||= 7;
   $self->create_consumer;
-  is($self->consumer->units_remaining, 20, "initially funds for 20 units");
-  my $h = $self->consumer->create_hold_for_units($n_units);
+  is($Consumer->units_remaining, 20, "initially funds for 20 units");
+  my $h = $Consumer->create_hold_for_units($n_units);
   my $amt = $n_units * cents(5);
   ok($h, "made hold");
   $self->hold($h);
-  is($h->target, $self->consumer, "hold has correct consumer");
-  is($h->source, $self->consumer->bank, "hold has correct bank");
+  is($h->target, $Consumer, "hold has correct consumer");
+  is($h->source, $Consumer->bank, "hold has correct bank");
   is($h->amount, $amt, "hold is for $amt mc");
   my $x_remaining = 20 - $n_units;
-  is($self->consumer->units_remaining, $x_remaining,
+  is($Consumer->units_remaining, $x_remaining,
      "after holding $n_units, there are $x_remaining left");
 }
 
 test "successful hold" => sub {
   my ($self) = @_;
+
   $self->successful_hold;
 };
 
 test release_hold => sub {
   my ($self) = @_;
-  $self->scrub_ledger;
   $self->successful_hold;
-  is($self->consumer->units_remaining, 13, "still 13 left in bank");
+  is($Consumer->units_remaining, 13, "still 13 left in bank");
   $self->hold->delete;
-  is($self->consumer->units_remaining, 20, "20 left after releasing hold");
+  is($Consumer->units_remaining, 20, "20 left after releasing hold");
 };
 
 test commit_hold => sub {
   my ($self) = @_;
   my @journals;
   $self->successful_hold;
-  @journals = $self->ledger->journals;
+  @journals = $Ledger->journals;
   is(@journals, 0, "no journal yet");
   note("creating charge for hold");
-  $self->consumer->create_charge_for_hold($self->hold, "test charge");
-  is($self->consumer->units_remaining, 13, "still 13 left in bank");
-  @journals = $self->ledger->journals;
+  $Consumer->create_charge_for_hold($self->hold, "test charge");
+  is($Consumer->units_remaining, 13, "still 13 left in bank");
+  @journals = $Ledger->journals;
   is(@journals, 1, "now one journal");
   is($journals[0]->total_amount, cents(35),
      "total charges now \$.35");
@@ -129,10 +109,10 @@ test commit_hold => sub {
 test failed_hold => sub {
   my ($self) = @_;
   $self->successful_hold;
-  is($self->consumer->units_remaining, 13, "still 13 left in bank");
-  my $hold = $self->consumer->create_hold_for_units(14);
+  is($Consumer->units_remaining, 13, "still 13 left in bank");
+  my $hold = $Consumer->create_hold_for_units(14);
   is(undef(), $hold, "cannot create hold for 14 units");
-  is($self->consumer->units_remaining, 13, "still 13 left in bank");
+  is($Consumer->units_remaining, 13, "still 13 left in bank");
 };
 
 test low_water_replacement => sub {
@@ -147,19 +127,19 @@ test low_water_replacement => sub {
   });
   my $q = 2;
   my $held = 0;
-  until ($self->consumer->has_replacement) {
-    $self->consumer->create_hold_for_units($q) or last;
+  until ($Consumer->has_replacement) {
+    $Consumer->create_hold_for_units($q) or last;
     $held += $q;
   }
-  ok($self->consumer->has_replacement, "replacement consumer created");
-  cmp_ok($self->consumer->units_remaining, '<=', $lwm,
+  ok($Consumer->has_replacement, "replacement consumer created");
+  cmp_ok($Consumer->units_remaining, '<=', $lwm,
          "replacement created at or below LW mark");
-  cmp_ok($self->consumer->units_remaining + $q, '>', $lwm,
+  cmp_ok($Consumer->units_remaining + $q, '>', $lwm,
          "replacement created just below LW mark");
 
   # Make sure hold creation works even after the replacement exists
   # (This caused a failure until commit 918a10cce.)
-  $self->consumer->create_hold_for_units(1);
+  $Consumer->create_hold_for_units(1);
 };
 
 sub jan {
@@ -174,33 +154,33 @@ test est_lifetime => sub {
   Moonpig->env->stop_clock_at(jan(1));
 
   $self->create_consumer();
-  is($self->consumer->units_remaining, 20, "initially 20 units");
-  is($self->consumer->unapplied_amount, dollars(1), "initially \$1.00");
-  is($self->consumer->estimated_lifetime, days(365),
+  is($Consumer->units_remaining, 20, "initially 20 units");
+  is($Consumer->unapplied_amount, dollars(1), "initially \$1.00");
+  is($Consumer->estimated_lifetime, days(365),
      "inestimable lifetime -> 365d");
 
   Moonpig->env->stop_clock_at(jan(15));
-  $self->consumer->create_hold_for_units(1);
-  is($self->consumer->units_remaining, 19, "now 19 units");
-  is($self->consumer->unapplied_amount, dollars(0.95), "now \$0.95");
+  $Consumer->create_hold_for_units(1);
+  is($Consumer->units_remaining, 19, "now 19 units");
+  is($Consumer->unapplied_amount, dollars(0.95), "now \$0.95");
   Moonpig->env->stop_clock_at(jan(30));
-  is($self->consumer->estimated_lifetime, days(30 * 19),
+  is($Consumer->estimated_lifetime, days(30 * 19),
      "1 charge/30d -> lifetime 600d");
 
   Moonpig->env->stop_clock_at(jan(24));
-  $self->consumer->create_hold_for_units(2);
-  is($self->consumer->units_remaining, 17, "now 17 units");
-  is($self->consumer->unapplied_amount, dollars(0.85), "now \$0.85");
+  $Consumer->create_hold_for_units(2);
+  is($Consumer->units_remaining, 17, "now 17 units");
+  is($Consumer->unapplied_amount, dollars(0.85), "now \$0.85");
   Moonpig->env->stop_clock_at(jan(30));
-  is($self->consumer->estimated_lifetime, days(30 * 17/3),
+  is($Consumer->estimated_lifetime, days(30 * 17/3),
      "3 charges/30d -> lifetime 200d");
 
   Moonpig->env->stop_clock_at(jan(50));
-  is($self->consumer->estimated_lifetime, days(30 * 17/2),
+  is($Consumer->estimated_lifetime, days(30 * 17/2),
      "old charges don't count");
 
   Moonpig->env->stop_clock_at(jan(58));
-  is($self->consumer->estimated_lifetime, days(365),
+  is($Consumer->estimated_lifetime, days(365),
      "no recent charges -> guess 365d");
 };
 
@@ -216,21 +196,21 @@ test "test lifetime replacement" => sub {
       my $day = 0;
 
       note "Testing with q=$q, t=$t\n";
-      $self->discard_consumer;
+      $self->discard_ledger;
       $self->create_consumer({
         low_water_mark => 0,
         replacement_mri => $MRI,
         old_age => $old_age,
       });
 
-      until ($self->consumer->has_replacement) {
+      until ($Consumer->has_replacement) {
         $day += $t;
         Moonpig->env->stop_clock_at(jan($day));
-        $prev_est_life = $self->consumer->estimated_lifetime;
-        $self->consumer->create_hold_for_units($q) or last;
-        $cur_est_life = $self->consumer->estimated_lifetime;
+        $prev_est_life = $Consumer->estimated_lifetime;
+        $Consumer->create_hold_for_units($q) or last;
+        $cur_est_life = $Consumer->estimated_lifetime;
       }
-      ok($self->consumer->has_replacement, "replacement consumer created");
+      ok($Consumer->has_replacement, "replacement consumer created");
       cmp_ok($cur_est_life, '<=', $old_age,
              "replacement created not created too soon");
       cmp_ok($prev_est_life, '>', $old_age,
@@ -250,17 +230,17 @@ test default_low_water_check => sub {
   });
   my $q = 0;
   my $held = 0;
-  until ($self->consumer->has_replacement) {
+  until ($Consumer->has_replacement) {
     $q++;
-    $self->consumer->create_hold_for_units($q) or last;
+    $Consumer->create_hold_for_units($q) or last;
     $held += $q;
   }
-  ok($self->consumer->has_replacement, "replacement consumer created");
+  ok($Consumer->has_replacement, "replacement consumer created");
   # If no low-water mark specified, create replacement when next request of
   # same size would cause exhaustion
-  cmp_ok($self->consumer->units_remaining, '<=', $q,
+  cmp_ok($Consumer->units_remaining, '<=', $q,
          "replacement created at or below LW mark");
-  cmp_ok($self->consumer->units_remaining, '>', 0,
+  cmp_ok($Consumer->units_remaining, '>', 0,
          "replacement created before exhaustion");
 };
 
