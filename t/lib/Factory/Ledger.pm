@@ -81,7 +81,6 @@ sub build_consumer {
   my $consumer = $stuff->{ledger}->add_consumer(
     class($class),
     { charge_tags => [],
-      charge_description => "test consumer",
       xid => "test:consumer:$name",
       %$args,
     });

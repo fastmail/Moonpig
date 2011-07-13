@@ -12,102 +12,83 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-my $CLASS = class('Consumer::ByTime::FixedCost');
+my $CLASS = "Consumer::ByTime::FixedCost";
+my $___ = class($CLASS); # Load it
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
-);
-sub ledger;  # Work around bug in Moose 'requires';
-
-with ('t::lib::Factory::Consumers',
-      't::lib::Factory::Ledger',
-     );
+use t::lib::Factory::Ledger;
 
 # todo: warning if no bank
 #       suicide
 #       create successor
 #       hand off to successor
 
-test "constructor" => sub {
+test "constructor_a" => sub {
   my ($self) = @_;
-  plan tests => 2;
-  my $ld = $self->test_ledger;
+  plan tests => 1;
+
+  my $stuff = t::lib::Factory::Ledger->build();
 
   ok(
     exception {
       $CLASS->new({
-        ledger             => $self->test_ledger,
+        ledger             => $stuff->{ledger},
        });
     },
     "missing attrs",
   );
+};
 
-  my $c = $self->test_consumer(
-    $CLASS,
-    { cost_amount        => dollars(1),
-      cost_period        => days(1),
-      old_age            => days(0),
-      replacement_mri    => Moonpig::URI->nothing(),
-    });
-  ok($c);
+sub build {
+  my ($self, $c_extra) = @_;
+  $c_extra ||= {};
+
+  return t::lib::Factory::Ledger->build(
+    consumer => { class => $CLASS,
+                  cost_amount        => dollars(1),
+                  cost_period        => days(1),
+                  old_age            => days(0),
+                  replacement_mri    => Moonpig::URI->nothing(),
+                  charge_description => "test consumer",
+                  bank               => dollars(3),
+                  make_active        => 1,
+                  %$c_extra,
+                });
+}
+
+test "constructor_b" => sub {
+  my ($self) = @_;
+  plan tests => 1;
+  my $stuff = $self->build();
+  ok($stuff->{consumer});
 };
 
 # Need more expiration date tests
 test expire_date => sub {
   my ($self) = @_;
   plan tests => 4;
-  my $ledger = $self->test_ledger;
-
-  my $b = class('Bank')->new({
-    ledger => $ledger,
-    amount => dollars(3)
-   });
 
   {
-    my $c = $self->test_consumer(
-      $CLASS,
-      { bank               => $b,
-        ledger             => $ledger,
-        cost_amount        => dollars(1),
-        cost_period        => days(1),
-        old_age            => days(0),
-        replacement_mri    => Moonpig::URI->nothing(),
-      });
-
-    my $exp = $c->expire_date;
+    my $stuff = $self->build;
+    my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
        "stock consumer expires in three days");
   }
 
   {
-    my $c = $self->test_consumer(
-      $CLASS,
-      { bank             => $b,
-        ledger           => $ledger,
-        cost_amount      => dollars(3),
-        cost_period      => days(1),
-        old_age          => days(0),
-        replacement_mri  => Moonpig::URI->nothing(),
-      });
-    my $exp = $c->expire_date;
+    my $stuff = $self->build({
+      cost_amount      => dollars(3),
+    });
+    my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
        "three dollars a day expires in one day");
   }
 
   {
-    my $c = $self->test_consumer(
-      $CLASS,
-      { bank               => $b,
-        ledger             => $ledger,
-        cost_amount        => dollars(1),
-        cost_period        => days(7),
-        old_age            => days(0),
-        replacement_mri    => Moonpig::URI->nothing(),
-      });
+    my $stuff = $self->build({
+      cost_period        => days(7),
+    });
 
-    my $exp = $c->expire_date;
+    my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 21 * 86_400)->ymd,
        "a dollar a week expires in 21 days");
   }
@@ -121,23 +102,14 @@ test expire_date => sub {
         hour   => 2,
         minute => 38,
         second => 0,
-      )
-    );
-    my $c = $self->test_consumer(
-      $CLASS,
-      { bank               => $b,
-        ledger             => $ledger,
-        cost_amount        => dollars(1),
-        cost_period        => days(1),
-        old_age            => days(0),
-        replacement_mri    => Moonpig::URI->nothing(),
-      });
+       ));
 
-    my $exp = $c->expire_date;
+    my $stuff = $self->build();
+
+    my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, "1969-04-05",
        "hippie consumer expires in three days");
   }
-
 };
 
 sub queue_handler {
@@ -154,16 +126,11 @@ sub queue_handler {
 test "basic_event" => sub {
   my ($self) = @_;
   plan tests => 1;
-  my $ld = $self->test_ledger;
 
-  my $c = $self->test_consumer(
-    $CLASS,
-    { ledger             => $self->test_ledger,
-      cost_amount        => dollars(1),
-      cost_period        => days(1),
-      old_age            => days(0),
-      replacement_mri    => Moonpig::URI->nothing(),
-    });
+  my $stuff = $self->build({
+    cost_amount        => dollars(1),
+  });
+  my $c = $stuff->{consumer};
 
   my @eq;
   $c->register_event_handler('test', 'testhandler', queue_handler("c", \@eq));
