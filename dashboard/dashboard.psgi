@@ -38,6 +38,7 @@ Router::Dumb::Helper::RouteFile->new({ filename => 'dashboard/routes' })
 my $interp = HTML::Mason::Interp->new(
   comp_root     => File::Spec->rel2abs("dashboard/mason"),
   request_class => 'Moonpig::Dashboard::Request',
+  allow_globals => [ '$r' ],
 );
 
 my $app = sub {
@@ -53,6 +54,9 @@ my $app = sub {
 
   try {
     my $output = '';
+
+    $interp->set_global('$r', $req);
+
     $interp->make_request(
       comp => $comp,
       args => [ $match->matches ],
