@@ -1,0 +1,18 @@
+%# vim:set ft=mason:
+<%args>
+$ledger_guid
+$invoice_guid
+</%args>
+<%perl>
+my $invoice = $m->mp_request(
+  GET => "/ledger/guid/$ledger_guid/invoices/guid/$invoice_guid");
+$m->redirect('/') unless $invoice;
+</%perl>
+<&| /page/full, title => "Moonpig Invoice $invoice_guid" &>
+
+(invoice data goes here)
+  <div class='dump'>
+  <h2>Raw Invoice Data</h2>
+  <% dumper_html($invoice) %>
+  </div>
+</&>
