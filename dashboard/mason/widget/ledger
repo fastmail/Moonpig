@@ -4,7 +4,7 @@ $ledger
 
 <div class='ledger'>
   <& SELF:contact, contact => $ledger->{contact} &>
-  <& SELF:active-consumers, active_consumers => $ledger->{active_xids} &>
+  <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
   <& SELF:open-invoices, ledger => $ledger, invoices => $ledger->{open_invoices}{items} &>
   <& SELF:credits, credits => $ledger->{credits}{items} &>
 
@@ -36,13 +36,19 @@ $credits
 
 <%method active-consumers>
 <%args>
+$ledger
 $active_consumers
 </%args>
 <div class='consumers'>
   <h2>Active Consumers</h2>
   <table>
 % for my $xid (sort keys %$active_consumers) {
-    <tr><th><% $xid |h %></th><td>...</td></tr>
+    <tr>
+      <th>
+        <a href='/ledger/<% $ledger->{guid} |h %>/consumer/<% $active_consumers->{$xid}->{guid} |h %>'><% $xid |h %></a>
+      </th>
+      <td>...</td>
+    </tr>
 % }
   </table>
 </div>

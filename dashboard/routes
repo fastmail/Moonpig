@@ -1,3 +1,4 @@
 /ledger/:guid               => /view/ledger
 
-/ledger/:ledger_guid/invoice/:invoice_guid => /view/invoice
+/ledger/:ledger_guid/invoice/:invoice_guid   => /view/invoice
+/ledger/:ledger_guid/consumer/:consumer_guid => /view/consumer
