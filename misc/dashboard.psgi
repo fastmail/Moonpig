@@ -7,6 +7,11 @@ use lib 'lib';
 use File::Spec;
 use HTML::Mason::PSGIHandler;
 use Plack::Builder;
+use Router::Dumb;
+use Router::Dumb::Helper::FileMapper;
+use Router::Dumb::Helper::RouteFile;
+
+use namespace::autoclean;
 
 {
   package HTML::Mason::Commands;
@@ -15,15 +20,38 @@ use Plack::Builder;
   sub mc { sprintf '$%.02f', ((shift) / 100_000) }
 }
 
-use namespace::autoclean;
+my $router = Router::Dumb->new;
 
-my $h = HTML::Mason::PSGIHandler->new(
-  comp_root     => File::Spec->rel2abs("dashboard"),
-  request_class => 'Moonpig::Dashboard::Request',
+Router::Dumb::Helper::FileMapper->new({
+  root          => 'dashboard/mason/public',
+  target_munger => sub {
+    my ($self, $filename) = @_;
+    dir('mason/public')->file( file($filename)
+                       ->relative($self->root) )
+                       ->stringify;
+  },
+})->add_routes_to($router);
+
+Router::Dumb::Helper::RouteFile->new({ filename => 'dashboard/routes' })
+                               ->add_routes_to($router);
+
+my $interp = HTML::Mason::Interp->new(
+  comp_root     => File::Spec->rel2abs("dashboard/mason"),
+  # request_class => 'Moonpig::Dashboard::Request',
 );
 
-my $handler = sub {
-  my $env = shift;
-  my $res = $h->handle_psgi($env);
-  return $res;
-};
+my $comp = $interp->load("/index");
+
+my $output = '';
+$interp->make_request(
+  comp => $comp,
+  args => [ ],
+  out_method => \$output,
+)->exec;
+
+print $output;
+# my $handler = sub {
+#   my $env = shift;
+#   my $res = $h->handle_psgi($env);
+#   return $res;
+# };
