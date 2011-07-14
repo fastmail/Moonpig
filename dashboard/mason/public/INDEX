@@ -7,7 +7,7 @@
 <script>
 $("#ledger-guid").submit(function () {
   window.location.href = '/ledger/' + $(this).find("input").first().val();
-  return true;
+  return false;
 });
 </script>
 

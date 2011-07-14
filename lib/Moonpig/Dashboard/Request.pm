@@ -28,4 +28,17 @@ sub dump {
   warn Data::Dumper->Dump([ $arg ]);
 }
 
+sub redirect {
+  Moonpig::Dashboard::Redirect->throw($_[1]);
+}
+
+package Moonpig::Dashboard::Redirect {
+  sub throw {
+    my $guts = { uri => $_[1] };
+    die(bless $guts => $_[0]);
+  };
+
+  sub uri { $_[0]->{uri} }
+}
+
 1;
