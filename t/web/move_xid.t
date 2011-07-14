@@ -6,7 +6,7 @@ use Moonpig::UserAgent;
 use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep qw(cmp_deeply re);
+use Test::Deep qw(cmp_deeply re ignore superhashof);
 use Test::Fatal;
 use Test::More;
 use Test::Routine;
@@ -56,10 +56,10 @@ sub setup_account {
         my $result = $ua->mp_post('/ledgers', $signup_info);
         cmp_deeply(
           $result,
-          {
-            active_xids => { $u_xid => $guid_re },
+          superhashof({
+            active_xids => { $u_xid => superhashof({ guid => $guid_re }) },
             guid        => $guid_re
-          },
+          }),
           "Created ledger"
         );
         $result->{guid};
@@ -77,7 +77,11 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, $guid_re, "added consumer");
+        cmp_deeply(
+          $result,
+          superhashof({ guid => $guid_re }),
+          "added consumer",
+        );
 
         $result;
       };

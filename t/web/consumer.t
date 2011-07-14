@@ -8,7 +8,7 @@ use Moonpig::UserAgent;
 use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep qw(cmp_deeply re bool);
+use Test::Deep qw(cmp_deeply re bool superhashof ignore);
 use Test::More;
 
 use lib 'eg/fauxbox/lib';
@@ -53,10 +53,10 @@ sub setup_account {
         my $result = $ua->mp_post('/ledgers', $signup_info);
         cmp_deeply(
           $result,
-          {
-            active_xids => { $u_xid => $guid_re },
+          superhashof({
+            active_xids => { $u_xid => superhashof({ guid => $guid_re }) },
             guid => $guid_re
-          }
+          }),
         );
         $result->{guid};
       };
@@ -72,7 +72,7 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, $guid_re, "ledger has one consumer");
+        cmp_deeply($result, superhashof({ guid => $guid_re }), "ledger has one consumer");
 
         $result;
       };
@@ -90,6 +90,7 @@ sub setup_account {
             is_paid   => bool(0),
             is_closed => bool(1),
             total_amount => $price,
+            charges => ignore(),
           },
         ],
         "there is one unpaid invoice -- what we expect",
@@ -105,6 +106,7 @@ sub setup_account {
           is_closed => $JSON::XS::true,
           is_paid => $JSON::XS::false,
           total_amount => $price,
+          charges => ignore(),
         },
       );
   };
