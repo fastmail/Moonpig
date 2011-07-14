@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::Dashboard::Request;
-BEGIN { our @ISA = qw(HTML::Mason::Request::PSGI) }
+use base 'HTML::Mason::Request';
 
 # use HTML::Widget::Factory;
 use JSON;

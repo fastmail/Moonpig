@@ -5,8 +5,9 @@ use warnings;
 use lib 'lib';
 
 use File::Spec;
-use HTML::Mason::PSGIHandler;
-use Plack::Builder;
+use HTML::Mason::Interp;
+use Path::Class;
+use Plack::Request;
 use Router::Dumb;
 use Router::Dumb::Helper::FileMapper;
 use Router::Dumb::Helper::RouteFile;
@@ -26,9 +27,7 @@ Router::Dumb::Helper::FileMapper->new({
   root          => 'dashboard/mason/public',
   target_munger => sub {
     my ($self, $filename) = @_;
-    dir('mason/public')->file( file($filename)
-                       ->relative($self->root) )
-                       ->stringify;
+    dir('public')->file( file($filename)->relative($self->root) )->stringify;
   },
 })->add_routes_to($router);
 
@@ -37,21 +36,28 @@ Router::Dumb::Helper::RouteFile->new({ filename => 'dashboard/routes' })
 
 my $interp = HTML::Mason::Interp->new(
   comp_root     => File::Spec->rel2abs("dashboard/mason"),
-  # request_class => 'Moonpig::Dashboard::Request',
+  request_class => 'Moonpig::Dashboard::Request',
 );
 
-my $comp = $interp->load("/index");
+return sub {
+  my ($env) = @_;
+  my $req = Plack::Request->new($env);
 
-my $output = '';
-$interp->make_request(
-  comp => $comp,
-  args => [ ],
-  out_method => \$output,
-)->exec;
+  my $match = $router->route( $req->path_info );
 
-print $output;
-# my $handler = sub {
-#   my $env = shift;
-#   my $res = $h->handle_psgi($env);
-#   return $res;
-# };
+  return [ 404 => [ ], [ ] ] unless $match;
+
+  warn $match->target;
+  my $comp = $interp->load( '/' . $match->target );
+
+  my $output = '';
+  $interp->make_request(
+    comp => $comp,
+    args => [ $match->matches ],
+    out_method => \$output,
+  )->exec;
+
+  return [
+    200 => [ 'Content-Type' => 'text/html' ], [ $output ]
+  ];
+}

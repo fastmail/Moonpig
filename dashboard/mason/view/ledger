@@ -1,4 +1,6 @@
-% my $guid   = $m->dhandler_arg;
+<%args>
+$guid
+</%args>
 % my $ledger = $m->mp_request(GET => "/ledger/guid/$guid");
 <&| /page/full, title => "Moonpig Ledger $guid" &>
 
