@@ -6,7 +6,7 @@ use MooseX::Types::Moose qw(Str);
 use Moonpig::Types qw(PositiveMillicents Time);
 
 with(
-  'Moonpig::Role::Consumer::AutoInvoicing',
+  'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::ChargesBank',
 );
 
@@ -42,6 +42,11 @@ has description => (
   isa => Str,
   required => 1,
 );
+
+sub invoice_costs {
+  my ($self) = @_;
+  return $self->costs_on( Moonpig->env->now );
+}
 
 sub costs_on {
   my ($self) = @_;

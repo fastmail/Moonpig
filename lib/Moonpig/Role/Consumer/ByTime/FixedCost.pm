@@ -16,6 +16,7 @@ has cost_amount => (
   traits => [ qw(Copy) ],
 );
 
+# Does not vary with time
 sub costs_on {
   return ($_[0]->charge_description, $_[0]->cost_amount);
 }

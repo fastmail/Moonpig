@@ -19,7 +19,7 @@ use Stick::Publisher::Publish 0.20110324;
 
 with(
   'Moonpig::Role::Consumer::ChargesBank',
-  'Moonpig::Role::Consumer::AutoInvoicing',
+  'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -55,6 +55,10 @@ sub cost_amount_on {
   my $amount = sum(values %costs);
 
   return $amount;
+}
+
+sub invoice_costs {
+  $_[0]->costs_on( Moonpig->env->now );
 }
 
 #  XXX this is period in days, which is not quite right, since a

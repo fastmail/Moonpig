@@ -1,4 +1,4 @@
-package Moonpig::Role::Consumer::AutoInvoicing;
+package Moonpig::Role::Consumer::InvoiceOnCreation;
 
 use Moose::Role;
 
@@ -15,6 +15,8 @@ with(
 );
 
 use Moonpig::Behavior::EventHandlers;
+
+requires 'invoice_costs';
 
 implicit_event_handlers {
   return {
@@ -37,7 +39,7 @@ sub _invoice {
 
   my $invoice = $self->ledger->current_invoice;
 
-  my @costs = $self->costs_on( Moonpig->env->now );
+  my @costs = $self->invoice_costs();
 
   my $iter = natatime 2, @costs;
 
