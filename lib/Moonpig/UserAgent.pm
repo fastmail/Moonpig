@@ -41,17 +41,18 @@ sub mp_time {
 }
 
 sub mp_get {
-  my ($self, $path) = @_;
-  $self->mp_request('get', $path);
+  my $self = shift;
+  $self->mp_request('get', @_);
 }
 
 sub mp_post {
-  my ($self, $path, $arg) = @_;
-  $self->mp_request('post', $path, $arg);
+  my $self = shift;
+  $self->mp_request('post', @_);
 }
 
 sub mp_request {
-  my ($self, $method, $path, $arg) = @_;
+  my ($self, $method, $path, $arg, $extra_arg) = @_;
+  $extra_arg //= {};
 
   my $target = $self->qualify_path($path);
   $method = lc $method;
@@ -61,7 +62,7 @@ sub mp_request {
   if ($method eq 'get') {
     $res = $self->get($target);
     return undef if $res->code == 404;
-  } elsif ($method eq'post') {
+  } elsif ($method eq 'post') {
     my $payload = $self->encode($arg);
 
     $res = $self->post(
@@ -78,6 +79,8 @@ sub mp_request {
                       . "response: \n%s", uc $method, $target, $res->as_string;
     die $error;
   }
+
+  ${ $extra_arg->{response} } = $res if $extra_arg->{response};
 
   return $self->decode($res->content)->{value};
 }

@@ -5,7 +5,7 @@ $ledger
 <div class='ledger'>
   <& SELF:contact, contact => $ledger->{contact} &>
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
-  <& SELF:open-invoices, ledger => $ledger, invoices => $ledger->{open_invoices}{items} &>
+  <& SELF:invoices, ledger => $ledger &>
   <& SELF:credits, credits => $ledger->{credits}{items} &>
 
   <div class='dump'>
@@ -54,14 +54,14 @@ $active_consumers
 </div>
 </%method>
 
-<%method open-invoices>
+<%method invoices>
 <%args>
 $ledger
-$invoices
 </%args>
 <div class='invoices'>
-  <h2>Open Invoice</h2>
+  <h2>Open Invoices</h2>
 % my $total = 0;
+% my $invoices = $ledger->{open_invoices}{items};
 % $total += $_->{total_amount} for @$invoices;
   <table>
 % for my $invoice (sort { $b->{date} cmp $a->{date} } @$invoices) {
@@ -78,6 +78,12 @@ $invoices
       <td><% mc($total) |h %></td>
     </tr>
   </table>
+
+  <div>
+    <a href='/ledger/<% $ledger->{guid} |h %>/invoices'>
+      view all invoices
+    </a>
+  </div>
 </div>
 </%method>
 

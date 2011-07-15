@@ -16,10 +16,19 @@ my $BASE_URI = $ENV{MOONPIG_URI} || die "no MOONPIG_URI";
 
 my $ua = Moonpig::UserAgent->new({ base_uri => $BASE_URI });
 
-sub mp_request {
-  my $self = shift;
+sub mp_last_response {
+  my ($self) = @_;
+  return $self->{__last_mp_response};
+}
 
-  $ua->mp_request(@_);
+sub mp_request {
+  my ($self, $method, $path, $arg, $extra_arg) = @_;
+  $extra_arg //= {};
+
+  undef $self->{__last_mp_response};
+  $extra_arg->{response} = \ $self->{__last_mp_response};
+
+  $ua->mp_request($method, $path, $arg, $extra_arg);
 }
 
 sub dump {

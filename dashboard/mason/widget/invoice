@@ -1,0 +1,14 @@
+<%args>
+$ledger_guid
+$invoice
+</%args>
+<div class='invoice'>
+  <table>
+    <tr>
+      <th class='guid'>
+        <a href='/ledger/<% $ledger_guid |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a></th>
+      <td><% $invoice->{date} |h %></td>
+      <td><% mc($invoice->{total_amount}) |h %></td>
+    </tr>
+  </table>
+</div>

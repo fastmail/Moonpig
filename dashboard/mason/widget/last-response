@@ -1,0 +1,12 @@
+% my $res = $m->mp_last_response;
+<div class='dump'>
+<pre><% $res->protocol |h %> <% $res->status_line |h %>
+<% $res->headers_as_string |h %></pre>
+% if ($res->header('content-type') eq 'application/json') {
+%   my $json = $res->content;
+%   my $data = JSON->new->decode($json);
+<pre><% JSON->new->pretty->encode($data) |h %></pre>
+% } else {
+<% dumper_html($m->mp_last_response->as_string) %></div>
+% }
+</div>
