@@ -262,6 +262,21 @@ sub __job_callbacks {
   );
 }
 
+sub __payloads_for_job_row {
+  my ($self, $job_row, $dbh) = @_;
+
+  my $payloads = $dbh->selectall_hashref(
+    q{SELECT ident, payload FROM job_documents WHERE job_id = ?},
+    'ident',
+    undef,
+    $job_row->{id},
+  );
+
+  $_ = $_->{payload} for values %$payloads;
+
+  return $payloads;
+}
+
 sub iterate_jobs {
   my ($self, $type, $code) = @_;
   my $conn = $self->_conn;
@@ -283,14 +298,7 @@ sub iterate_jobs {
     $job_sth->execute($type);
 
     while (my $job_row = $job_sth->fetchrow_hashref) {
-      my $payloads = $dbh->selectall_hashref(
-        q{SELECT ident, payload FROM job_documents WHERE job_id = ?},
-        'ident',
-        undef,
-        $job_row->{id},
-      );
-
-      $_ = $_->{payload} for values %$payloads;
+      my $payloads = $self->__payloads_for_job_row($job_row, $dbh);
 
       # We don't wrap each job in a transaction, because we want to let calls
       # to "done" or "lock" happen immediately.  Otherwise, a very slow job
@@ -320,6 +328,43 @@ sub iterate_jobs {
       $job->unlock;
     }
   });
+}
+
+sub undone_jobs_for_ledger {
+  my ($self, $ledger) = @_;
+
+  my $conn = $self->_conn;
+
+  my @jobs;
+
+  $conn->run(sub {
+    my $dbh = $_;
+
+    my $job_sth = $dbh->prepare(
+      q{
+        SELECT *
+        FROM jobs
+        WHERE ledger_guid = ? AND fulfilled_at IS NULL AND locked_at IS NULL
+        ORDER BY created_at
+      },
+    );
+
+    $job_sth->execute($ledger->guid);
+    my $job_rows = $job_sth->fetchall_arrayref({}, );
+
+    @jobs = map {
+      Moonpig::Job->new({
+        ledger   => $ledger,
+        job_id   => $_->{id},
+        job_type => $_->{type},
+        payloads => $self->__payloads_for_job_row($_, $dbh),
+
+        $self->__job_callbacks($conn, $_),
+      });
+    } @$job_rows;
+  });
+
+  return \@jobs;
 }
 
 sub save_ledger {

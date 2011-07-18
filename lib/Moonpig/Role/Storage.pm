@@ -8,6 +8,7 @@ requires 'do_ro';
 
 requires 'queue_job__';
 requires 'iterate_jobs';
+requires 'undone_jobs_for_ledger';
 
 requires 'save_ledger';
 requires 'ledger_guids';
