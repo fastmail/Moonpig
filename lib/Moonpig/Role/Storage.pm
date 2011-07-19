@@ -23,7 +23,7 @@ around retrieve_ledger_for_guid => sub {
 
   return unless my $ledger = $self->$orig(@arg);
 
-  $Context->stack->top->add_memorandum($ledger);
+  $Context->stack->current_frame->add_memorandum($ledger);
   return $ledger;
 };
 

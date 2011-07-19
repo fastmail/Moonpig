@@ -616,7 +616,7 @@ PARTIAL_PACK {
 };
 
 after BUILD => sub {
-  $Context->stack->top->add_memorandum($_[0]);
+  $Context->stack->current_frame->add_memorandum($_[0]);
 };
 
 1;
