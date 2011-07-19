@@ -74,8 +74,4 @@ sub import {
   Moonpig->set_env($THIS)
 };
 
-sub remember_routed_object {
-  $Context->stack->top->add_memorandum($_[1]);
-}
-
 1;

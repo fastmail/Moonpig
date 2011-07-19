@@ -566,6 +566,7 @@ publish split_xid => { -http_method => 'post', -path => 'split',
         name => $args->{contact_name},
         email_addresses => $args->{contact_email_addresses} });
       my $target = class('Ledger')->new({ contact => $contact });
+
       Moonpig->env->storage->save_ledger($target);
       return $cons->copy_to($target);
     });
@@ -614,8 +615,8 @@ PARTIAL_PACK {
   };
 };
 
-sub remember_routed_object {
-  $Context->stack->top->add_memorandum($_[1]);
-}
+after BUILD => sub {
+  $Context->stack->top->add_memorandum($_[0]);
+};
 
 1;

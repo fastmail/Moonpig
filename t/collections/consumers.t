@@ -6,6 +6,8 @@ use Moonpig::Env::Test;
 use Moonpig::Util qw(class dollars);
 use Scalar::Util qw(refaddr);
 
+use Moonpig::Context::Test -all, '$Context';
+
 with(
   't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',

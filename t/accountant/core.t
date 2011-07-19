@@ -9,6 +9,8 @@ use Test::More;
 use Test::Routine::Util;
 with ('t::lib::Factory::Ledger');
 
+use Moonpig::Context::Test -all, '$Context';
+
 has ledger => (
   is   => 'rw',
   does => 'Moonpig::Role::Ledger',

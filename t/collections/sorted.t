@@ -8,6 +8,8 @@ use Test::Routine::Util -all;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class cents dollars);
 
+use Moonpig::Context::Test -all, '$Context';
+
 with(
   't::lib::Factory::Ledger',
 );

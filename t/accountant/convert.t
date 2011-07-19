@@ -1,14 +1,13 @@
-
-use strict;
-use warnings;
+use Test::Routine;
 
 use Carp qw(confess croak);
 use Moonpig::Util -all;
 use Test::Exception;
 use Test::More;
-use Test::Routine;
 use Test::Routine::Util;
 with ('t::lib::Factory::Ledger');
+
+use Moonpig::Context::Test -all, '$Context';
 
 has ledger => (
   is   => 'rw',

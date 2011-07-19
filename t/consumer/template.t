@@ -11,6 +11,8 @@ use Test::More;
 use Test::Routine::Util;
 use Try::Tiny;
 
+use Moonpig::Context::Test -all, '$Context';
+
 with(
   't::lib::Factory::Ledger',
 );

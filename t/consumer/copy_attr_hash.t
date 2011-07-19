@@ -7,6 +7,8 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
+use Moonpig::Context::Test -all, '$Context';
+
 with qw(t::lib::Factory::Ledger);
 
 my @basic = qw(expired replacement_mri is_replaceable xid);

@@ -12,6 +12,8 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
+use Moonpig::Context::Test -all, '$Context';
+
 my $CLASS = "Consumer::ByTime::FixedCost";
 my $___ = class($CLASS); # Load it
 

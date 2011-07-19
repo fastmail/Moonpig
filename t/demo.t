@@ -10,6 +10,8 @@ with(
 
 use t::lib::Logger '$Logger';
 
+use Moonpig::Context::Test -all, '$Context';
+
 use Moonpig::Env::Test;
 
 use Moonpig::Events::Handler::Code;

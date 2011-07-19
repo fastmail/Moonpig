@@ -1,10 +1,11 @@
-
 use Carp::Assert;
 use Moonpig::Util qw(dollars);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
+
+use Moonpig::Context::Test -all, '$Context';
 
 with 't::lib::Factory::Ledger';
 

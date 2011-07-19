@@ -8,6 +8,8 @@ with(
   't::lib::Factory::Ledger',
 );
 
+use Moonpig::Context::Test -all, '$Context';
+
 use t::lib::Logger;
 
 test pay_and_get_refund => sub {

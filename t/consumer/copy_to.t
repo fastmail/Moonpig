@@ -1,12 +1,13 @@
+use Test::Routine;
 
-use strict;
 use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
-use Test::Routine;
 use Test::Routine::Util;
 use t::lib::ConsumerTemplateSet::Test;
+
+use Moonpig::Context::Test '-all', '$Context';
 
 with qw(t::lib::Factory::Ledger
         t::lib::Role::UsesStorage);

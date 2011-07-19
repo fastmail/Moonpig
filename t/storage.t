@@ -3,6 +3,8 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 
+use Moonpig::Context::Test -all, '$Context';
+
 with(
   't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',

@@ -1,6 +1,8 @@
 package Moonpig::Role::Storage;
 use Moose::Role;
 
+use Moonpig::Context::Test -all, '$Context';
+
 use namespace::autoclean;
 
 requires 'do_rw';
@@ -15,5 +17,14 @@ requires 'ledger_guids';
 
 requires 'retrieve_ledger_for_guid';
 requires 'retrieve_ledger_for_xid';
+
+around retrieve_ledger_for_guid => sub {
+  my ($orig, $self, @arg) = @_;
+
+  return unless my $ledger = $self->$orig(@arg);
+
+  $Context->stack->top->add_memorandum($ledger);
+  return $ledger;
+};
 
 1;
