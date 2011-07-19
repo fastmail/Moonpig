@@ -5,6 +5,8 @@ use Moose::Role;
 use Moonpig::Types qw(EmailAddresses);
 use MooseX::Types::Moose qw(ArrayRef);
 
+use Moonpig::Behavior::Packable;
+
 use Moonpig::Logger '$Logger';
 
 with(
@@ -31,13 +33,13 @@ has email_addresses => (
   required => 1,
 );
 
-sub STICK_PACK {
+PARTIAL_PACK {
   my ($self) = @_;
 
   return {
     name  => $self->name,
     email => [ $self->email_addresses ],
   };
-}
+};
 
 1;

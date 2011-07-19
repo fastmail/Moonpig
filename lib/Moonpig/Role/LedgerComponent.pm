@@ -9,6 +9,7 @@ with(
 use Moonpig::Types qw(Ledger);
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 
 use namespace::autoclean;
 

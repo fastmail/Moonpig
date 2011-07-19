@@ -67,6 +67,7 @@ use Data::GUID qw(guid_string);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
 use namespace::autoclean;
@@ -589,11 +590,10 @@ sub queue_job {
   });
 }
 
-sub STICK_PACK {
+PARTIAL_PACK {
   my ($self) = @_;
 
   return {
-    guid    => $self->guid,
     contact => ppack($self->contact),
     credits => {
       items => [
@@ -610,6 +610,6 @@ sub STICK_PACK {
         $self->xids_handled
     },
   };
-}
+};
 
 1;

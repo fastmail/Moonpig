@@ -84,14 +84,14 @@ sub setup_account {
       cmp_deeply(
         $invoices,
         [
-          {
+          superhashof({
             date => $date_re,
             guid => $guid_re,
             is_paid   => bool(0),
             is_closed => bool(1),
             total_amount => $price,
             charges => ignore(),
-          },
+          }),
         ],
         "there is one unpaid invoice -- what we expect",
       );
@@ -100,14 +100,14 @@ sub setup_account {
       my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
       cmp_deeply(
         $invoice,
-        {
+        superhashof({
           date => $date_re,
           guid => $invoice_guid,
           is_closed => $JSON::XS::true,
           is_paid => $JSON::XS::false,
           total_amount => $price,
           charges => ignore(),
-        },
+        }),
       );
   };
 

@@ -100,14 +100,14 @@ sub setup_account {
       cmp_deeply(
         $invoices,
         [
-          {
+          superhashof({
             date => $date_re,
             guid => $guid_re,
             is_paid   => bool(0),
             is_closed => bool(1),
             total_amount => $price,
             charges   => ignore(),
-          },
+          }),
         ],
         "there is one unpaid invoice -- what we expect",
       );
@@ -116,14 +116,14 @@ sub setup_account {
       my $invoice = $ua->mp_get("$ledger_path/invoices/guid/$invoice_guid");
       cmp_deeply(
         $invoice,
-        {
+        superhashof({
           date         => $date_re,
           guid         => $invoice_guid,
           is_closed    => bool(1),
           is_paid      => bool(0),
           total_amount => $price,
           charges      => ignore(),
-        },
+        }),
       );
     };
 
@@ -145,13 +145,13 @@ test "single payment" => sub {
 
   cmp_deeply(
     $credit,
-    {
+    superhashof({
       amount           => $price,
       created_at       => $date_re,
       guid             => $guid_re,
       type             => "Credit::Simulated",
       unapplied_amount => dollars(0),
-    },
+    }),
   );
 };
 

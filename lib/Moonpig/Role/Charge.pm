@@ -6,6 +6,8 @@ use MooseX::Types::Moose qw(Str);
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents TagSet);
 
+use Moonpig::Behavior::Packable;
+
 use namespace::autoclean;
 
 has description => (
@@ -36,7 +38,7 @@ has tags => (
   },
 );
 
-sub STICK_PACK {
+PARTIAL_PACK {
   my ($self) = @_;
 
   return {
@@ -45,7 +47,6 @@ sub STICK_PACK {
     date        => $self->date,
     tags        => $self->tags,
   }
-}
-
+};
 
 1;
