@@ -10,6 +10,7 @@ use MooseX::Types::Moose qw(Any ArrayRef Maybe Object Str Undef);
 use Moonpig::Types qw(PositiveInt);
 use POSIX qw(ceil);
 use Scalar::Util qw(blessed);
+use Stick::Util qw(ppack);
 
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
@@ -261,7 +262,7 @@ role {
     return {
       what   => $collection_name,
       owner  => $self->owner->guid,
-      items  => [ map $_->guid, $self->all ] };
+      items  => [ map ppack($_), $self->all ] };
   }
 };
 
