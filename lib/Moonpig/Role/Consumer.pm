@@ -21,6 +21,8 @@ with(
 
 sub _class_subroute { return }
 
+use Moonpig::Behavior::Packable;
+
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
@@ -319,5 +321,9 @@ sub template_like_this {
     arg   => $self->copy_attr_hash__,
   };
 }
+
+PARTIAL_PACK {
+  return { xid => $_[0]->xid };
+};
 
 1;
