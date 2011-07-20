@@ -7,6 +7,7 @@ $ledger
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
   <& SELF:invoices, ledger => $ledger &>
   <& SELF:credits, credits => $ledger->{credits}{items} &>
+  <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
 </div>
@@ -25,6 +26,24 @@ $credits
       <td><% $credit->{created_at} |h %></td>
       <td><% mc($credit->{amount}) |h %></td>
       <td><% mc($credit->{unapplied_amount}) |h %></td>
+    </tr>
+% }
+  </table>
+</div>
+</%method>
+
+<%method jobs>
+<%args>
+$jobs
+</%args>
+<div class='jobs'>
+  <h2>Outstanding Jobs</h2>
+  <table>
+% for my $job (@$jobs) {
+    <tr>
+      <th class='id'><% $job->{id} |h %></th>
+      <td><% $job->{created_at} |h %></td>
+      <td><a href='/ledger/<% $job->{ledger_guid} |h %>/job/<% $job->{id} |h %>'><% $job->{type} |h %></a></td>
     </tr>
 % }
   </table>

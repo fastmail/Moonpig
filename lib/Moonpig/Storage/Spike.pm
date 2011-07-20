@@ -232,11 +232,16 @@ sub __job_callbacks {
     get_logs_callback => sub {
       my ($self) = @_;
 
-      $conn->run(sub { $_->selectall_arrayref(
+      my $logs = $conn->run(sub { $_->selectall_arrayref(
         "SELECT * FROM job_logs WHERE job_id = ? ORDER BY logged_at",
         { Slice => {} },
         $job_row->{id},
       )});
+
+      $_->{logged_at} = Moonpig::DateTime->new($_->{logged_at})
+        for @$logs;
+
+      return $logs;
     },
     unlock_callback => sub {
       my ($self) = @_;
@@ -316,10 +321,11 @@ sub iterate_jobs {
       }
 
       my $job = Moonpig::Job->new({
-        ledger   => $ledger,
-        job_id   => $job_row->{id},
-        job_type => $job_row->{type},
-        payloads => $payloads,
+        ledger     => $ledger,
+        job_id     => $job_row->{id},
+        job_type   => $job_row->{type},
+        created_at => $job_row->{created_at},
+        payloads   => $payloads,
 
         $self->__job_callbacks($conn, $job_row),
       });
@@ -344,7 +350,7 @@ sub undone_jobs_for_ledger {
       q{
         SELECT *
         FROM jobs
-        WHERE ledger_guid = ? AND fulfilled_at IS NULL AND locked_at IS NULL
+        WHERE ledger_guid = ? AND fulfilled_at IS NULL
         ORDER BY created_at
       },
     );
@@ -354,10 +360,11 @@ sub undone_jobs_for_ledger {
 
     @jobs = map {
       Moonpig::Job->new({
-        ledger   => $ledger,
-        job_id   => $_->{id},
-        job_type => $_->{type},
-        payloads => $self->__payloads_for_job_row($_, $dbh),
+        ledger     => $ledger,
+        job_id     => $_->{id},
+        job_type   => $_->{type},
+        created_at => $_->{created_at},
+        payloads   => $self->__payloads_for_job_row($_, $dbh),
 
         $self->__job_callbacks($conn, $_),
       });

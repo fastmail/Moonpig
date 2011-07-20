@@ -3,3 +3,4 @@
 /ledger/:ledger_guid/invoices                => /view/invoice-history
 /ledger/:ledger_guid/invoice/:invoice_guid   => /view/invoice
 /ledger/:ledger_guid/consumer/:consumer_guid => /view/consumer
+/ledger/:ledger_guid/job/:job_id             => /view/job

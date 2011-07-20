@@ -45,6 +45,11 @@ with(
     default_sort_key => 'created_at',
     is => 'ro',
    },
+  'Moonpig::Role::HasCollection' => {
+    item => 'job',
+    item_roles => [ ],
+    is => 'ro',
+   },
   'Stick::Role::PublicResource::GetSelf',
 );
 
@@ -105,6 +110,7 @@ sub _extra_instance_subroute {
   my ($first) = @$path;
   my %x_rt = (
     banks => $self->bank_collection,
+    jobs  => $self->job_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
     credits => $self->credit_collection,
@@ -593,16 +599,18 @@ sub queue_job {
   });
 }
 
+sub job_array {
+  Moonpig->env->storage->undone_jobs_for_ledger($_[0]);
+}
+
 PARTIAL_PACK {
   my ($self) = @_;
 
   return {
     contact => ppack($self->contact),
-    credits => {
-      items => [
-        map { ppack($_) } $self->credits
-      ],
-    },
+    credits => ppack($self->credit_collection),
+    jobs    => ppack($self->job_collection),
+
     open_invoices => {
       items => [
         map { ppack($_) } grep { $_->is_unpaid } $self->invoices
