@@ -40,7 +40,7 @@ sub build_consumers {
   for my $c_name (keys %$args) {
     next if exists $stuff->{$c_name};
     my %c_args = %{$args->{$c_name}};
-    $stuff->{$c_name} = build_consumer($c_name, \%c_args, $stuff);
+    $stuff->{$c_name} = build_consumer($c_name, $args, $stuff);
     $name_by_guid{$stuff->{$c_name}->guid} = $c_name;
   }
 
@@ -64,21 +64,23 @@ sub build_consumers {
 
 sub build_consumer {
   my ($name, $args, $stuff) = @_;
-  my $become_active = delete $args->{make_active};
+  my %c_args = %{$args->{$name}};
+  my $become_active = delete $c_args{make_active};
 
   # If this consumer will have a replacement, build that first
-  my $replacement_name = $args->{replacement};
+  my $replacement_name = $c_args{replacement};
   if (defined($replacement_name) && ! exists $stuff->{$replacement_name}) {
-    $args->{replacement} =  build_consumer($replacement_name, $args, $stuff);
+    $stuff->{$replacement_name} = $c_args{replacement} =
+      build_consumer($replacement_name, $args, $stuff);
   }
 
   my $bank;
-  if (exists $args->{bank} && $args->{bank} > 0) {
-    $args->{bank} = build_bank({ amount => $args->{bank} }, $stuff);
+  if (exists $c_args{bank} && $c_args{bank} > 0) {
+    $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
   }
 
-  my $class = delete $args->{class};
-  my $template = delete $args->{template};
+  my $class = delete $c_args{class};
+  my $template = delete $c_args{template};
 
   my $consumer;
   if ($class) {
@@ -90,14 +92,14 @@ sub build_consumer {
       class($class),
       { charge_tags => [],
         xid => "test:consumer:$name",
-        %$args,
+        %c_args,
       });
   } elsif ($template) {
     $consumer = $stuff->{ledger}->add_consumer_from_template(
       $template,
       { charge_tags => [],
         xid => "test:consumer:$name",
-        %$args,
+        %c_args,
       });
   } else {
     croak "Arguments for consumer '$name' have neither 'class' nor 'template'\n";
