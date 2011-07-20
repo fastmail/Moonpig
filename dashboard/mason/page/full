@@ -8,6 +8,15 @@ $title
   <link rel="stylesheet" href="/css/dashboard.css" />
 </head>
 
+<script>
+$(function () {
+  $('div.dump').hide();
+  $(".dumpcontainer h2").click(function () {
+    $(this).parent().find('div.dump').slideToggle();
+  });
+});
+</script>
+
 <body>
   <h1><% $title |h %></h1>
   <% $m->content %>

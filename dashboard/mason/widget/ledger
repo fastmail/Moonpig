@@ -8,10 +8,7 @@ $ledger
   <& SELF:invoices, ledger => $ledger &>
   <& SELF:credits, credits => $ledger->{credits}{items} &>
 
-  <div class='dump'>
-  <h2>Raw Ledger Data</h2>
-  <% dumper_html($ledger) %>
-  </div>
+  <& /widget/dump, dump => $ledger, what => 'Ledger' &>
 </div>
 
 <%method credits>

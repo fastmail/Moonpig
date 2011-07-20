@@ -1,4 +1,9 @@
+%# vim:set ft=mason:
+<%args>
+$label => undef
+</%args>
 % my $res = $m->mp_last_response;
+<&| /widget/dumpcontainer, label => ($label // 'Last Moonpig Response') &>
 <div class='dump'>
 <pre><% $res->protocol |h %> <% $res->status_line |h %>
 <% $res->headers_as_string |h %></pre>
@@ -10,3 +15,4 @@
 <% dumper_html($m->mp_last_response->as_string) %></div>
 % }
 </div>
+</&>

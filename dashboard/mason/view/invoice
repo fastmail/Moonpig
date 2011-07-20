@@ -10,9 +10,7 @@ $m->redirect('/') unless $invoice;
 </%perl>
 <&| /page/full, title => "Moonpig Invoice $invoice_guid" &>
 
-(invoice data goes here)
-  <div class='dump'>
-  <h2>Raw Invoice Data</h2>
-  <% dumper_html($invoice) %>
-  </div>
+  <& /widget/invoice, invoice => $invoice &>
+
+  <& /widget/dump, dump => $invoice, what => 'Invoice' &>
 </&>

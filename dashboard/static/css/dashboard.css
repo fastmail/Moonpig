@@ -1,3 +1,9 @@
+.dumpcontainer {
+  background-color: #fed;
+  border: 1px black dashed;
+  padding: 0 .5em;
+}
+
 .dump {
   font-family: monospace;
   border: thin black solid;
