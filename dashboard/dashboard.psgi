@@ -69,7 +69,7 @@ my $app = sub {
   } catch {
     if (try { $_->isa('Moonpig::Dashboard::Redirect') }) {
       my $uri  = URI->new_abs( $_->uri, $req->uri );
-      return [ 301, [ Location => $uri ], [] ];
+      return [ 302, [ Location => $uri ], [] ];
     }
     die $_;
   };
