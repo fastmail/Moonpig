@@ -59,7 +59,10 @@ sub add_bank_to {
 
 sub add_consumer_to {
   my ($self, $ledger, $args) = @_;
-  my $class = delete $args->{class} || class("Consumer::Dummy");
+  my $default_class =
+    exists $args->{bank} ? class("Consumer::DummyWithBank")
+                         : class("Consumer::Dummy");
+  my $class = delete $args->{class} || $default_class;
 
   my $consumer = $ledger->add_consumer(
     $class,
@@ -67,6 +70,7 @@ sub add_consumer_to {
       xid             => 'urn:uuid:' . guid_string,
       make_active     => 1,
       replacement_mri => Moonpig::URI->nothing(),
+      exists $args->{bank} ? ( old_age => years(1000) ) : (),
       %$args,
     },
   );

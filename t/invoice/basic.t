@@ -2,7 +2,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Util qw(class dollars event);
+use Moonpig::Util qw(class dollars event years);
 
 with(
   't::lib::Factory::Ledger',
@@ -17,7 +17,7 @@ before run_test => sub {
 };
 
 sub fresh_ledger {
-  my ($self) = @_;
+  my ($self, $ledger_class) = @_;
 
   my $ledger;
 
@@ -140,7 +140,6 @@ test overpayment  => sub {
     class(qw(InvoiceCharge))->new({
       description => 'test charge (setup)',
       amount      => dollars(10),
-      # tags => [ 'test.charges.setup' ],
     }),
   );
 
@@ -173,7 +172,11 @@ test create_bank_on_payment => sub {
 
   my $ledger = $self->fresh_ledger;
 
-  my $consumer = $self->add_consumer_to($ledger);
+  my $consumer = $self->add_consumer_to(
+    $ledger,
+    { class => class("Consumer::DummyWithBank"),
+      old_age => years(1000),
+    });
 
   is_deeply($ledger->_banks, {}, "there are no banks on our ledger yet");
   ok(! $consumer->has_bank, "...nor on our consumer");

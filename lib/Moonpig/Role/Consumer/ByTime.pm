@@ -254,7 +254,7 @@ sub reflect_on_mortality {
 
 sub can_make_payment_on {
   my ($self, $date) = @_;
-  return $self->amount_in_bank >= $self->calculate_charge_on($date);
+  return $self->unapplied_amount >= $self->calculate_charge_on($date);
 }
 
 # My predecessor is running out of money

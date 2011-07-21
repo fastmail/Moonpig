@@ -65,31 +65,6 @@ implicit_event_handlers {
   };
 };
 
-has bank => (
-  reader => 'bank',
-  writer => '_set_bank',
-  does   => 'Moonpig::Role::Bank',
-  traits => [ qw(SetOnce) ],
-  predicate => 'has_bank',
-);
-
-before _set_bank => sub {
-  my ($self, $bank) = @_;
-
-  unless ($self->ledger->guid eq $bank->ledger->guid) {
-    confess sprintf(
-      "cannot associate consumer from %s with bank from %s",
-      $self->ledger->ident,
-      $bank->ledger->ident,
-    );
-  }
-};
-
-sub unapplied_amount {
-  my ($self) = @_;
-  return $self->has_bank ? $self->bank->unapplied_amount : 0;
-}
-
 has replacement => (
   is   => 'rw',
   does => 'Moonpig::Role::Consumer',
@@ -156,11 +131,6 @@ sub cancel_service {
     $self->replacement_mri(Moonpig::URI->nothing);
   }
   return;
-}
-
-sub amount_in_bank {
-  my ($self) = @_;
-  return $self->has_bank ? $self->bank->unapplied_amount : 0;
 }
 
 has xid => (

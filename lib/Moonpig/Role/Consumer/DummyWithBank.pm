@@ -1,4 +1,4 @@
-package Moonpig::Role::Consumer::Dummy;
+package Moonpig::Role::Consumer::DummyWithBank;
 # ABSTRACT: a minimal consumer for testing
 
 use Carp qw(confess croak);
@@ -6,6 +6,7 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );
