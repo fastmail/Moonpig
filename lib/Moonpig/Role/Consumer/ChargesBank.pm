@@ -11,12 +11,17 @@ use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;
 
-has charge_tags => (
+has extra_charge_tags => (
   is  => 'ro',
   isa => ArrayRef,
-  required => 1,
+  default => sub { [] },
   traits => [ qw(Copy) ],
 );
+
+sub charge_tags {
+  my ($self) = @_;
+  return [ $self->xid, @{$self->extra_charge_tags} ]
+}
 
 # When the object has less than this long to live, it will
 # start posting low-balance events to its successor, or to itself if

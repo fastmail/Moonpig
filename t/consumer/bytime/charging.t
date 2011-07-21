@@ -134,7 +134,7 @@ test "variable charge" => sub {
       {
         # These would come from defaults if this wasn't a weird-o class. --
         # rjbs, 2011-05-17
-        charge_tags     => [ "test" ],
+        extra_charge_tags => [ "test" ],
         ledger          => $self->ledger,
         bank            => $b,
         old_age         => years(1000),

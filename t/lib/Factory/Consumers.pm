@@ -11,11 +11,11 @@ requires 'ledger';
 my %reasonable_defaults = (
   'Moonpig::Class::Consumer::ByTime::FixedCost' => {
     charge_description => "test charge",
-    charge_tags        => ["test"],
+    extra_charge_tags  => ["test"],
     # description        => "test consumer",
   },
   'Moonpig::Class::Consumer::ByUsage' => {
-    charge_tags        => ["test"],
+    extra_charge_tags  => ["test"],
   },
   'Moonpig::Class::Consumer::Dummy' => {
   },

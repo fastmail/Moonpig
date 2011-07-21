@@ -90,15 +90,13 @@ sub build_consumer {
     $class = "Consumer::$class" unless $class =~ /^Consumer::/;
     $consumer = $stuff->{ledger}->add_consumer(
       class($class),
-      { charge_tags => [],
-        xid => "test:consumer:$name",
+      { xid => "test:consumer:$name",
         %c_args,
       });
   } elsif ($template) {
     $consumer = $stuff->{ledger}->add_consumer_from_template(
       $template,
-      { charge_tags => [],
-        xid => "test:consumer:$name",
+      { xid => "test:consumer:$name",
         %c_args,
       });
   } else {

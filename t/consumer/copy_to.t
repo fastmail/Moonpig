@@ -52,7 +52,6 @@ test bytime => sub {
     my $consumer = $ledger_a->add_consumer(
       class("Consumer::ByTime::FixedCost"),
       { charge_description => "monkey meat",
-        charge_tags => [ ],
         cost_amount => cents(1234),
         cost_period => years(1),
         old_age => days(3),
@@ -79,7 +78,6 @@ test with_bank => sub {
       bank => $bank_a,
 
       charge_description => "monkey meat",
-      charge_tags => [ ],
       cost_amount => cents(1234),
       cost_period => years(1),
       old_age => days(3),

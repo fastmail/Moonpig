@@ -42,7 +42,6 @@ test "fixed-expiration consumer" => sub {
       {
         cost_amount => $cost,
         old_age     => days(0), # lame
-        charge_tags => [ qw(bogus) ],
         description => 'test fixed expiration consumer',
         expire_date => $expire_date,
         replacement_mri    => Moonpig::URI->nothing(),
