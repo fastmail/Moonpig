@@ -7,6 +7,7 @@ with(
 
 use Moonpig::Trait::Copy;
 use Moonpig::Types qw(TimeInterval);
+use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;
@@ -58,4 +59,59 @@ sub unapplied_amount {
   return $self->has_bank ? $self->bank->unapplied_amount : 0;
 }
 
+# when copying this consumer to another ledger, copy its bank as well
+after copy_subcomponents_to__ => sub {
+  my ($self, $target, $copy) = @_;
+  $self->move_bank_to__($copy);
+};
+
+# "Move" my bank to a different consumer.  This will work even if the
+# consumer is in a different ledger.  It works by entering a charge to
+# my bank for its entire remaining funds, then creating a credit in
+# the recipient consumer's ledger and using the credit to set up a
+# fresh bank for the recipient.
+sub move_bank_to__ {
+  my ($self, $new_consumer) = @_;
+  my $amount = $self->unapplied_amount;
+  return if $amount == 0;
+
+  my $ledger = $self->ledger;
+  my $new_ledger = $new_consumer->ledger;
+  Moonpig->env->storage->do_rw(
+    sub {
+      $ledger->current_journal->charge({
+        desc        => sprintf("Transfer management of '%s' to ledger %s",
+                               $self->xid, $new_ledger->guid),
+        from        => $self->bank,
+        to          => $self,
+        date        => Moonpig->env->now,
+        amount      => $amount,
+        tags        => [ @{$self->charge_tags}, "transient" ],
+      });
+      my $credit = $new_ledger->add_credit(
+        class('Credit::Transient'),
+        {
+          amount               => $amount,
+          source_bank_guid     => $self->bank->guid,
+          source_consumer_guid => $self->guid,
+          source_ledger_guid   => $ledger->guid,
+        });
+      my $transient_invoice = class("Invoice")->new({
+         ledger      => $new_ledger,
+      });
+      my $charge = $transient_invoice->add_charge(
+        class('InvoiceCharge::Bankable')->new({
+          description => sprintf("Transfer management of '%s' from ledger %s",
+                                 $self->xid, $ledger->guid),
+          amount      => $amount,
+          consumer    => $new_consumer,
+          tags        => [ @{$new_consumer->charge_tags}, "transient" ],
+        }),
+       );
+      $new_ledger->apply_credits_to_invoice__(
+        [{ credit => $credit,
+           amount => $amount }],
+        $transient_invoice);
+    });
+}
 1;
