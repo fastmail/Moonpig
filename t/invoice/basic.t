@@ -60,7 +60,7 @@ test charge_close_and_send => sub {
   $self->heartbeat_and_send_mail($ledger);
 
   my @deliveries = Moonpig->env->email_sender->deliveries;
-  is(@deliveries, 1, "we went the invoice to the customer");
+  is(@deliveries, 1, "we sent the invoice to the customer");
   my $email = $deliveries[0]->{email};
   like(
     $email->header('subject'),

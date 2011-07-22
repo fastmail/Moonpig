@@ -6,7 +6,6 @@ with(
   'Moonpig::Role::InvoiceCharge',
 );
 
-use Moonpig::Behavior::EventHandlers;
 use Moonpig::Util qw(class);
 
 use namespace::autoclean;
