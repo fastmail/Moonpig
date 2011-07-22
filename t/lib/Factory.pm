@@ -12,6 +12,165 @@ use Sub::Exporter -setup => {
   exports => [ qw(build) ], # The other stuff is really not suitable for exportation
 };
 
+=head1 NAME
+
+C<t::lib::Factory> - construct test examples
+
+=head1 SYNOPSIS
+
+       use t::lib::Factory 'build';
+
+       my $stuff = build( fred => { template => "consumer template name",
+                                    bank     => dollars(100) });
+       my $ledger = $stuff->{ledger};
+       my $consumer = $stuff->{fred};
+
+=head1 C<build>
+
+The C<build> function gets a list of key-value pairs.  Each pair
+specifies a component to be constructed, such as a ledger or a
+consumer.  The retruned value is a reference to a hash with the same
+keys; the corresponding values are the components that were
+constructed.
+
+=head2 C<ledger>
+
+The C<build> function always builds a ledger, even if there is no
+C<ledger> key in the argument list; if the ledger value is omitted,
+the builder will build a default ledger with a randomly-generated
+contact.
+
+If a C<ledger> value is supplied, it should be a hash of the following
+form:
+
+          { class => CLASSNAME, contact => $contact }
+
+The classname defaults to C< class('Ledger') >.  If omitted, a contact
+will be generated at random using the C<build_contact> method.
+
+=head2 Consumer keys
+
+All other keys are taken to be names of consumers.  You may include as
+many consumers as you want.  The consumers are created as specified
+and added to the ledger.
+
+The corresponding values are hashes.   Each hash must contain either a
+C<template> key which specifies a template name, or a C<class> key
+which specifies a class role name.  
+
+If C<template>, the consumer is
+constructed and added to the ledger with
+C<Ledger::add_consumer_from_template>.
+
+If C<class> is specified, the argument has C<Consumer::> prepended if
+it doesn't already begin with C<Consumer::>, is passed to
+C<Moonpig::Util::class>, and the resulting class name is given to
+C<Ledger::add_consumer>.
+
+Most hash elements are passed to the consumer constructor
+(C<Ledger::add_consumer_from_template> or C<Ledger::add_consumer>) as
+normal constructor arguments.  There are a few exceptions:
+
+=over
+
+=item *
+
+As described above, C<class> and C<template> are special, and are not
+passed.
+
+=item *
+
+The value of C<replacement> may either be a consumer object to use as
+the replacement, or a string which identifies the consumer to use as
+the one manufactured by the C<build> method itself.  For example,
+
+    build(fred => { template => 'test', replacement => 'steve' },
+          steve => { template => 'test' });
+
+builds a ledger with two consumers; the replacement for consumer
+C<fred> will be consumer C<steve>.
+
+=item *
+
+The value of C<bank> may either be a bank object to use, or a simple
+money amount.  In the latter case, a bank is manufactured with the
+indicated amount of money and is used.  For example:
+
+    use Moonpig::Util qw(dollars);
+    build(fred => { template => 'test', bank => dollars(15) });
+
+If the money amount is zero, no bank will be created.
+
+=item *
+
+If no C<xid> argument is passed, C<test:consumer:NAME> will be used,
+where I<NAME> is the key by which the consumer is known in the
+arguments to C<build>.  For example, in this call:
+
+    build(fred => { template => 'test' });
+
+the consumer C<fred> receives the xid C<test:consumer:fred>.
+
+Note that if consumer I<B> is the replacement for consumer I<A>, they
+will still not be assigned the same xid by default; this is probably
+not what you want.  
+
+=item *
+
+If a C<make_active> argument is passed, the consumer will be made the
+active consumer for its xid if the associated value is true.  If no
+C<make_active> argument is passed, the consumer will be activated if
+and only if it is I<not> the replacement for any other consumer.  For
+example:
+
+    # fred is activated, steve is not
+    build(fred => { template => 'test', replacement => 'steve' },
+          steve => { template => 'test' });
+
+
+    # neither is activated
+    build(fred => { template => 'test', replacement => 'steve', make_active => 0 },
+          steve => { template => 'test' });
+
+    # both are activated
+    build(fred => { template => 'test', replacement => 'steve' },
+          steve => { template => 'test', make_active => 1 });
+
+
+=back
+
+=head2 Examples
+
+         my $stuff = build(
+           consumer => { class => 'ByUsage',
+                         bank => dollars(1),
+                         cost_per_unit => cents(5),
+                         old_age => days(30),
+                         replacement_mri => Moonpig::URI->nothing(),
+                         make_active => 1,
+                       },
+         );
+
+The C<$stuff> hash contains two elements.  C<  $stuff->{ledger} > is a
+regular ledger with a randomly-generated contact.  C< $stuff->{consumer} >
+is a consumer of class C<class("Moonpig::Role::Consumer::ByUsage")>
+with a bank that contains $1 and other properties as specified.  The
+C<< make_active => 1 >> specification is redundant.
+
+  my $xid = "...";
+  my $stuff = build(b5 => { template => 'fiveyear', replacement => 'g1', xid => $xid },
+                    g1 => { template => 'free_sixthyear',                xid => $xid });
+
+Here the C<$stuff> hash contains three elements: C<ledger>, C<b5>, and
+C<g1>.  Elements C<b5> and C<g1> are consumers built from the
+indicated templates; consumer C<g1> is the replacement for C<b5>.
+Note the use of an explicit C<xid> argument to ensure that both
+consumers handle the same XID.  Consumer C<b5> is the active consumer
+for this XID, because it is the consumer which is not a replacement.
+
+
+=cut
+
 sub build {
   my (%args) = @_;
   my %stuff;
@@ -75,7 +234,7 @@ sub build_consumer {
   }
 
   my $bank;
-  if (exists $c_args{bank} && $c_args{bank} > 0) {
+  if (exists $c_args{bank} && ! ref($c_args{bank}) && $c_args{bank} > 0) {
     $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
   }
 
