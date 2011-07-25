@@ -2,7 +2,7 @@ package Moonpig::Role::Coupon;
 # ABSTRACT: a discount for paying for a certain service
 use Moose::Role;
 use Moonpig;
-use Moonpig::Types qw(Factory Time);
+use Moonpig::Types qw(Factory Time TimeInterval);
 use Moonpig::Util qw(class);
 
 with(
@@ -18,11 +18,24 @@ has description => (
   required => 1,
 );
 
-has expiration_date => (
+has lifetime => (
   is => 'ro',
-  isa => Time,
+  isa => TimeInterval,
   predicate => 'has_expiration_date',
 );
+
+has created_at => (
+  is => 'ro',
+  isa => Time,
+  default => sub { Moonpig->env->now },
+  init_arg => undef,
+);
+
+sub expiration_date {
+  my ($self) = @_;
+  return unless $self->has_expiration_date;
+  return $self->created_at + $self->lifetime;
+}
 
 has credit_class => (
   is => 'ro',
