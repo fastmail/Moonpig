@@ -2,7 +2,7 @@ package t::lib::Factory::Templates;
 use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
-use Moonpig::Util qw(days dollars);
+use Moonpig::Util qw(class days dollars);
 use Moonpig::URI;
 
 use Data::GUID qw(guid_string);
@@ -16,7 +16,7 @@ sub templates {
       my $xid = "consumer:5y:$name";
 
       return {
-        roles => [ 'Consumer::ByTime::FixedCost' ],
+        roles => [ 'Consumer::ByTime::FixedCost', 't::Consumer::CouponCreator' ],
         arg   => {
           xid         => $xid,
           old_age     => days(30),
@@ -24,6 +24,13 @@ sub templates {
           cost_period => days(365 * 5 + 1),
           charge_description => 'long-term consumer',
           replacement_mri    => "moonpig://consumer-template/$name",
+
+          coupon_class => class(qw(Coupon::Simple Coupon::SingleXID)),
+          coupon_args => {
+            discount_rate => 1.00,
+            target_xid    => $xid,
+            description   => "Buy five, get one free",
+          },
         },
       }
     },

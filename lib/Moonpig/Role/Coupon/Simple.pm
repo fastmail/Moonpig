@@ -9,7 +9,7 @@ use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(Num);
 
 with(
-  'Moonpig::Role::LedgerComponent',
+  'Moonpig::Role::Coupon',
 );
 
 use namespace::autoclean;

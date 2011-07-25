@@ -44,10 +44,14 @@ test coupon_insertion => sub {
 # test to make sure that when the invoice is paid, the coupon is properly applied
 # and the self-funding consumer is created
 test coupon_payment => sub {
+ TODO: {
    my ($self) = @_;
    my ($ledger, $b5, $g1) = $self->set_up;
 
+   local $TODO = 'x';
   # is the coupon in the ledger?
+    fail("not implemented");
+ }
 
 };
 
