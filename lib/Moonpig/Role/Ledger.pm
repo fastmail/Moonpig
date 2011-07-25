@@ -9,7 +9,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
 Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
 
-_generate_subcomponent_methods(qw(bank consumer refund credit));
+_generate_subcomponent_methods(qw(bank consumer refund credit coupon));
 
 with(
   'Moonpig::Role::HasGuid',
@@ -18,34 +18,40 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
+  'Stick::Role::PublicResource::GetSelf',
   'Moonpig::Role::HasCollection' => {
     item => 'refund',
     item_roles => [ 'Moonpig::Role::Refund' ],
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
     collection_roles => [ 'ConsumerExtras' ],
     post_action => 'add_from_template',
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'credit',
     item_roles => [ 'Moonpig::Role::Credit' ],
     collection_roles => [ 'CreditExtras' ],
     post_action => 'accept_payment',
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'invoice',
     item_roles => [ 'Moonpig::Role::Invoice' ],
     collection_roles => [ 'InvoiceExtras' ],
     default_sort_key => 'created_at',
     is => 'ro',
-   },
-  'Stick::Role::PublicResource::GetSelf',
+  },
+  'Moonpig::Role::HasCollection' => {
+    item => 'coupon',
+    item_roles => [ 'Moonpig::Role::Coupon' ],
+    collection_roles => [ ],
+    default_sort_key => 'created_at',
+  },
 );
 
 use Moose::Util::TypeConstraints;
@@ -106,6 +112,7 @@ sub _extra_instance_subroute {
     refunds => $self->refund_collection,
     credits => $self->credit_collection,
     invoices => $self->invoice_collection,
+    coupons => $self->coupon_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
