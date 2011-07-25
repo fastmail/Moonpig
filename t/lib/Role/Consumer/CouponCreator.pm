@@ -1,24 +1,16 @@
-package t::lib::Role::Charge::CouponCreator;
+package t::lib::Role::Consumer::CouponCreator;
 use Moose::Role;
 
 use Moonpig;
 use Moonpig::Logger '$Logger';
 use Moonpig::Trait::Copy;
 use Moonpig::Types qw(Factory);
+use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(HashRef);
 
 use namespace::autoclean;
 
-with(
-  'Moonpig::Role::InvoiceCharge',
-  'Moonpig::Role::Charge::HandlesEvents',
-);
-
-implicit_event_handlers {
-  return { paid => { add_coupon => Moonpig::Events::Handler::Method->new("add_coupon") } };
-};
-
-has coupon_factory => (
+has coupon_class => (
   is  => 'ro',
   isa => Factory,
   required => 1,
@@ -32,8 +24,19 @@ has coupon_args => (
   traits   => [ qw(Copy) ],
 );
 
-sub add_coupon {
-  my ($self, $event) = @_;
-}
+after _invoice => sub {
+  my ($self) = @_;
+  $self->ledger->current_invoice->add_charge(
+    class("InvoiceCharge::CouponCreator")->new({
+      ledger_guid => $self->ledger->guid,
+      coupon_class => $self->coupon_class,
+      coupon_args => $self->coupon_args,
+      description => "Pseudocharge to trigger coupon creation on behalf of consumer for " .
+        $self->xid,
+      amount => 1,
+      tags => [ $self->xid ],
+    }));
+};
+
 
 1;
