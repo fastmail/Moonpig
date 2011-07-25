@@ -25,10 +25,10 @@ sub templates {
           charge_description => 'long-term consumer',
           replacement_mri    => "moonpig://consumer-template/$name",
 
-          coupon_class => class(qw(Coupon::Simple Coupon::SingleXID)),
+          coupon_class => class(qw(Coupon::Simple Coupon::RequiredTags)),
           coupon_args => {
             discount_rate => 1.00,
-            target_xid    => $xid,
+            target_tags   => [ $xid, "coupon.b5g1" ],
             description   => "Buy five, get one free",
           },
         },
