@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class days);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -41,6 +41,12 @@ test coupon_insertion => sub {
   $self->pay_open_invoices($ledger);
   my $coupons = $ledger->coupon_array;
   is(@$coupons, 1, "exactly one coupon");
+  my $coupon = $coupons->[0];
+  ok($coupon->does("Moonpig::Role::Coupon::RequiredTags"));
+#  note "Coupon target tags: ", join ", ", $coupon->taglist;
+  for my $tag ($b5->xid, "coupon.b5g1") {
+    ok($coupon->has_target_tag($tag), "coupon has target tag '$tag'");
+  }
 };
 
 sub pay_open_invoices {
@@ -49,25 +55,27 @@ sub pay_open_invoices {
   for my $invoice ($ledger->invoices) {
     $total += $invoice->total_amount unless $invoice->is_paid;
   }
+  printf "# Total amount payable: %.2f\n", $total / 100000;
   $ledger->add_credit(class('Credit::Simulated'), { amount => $total });
   $ledger->process_credits;
 }
-
-
 
 # test to make sure that if the coupon is there, the correct amount is invoiced
 # test to make sure that when the invoice is paid, the coupon is properly applied
 # and the self-funding consumer is created
 test coupon_payment => sub {
- TODO: {
    my ($self) = @_;
    my ($ledger, $b5, $g1) = $self->set_up;
 
-   local $TODO = 'x';
-  # is the coupon in the ledger?
-    fail("not implemented");
- }
+   my $i1 = $ledger->current_invoice->guid;
 
+   $self->pay_open_invoices($ledger);
+   Moonpig->env->stop_clock();
+   Moonpig->env->elapse_time(days(1));
+
+   my $i2 = $ledger->latest_invoice->guid;
+   ok($i2, "ledger has new current invoice");
+   isnt($i2, $i1, "new invoice different from old invoice");
 };
 
 # test to make sure everything is cancelled on account cancellation

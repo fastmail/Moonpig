@@ -24,5 +24,13 @@ sub applies_to {
   return 1;
 }
 
+sub has_target_tag {
+  my ($self, $tag) = @_;
+  for my $_tag ($self->taglist) {
+    return 1 if $_tag eq $tag;
+  }
+  return;
+}
+
 1;
 

@@ -10,10 +10,10 @@ use Data::GUID qw(guid_string);
 use namespace::autoclean;
 
 sub templates {
+  my $xid = "consumer:5y:test";
   return {
     fiveyear => sub {
       my ($name) = @_;
-      my $xid = "consumer:5y:$name";
 
       return {
         roles => [ 'Consumer::ByTime::FixedCost', 't::Consumer::CouponCreator' ],
@@ -36,7 +36,6 @@ sub templates {
     },
     free_sixthyear => sub {
       my ($name) = @_;
-      my $xid = "consumer:5y:$name";
 
       return {
         roles => [ 'Consumer::ByTime::FixedCost' ],
