@@ -30,7 +30,7 @@ sub templates {
         arg   => {
           cost_period     => days(365),
           old_age         => days(30),
-          extra_charge_tags     => [ 'fauxbox.basic' ],
+          extra_journal_charge_tags     => [ 'fauxbox.basic' ],
           replacement_mri => "moonpig://consumer-template/$name",
         },
       }
@@ -47,7 +47,7 @@ sub templates {
           cost_amount => dollars(20),
           cost_period => days(5),
           old_age     => days(2),
-          extra_charge_tags => [ 'fauxbox.speedy' ],
+          extra_journal_charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
           replacement_mri    => "moonpig://consumer-template/$name",

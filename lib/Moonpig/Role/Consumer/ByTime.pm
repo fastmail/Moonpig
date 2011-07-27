@@ -194,7 +194,7 @@ sub charge {
         from => $self->bank,
         to   => $self,
         date => $next_charge_date,
-        tags => $self->charge_tags,
+        tags => $self->journal_charge_tags,
         amount => $amt,
       });
     }

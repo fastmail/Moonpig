@@ -135,7 +135,7 @@ sub create_charge_for_hold {
     from => $hold->source,
     to   => $self,
     date => $now,
-    tags => $self->charge_tags,
+    tags => $self->journal_charge_tags,
     amount    => $hold->amount,
   });
   $hold->delete;

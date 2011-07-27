@@ -8,10 +8,10 @@ use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
+use MooseX::Types::Moose qw(ArrayRef);
 
 with(
   'Moonpig::Role::Consumer',
-  'Moonpig::Role::Consumer::ChargesBank', # for charge_tags
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -34,6 +34,18 @@ implicit_event_handlers {
 # This is an arrayref so we can have ordered line items for display.
 requires 'costs_on';
 
+has extra_invoice_charge_tags => (
+  is  => 'ro',
+  isa => ArrayRef,
+  default => sub { [] },
+  traits => [ qw(Copy) ],
+);
+
+sub invoice_charge_tags {
+  my ($self) = @_;
+  return [ $self->xid, @{$self->extra_invoice_charge_tags} ]
+}
+
 sub _invoice {
   my ($self) = @_;
 
@@ -48,7 +60,7 @@ sub _invoice {
       class( "InvoiceCharge::Bankable" )->new({
         description => $desc,
         amount      => $amt,
-        tags        => $self->charge_tags,
+        tags        => $self->invoice_charge_tags,
         consumer    => $self,
       }),
     );

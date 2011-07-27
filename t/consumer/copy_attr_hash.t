@@ -10,7 +10,8 @@ use Test::Routine::Util;
 with qw(t::lib::Factory::Ledger);
 
 my @basic = qw(expired replacement_mri is_replaceable xid);
-my @charges_bank = qw(extra_charge_tags old_age);
+my @charges_bank = qw(extra_journal_charge_tags old_age);
+my @invoices = qw(extra_invoice_charge_tags);
 
 test dummy => sub {
   my ($self) = @_;
@@ -41,7 +42,7 @@ test by_time => sub {
 
     my $h = $consumer->copy_attr_hash__();
     cmp_deeply([keys %$h],
-               bag(@basic, @charges_bank,
+               bag(@basic, @charges_bank, @invoices,
                    qw(charge_description charge_frequency
                       cost_amount cost_period grace_period_duration
                     ),

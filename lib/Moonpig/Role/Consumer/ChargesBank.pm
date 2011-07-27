@@ -1,5 +1,5 @@
 package Moonpig::Role::Consumer::ChargesBank;
-# ABSTRACT: a consumer that can issue charges
+# ABSTRACT: a consumer that can issue journal charges to a bank
 use Moose::Role;
 with(
   'Moonpig::Role::Consumer',
@@ -12,16 +12,16 @@ use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;
 
-has extra_charge_tags => (
+has extra_journal_charge_tags => (
   is  => 'ro',
   isa => ArrayRef,
   default => sub { [] },
   traits => [ qw(Copy) ],
 );
 
-sub charge_tags {
+sub journal_charge_tags {
   my ($self) = @_;
-  return [ $self->xid, @{$self->extra_charge_tags} ]
+  return [ $self->xid, @{$self->extra_journal_charge_tags} ]
 }
 
 # When the object has less than this long to live, it will
@@ -86,7 +86,7 @@ sub move_bank_to__ {
         to          => $self,
         date        => Moonpig->env->now,
         amount      => $amount,
-        tags        => [ @{$self->charge_tags}, "transient" ],
+        tags        => [ @{$self->journal_charge_tags}, "transient" ],
       });
       my $credit = $new_ledger->add_credit(
         class('Credit::Transient'),
@@ -105,7 +105,7 @@ sub move_bank_to__ {
                                  $self->xid, $ledger->guid),
           amount      => $amount,
           consumer    => $new_consumer,
-          tags        => [ @{$new_consumer->charge_tags}, "transient" ],
+          tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
         }),
        );
       $new_ledger->apply_credits_to_invoice__(

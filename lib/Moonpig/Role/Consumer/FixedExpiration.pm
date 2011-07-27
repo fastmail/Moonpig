@@ -64,7 +64,7 @@ sub _check_expiry {
     from => $self->bank,
     to   => $self,
     date => Moonpig->env->now,
-    tags => $self->charge_tags,
+    tags => $self->journal_charge_tags,
 
     # no part of the amount should be applied, so I have expressly said
     # ->amount and not ->unapplied_amount; if the full amount is an
