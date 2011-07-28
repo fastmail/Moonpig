@@ -290,14 +290,18 @@ sub process_credits {
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
   for my $invoice ( $self->payable_invoices ) {
 
-    @credits = grep { $_->unapplied_amount } @credits;
+    @credits = grep { $_->unapplied_amount > 0 } @credits;
+
+    # array of { charge => $charge, coupon => $coupon } items
+    my @coupon_apps = $self->find_coupon_applications__($invoice);
+    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}), @coupon_apps;
 
     my $to_pay = $invoice->total_amount;
 
     my @to_apply;
 
     # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@credits) {
+    CREDIT: for my $credit (@coupon_credits, @credits) {
       my $credit_amount = $credit->unapplied_amount;
       my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
 
@@ -320,11 +324,33 @@ sub process_credits {
 
     if ($to_pay == 0) {
       $self->apply_credits_to_invoice__( \@to_apply, $invoice );
+      $_->{coupon}->applied for @coupon_apps;
     } else {
       # We can't successfully pay this invoice, so stop processing.
+      $self->destroy_credits__(@coupon_credits);
       return;
     }
   }
+}
+
+sub destroy_credits__ {
+  my ($self, @credits) = @_;
+  for my $c (@credits) {
+    delete $self->_credits->{$c->guid};
+  }
+}
+
+# Given an invoice, find all outstanding coupons that apply to its charges
+# return a list of { coupon => $coupon, charge => $charge } items indicating which coupons
+# apply to which charges
+sub find_coupon_applications__ {
+  my ($self, $invoice) = @_;
+  my @coupons = $self->coupons;
+  my @res;
+  for my $coupon ($self->coupons) {
+    push @res, map { coupon => $coupon, charge => $_ }, $coupon->applies_to_invoice($invoice);
+  }
+  return @res;
 }
 
 # Only call this if you are paying off the complete invoice!

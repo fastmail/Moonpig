@@ -52,6 +52,13 @@ sub is_expired {
 requires 'applies_to';
 requires 'discount_amount_for';
 
+sub applied { } # No-op
+
+sub applies_to_invoice {
+  my ($self, $invoice) = @_;
+  return grep $self->applies_to($_), $invoice->all_charges;
+}
+
 sub create_discount_for {
   my ($self, $charge) = @_;
   return if $self->is_expired;
