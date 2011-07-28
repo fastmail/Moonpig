@@ -23,7 +23,7 @@ sub templates {
           cost_amount => dollars(500),
           cost_period => days(365 * 5 + 1),
           charge_description => 'long-term consumer',
-          replacement_mri    => "moonpig://consumer-template/$name",
+          replacement_mri    => "moonpig://consumer-template/free_sixthyear",
 
           coupon_class => class(qw(Coupon::Simple Coupon::RequiredTags)),
           coupon_args => {
