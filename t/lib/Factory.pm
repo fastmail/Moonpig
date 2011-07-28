@@ -1,14 +1,14 @@
 package t::lib::Factory;
 use strict;
 
+use t::lib::Factory::Templates; # default testing template set
+
 use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 
 use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util -all;
-
-use t::lib::Factory::Templates;
 
 use Sub::Exporter -setup => {
   exports => [ qw(build build_consumers build_ledger) ], # The other stuff is really not suitable for exportation
