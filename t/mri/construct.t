@@ -12,7 +12,6 @@ use Try::Tiny;
 
 use Moose;
 with 't::lib::Factory::Ledger';
-
 my $day = days(1);
 plan tests => 4;
 
