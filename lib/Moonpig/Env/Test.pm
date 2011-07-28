@@ -178,6 +178,22 @@ sub now {
   confess "Bizarre clock state '$state'; aborting";
 }
 
+# Env->clock_offset = Env->now - true_current_time()
+sub clock_offset {
+  my ($self) = @_;
+
+  my $state = $self->_clock_state;
+  if ($state eq 'wallclock') {
+    return 0;
+  } elsif ($state eq 'stopped') {
+    return $self->_clock_stopped_time - Moonpig::DateTime->now;
+  } elsif ($state eq 'offset') {
+    return $self->_clock_stopped_time - $self->_clock_restarted_at;
+  }
+
+  confess "Bizarre clock state '$state'; aborting";
+}
+
 has _guid_serial_number_registry => (
   is  => 'ro',
   init_arg => undef,
