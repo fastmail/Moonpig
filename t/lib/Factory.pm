@@ -101,6 +101,9 @@ indicated amount of money and is used.  For example:
 
 If the money amount is zero, no bank will be created.
 
+If a consumer's key in the returned hash is I<X>, then the bank will
+be returned under the key I<X>C<.bank>.
+
 =item *
 
 If no C<xid> argument is passed, C<test:consumer:NAME> will be used,
@@ -235,7 +238,8 @@ sub build_consumer {
 
   my $bank;
   if (exists $c_args{bank} && ! ref($c_args{bank}) && $c_args{bank} > 0) {
-    $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
+    $stuff->{"$name.bank"} =
+      $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
   }
 
   my $class = delete $c_args{class};
