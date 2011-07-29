@@ -3,7 +3,7 @@ package Moonpig::Types;
 use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Consumer
-  Millicents PositiveMillicents
+  Millicents PositiveMillicents NonNegativeMillicents
 
   Credit
 
@@ -60,9 +60,11 @@ subtype PositiveInt, as Int, where { $_ > 0 };
 
 subtype Millicents, as Int;
 subtype PositiveMillicents, as Millicents, where { $_ > 0 };
+subtype NonNegativeMillicents, as Millicents, where { $_ >= 0 };
 
 coerce Millicents, from Num, via { int };
 coerce PositiveMillicents, from Num, via { int };
+coerce NonNegativeMillicents, from Num, via { int };
 
 role_type Credit, { role => 'Moonpig::Role::Credit' };
 

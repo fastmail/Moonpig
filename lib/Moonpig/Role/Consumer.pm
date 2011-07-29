@@ -21,9 +21,19 @@ with(
 
 sub _class_subroute { return }
 
+use MooseX::SetOnce;
+use Moonpig::Types qw(Ledger Millicents MRI TimeInterval XID);
+use Moonpig::Util qw(class event);
+
+use Moonpig::Logger '$Logger';
+use namespace::autoclean;
+
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
+    'activated' => {
+      noop => Moonpig::Events::Handler::Noop->new,
+    },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
         method_name => 'create_own_replacement',
@@ -33,24 +43,6 @@ implicit_event_handlers {
       cancel_service => Moonpig::Events::Handler::Method->new(
         method_name => 'cancel_service',
       ),
-    },
-  };
-};
-
-use MooseX::SetOnce;
-use Moonpig::Types qw(Ledger Millicents MRI TimeInterval XID);
-use Moonpig::Util qw(class event);
-
-use Moonpig::Logger '$Logger';
-
-use Moonpig::Behavior::EventHandlers;
-
-use namespace::autoclean;
-
-implicit_event_handlers {
-  return {
-    'activated' => {
-      noop => Moonpig::Events::Handler::Noop->new,
     },
     'fail-over' => {
       default => Moonpig::Events::Handler::Method->new(

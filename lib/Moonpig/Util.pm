@@ -27,6 +27,8 @@ use Sub::Exporter -setup => [ qw(
 
   same_object
 
+  percent
+
   sum
 ) ];
 
@@ -192,5 +194,7 @@ sub sum {
   require List::Util;
   return List::Util::reduce(sub { $a + $b }, 0, @_);
 }
+
+sub percent { $_[0] / 100 }
 
 1;

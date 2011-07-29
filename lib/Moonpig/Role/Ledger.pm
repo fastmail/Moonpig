@@ -9,7 +9,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
 Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
 
-_generate_subcomponent_methods(qw(bank consumer refund credit));
+_generate_subcomponent_methods(qw(bank consumer refund credit coupon));
 
 with(
   'Moonpig::Role::HasGuid',
@@ -18,34 +18,40 @@ with(
   'Moonpig::Role::Dunner',
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::Routable::AutoInstance',
+  'Stick::Role::PublicResource::GetSelf',
   'Moonpig::Role::HasCollection' => {
     item => 'refund',
     item_roles => [ 'Moonpig::Role::Refund' ],
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'consumer',
     item_roles => [ 'Moonpig::Role::Consumer' ],
     collection_roles => [ 'ConsumerExtras' ],
     post_action => 'add_from_template',
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'bank',
     item_roles => [ 'Moonpig::Role::Bank' ],
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'credit',
     item_roles => [ 'Moonpig::Role::Credit' ],
     collection_roles => [ 'CreditExtras' ],
     post_action => 'accept_payment',
-   },
+  },
   'Moonpig::Role::HasCollection' => {
     item => 'invoice',
     item_roles => [ 'Moonpig::Role::Invoice' ],
     collection_roles => [ 'InvoiceExtras' ],
     default_sort_key => 'created_at',
     is => 'ro',
-   },
-  'Stick::Role::PublicResource::GetSelf',
+  },
+  'Moonpig::Role::HasCollection' => {
+    item => 'coupon',
+    item_roles => [ 'Moonpig::Role::Coupon' ],
+    collection_roles => [ ],
+    default_sort_key => 'created_at',
+  },
 );
 
 use Moose::Util::TypeConstraints;
@@ -106,6 +112,7 @@ sub _extra_instance_subroute {
     refunds => $self->refund_collection,
     credits => $self->credit_collection,
     invoices => $self->invoice_collection,
+    coupons => $self->coupon_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
@@ -283,14 +290,17 @@ sub process_credits {
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
   for my $invoice ( $self->payable_invoices ) {
 
-    @credits = grep { $_->unapplied_amount } @credits;
+    @credits = grep { $_->unapplied_amount > 0 } @credits;
+
+    my @coupon_apps = $self->find_coupon_applications__($invoice);
+    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}), @coupon_apps;
 
     my $to_pay = $invoice->total_amount;
 
     my @to_apply;
 
     # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@credits) {
+    CREDIT: for my $credit (@coupon_credits, @credits) {
       my $credit_amount = $credit->unapplied_amount;
       my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
 
@@ -313,11 +323,33 @@ sub process_credits {
 
     if ($to_pay == 0) {
       $self->apply_credits_to_invoice__( \@to_apply, $invoice );
+      $_->{coupon}->applied for @coupon_apps;
     } else {
       # We can't successfully pay this invoice, so stop processing.
+      $self->destroy_credits__(@coupon_credits);
       return;
     }
   }
+}
+
+sub destroy_credits__ {
+  my ($self, @credits) = @_;
+  for my $c (@credits) {
+    delete $self->_credits->{$c->guid};
+  }
+}
+
+# Given an invoice, find all outstanding coupons that apply to its charges
+# return a list of { coupon => $coupon, charge => $charge } items indicating which coupons
+# apply to which charges
+sub find_coupon_applications__ {
+  my ($self, $invoice) = @_;
+  my @coupons = $self->coupons;
+  my @res;
+  for my $coupon ($self->coupons) {
+    push @res, map { coupon => $coupon, charge => $_ }, $coupon->applies_to_invoice($invoice);
+  }
+  return @res;
 }
 
 # Only call this if you are paying off the complete invoice!

@@ -36,4 +36,12 @@ has tags => (
   },
 );
 
+sub has_tag {
+  my ($self, $tag) = @_;
+  for my $_tag ($self->tags) {
+    return 1 if $_tag eq $tag;
+  }
+  return;
+}
+
 1;
