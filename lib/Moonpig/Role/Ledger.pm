@@ -268,6 +268,11 @@ sub invoice_array {
   [ $_[0]->invoices ]
 }
 
+sub payable_invoices {
+  my ($self) = @_;
+  grep $_->is_unpaid && $_->is_closed, $self->invoices;
+}
+
 sub process_credits {
   my ($self) = @_;
 
@@ -276,8 +281,7 @@ sub process_credits {
   my @credits = $self->credits;
 
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
-  for my $invoice (@{ $self->_invoices }) {
-    next if $invoice->is_paid || $invoice->is_open;
+  for my $invoice ( $self->payable_invoices ) {
 
     @credits = grep { $_->unapplied_amount } @credits;
 
