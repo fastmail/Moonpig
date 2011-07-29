@@ -11,21 +11,15 @@ use Test::More;
 use Test::Routine::Util;
 use Try::Tiny;
 
-with(
-  't::lib::Factory::Ledger',
-);
-
 use t::lib::ConsumerTemplateSet::Test;
+use t::lib::Factory qw(build);
 
 test "consumer from template" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
-
-  my $c = $ledger->add_consumer_from_template(
-    'boring',
-    { make_active => 1 },
-  );
+  my $stuff = build( c => { template => 'boring' } );
+  my $c = $stuff->{c};
+  my $ledger = $stuff->{ledger};
 
   ok(
     $c->does('Moonpig::Role::Consumer::ByTime'),
