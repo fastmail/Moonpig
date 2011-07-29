@@ -277,7 +277,7 @@ sub process_credits {
 
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
   for my $invoice (@{ $self->_invoices }) {
-    next if $invoice->is_paid;
+    next if $invoice->is_paid || $invoice->is_open;
 
     @credits = grep { $_->unapplied_amount } @credits;
 
