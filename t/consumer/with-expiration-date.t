@@ -7,18 +7,10 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
-my $CLASS = class('Consumer::WithExpirationDate');
+my $CLASS = 'Consumer::WithExpirationDate';
 my $XID = "narf";
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
-);
-sub ledger;  # Work around bug in Moose 'requires';
-
-with ('t::lib::Factory::Ledger',
-     );
+use t::lib::Factory qw(build);
 
 sub jan {
   my ($dy) = @_;
@@ -27,17 +19,16 @@ sub jan {
   );
 }
 
+
 my ($ledger, $consumer);
 before 'run_test' => sub {
   my ($self) = @_;
   Moonpig->env->stop_clock_at(jan(1));
-  $ledger = $self->test_ledger;
-  $consumer = $ledger->add_consumer($CLASS,
-                                    { expire_date => jan(3),
-                                      xid => $XID,
-                                    }
-                                   );
-  $ledger->mark_consumer_active__($consumer);
+  my $stuff = build(consumer => { class => $CLASS,
+                                  expire_date => jan(3),
+                                  xid => $XID
+                                 });
+  ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
 };
 
 test "no replacement" => sub {
@@ -49,7 +40,7 @@ test "no replacement" => sub {
 
 test "cannot set replacement" => sub {
   isnt(exception {
-    $ledger->add_consumer($CLASS,
+    $ledger->add_consumer(class($CLASS),
                           { expire_date => jan(3),
                             xid => $XID,
                             replacement_mri =>
