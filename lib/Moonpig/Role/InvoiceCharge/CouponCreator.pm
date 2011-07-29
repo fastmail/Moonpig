@@ -8,7 +8,7 @@ with(
 
 use Moonpig;
 use Moonpig::Logger '$Logger';
-use Moonpig::Types qw(Factory GUID);
+use Moonpig::Types qw(Factory GUID Ledger);
 use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(HashRef);
 
@@ -25,10 +25,11 @@ implicit_event_handlers {
 };
 
 # Do we really need this? Is there no other way to find the ledger?
-has ledger_guid => (
+has ledger => (
   is => 'ro',
-  isa => GUID,
+  isa => Ledger,
   required => 1,
+  weak_ref => 1,
 );
 
 has coupon_class => (
@@ -49,16 +50,10 @@ sub create_coupon {
   my $coupon;
   Moonpig->env->storage->do_rw(
     sub {
-      my $ledger = $self->find_ledger__;
-      $coupon = $ledger->add_coupon_to_ledger($self->coupon_class, $self->coupon_args);
-      $Logger->log([ 'created coupon %s in ledger %s', $coupon->ident, $ledger->ident ]);
+      $coupon = $self->ledger->add_coupon($self->coupon_class, $self->coupon_args);
+      $Logger->log([ 'created coupon %s in ledger %s', $coupon->ident, $self->ledger->ident ]);
     });
   return $coupon;
-}
-
-sub find_ledger__ {
-  my ($self) = @_;
-  return Moonpig->env->storage->retrieve_ledger_for_guid($self->ledger_guid);
 }
 
 1;
