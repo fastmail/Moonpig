@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use Moonpig::Util qw(class);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -34,11 +35,25 @@ test setup => sub {
 
 # test to make sure that coupon is properly inserted
 test coupon_insertion => sub {
- TODO: {
-    local $TODO = 'x';
-    fail("not implemented");
-  }
+  my ($self) = @_;
+  my ($ledger, $b5, $g1) = $self->set_up;
+
+  $self->pay_open_invoices($ledger);
+  my $coupons = $ledger->coupon_array;
+  is(@$coupons, 1, "exactly one coupon");
 };
+
+sub pay_open_invoices {
+  my ($self, $ledger) = @_;
+  my $total = 0;
+  for my $invoice ($ledger->invoices) {
+    $total += $invoice->total_amount unless $invoice->is_paid;
+  }
+  $ledger->add_credit(class('Credit::Simulated'), { amount => $total });
+  $ledger->process_credits;
+}
+
+
 
 # test to make sure that if the coupon is there, the correct amount is invoiced
 # test to make sure that when the invoice is paid, the coupon is properly applied
