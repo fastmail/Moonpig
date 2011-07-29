@@ -11,7 +11,7 @@ use Moonpig::Util -all;
 use t::lib::Factory::Templates;
 
 use Sub::Exporter -setup => {
-  exports => [ qw(build) ], # The other stuff is really not suitable for exportation
+  exports => [ qw(build build_ledger) ], # The other stuff is really not suitable for exportation
 };
 
 =head1 NAME
@@ -20,7 +20,7 @@ C<t::lib::Factory> - construct test examples
 
 =head1 SYNOPSIS
 
-       use t::lib::Factory 'build';
+       use t::lib::Factory qw(build);
 
        my $stuff = build( fred => { template => "consumer template name",
                                     bank     => dollars(100) });
@@ -31,7 +31,7 @@ C<t::lib::Factory> - construct test examples
 
 The C<build> function gets a list of key-value pairs.  Each pair
 specifies a component to be constructed, such as a ledger or a
-consumer.  The retruned value is a reference to a hash with the same
+consumer.  The returned value is a reference to a hash with the same
 keys; the corresponding values are the components that were
 constructed.
 
@@ -173,6 +173,18 @@ Note the use of an explicit C<xid> argument to ensure that both
 consumers handle the same XID.  Consumer C<b5> is the active consumer
 for this XID, because it is the consumer which is not a replacement.
 
+=head1 C<build_ledger>
+
+This builds and returns a single ledger.  Arguments are the same as
+for the C<ledger> element of the arguments to the C<build> function,
+described above.  That is, these two calls are in all cases identical:
+
+	build_ledger($args)
+
+	build(ledger => $args)
+
+except that the first returns the ledger and the second returns a hash
+with the ledger stored under the key C<ledger>.
 
 =cut
 
