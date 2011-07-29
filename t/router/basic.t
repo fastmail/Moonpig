@@ -4,9 +4,9 @@ use Test::More;
 use Test::Fatal;
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
+use t::lib::Factory qw(build_ledger);
 
 use Moonpig::Env::Test;
 
@@ -20,7 +20,7 @@ use Moonpig::Util qw(class);
 test "route to and get a simple resource" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
 
   my $guid = $ledger->guid;
 
@@ -46,7 +46,7 @@ test "route to and get a simple resource" => sub {
 test "route to and GET a method on a simple resource" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
 
   Moonpig->env->save_ledger($ledger);
 
