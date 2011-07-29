@@ -8,6 +8,8 @@ use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util -all;
 
+use t::lib::Factory::Templates;
+
 use Sub::Exporter -setup => {
   exports => [ qw(build) ], # The other stuff is really not suitable for exportation
 };
