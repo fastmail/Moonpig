@@ -292,7 +292,6 @@ sub process_credits {
 
     @credits = grep { $_->unapplied_amount > 0 } @credits;
 
-    # array of { charge => $charge, coupon => $coupon } items
     my @coupon_apps = $self->find_coupon_applications__($invoice);
     my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}), @coupon_apps;
 

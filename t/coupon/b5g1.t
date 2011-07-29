@@ -34,9 +34,18 @@ test setup_b5 => sub {
   ok($ledger->latest_invoice);
 };
 
-sub pay_open_invoices {
+sub pay_unpaid_invoices {
   my ($self, $ledger) = @_;
   my $total = 0;
+
+  Moonpig->env->stop_clock();
+  until ($ledger->payable_invoices) {
+    Moonpig->env->elapse_time(days(1));
+    Moonpig->env->storage->do_rw(sub {
+                                   $ledger->handle_event( event('heartbeat') );
+                                 });
+  }
+
   for my $invoice ($ledger->invoices) {
     $total += $invoice->total_amount unless $invoice->is_paid;
   }
@@ -49,7 +58,7 @@ sub set_up_g1 {
   my ($self) = @_;
 
   my ($ledger, $b5) = $self->set_up_b5;
-  $self->pay_open_invoices($ledger);
+  $self->pay_unpaid_invoices($ledger);
   Moonpig->env->stop_clock();
   print "# Time passes";
   until ($b5->has_replacement) {
@@ -77,7 +86,7 @@ test coupon_insertion => sub {
   my ($self) = @_;
   my ($ledger, $b5) = $self->set_up_b5;
 
-  $self->pay_open_invoices($ledger);
+  $self->pay_unpaid_invoices($ledger);
   ok(  $ledger->latest_invoice->is_paid);
   ok(! $ledger->latest_invoice->is_open);
   my $coupons = $ledger->coupon_array;
