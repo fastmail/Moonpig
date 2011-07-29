@@ -8,16 +8,14 @@ use Test::Routine;
 use Test::Routine::Util;
 use t::lib::ConsumerTemplateSet::Test;
 
-with qw(t::lib::Factory::Ledger
-        t::lib::Role::UsesStorage);
+with qw(t::lib::Role::UsesStorage);
+use t::lib::Factory qw(build_ledger);
 
 my ($ledger_a, $ledger_b, $A, $B);
 
 before run_test => sub {
   my ($self) = @_;
-  $_ = $self->test_ledger(class('Ledger'),
-                          { contact => $self->random_contact })
-    for $ledger_a, $ledger_b;
+  $_ = build_ledger() for $ledger_a, $ledger_b;
   $A = $ledger_a->guid;
   $B = $ledger_b->guid;
   die if $A eq $B;
@@ -27,7 +25,7 @@ before run_test => sub {
 
 test dummy => sub {
   my ($self) = @_;
-  my $consumer = $self->add_consumer_to($ledger_a);
+  my $consumer = $ledger_a->add_consumer_from_template("dummy", { make_active => 1 });
   my $copy = $consumer->copy_to($ledger_b);
   isnt($consumer, $copy, "copied, not moved");
   isnt($consumer->guid, $copy->guid, "copy has fresh guid");
@@ -72,11 +70,10 @@ test with_bank => sub {
   my ($self) = @_;
   my $xid = "eat:more:possum";
 
-  my $bank_a = $self->add_bank_to($ledger_a);
-  my $cons_a = $self->add_consumer_to($ledger_a,
-    { class => class("Consumer::ByTime::FixedCost"),
-      bank => $bank_a,
-
+  my $bank_a = $ledger_a->add_bank(class('Bank'), { amount => dollars(100) });
+  my $cons_a = $ledger_a->add_consumer(
+    class("Consumer::ByTime::FixedCost"),
+    { bank => $bank_a,
       charge_description => "monkey meat",
       cost_amount => cents(1234),
       cost_period => years(1),
@@ -123,10 +120,9 @@ test with_bank => sub {
 
 test with_replacement => sub {
   my ($self) = @_;
-  my $cons_a = $self->add_consumer_to(
-    $ledger_a,
-    { class => class("Consumer::Dummy"),
-      replacement_mri => "moonpig://consumer-template/boring" });
+  my $cons_a = $ledger_a->add_consumer_from_template(
+    "dummy",
+    { replacement_mri => "moonpig://consumer-template/boring" });
   $cons_a->handle_event(
     event("consumer-create-replacement",
           { mri => $cons_a->replacement_mri }));
@@ -144,7 +140,6 @@ test with_replacement => sub {
   ok($repl_b->does("Moonpig::Role::Consumer::ByTime"),
      "replacement copy is as expected");
 };
-
 
 run_me;
 done_testing;
