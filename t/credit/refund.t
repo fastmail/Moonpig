@@ -4,16 +4,13 @@ use Test::Routine::Util;
 
 use Moonpig::Util qw(class dollars);
 
-with(
-  't::lib::Factory::Ledger',
-);
-
 use t::lib::Logger;
+use t::lib::Factory qw(build_ledger);
 
 test pay_and_get_refund => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
 
   my $credit = $ledger->add_credit(
     class(qw( Credit::Simulated Credit::FromPayment t::Refundable::Test )),
