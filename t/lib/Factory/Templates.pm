@@ -12,6 +12,7 @@ use Data::GUID qw(guid_string);
 use namespace::autoclean;
 
 sub templates {
+  my $dummy_xid = "consumer:test:dummy";
   my $b5g1_xid = "consumer:5y:test";
   return {
     dummy => sub {
@@ -20,6 +21,7 @@ sub templates {
         roles => [ 'Consumer::Dummy' ],
         arg => {
           replacement_mri => Moonpig::URI->nothing(),
+          xid             => $dummy_xid,
          },
        }
     },
@@ -30,6 +32,7 @@ sub templates {
         arg => {
           replacement_mri => Moonpig::URI->nothing(),
           old_age => years(1000),
+          xid             => $dummy_xid,
         },
       }
     },

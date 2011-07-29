@@ -5,12 +5,12 @@ use Test::Routine::Util;
 use Moonpig::Util qw(class dollars event years);
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Factory::EventHandler',
   't::lib::Role::UsesStorage',
 );
 
 use t::lib::Logger;
+use t::lib::Factory qw(build_ledger);
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
@@ -19,10 +19,9 @@ before run_test => sub {
 sub fresh_ledger {
   my ($self, $ledger_class) = @_;
 
-  my $ledger;
+  my $ledger = build_ledger();
 
   Moonpig->env->storage->do_rw(sub {
-    $ledger = $self->test_ledger;
     Moonpig->env->save_ledger($ledger);
   });
 
@@ -172,11 +171,7 @@ test create_bank_on_payment => sub {
 
   my $ledger = $self->fresh_ledger;
 
-  my $consumer = $self->add_consumer_to(
-    $ledger,
-    { class => class("Consumer::DummyWithBank"),
-      old_age => years(1000),
-    });
+  my $consumer = $ledger->add_consumer_from_template("dummy_with_bank");
 
   is_deeply($ledger->_banks, {}, "there are no banks on our ledger yet");
   ok(! $consumer->has_bank, "...nor on our consumer");
