@@ -210,7 +210,8 @@ sub build_consumers {
   # otherwise specified
   { my %consumer = map { $stuff->{$_}->guid => $stuff->{$_} } keys %$args;
     # delete all the consumers that are replacements
-    for my $consumer (values %consumer) {
+    my @consumers = values %consumer;
+    for my $consumer (@consumers) {
       $consumer->replacement && delete $consumer{$consumer->replacement->guid};
     }
     # iterate over non-replacements, activating each
