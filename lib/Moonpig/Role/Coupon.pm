@@ -52,6 +52,11 @@ sub is_expired {
 requires 'applies_to';
 requires 'discount_amount_for';
 
+around applies_to => sub {
+  my ($orig, $self, @args) = @_;
+  return $self->is_expired ? () : $self->$orig(@args);
+};
+
 sub applied { } # No-op
 
 sub applies_to_invoice {
