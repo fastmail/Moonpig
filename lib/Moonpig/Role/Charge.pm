@@ -8,6 +8,8 @@ use Moonpig::Types qw(PositiveMillicents TagSet);
 
 use namespace::autoclean;
 
+with ('Moonpig::Role::HasTagset' => {});
+
 has description => (
   is  => 'ro',
   isa => Str,
@@ -26,22 +28,5 @@ has date => (
   isa     => 'DateTime',
   default  => sub { Moonpig->env->now() },
 );
-
-has tags => (
-  isa => TagSet,
-  default => sub {  []  },
-  traits  => [ 'Array' ],
-  handles => {
-    tags => 'elements',
-  },
-);
-
-sub has_tag {
-  my ($self, $tag) = @_;
-  for my $_tag ($self->tags) {
-    return 1 if $_tag eq $tag;
-  }
-  return;
-}
 
 1;
