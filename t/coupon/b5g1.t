@@ -8,13 +8,13 @@ use Test::Routine;
 use Test::Routine::Util;
 
 use t::lib::Factory qw(build);
+with ('t::lib::Role::UsesStorage');
 
 my $xid = "consumer:5y:test";
 
 before run_test => sub {
   Moonpig->env->reset_clock;
 };
-
 
 sub set_up_b5 {
   my ($self) = @_;
