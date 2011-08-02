@@ -521,10 +521,9 @@ sub _collect_spare_change {
   return unless $total > 0;
 
   my $credit = $self->add_credit(
-    class('Credit::Courtesy'),
+    class('Credit::SpareChange'),
     {
       amount => $total,
-      reason => "collecting spare change", # XXX ? -- rjbs, 2011-01-28
     },
   );
 
