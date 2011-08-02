@@ -1,6 +1,8 @@
 package Moonpig::Job;
 use Moose;
 use MooseX::StrictConstructor;
+require Stick::Role::HasCollection;
+Stick::Role::HasCollection->VERSION(0.20110802);
 
 my %callback = (
   lock     => [ qw(lock extend_lock) ],
@@ -27,7 +29,7 @@ with(
   'Stick::Role::Routable::ClassAndInstance',
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
-  'Moonpig::Role::HasCollection' => {
+  'Stick::Role::HasCollection' => {
     is   => 'ro',
     item => 'log',
     item_roles => [ ],
