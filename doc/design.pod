@@ -155,6 +155,14 @@ C<< $hold->delete >>.
 A refund object records a refund that was issued to a customer.  Money
 can be transferred from a credit to a refund.
 
+=head3 Coupon
+
+A coupon object lives in the ledger.  When it's time for the ledger to
+try to apply credits to a charge, it first consults each of its
+coupons about whether the coupon thinks it applies to the charge.  A
+coupon that does apply will manufacture a credit to help pay the
+charge.
+
 =head2 Payment cycle
 
 Suppose a user requests a service.  The following sequence of events
@@ -192,7 +200,8 @@ and then asks the ledger to process its outstanding credits.
 The ledger's C<process_credits> method runs through the unpaid
 invoices looking for unpaid charges.  When it finds an invoice that
 can be paid in full, it transfers funds from the credit or credits to
-the invoice and then marks the invoice paid.
+the invoice and then marks the invoice paid.  See "credit processing",
+below, for more details.
 
 =item 7.
 
@@ -245,6 +254,47 @@ ledger's accountant uses this record when asked to compute the amount
 of money still in the consumer's bank.
 
 =back
+
+=back
+
+=head3 Credit processing
+
+Periodically the ledger will try to process its credits and apply them
+to outstanding charges.  At present this is kicked off by the
+C<accept_payment> method on the ledger's credit collection.
+
+=over 4
+
+=item 1.
+
+The method first scans over all the banks looking for "spare change":
+banks with outstanding funds that are attached to expired consumers.
+It transfers all the funds from these inactive banks to a fresh
+credit.
+
+=item 2.
+
+The method then scans the unpaid invoices in order, starting with the
+oldest.  It asks each of its coupons if the coupon can find any
+charges on the current invoice to which it applies; if so, it has the
+coupon create an additional credit that it will try to use in paying
+the invoice.
+
+=item 3.
+
+It now adds up the applicable credits, both pre-existing and
+coupon-generated, to see if they are sufficient to pay the current
+invoice.
+
+If so, it applies the credits to the invoice, transferring the funds
+from the credits to the invoice, and then marks the invoice paid.  If
+any of the credits were coupon-generated, the coupons are notified.
+The method then goes on to the next invoice, if there is one.
+
+If the credits are not enough to pay the invoice, the method gives up
+and returns, without transferring any funds to the invoice and without
+considering any further invoices.  Any coupon-generated credits are
+destroyed again.
 
 =back
 
