@@ -11,7 +11,7 @@ use Moonpig::Util -all;
 use t::lib::Factory::Templates;
 
 use Sub::Exporter -setup => {
-  exports => [ qw(build build_ledger) ], # The other stuff is really not suitable for exportation
+  exports => [ qw(build build_consumers build_ledger) ], # The other stuff is really not suitable for exportation
 };
 
 =head1 NAME
@@ -186,18 +186,29 @@ described above.  That is, these two calls are in all cases identical:
 except that the first returns the ledger and the second returns a hash
 with the ledger stored under the key C<ledger>.
 
+=head1 C<build_consumers>
+
+Use this if you need to build the ledger and consumers separately.
+
+        my $ledger = build_ledger();
+	my $stuff = build_consumers($ledger, $args);
+
+Here C<$args> is an argument hash suitable for passing to C<build>.
+C<build_consumers> works the same way but inserts the consumers into
+the specified ledger instead of building a new one.  It returns the
+same C<$stuff> array as C<build>, including the C<ledger> element.
+
 =cut
 
 sub build {
   my (%args) = @_;
-  my %stuff;
 
-  $stuff{ledger} = build_ledger($args{ledger});
+  my $ledger = build_ledger($args{ledger});
   delete $args{ledger};
 
-  build_consumers(\%args, \%stuff);
+  my $stuff = build_consumers($ledger, \%args);
 
-  return \%stuff;
+  return $stuff;
 }
 
 sub build_ledger {
@@ -209,6 +220,12 @@ sub build_ledger {
 }
 
 sub build_consumers {
+  my ($ledger, $args) = @_;
+  my $stuff = { ledger => $ledger };
+  _build_consumers($args, $stuff);
+}
+
+sub _build_consumers {
   my ($args, $stuff) = @_;
 
   my %name_by_guid; # backwards mapping from guid of created consumer to name
@@ -237,6 +254,8 @@ sub build_consumers {
       }
     }
   }
+
+  return $stuff;
 }
 
 sub build_consumer {
