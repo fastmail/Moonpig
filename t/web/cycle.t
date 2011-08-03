@@ -14,9 +14,9 @@ use Test::Routine::Util '-all';
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 
-use strict;
-
 with ('t::lib::Role::UsesStorage');
+
+use Moonpig::Context::Test -all, '$Context';
 
 around run_test => sub {
   my ($orig) = shift;

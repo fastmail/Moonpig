@@ -70,6 +70,8 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
+use Moonpig::Context -all, '$Context';
+
 use namespace::autoclean;
 
 # Should this be plural?  Or what?  Maybe it's a ContactManager subsystem...
@@ -611,5 +613,9 @@ PARTIAL_PACK {
     },
   };
 };
+
+sub remember_routed_object {
+  $Context->stack->top->add_memorandum($_[1]);
+}
 
 1;

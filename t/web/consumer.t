@@ -11,6 +11,8 @@ use Plack::Test;
 use Test::Deep qw(cmp_deeply re bool superhashof ignore);
 use Test::More;
 
+use Moonpig::Context::Test -all, '$Context';
+
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 

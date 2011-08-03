@@ -11,6 +11,8 @@ with(
   't::lib::Role::UsesStorage',
 );
 
+use Moonpig::Context::Test -all, '$Context';
+
 use namespace::autoclean;
 
 test "get a ledger guid via web" => sub {

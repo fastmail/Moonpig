@@ -8,6 +8,7 @@ with(
   't::lib::Role::UsesStorage',
 );
 
+use Moonpig::Context::Test -all, '$Context';
 use Moonpig::Env::Test;
 
 # use Moonpig::Util qw(class days dollars event);
