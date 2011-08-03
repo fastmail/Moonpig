@@ -8,23 +8,15 @@ use Test::Exception;
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
-with ('t::lib::Factory::Ledger');
+use t::lib::Factory qw(build);
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
-  lazy => 1,
-  clearer => 'scrub_ledger',
-  handles => [ qw(accountant) ],
-);
-
-my ($b, $c);
-
+my ($Ledger, $b, $c);
 sub setup {
   my ($self) = @_;
-  $self->scrub_ledger;
-  ($b, $c) = $self->add_bank_and_consumer_to($self->ledger);
+  my $stuff = build(cons => { template => 'dummy_with_bank',
+                              bank => dollars(100),
+                            });
+  ($Ledger, $b, $c) = @{$stuff}{qw(ledger cons.bank cons)};
 }
 
 # This is to test that when the hold is for more than 50% of the
@@ -37,7 +29,7 @@ test "get and commit hold" => sub {
   $self->setup;
   my $amount = int($b->unapplied_amount * 0.75);
   my $x_remaining = $b->unapplied_amount - $amount;
-  my $h = $self->ledger->create_transfer({
+  my $h = $Ledger->create_transfer({
     type => 'hold',
     from => $b,
     to => $c,
@@ -45,7 +37,7 @@ test "get and commit hold" => sub {
   });
   ok($h);
   is($b->unapplied_amount, $x_remaining);
-  my $t = $self->accountant->commit_hold($h);
+  my $t = $Ledger->accountant->commit_hold($h);
   ok($t);
   is($t->amount, $amount);
   is($t->type, 'transfer');
