@@ -6,7 +6,7 @@ use Moonpig::UserAgent;
 use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;
 use Plack::Test;
-use Test::Deep qw(cmp_deeply re);
+use Test::Deep qw(cmp_deeply re ignore superhashof);
 use Test::Fatal;
 use Test::More;
 use Test::Routine;
@@ -15,23 +15,20 @@ use Test::Routine::Util '-all';
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 
+use Moonpig::Context::Test -all, '$Context';
+
 use strict;
 
 with ('t::lib::Role::UsesStorage');
 
-my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
-my $json = JSON->new;
+my $ua  = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $app = Moonpig::Web::App->app;
 
-my $x_username = 'testuser';
-my $u_xid = username_xid($x_username);
+my $u_xid = 'test:username:testuser';
 my $a_xid = "test:account:1";
-my $ledger_path;
 
 my $guid_re = re('^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$');
 my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');
-
-my $price = dollars(20);
 
 sub setup_account {
   my ($self) = @_;
@@ -56,15 +53,16 @@ sub setup_account {
         my $result = $ua->mp_post('/ledgers', $signup_info);
         cmp_deeply(
           $result,
-          {
-            active_xids => { $u_xid => $guid_re },
+          superhashof({
+            active_xids => { $u_xid => superhashof({ guid => $guid_re }) },
             guid        => $guid_re
-          },
+          }),
           "Created ledger"
         );
         $result->{guid};
       };
-      $ledger_path = sprintf "/ledger/guid/%s", $rv{ledger_guid};
+
+      $rv{ledger_path} = sprintf "/ledger/guid/%s", $rv{ledger_guid};
 
       $rv{account_guid} = do {
         my $account_info = {
@@ -75,9 +73,13 @@ sub setup_account {
           },
         };
 
-        my $result = $ua->mp_post("$ledger_path/consumers",
+        my $result = $ua->mp_post("$rv{ledger_path}/consumers",
                                   $account_info);
-        cmp_deeply($result, $guid_re, "added consumer");
+        cmp_deeply(
+          $result,
+          superhashof({ guid => $guid_re }),
+          "added consumer",
+        );
 
         $result;
       };
@@ -103,11 +105,11 @@ sub check_xid {
 
 test split => sub {
   my ($self) = @_;
-  my ($ledger, $consumer);
 
   my $v1 = $self->setup_account;
   my $ledger_a_guid = $v1->{ledger_guid};
-  my $cons_a_guid = $v1->{account_guid};
+  my $cons_a_guid   = $v1->{account_guid};
+  my $ledger_path   = $v1->{ledger_path};
 
   $self->check_xid($a_xid, $ledger_a_guid);
 
@@ -188,27 +190,6 @@ test handoff => sub {
     undef,
     "properly refusing to transfer management of unmanaged xid");
 };
-
-sub elapse {
-  my ($self, $days) = @_;
-  while ($days >= 1) {
-    $ua->mp_get("/advance-clock/86400");
-    $ua->mp_post("$ledger_path/heartbeat", {});
-    $days--;
-  }
-  if ($days > 0) {
-    $ua->mp_get(sprintf "/advance-clock/%d", $days * 86400);
-    $ua->mp_post("$ledger_path/heartbeat", {});
-  }
-}
-
-sub now {
-  my ($self) = @_;
-  my $res = $ua->mp_get("/time");
-  return $res->{now};
-}
-
-sub username_xid { "test:username:$_[0]" }
 
 sub pause {
   print STDERR "Pausing... ";

@@ -1,16 +1,15 @@
-
-use strict;
-use warnings;
+use Test::Routine;
 
 use Carp qw(confess croak);
 use Moonpig::DateTime;
 use Moonpig::Util -all;
 use Test::Deep qw(bag cmp_bag);
 use Test::More;
-use Test::Routine;
 use Test::Routine::Util;
 
 use t::lib::Factory qw(build);
+
+use Moonpig::Context::Test -all, '$Context';
 
 sub jan {
   my ($day) = @_;

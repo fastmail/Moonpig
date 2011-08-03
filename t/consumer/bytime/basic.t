@@ -12,6 +12,8 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
+use Moonpig::Context::Test -all, '$Context';
+
 use t::lib::Factory qw(build);
 
 my $CLASS = class("Consumer::ByTime::FixedCost");

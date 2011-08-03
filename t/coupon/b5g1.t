@@ -10,6 +10,8 @@ use Test::Routine::Util;
 use t::lib::Factory qw(build);
 with ('t::lib::Role::UsesStorage');
 
+use Moonpig::Context::Test -all, '$Context';
+
 my $xid = "consumer:5y:test";
 
 before run_test => sub {

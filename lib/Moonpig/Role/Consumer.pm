@@ -28,6 +28,8 @@ use Moonpig::Util qw(class event);
 use Moonpig::Logger '$Logger';
 use namespace::autoclean;
 
+use Moonpig::Behavior::Packable;
+
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
@@ -238,9 +240,8 @@ sub template_like_this {
   };
 }
 
-sub STICK_PACK {
-  my ($self) = @_;
-  return $self->guid;
-}
+PARTIAL_PACK {
+  return { xid => $_[0]->xid };
+};
 
 1;

@@ -1,0 +1,21 @@
+%# vim:set ft=mason:
+<%args>
+$dump
+$id   => undef
+$what => undef
+</%args>
+<%perl>
+$id = guid_string unless defined $id;
+my $header_id = "header-$id";
+
+unless (defined $what) {
+  $what = Scalar::Util::blessed($dump)
+        ? $dump->can('ident') ? $dump->ident : ref($dump)
+        : ref($dump)          ? ref($dump)   : 'Scalar';
+}
+</%perl>
+<&| /widget/dumpcontainer, label => "Dump of $what", header_id => $header_id &>
+<div class='dump' id='<% $id |h %>'>
+<% dumper_html($dump) %>
+</div>
+</&>

@@ -10,6 +10,8 @@ use Moonpig::Util qw(class cents dollars);
 
 use t::lib::Factory qw(build_ledger);
 
+use Moonpig::Context::Test -all, '$Context';
+
 my ($Ledger, $Credit);
 
 before run_test => sub {
@@ -69,7 +71,7 @@ test "miscellaneous tests" => sub {
         qr/no sort key defined/i,
         "no default sort key for consumers" );
 
- # Can't get TODO working with Tsst::Routine
+ # Can't get TODO working with Test::Routine
  TODO: {
      local $TODO = "Can't check sort key method name without method_name_for type";
 #     isnt( exception { $cc->sort_key("uglification") },

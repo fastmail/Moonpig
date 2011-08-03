@@ -10,6 +10,8 @@ use Test::Routine;
 use Test::Routine::Util;
 use t::lib::Factory qw(build);
 
+use Moonpig::Context::Test -all, '$Context';
+
 my ($Ledger, $b, $c);
 sub setup {
   my ($self) = @_;

@@ -14,6 +14,8 @@ use Moonpig::Events::Handler::Method;
 use Moonpig::Ledger::PostTarget;
 use Moonpig::Util qw(class);
 
+use Moonpig::Context -all, '$Context';
+
 use namespace::autoclean;
 
 requires 'register_object';

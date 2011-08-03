@@ -1,0 +1,30 @@
+<%args>
+$title
+</%args>
+<html>
+<head>
+  <title><% $title |h %></title>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+
+<script>
+$(function () {
+  $('div.dump').hide();
+  $(".dumpcontainer h2").click(function () {
+    $(this).parent().find('div.dump').slideToggle();
+  });
+
+  $("button.cancel-consumer").click(function () {
+    var xid = $(this).attr('moonpig:xid');
+    alert(xid);
+    // $(this).parent().find('div.dump').slideToggle();
+  });
+});
+</script>
+
+<body>
+  <h1><% $title |h %></h1>
+  <% $m->content %>
+</body>
+</html>

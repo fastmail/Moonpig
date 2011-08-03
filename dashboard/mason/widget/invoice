@@ -1,0 +1,22 @@
+<%args>
+$invoice
+</%args>
+<div class='invoice'>
+  <table>
+    <tr>
+      <th class='guid'>
+        <a href='/ledger/<% $invoice->{ledger_guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a></th>
+      <td><% $invoice->{date} |h %></td>
+      <td><% mc($invoice->{total_amount}) |h %></td>
+    </tr>
+  </table>
+</div>
+
+<table>
+% for my $charge (@{ $invoice->{charges} }) {
+  <tr>
+    <td><% $charge->{description} |h %></td>
+    <td><% mc($charge->{amount}) |h %></td>
+  </tr>
+% }
+</table>

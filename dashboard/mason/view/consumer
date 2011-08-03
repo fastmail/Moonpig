@@ -1,0 +1,19 @@
+%# vim:set ft=mason:
+<%args>
+$ledger_guid
+$consumer_guid
+</%args>
+<%perl>
+my $consumer = $m->mp_request(
+  GET => "/ledger/guid/$ledger_guid/consumers/guid/$consumer_guid");
+$m->redirect('/') unless $consumer;
+my $xid = $consumer->{xid};
+</%perl>
+
+<&| /page/full, title => "Moonpig Consumer $consumer_guid" &>
+  <div>Consumer for resource: <% $xid |h %></div>
+  <button class='cancel-consumer' moonpig:xid='<% $xid |h %>'>
+    Cancel Service
+  </button>
+  <& /widget/dump, dump => $consumer, what => 'Consumer' &>
+</&>

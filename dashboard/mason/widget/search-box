@@ -1,0 +1,16 @@
+<%args>
+$label
+$action => '#'
+$id     => undef
+</%args>
+<%init>
+my $i = 0;
+</%init>
+% my $search_id = $id || ("search-" . $i++);
+% my $field_id  = "$search_id.search";
+% my $method    = $action eq '#' ? 'get' : 'post';
+<form id='<% $search_id |h %>' action="<% $action |h %>" method="<% $method |h %>">
+  <label for='<% $field_id |h %>'><% $label |h %></label>
+  <input id='<%  $field_id |h %>' type='text' name='search' />
+  <input type='submit' />
+</form>

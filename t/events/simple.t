@@ -7,6 +7,8 @@ use Test::Deep qw(cmp_deeply all ignore methods superhashof);
 
 use Moonpig::Util qw(event);
 
+use Moonpig::Context::Test '-all', '$Context';
+
 use t::lib::Class::Ledger::ImplicitEvents;
 use t::lib::Factory qw(build_ledger);
 

@@ -9,6 +9,8 @@ use Test::Routine::Util;
 
 use t::lib::Factory qw(build);
 
+use Moonpig::Context::Test -all, '$Context';
+
 my @basic = qw(expired replacement_mri is_replaceable xid);
 my @charges_bank = qw(extra_journal_charge_tags old_age);
 my @invoices = qw(extra_invoice_charge_tags);

@@ -6,6 +6,8 @@ use MooseX::Types::Moose qw(Str);
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents TagSet);
 
+use Moonpig::Behavior::Packable;
+
 use namespace::autoclean;
 
 with ('Moonpig::Role::HasTagset' => {});

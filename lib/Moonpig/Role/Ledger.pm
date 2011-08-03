@@ -52,6 +52,12 @@ with(
     collection_roles => [ ],
     default_sort_key => 'created_at',
   },
+  'Moonpig::Role::HasCollection' => {
+    item => 'job',
+    item_roles => [ ],
+    is => 'ro',
+   },
+  'Stick::Role::PublicResource::GetSelf',
 );
 
 use Moose::Util::TypeConstraints;
@@ -73,7 +79,10 @@ use Data::GUID qw(guid_string);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 use Sub::Install ();
+
+use Moonpig::Context -all, '$Context';
 
 use namespace::autoclean;
 
@@ -108,6 +117,7 @@ sub _extra_instance_subroute {
   my ($first) = @$path;
   my %x_rt = (
     banks => $self->bank_collection,
+    jobs  => $self->job_collection,
     consumers => $self->consumer_collection,
     refunds => $self->refund_collection,
     credits => $self->credit_collection,
@@ -599,6 +609,7 @@ publish split_xid => { -http_method => 'post', -path => 'split',
         name => $args->{contact_name},
         email_addresses => $args->{contact_email_addresses} });
       my $target = class('Ledger')->new({ contact => $contact });
+
       Moonpig->env->storage->save_ledger($target);
       return $cons->copy_to($target);
     });
@@ -625,16 +636,32 @@ sub queue_job {
   });
 }
 
-sub STICK_PACK {
+sub job_array {
+  Moonpig->env->storage->undone_jobs_for_ledger($_[0]);
+}
+
+PARTIAL_PACK {
   my ($self) = @_;
 
   return {
-    guid => $self->guid,
+    contact => ppack($self->contact),
+    credits => ppack($self->credit_collection),
+    jobs    => ppack($self->job_collection),
+
+    open_invoices => {
+      items => [
+        map { ppack($_) } grep { $_->is_unpaid } $self->invoices
+      ],
+    },
     active_xids => {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
         $self->xids_handled
     },
   };
-}
+};
+
+after BUILD => sub {
+  $Context->stack->current_frame->add_memorandum($_[0]);
+};
 
 1;

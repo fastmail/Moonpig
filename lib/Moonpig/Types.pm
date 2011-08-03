@@ -130,7 +130,7 @@ subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
 # Time
 
 class_type Time, { class => 'Moonpig::DateTime' };
-coerce Time, from Num, via { Moonpig::DateTime->new_epoch($_) };
+coerce Time, from Num, via { Moonpig::DateTime->new($_) };
 
 # Total seconds
 subtype TimeInterval, as Num;

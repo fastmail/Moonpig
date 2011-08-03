@@ -9,6 +9,7 @@ with(
 use Moonpig::Types qw(Ledger);
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 
 use namespace::autoclean;
 
@@ -22,6 +23,10 @@ has ledger => (
 
 implicit_event_handlers {
   return { created => { noop => Moonpig::Events::Handler::Noop->new } };
+};
+
+PARTIAL_PACK {
+  return { ledger_guid => $_[0]->ledger->guid }
 };
 
 1;

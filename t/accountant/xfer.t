@@ -1,4 +1,3 @@
-
 use Carp::Assert;
 use Moonpig::Util qw(dollars);
 use Test::More;
@@ -7,6 +6,8 @@ use Test::Routine::Util;
 use Try::Tiny;
 
 use t::lib::Factory qw(build);
+
+use Moonpig::Context::Test -all, '$Context';
 
 test "basics of transfer" => sub {
   my ($self) = @_;

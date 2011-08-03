@@ -11,6 +11,8 @@ use Test::More;
 use Test::Routine::Util;
 use Try::Tiny;
 
+use Moonpig::Context::Test -all, '$Context';
+
 use t::lib::ConsumerTemplateSet::Test;
 use t::lib::Factory qw(build);
 

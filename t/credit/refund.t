@@ -4,6 +4,8 @@ use Test::Routine::Util;
 
 use Moonpig::Util qw(class dollars);
 
+use Moonpig::Context::Test -all, '$Context';
+
 use t::lib::Logger;
 use t::lib::Factory qw(build_ledger);
 

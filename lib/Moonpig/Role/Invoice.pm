@@ -13,6 +13,7 @@ with(
 );
 
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 
 use Moonpig::Util qw(class event sum);
 use Moonpig::Types qw(Credit Time);
@@ -89,16 +90,16 @@ sub _create_banks {
   }
 }
 
-sub STICK_PACK {
+PARTIAL_PACK {
   my ($self) = @_;
 
   return ppack({
-    guid         => $self->guid,
     total_amount => $self->total_amount,
     is_paid      => $self->is_paid,
     is_closed    => $self->is_closed,
     date         => $self->date,
+    charges      => [ map {; ppack($_) } $self->all_charges ],
   });
-}
+};
 
 1;

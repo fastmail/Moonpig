@@ -8,6 +8,7 @@ with(
 );
 use t::lib::Factory qw(build_ledger);
 
+use Moonpig::Context::Test -all, '$Context';
 use Moonpig::Env::Test;
 
 # use Moonpig::Util qw(class days dollars event);

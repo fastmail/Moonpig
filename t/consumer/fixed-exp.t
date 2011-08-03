@@ -1,8 +1,9 @@
-use strict;
-use warnings;
+use Test::Routine;
 
 use Moonpig::Env::Test;
 use t::lib::Logger '$Logger';
+
+use Moonpig::Context::Test '-all', '$Context';
 
 use Carp qw(confess croak);
 use DateTime;
@@ -11,7 +12,6 @@ use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
 use Test::Fatal;
 use Test::More;
-use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 

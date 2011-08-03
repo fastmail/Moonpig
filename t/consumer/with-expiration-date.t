@@ -7,6 +7,8 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
+use Moonpig::Context::Test -all, '$Context';
+
 my $XID = "narf";
 
 use t::lib::Factory qw(build);

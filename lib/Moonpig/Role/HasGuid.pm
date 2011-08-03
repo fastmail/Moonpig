@@ -8,6 +8,8 @@ use Moose::Util::TypeConstraints;
 use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(GUID);
 
+use Moonpig::Behavior::Packable;
+
 use namespace::autoclean;
 
 with 'Moonpig::Role::StubBuild';
@@ -34,5 +36,10 @@ after BUILD => sub {
   $Logger->log([ 'created %s', $self->ident ]);
   Moonpig->env->register_object($self);
 };
+
+PARTIAL_PACK {
+  return { guid => $_[0]->guid };
+};
+
 
 1;

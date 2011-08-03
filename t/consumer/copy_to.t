@@ -1,15 +1,16 @@
+use Test::Routine;
 
-use strict;
 use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
-use Test::Routine;
 use Test::Routine::Util;
 use t::lib::ConsumerTemplateSet::Test;
 
 with qw(t::lib::Role::UsesStorage);
 use t::lib::Factory qw(build_ledger);
+
+use Moonpig::Context::Test '-all', '$Context';
 
 my ($ledger_a, $ledger_b, $A, $B);
 

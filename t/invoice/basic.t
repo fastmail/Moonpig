@@ -12,6 +12,8 @@ with(
 use t::lib::Logger;
 use t::lib::Factory qw(build_ledger);
 
+use Moonpig::Context::Test -all, '$Context';
+
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
