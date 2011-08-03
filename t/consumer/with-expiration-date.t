@@ -7,7 +7,6 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
-my $CLASS = 'Consumer::WithExpirationDate';
 my $XID = "narf";
 
 use t::lib::Factory qw(build);
@@ -24,10 +23,11 @@ my ($ledger, $consumer);
 before 'run_test' => sub {
   my ($self) = @_;
   Moonpig->env->stop_clock_at(jan(1));
-  my $stuff = build(consumer => { class => $CLASS,
-                                  expire_date => jan(3),
-                                  xid => $XID
-                                 });
+  my $stuff = build(consumer =>
+                      { class => class('Consumer::WithExpirationDate'),
+                        expire_date => jan(3),
+                        xid => $XID
+                       });
   ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
 };
 
@@ -40,7 +40,7 @@ test "no replacement" => sub {
 
 test "cannot set replacement" => sub {
   isnt(exception {
-    $ledger->add_consumer(class($CLASS),
+    $ledger->add_consumer(class('Consumer::WithExpirationDate'),
                           { expire_date => jan(3),
                             xid => $XID,
                             replacement_mri =>

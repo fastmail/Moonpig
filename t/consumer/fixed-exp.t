@@ -15,8 +15,6 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-my $CLASS = 'Consumer::FixedExpiration';
-
 with ('t::lib::Role::UsesStorage');
 use t::lib::Factory qw(build);
 
@@ -29,7 +27,7 @@ test "fixed-expiration consumer" => sub {
 
     my $cost = dollars(1);
     my $stuff = build(c => {
-      class => $CLASS,
+      class => class('Consumer::FixedExpiration'),
       cost_amount => $cost,
       old_age     => days(0), # lame
       description => 'test fixed expiration consumer',
@@ -39,7 +37,7 @@ test "fixed-expiration consumer" => sub {
     my $c = $stuff->{c};
     my $ledger = $c->ledger;
 
-    isa_ok($c, class($CLASS));
+    isa_ok($c, class('Consumer::FixedExpiration'));
 
     my $invoice = $ledger->current_invoice;
     is($invoice->total_amount, $cost, "made an invoice for whole amount");

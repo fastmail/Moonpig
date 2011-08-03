@@ -53,7 +53,7 @@ test "with_successor" => sub {
     my $stuff;
     my $xid = "consumer:test:" . guid_string();
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(initial => { class => 'Consumer::ByTime::FixedCost',
+      $stuff = build(initial => { class => class('Consumer::ByTime::FixedCost'),
                                   bank               => dollars(31),
                                   old_age            => years(1000),
                                   charge_description => "test charge",
@@ -63,7 +63,7 @@ test "with_successor" => sub {
                                   replacement_mri => Moonpig::URI->nothing,
                                   xid                => $xid,
                                 },
-                     replacement => { class => 'Consumer::ByTime::FixedCost',
+                     replacement => { class => class('Consumer::ByTime::FixedCost'),
                                       old_age            => years(1000),
                                       charge_description => "test charge",
                                       cost_amount        => dollars(1),
@@ -137,7 +137,7 @@ test "without_successor" => sub {
     my $xid = "consumer:test:" . guid_string();
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer => { class => 'Consumer::ByTime::FixedCost',
+      $stuff = build(consumer => { class => class('Consumer::ByTime::FixedCost'),
                                    charge_description => "test charge",
                                    old_age => days(20),
                                    replacement_mri => $mri,
@@ -194,7 +194,7 @@ test "irreplaceable" => sub {
     my $xid = "consumer:test:" . guid_string();
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer => { class => 'Consumer::ByTime::FixedCost',
+      $stuff = build(consumer => { class => class('Consumer::ByTime::FixedCost'),
                                    old_age => days(20),
                                    cost_amount        => dollars(1),
                                    cost_period        => days(1),

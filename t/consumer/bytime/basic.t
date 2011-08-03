@@ -12,10 +12,9 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-my $CLASS = "Consumer::ByTime::FixedCost";
-my $___ = class($CLASS); # Load it
-
 use t::lib::Factory qw(build);
+
+my $CLASS = class("Consumer::ByTime::FixedCost");
 
 # todo: warning if no bank
 #       suicide

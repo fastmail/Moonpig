@@ -35,7 +35,7 @@ sub _test_ledgers_and_xids {
     $xid{ $key }    = $self->random_xid;
     $ledger{ $key } = build(
         consumer => {
-            class => 'Consumer::Dummy',
+            class => class('Consumer::Dummy'),
             xid   => $xid{$key},
             make_active        => 1,
             replacement_mri    => Moonpig::URI->nothing,

@@ -28,7 +28,7 @@ test by_time => sub {
 
     my $stuff = build(
       consumer =>
-        { class => "Consumer::ByTime::FixedCost",
+        { class => class("Consumer::ByTime::FixedCost"),
           xid             => 'urn:uuid:' . guid_string,
           replacement_mri => Moonpig::URI->nothing(),
           charge_description => "dummy",
@@ -56,7 +56,7 @@ test byusage => sub {
   my ($self) = @_;
   my $stuff = build(
     consumer => {
-      class => "Consumer::ByUsage",
+      class => class("Consumer::ByUsage"),
       xid             => 'urn:uuid:' . guid_string,
       replacement_mri => Moonpig::URI->nothing(),
       cost_per_unit   => dollars(2),
