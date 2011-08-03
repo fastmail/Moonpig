@@ -6,19 +6,19 @@ use Moonpig::Env::Test;
 use Moonpig::Util qw(class dollars);
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
+use t::lib::Factory qw(build_ledger);
 
 use namespace::autoclean;
 
 test "check for existence of collection routes" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   ok($ledger->route(['consumers']));
   is($ledger->route(['consumers'])->count, 0);
-  my $c = $self->add_consumer_to($ledger);
+  my $c = $ledger->add_consumer_from_template("dummy");
   is($ledger->route(['consumers'])->count, 1);
   is($ledger->route(['consumers', 'guid', $c->guid]), $c);
   is($ledger->route(['consumers', 'count'])->resource_request(get => {}), 1);
@@ -27,7 +27,7 @@ test "check for existence of collection routes" => sub {
 test "route to get a collection" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   Moonpig->env->save_ledger($ledger);
 
   my $guid = $ledger->guid;
@@ -44,7 +44,7 @@ test "route to get a collection" => sub {
 test "pages" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   Moonpig->env->save_ledger($ledger);
   my @bank;
   for my $i (1..20) {
@@ -88,7 +88,7 @@ sub _count_items_in_pages {
 test "add item to a collection" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   my $b = class('Bank')->new({ ledger => $ledger, amount => dollars(1) });
 
   my ($collection) = $ledger->route([ 'banks' ]);

@@ -36,7 +36,7 @@ sub create_consumer {
   $args ||= {};
 
   my $stuff = build(
-    consumer => { class => 'ByUsage',
+    consumer => { class => class('Consumer::ByUsage'),
                   bank => dollars(1),
                   cost_per_unit => cents(5),
                   old_age => days(30),

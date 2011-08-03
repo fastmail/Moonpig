@@ -3,27 +3,32 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
+use Moonpig;
+use Moonpig::Env::Test;
 use Moonpig::Util -all;
 use Test::Exception;
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
-with ('t::lib::Factory::Ledger');
+use t::lib::Factory qw(build);
 
-has ledger => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Ledger',
-  default => sub { $_[0]->test_ledger() },
-  lazy => 1,
-  clearer => 'scrub_ledger',
-  handles => [ qw(accountant) ],
+has stuff => (
+  is => 'rw',
+  isa => 'HashRef',
+  default => sub { build(consumer => { template => 'dummy_with_bank',
+                                       bank => dollars(100) } ) },
 );
+
+sub ledger { $_[0]->stuff->{ledger} }
+sub accountant { $_[0]->ledger->accountant }
 
 sub make_hold {
   my ($self) = @_;
-  my ($b, $c) = $self->add_bank_and_consumer_to($self->ledger);
   my $h = $self->ledger->create_transfer({
-    type => 'hold', from => $b, to => $c, amount => 1
+    type => 'hold',
+    from => $self->stuff->{consumer}->bank,
+    to => $self->stuff->{consumer},
+    amount => 1
   });
   return $h;
 }
@@ -57,11 +62,10 @@ test commit_hold => sub {
 test commit_failures => sub {
   my ($self) = @_;
   plan tests => 4;
-  my ($b, $c) = $self->add_bank_and_consumer_to($self->ledger);
   my $t = $self->ledger->create_transfer({
     type => "transfer",
-    from => $b,
-    to   => $c,
+    from => $self->stuff->{consumer}->bank,
+    to   => $self->stuff->{consumer},
     amount => 1,
   });
 
@@ -70,8 +74,8 @@ test commit_failures => sub {
 
   my $h = $self->ledger->create_transfer({
     type => "hold",
-    from => $b,
-    to   => $c,
+    from => $self->stuff->{consumer}->bank,
+    to   => $self->stuff->{consumer},
     amount => 1,
   });
 

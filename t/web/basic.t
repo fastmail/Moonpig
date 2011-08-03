@@ -6,8 +6,9 @@ use HTTP::Request;
 use Moonpig::Web::App;
 use Plack::Test;
 
+use t::lib::Factory qw(build_ledger);
+
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
 
@@ -16,7 +17,7 @@ use namespace::autoclean;
 test "get a ledger guid via web" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
 
   my $guid = $ledger->guid;
 

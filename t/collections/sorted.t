@@ -8,42 +8,27 @@ use Test::Routine::Util -all;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class cents dollars);
 
-with(
-  't::lib::Factory::Ledger',
-);
+use t::lib::Factory qw(build_ledger);
 
-has ledger => (
-  is => 'ro',
-  does => 'Moonpig::Role::Ledger',
-  lazy => 1,
-  default => sub { $_[0]->test_ledger },
-  clearer => 'scrub_ledger',
-);
-
-has credit => (
-  is => 'rw',
-  does => 'Moonpig::Role::Credit',
-  clearer => 'scrub_credit',
-);
+my ($Ledger, $Credit);
 
 before run_test => sub {
   my ($self) = @_;
 
-  $self->scrub_ledger;
-  my $credit = $self->ledger->add_credit(
+  $Ledger = build_ledger();
+  $Credit = $Ledger->add_credit(
     class('Credit::Simulated', 't::Refundable::Test'),
     { amount => dollars(5_000) },
   );
-  $self->credit($credit);
 };
 
 sub refund {
   my ($self, $amount) = @_;
-  my $refund = $self->ledger->add_refund(class('Refund'));
+  my $refund = $Ledger->add_refund(class('Refund'));
   $amount ||= dollars(1);
-  $self->ledger->create_transfer({
+  $Ledger->create_transfer({
     type => 'credit_application',
-    from => $self->credit,
+    from => $Credit,
     to => $refund,
     amount => $amount,
   });
@@ -58,9 +43,9 @@ test "refund collections" => sub {
     $self->refund(cents($_ * 101));
   }
 
-  my @refunds = $self->ledger->refunds();
+  my @refunds = $Ledger->refunds();
   is(@refunds, 6, "ledger loaded with five refunds");
-  my $rc = $self->ledger->refund_collection;
+  my $rc = $Ledger->refund_collection;
 
   is( exception { $rc->sort_key("amount") },
       undef,
@@ -78,7 +63,7 @@ test "refund collections" => sub {
 
 test "miscellaneous tests" => sub {
   my ($self) = @_;
-  my $cc = $self->ledger->consumer_collection;
+  my $cc = $Ledger->consumer_collection;
 
   like( exception { $cc->all_sorted },
         qr/no sort key defined/i,

@@ -8,16 +8,16 @@ use Test::Deep qw(cmp_deeply all ignore methods superhashof);
 use Moonpig::Util qw(event);
 
 use t::lib::Class::Ledger::ImplicitEvents;
+use t::lib::Factory qw(build_ledger);
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Factory::EventHandler',
 );
 
 test generic_event_test => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
 
   my $noop_h = $self->make_event_handler(Noop => { });
 
@@ -85,7 +85,7 @@ test generic_event_test => sub {
 test implicit_events_and_overrides => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger('t::lib::Class::Ledger::ImplicitEvents');
+  my $ledger = build_ledger({ class => 't::lib::Class::Ledger::ImplicitEvents'});
 
   my $code_h = $self->make_event_handler('t::Test');
 
@@ -167,7 +167,7 @@ test implicit_events_and_overrides => sub {
 test "implicit handler composition conflict" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger('Conflicted::Handler');
+  my $ledger = build_ledger({ class => 'Conflicted::Handler' });
   my $err = exception { $ledger->composed_implicit_event_handlers };
 
   is(

@@ -4,14 +4,15 @@ use Test::Routine::Util -all;
 use Test::More;
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
 
+use t::lib::Factory qw(build build_ledger);
 use t::lib::Logger '$Logger';
 
 use Moonpig::Env::Test;
 
+use Data::Dumper qw(Dumper);
 use Data::GUID qw(guid_string);
 use Path::Class;
 
@@ -25,7 +26,7 @@ sub fresh_ledger {
   my $ledger;
 
   Moonpig->env->storage->do_rw(sub {
-    $ledger = $self->test_ledger;
+    $ledger = build_ledger();
     Moonpig->env->save_ledger($ledger);
   });
 
@@ -52,15 +53,7 @@ test "store and retrieve" => sub {
       die("error with child: " . Dumper(\%waitpid));
     }
   } else {
-    my $ledger = $self->test_ledger;
-
-    my $consumer = $ledger->add_consumer_from_template(
-      'demo-service',
-      {
-        xid                => $xid,
-        make_active        => 1,
-      },
-    );
+    my $ledger = build(consumer => { template => 'demo-service', xid => $xid })->{ledger};
 
     Moonpig->env->save_ledger($ledger);
 

@@ -6,11 +6,11 @@ use Test::Fatal;
 use Test::More;
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';
+use t::lib::Factory qw(build);
 
 use Moonpig::Env::Test;
 
@@ -32,18 +32,15 @@ sub _test_ledgers_and_xids {
   my (%ledger, %xid);
 
   for my $key (qw(1 2)) {
-    $ledger{ $key } = $self->test_ledger;
     $xid{ $key }    = $self->random_xid;
+    $ledger{ $key } = build(
+        consumer => {
+            class => class('Consumer::Dummy'),
+            xid   => $xid{$key},
+            make_active        => 1,
+            replacement_mri    => Moonpig::URI->nothing,
+        })->{ledger};
 
-    $ledger{$key}->add_consumer(
-      class(qw(Consumer::Dummy)),
-      {
-        xid                => $xid{$key},
-        make_active        => 1,
-
-        replacement_mri    => Moonpig::URI->nothing,
-      },
-    );
 
     Moonpig->env->save_ledger($ledger{$key});
   }

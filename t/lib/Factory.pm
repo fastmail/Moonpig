@@ -1,14 +1,15 @@
 package t::lib::Factory;
 use strict;
 
+use t::lib::Factory::Templates; # default testing template set
+
 use Carp qw(confess croak);
+use Class::MOP ();
 use Data::GUID qw(guid_string);
 
 use Moonpig::Env::Test;
 use Moonpig::URI;
 use Moonpig::Util -all;
-
-use t::lib::Factory::Templates;
 
 use Sub::Exporter -setup => {
   exports => [ qw(build build_consumers build_ledger) ], # The other stuff is really not suitable for exportation
@@ -58,16 +59,15 @@ and added to the ledger.
 
 The corresponding values are hashes.   Each hash must contain either a
 C<template> key which specifies a template name, or a C<class> key
-which specifies a class role name.  
+which specifies a class role name.
 
 If C<template>, the consumer is
 constructed and added to the ledger with
 C<Ledger::add_consumer_from_template>.
 
-If C<class> is specified, the argument has C<Consumer::> prepended if
-it doesn't already begin with C<Consumer::>, is passed to
-C<Moonpig::Util::class>, and the resulting class name is given to
-C<Ledger::add_consumer>.
+If C<class> is specified, it should be the name of the class for the
+consumer; it is given to C<Ledger::add_consumer>.  You may use
+C<Moonpig::Util::class> to construct this name.
 
 Most hash elements are passed to the consumer constructor
 (C<Ledger::add_consumer_from_template> or C<Ledger::add_consumer>) as
@@ -147,7 +147,7 @@ example:
 =head2 Examples
 
          my $stuff = build(
-           consumer => { class => 'ByUsage',
+           consumer => { class => class('Consumer::ByUsage'),
                          bank => dollars(1),
                          cost_per_unit => cents(5),
                          old_age => days(30),
@@ -284,9 +284,9 @@ sub build_consumer {
     croak "Arguments for consumer '$name' have both 'class' and 'template'\n"
       if $template;
 
-    $class = "Consumer::$class" unless $class =~ /^Consumer::/;
+    Class::MOP::load_class($class);
     $consumer = $stuff->{ledger}->add_consumer(
-      class($class),
+      $class,
       { xid => "test:consumer:$name",
         %c_args,
       });
