@@ -6,14 +6,16 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-with 't::lib::Factory::Ledger';
+use t::lib::Factory qw(build);
 
 test "basics of transfer" => sub {
   my ($self) = @_;
   plan tests => 4;
 
-  my $ledger = $self->test_ledger;
-  my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
+  my $stuff = build(c => { template => 'dummy_with_bank',
+                           bank => dollars(100),
+                         });
+  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
 
   my $amount = $bank->amount;
   is(
@@ -90,8 +92,10 @@ test "basics of transfer" => sub {
 test "multiple transfer types" => sub {
   my ($self) = @_;
   plan tests => 3;
-  my $ledger = $self->test_ledger;
-  my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
+  my $stuff = build(c => { template => 'dummy_with_bank',
+                           bank => dollars(100),
+                         });
+  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
   my $amt = $bank->amount;
 
   my $h = $ledger->create_transfer({
@@ -118,8 +122,10 @@ test "ledger->transfer" => sub {
     my ($self) = @_;
     plan tests => 6;
 
-    my $ledger = $self->test_ledger;
-    my ($bank, $consumer) = $self->add_bank_and_consumer_to($ledger);
+  my $stuff = build(c => { template => 'dummy_with_bank',
+                           bank => dollars(100),
+                         });
+  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
 
     for my $type (qw(transfer bank_credit DEFAULT)) {
         my $err;
@@ -143,7 +149,6 @@ test "ledger->transfer" => sub {
         }
     }
 };
-
 
 run_me;
 done_testing;
