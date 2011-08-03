@@ -7,16 +7,16 @@ use Moonpig::Util qw(class dollars);
 use Scalar::Util qw(refaddr);
 
 with(
-  't::lib::Factory::Ledger',
   't::lib::Role::UsesStorage',
 );
 
 use t::lib::ConsumerTemplateSet::Test;
+use t::lib::Factory qw(build_ledger);
 
 test "create consumer" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   my $collection = $ledger->consumer_collection;
   ok($collection->does('Moonpig::Role::Collection::ConsumerExtras'));
   $collection->add_from_template({ template => 'boring',
@@ -39,7 +39,7 @@ test "create consumer" => sub {
 test "route to ad-hoc method" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->test_ledger;
+  my $ledger = build_ledger();
   my $collection = $ledger->consumer_collection;
   my $cons = $collection->resource_request(
     post => { template => 'boring',
