@@ -12,13 +12,13 @@ use t::lib::Factory qw(build);
 
 use Moonpig::Context::Test -all, '$Context';
 
-my ($Ledger, $b, $c);
 sub setup {
   my ($self) = @_;
   my $stuff = build(cons => { template => 'dummy_with_bank',
                               bank => dollars(100),
                             });
-  ($Ledger, $b, $c) = @{$stuff}{qw(ledger cons.bank cons)};
+
+  return @{$stuff}{qw(ledger cons.bank cons)};
 }
 
 # This is to test that when the hold is for more than 50% of the
@@ -28,7 +28,7 @@ sub setup {
 test "get and commit hold" => sub {
   my ($self) = @_;
   plan tests => 6;
-  $self->setup;
+  my ($Ledger, $b, $c) = $self->setup;
   my $amount = int($b->unapplied_amount * 0.75);
   my $x_remaining = $b->unapplied_amount - $amount;
   my $h = $Ledger->create_transfer({
