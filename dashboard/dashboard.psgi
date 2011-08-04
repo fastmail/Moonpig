@@ -7,6 +7,7 @@ use lib 'lib';
 use File::Spec;
 use HTML::Mason::Interp;
 use Path::Class;
+use Plack::App::Proxy;
 use Plack::Builder;
 use Plack::Request;
 use Router::Dumb;
@@ -84,5 +85,9 @@ builder {
     root => 'dashboard/static/'
   );
 
-  return $app;
+  mount "/moonpig" => Plack::App::Proxy->new(
+    remote => $ENV{MOONPIG_URI},
+  )->to_app;
+
+  mount "/" => $app;
 };
