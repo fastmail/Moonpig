@@ -88,7 +88,7 @@ my $sql = <<'END_SQL';
       type TEXT NOT NULL,
       created_at INTEGER NOT NULL,
       locked_at INTEGER,
-      fulfilled_at INTEGER
+      termination_state TEXT
     );
 
     CREATE TABLE job_documents (
@@ -257,12 +257,35 @@ sub __job_callbacks {
         undef, Moonpig->env->now->epoch, $job_row->{id},
       )});
     },
+    cancel_callback => sub {
+      my ($self) = @_;
+      $conn->run(sub {
+        my $dbh = $_;
+        $_->do(
+          "INSERT INTO job_logs (job_id, logged_at, message)
+          VALUES (?, ?, ?)",
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'job complete',
+        );
+        $_->do(
+          "UPDATE jobs SET termination_state = 'cancel' WHERE id = ?",
+          undef, $job_row->{id},
+        );
+      });
+    },
     done_callback => sub {
       my ($self) = @_;
-      $conn->run(sub { $_->do(
-        "UPDATE jobs SET fulfilled_at = ? WHERE id = ?",
-        undef, Moonpig->env->now->epoch, $job_row->{id},
-      )});
+      $conn->run(sub {
+        my $dbh = $_;
+        $_->do(
+          "INSERT INTO job_logs (job_id, logged_at, message)
+          VALUES (?, ?, ?)",
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'job complete',
+        );
+        $_->do(
+          "UPDATE jobs SET termination_state = 'done' WHERE id = ?",
+          undef, $job_row->{id},
+        );
+      });
     },
   );
 }
@@ -295,7 +318,7 @@ sub iterate_jobs {
       q{
         SELECT *
         FROM jobs
-        WHERE type = ? AND fulfilled_at IS NULL AND locked_at IS NULL
+        WHERE type = ? AND termination_state IS NULL AND locked_at IS NULL
         ORDER BY created_at
       },
     );
@@ -326,6 +349,7 @@ sub iterate_jobs {
         job_type   => $job_row->{type},
         created_at => $job_row->{created_at},
         payloads   => $payloads,
+        status     => $job_row->{termination_state} || 'incomplete',
 
         $self->__job_callbacks($conn, $job_row),
       });
@@ -350,7 +374,7 @@ sub undone_jobs_for_ledger {
       q{
         SELECT *
         FROM jobs
-        WHERE ledger_guid = ? AND fulfilled_at IS NULL
+        WHERE ledger_guid = ? AND termination_state IS NULL
         ORDER BY created_at
       },
     );
@@ -365,6 +389,7 @@ sub undone_jobs_for_ledger {
         job_type   => $_->{type},
         created_at => $_->{created_at},
         payloads   => $self->__payloads_for_job_row($_, $dbh),
+        status     => $_->{termination_state} || 'incomplete',
 
         $self->__job_callbacks($conn, $_),
       });

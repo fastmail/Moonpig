@@ -9,6 +9,13 @@ $m->redirect('/') unless $job;
 my $logs = $m->mp_request(GET => "/ledger/guid/$ledger_guid/jobs/guid/$job_id/logs");
 </%perl>
 <&| /page/full, title => "Job $job_id for Ledger $ledger_guid" &>
+% if ($job->{status} eq 'incomplete') {
+  <form method='post' action='/post/cancel-job'>
+    <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+    <input type='hidden' name='job_id' value='<% $job_id |h %>' />
+    <input type='submit' value='Cancel Job' />
+  </form>
+% }
 
   <& /widget/dump, dump => $job, what => 'Job' &>
 

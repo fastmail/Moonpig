@@ -4,12 +4,19 @@ use MooseX::StrictConstructor;
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.20110802);
 
+use Stick::Publisher 0.20110324;
+use Stick::Publisher::Publish 0.20110324;
+use Moose::Util::TypeConstraints qw(enum);
+
+use namespace::autoclean;
+
 my %callback = (
   lock     => [ qw(lock extend_lock) ],
   unlock   => [ qw(unlock)           ],
   log      => [ qw(log)              ],
   get_logs => [ qw(get_logs)         ],
   done     => [ qw(mark_complete)    ],
+  cancel   => [ qw(mark_canceled)    ],
 );
 
 for my $key (keys %callback) {
@@ -96,6 +103,16 @@ has payloads => (
   },
 );
 
+has status => (
+  is  => 'ro',
+  isa => enum([ qw(incomplete done canceled) ]),
+  writer   => '_set_status',
+  required => 1,
+);
+
+after cancel        => sub { $_[0]->_set_status('canceled') };
+after mark_complete => sub { $_[0]->_set_status('done') };
+
 sub guid { $_[0]->job_id }
 
 PARTIAL_PACK {
@@ -106,7 +123,14 @@ PARTIAL_PACK {
     created_at  => $self->created_at,
     payloads    => $self->payloads,
     ledger_guid => $self->ledger->guid,
+    status      => $self->status,
   };
+};
+
+publish handle_cancel => { -http_method => 'post', -path => 'cancel' } => sub {
+  my ($self) = @_;
+  $self->cancel;
+  return;
 };
 
 1;

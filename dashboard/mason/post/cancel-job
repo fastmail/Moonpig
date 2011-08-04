@@ -1,0 +1,19 @@
+%# vim:set ft=mason:
+<%args>
+$job_id
+$ledger_guid
+</%args>
+
+<%perl>
+$m->mp_request(
+  POST => "/ledger/guid/$ledger_guid/jobs/guid/$job_id/cancel", {}
+);
+
+# We can't redirect back to ourself, right now, because the jobs collection is
+# actually the "open jobs" collection.  What we really want is the "all jobs"
+# collection, so we can view closed jobs.  That may wait until collection
+# overhaul of 2011-08 is complete. -- rjbs, 2011-08-04
+# $m->redirect('/ledger/' . $ledger_guid . '/job/' . $job_id);
+
+$m->redirect('/ledger/' . $ledger_guid);
+</%perl>
