@@ -77,7 +77,10 @@ my $app = sub {
 
     $interp->make_request(
       comp => $comp,
-      args => [ $match->matches ],
+      args => [
+        %{ $req->body_parameters },
+        $match->matches,
+      ],
       out_method => \$output,
     )->exec;
 
