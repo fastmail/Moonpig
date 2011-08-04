@@ -1,0 +1,18 @@
+%# vim:set ft=mason:
+<%args>
+$amount
+$ledger_guid
+</%args>
+<%perl>
+my $credit = $m->mp_request(
+  POST => sprintf(
+    '/ledger/guid/%s/credits/accept_payment',
+    $ledger_guid,
+  ),
+  {
+    amount => int($amount * 100_000),  # convert to millicents
+    type   => 'Simulated',
+  },
+);
+$m->redirect('/ledger/' . $ledger_guid);
+</%perl>

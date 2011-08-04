@@ -6,7 +6,7 @@ $ledger
   <& SELF:contact, contact => $ledger->{contact} &>
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
   <& SELF:invoices, ledger => $ledger &>
-  <& SELF:credits, credits => $ledger->{credits}{items} &>
+  <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
@@ -15,6 +15,7 @@ $ledger
 <%method credits>
 <%args>
 $credits
+$ledger
 </%args>
 <div class='credits'>
   <h2>Payment History</h2>
@@ -29,6 +30,13 @@ $credits
     </tr>
 % }
   </table>
+
+  Add a credit:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='amount' />
+    <input type='submit' value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+  </form>
 </div>
 </%method>
 
