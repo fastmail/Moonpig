@@ -26,6 +26,7 @@ package HTML::Mason::Commands {
 
 my $router = Router::Dumb->new;
 
+# GET targets
 Router::Dumb::Helper::FileMapper->new({
   root          => 'dashboard/mason/public',
   target_munger => sub {
@@ -34,8 +35,23 @@ Router::Dumb::Helper::FileMapper->new({
   },
 })->add_routes_to($router);
 
+# POST targets
+Router::Dumb::Helper::FileMapper->new({
+  root          => 'dashboard/mason/post',
+  parts_munger  => sub { unshift @{ $_[1] }, 'post'; $_[1] },
+  target_munger => sub {
+    my ($self, $filename) = @_;
+    dir('post')->file( file($filename)->relative($self->root) )->stringify;
+  },
+})->add_routes_to($router);
+
 Router::Dumb::Helper::RouteFile->new({ filename => 'dashboard/routes' })
                                ->add_routes_to($router);
+
+warn "ROUTING TABLE: \n";
+for my $route ($router->ordered_routes) {
+  warn sprintf "/%-50s -> %s\n", $route->path, $route->target;
+}
 
 my $interp = HTML::Mason::Interp->new(
   comp_root     => File::Spec->rel2abs("dashboard/mason"),
