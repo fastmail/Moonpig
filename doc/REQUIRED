@@ -12,6 +12,8 @@ Email::MIME::Kit::Renderer::Text::Template
 Email::MIME::Kit::Validator::Rx
 Email::Sender::Transport::Test
 File::ShareDir
+Global::Context
+HTML::Mason::Request
 HTTP::Throwable::Factory
 HTTP::Throwable::Factory
 HTTP::Throwable::Factory
