@@ -13,7 +13,7 @@ my $ledger = $m->mp_request(GET => $ledger_path);
 <h2>Your Dashboard!</h2>
 <h3>currently logged in as <% $client->username %>
 
-<h3>Ledger</h3>
+<h3>Ledger <% $ledger->{guid} |h %></h3>
 <pre>
 <% Dump($ledger) |h %>
 </pre>
