@@ -37,7 +37,6 @@ memoize(class => (NORMALIZER => \&make_key,
                  ));
 
 use Moose::Util qw(apply_all_roles);
-my $nonce = "00";
 # Arguments here are role names, or role objects followed by nonce-names.
 
 my %CLASS_ROLES;
