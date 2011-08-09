@@ -64,7 +64,7 @@ sub templates {
           charge_description => 'long-term consumer',
           replacement_mri    => "moonpig://consumer-template/free_sixthyear",
 
-          coupon_class => class(qw(Coupon::Simple Coupon::RequiredTags)),
+          coupon_class => class(qw(Coupon::FixedPercentage Coupon::RequiredTags)),
           coupon_args => {
             discount_rate => 1.00,
             target_tags   => [ $b5g1_xid, "coupon.b5g1" ],
