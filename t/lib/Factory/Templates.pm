@@ -14,6 +14,7 @@ use namespace::autoclean;
 sub templates {
   my $dummy_xid = "consumer:test:dummy";
   my $b5g1_xid = "consumer:5y:test";
+
   return {
     dummy => sub {
       my ($name) = @_;
@@ -36,6 +37,20 @@ sub templates {
         },
       }
     },
+
+    quick => sub {
+      my ($name) = @_;
+      return {
+        roles => [ 'Consumer::ByTime::FixedCost' ],
+        arg => {
+          old_age     => years(1000),
+          cost_amount => dollars(100),
+          cost_period => days(2),
+          charge_description => 'quick consumer',
+          replacement_mri => Moonpig::URI->nothing(),
+        }};
+    },
+
     fiveyear => sub {
       my ($name) = @_;
 
