@@ -1,5 +1,5 @@
 package Moonpig::Role::Coupon::BulkDiscount;
-# ABSTRACT: a disount for paying for a certain servive
+# ABSTRACT: 10% discount for bulk purchases
 use Moose::Role;
 
 use List::Util qw(min);
@@ -16,6 +16,9 @@ with(
 
 use namespace::autoclean;
 
+# Nonprofits already get a 10% discount.  Their bulk purchase discount is smaller:
+# it is calculated to bring their total discount to 15%.
+# (9/10 * 17/18 = 17/20 = 85%)
 sub discount_amount_for {
   my ($self, $charge) = @_;
   my $charge_amount = $charge->amount;
