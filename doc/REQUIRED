@@ -15,8 +15,6 @@ File::ShareDir
 Global::Context
 HTML::Mason::Request
 HTTP::Throwable::Factory
-HTTP::Throwable::Factory
-HTTP::Throwable::Factory
 JSON
 List::AllUtils
 Log::Dispatchouli::Global
