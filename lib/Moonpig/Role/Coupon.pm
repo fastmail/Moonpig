@@ -1,9 +1,9 @@
 package Moonpig::Role::Coupon;
 # ABSTRACT: a discount for paying for a certain service
-use Moose::Role;
 use Moonpig;
 use Moonpig::Types qw(Factory Time TimeInterval);
 use Moonpig::Util qw(class);
+use Moose::Role;
 
 with(
   'Moonpig::Role::HasGuid',
