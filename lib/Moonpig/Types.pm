@@ -35,6 +35,7 @@ use Data::GUID 0.046 ();
 use DateTime;
 use DateTime::Duration;
 use Email::Address;
+use Email::Valid;
 use Moonpig::DateTime;
 use Moonpig::URI;
 
@@ -43,7 +44,7 @@ use namespace::autoclean;
 subtype EmailAddresses, as ArrayRef, where {
   @$_ > 0
   and
-  @$_ == grep { /\@/ } @$_
+  @$_ == grep { Email::Valid->address($_) } @$_
 };
 
 role_type Ledger, { role => 'Moonpig::Role::Ledger' };
