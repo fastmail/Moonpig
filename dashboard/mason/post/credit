@@ -1,6 +1,7 @@
 %# vim:set ft=mason:
 <%args>
 $amount
+$reason
 $ledger_guid
 </%args>
 <%perl>
@@ -11,7 +12,9 @@ my $credit = $m->mp_request(
   ),
   {
     amount => int($amount * 100_000),  # convert to millicents
-    type   => 'Courtesy',
+    type   => 'Simulated',
+    # type   => 'Courtesy', # we can't use this w/o reason -- rjbs, 2011-08-15
+    # reason => $reason, # this isn't yet allowed -- rjbs, 2011-08-15
   },
 );
 $m->redirect('/ledger/' . $ledger_guid);

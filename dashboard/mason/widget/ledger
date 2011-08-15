@@ -31,9 +31,10 @@ $ledger
 % }
   </table>
 
-  Add a credit:
+  Add a courtesty credit:
   <form method='post' action='/post/credit'>
     Amount ($): <input name='amount' />
+    Reason (req): <input name='reason' />
     <input type='submit' value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
   </form>
