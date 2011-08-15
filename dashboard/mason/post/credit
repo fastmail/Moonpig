@@ -11,7 +11,7 @@ my $credit = $m->mp_request(
   ),
   {
     amount => int($amount * 100_000),  # convert to millicents
-    type   => 'Simulated',
+    type   => 'Courtesy',
   },
 );
 $m->redirect('/ledger/' . $ledger_guid);
