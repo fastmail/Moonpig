@@ -6,7 +6,7 @@ use Moonpig::Util qw(cents class);
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110504;
 
-publish accept_payment => { -http_method => 'post',
+publish add_credit => { -http_method => 'post',
                             attributes => HashRef,
                             type => Str,
                           } => sub {
