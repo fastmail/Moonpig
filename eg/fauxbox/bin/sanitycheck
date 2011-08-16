@@ -27,7 +27,7 @@ my $JSON = JSON->new;
 
 ACCOUNT: while (my $account = $account_rs->next) {
   my $xid = sprintf 'fauxbox:account:%u', $account->id;
-  my $res = $ua->get("http://localhost:5001/ledger/xid/$xid");
+  my $res = $ua->get("http://localhost:5001/ledger/by-xid/$xid");
   next if $res->is_success;
 
   if ($res->code == 404) {
@@ -54,7 +54,7 @@ ACCOUNT: while (my $account = $account_rs->next) {
   });
 
   my $create_res = $ua->post(
-    sprintf('/ledger/xid/%s/consumers', $client_xid),
+    sprintf('/ledger/by-xid/%s/consumers', $client_xid),
     'Content-Type' => 'application/json',
     Content => $payload,
   );

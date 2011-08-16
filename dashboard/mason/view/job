@@ -4,9 +4,9 @@ $ledger_guid
 $job_id
 </%args>
 <%perl>
-my $job = $m->mp_request(GET => "/ledger/guid/$ledger_guid/jobs/guid/$job_id");
+my $job = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/jobs/guid/$job_id");
 $m->redirect('/') unless $job;
-my $logs = $m->mp_request(GET => "/ledger/guid/$ledger_guid/jobs/guid/$job_id/logs");
+my $logs = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/jobs/guid/$job_id/logs");
 </%perl>
 <&| /page/full, title => "Job $job_id for Ledger $ledger_guid" &>
 % if ($job->{status} eq 'incomplete') {

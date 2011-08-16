@@ -62,7 +62,7 @@ sub setup_account {
         $result->{guid};
       };
 
-      $rv{ledger_path} = sprintf "/ledger/guid/%s", $rv{ledger_guid};
+      $rv{ledger_path} = sprintf "/ledger/by-guid/%s", $rv{ledger_guid};
 
       $rv{account_guid} = do {
         my $account_info = {
@@ -94,11 +94,11 @@ sub check_xid {
   # should be found, and should NOT be found, respectively.
   # $not_here may be undef, in which case those tests are skipped.
 
-  isnt($ua->mp_get("/ledger/guid/$here/consumers/active/$xid"), undef,
+  isnt($ua->mp_get("/ledger/by-guid/$here/consumers/active/$xid"), undef,
        "$xid consumer in expected ledger");
-  is($ua->mp_get("/ledger/xid/$xid")->{guid}, $here, "ledger for $xid as expected");
+  is($ua->mp_get("/ledger/by-xid/$xid")->{guid}, $here, "ledger for $xid as expected");
   if (defined $not_here) {
-    is($ua->mp_get("/ledger/guid/$not_here/consumers/active/$xid"), undef,
+    is($ua->mp_get("/ledger/by-guid/$not_here/consumers/active/$xid"), undef,
        "$xid absent from other ledger");
   }
 }
@@ -122,7 +122,7 @@ test split => sub {
       contact_email_addresses => [ "bspesq\@example.com" ],
     });
   ok($result, "web service returns new consumer $result");
-  my $ledger_b_guid = $ua->mp_get("/ledger/xid/$a_xid")->{guid};
+  my $ledger_b_guid = $ua->mp_get("/ledger/by-xid/$a_xid")->{guid};
   isnt($ledger_b_guid, $ledger_a_guid, "$a_xid is in a different ledger");
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
   # TODO: check to make sure the new ledger has the right contact info
@@ -130,7 +130,7 @@ test split => sub {
   note "Splitting nonexistent sservice should fail";
   isnt( exception {
     $ua->mp_post(
-      "/ledger/guid/$ledger_a_guid/split",
+      "/ledger/by-guid/$ledger_a_guid/split",
       {
         xid => $a_xid,
         contact_name => "Mr. Hand",
@@ -161,7 +161,7 @@ test handoff => sub {
 
   note "Transferring responsibility for $a_xid to ledger $ledger_b_guid\n";
   $result = $ua->mp_post(
-    "/ledger/guid/$ledger_a_guid/handoff",
+    "/ledger/by-guid/$ledger_a_guid/handoff",
     {
       xid => $a_xid,
       target_ledger => $ledger_b_guid,
@@ -171,7 +171,7 @@ test handoff => sub {
 
   note "Transferring responsibility back";
   $result = $ua->mp_post(
-    "/ledger/guid/$ledger_b_guid/handoff",
+    "/ledger/by-guid/$ledger_b_guid/handoff",
     {
       xid => $a_xid,
       target_ledger => $ledger_a_guid,
@@ -182,7 +182,7 @@ test handoff => sub {
   note "Transferring responsibility incorrectly";
   isnt( exception {
     $ua->mp_post(
-      "/ledger/guid/$ledger_b_guid/handoff",
+      "/ledger/by-guid/$ledger_b_guid/handoff",
       {
         xid => $a_xid,
         target_ledger => $ledger_a_guid,

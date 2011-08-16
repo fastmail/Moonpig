@@ -2,7 +2,7 @@
 <%args>
 $guid
 </%args>
-% my $ledger = $m->mp_request(GET => "/ledger/guid/$guid");
+% my $ledger = $m->mp_request(GET => "/ledger/by-guid/$guid");
 % $m->redirect('/') unless $ledger;
 <&| /page/full, title => "Moonpig Ledger $guid" &>
 

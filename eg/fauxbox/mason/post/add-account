@@ -21,7 +21,7 @@ $m->schema->txn_do(sub {
 
 $m->mp_request(
   POST => sprintf(
-    '/ledger/xid/%s/consumers',
+    '/ledger/by-xid/%s/consumers',
     username_xid($client->username),
   ),
   {

@@ -13,7 +13,7 @@ my $amount    = $payment_p->{amount};
 <%perl>
 my $credit = $m->mp_request(
   POST => sprintf(
-    '/ledger/xid/%s/credits',
+    '/ledger/by-xid/%s/credits',
     username_xid($client->username),
   ),
   {

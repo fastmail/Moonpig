@@ -21,7 +21,7 @@ __PACKAGE__->has_many(
 
 sub ledger_uri {
   my ($self, $extra) = @_;
-  my $base = sprintf "/ledger/xid/%s", $self->xid;
+  my $base = sprintf "/ledger/by-xid/%s", $self->xid;
   $base .= "/$extra" if defined $extra;
   return $base;
 }

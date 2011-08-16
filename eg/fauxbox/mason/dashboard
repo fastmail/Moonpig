@@ -6,7 +6,7 @@ $username
 require Moonpig::App::Ob::Dumper;
 Moonpig::App::Ob::Dumper->import('Dump');
 my $client = $m->schema->resultset('Client')->find({ username => $username });
-my $ledger_path = "/ledger/xid/" . username_xid($username);
+my $ledger_path = "/ledger/by-xid/" . username_xid($username);
 my $ledger = $m->mp_request(GET => $ledger_path);
 </%init>
 

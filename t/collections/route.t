@@ -35,7 +35,7 @@ test "route to get a collection" => sub {
   my $guid = $ledger->guid;
 
   my ($collection) = Moonpig->env->route(
-    [ 'ledger', 'guid', $guid, 'refunds' ],
+    [ 'ledger', 'by-guid', $guid, 'refunds' ],
   );
   ok($collection);
 

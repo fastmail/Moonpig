@@ -581,12 +581,12 @@ sub _collect_spare_change {
 sub _class_subroute {
   my ($class, $path) = @_;
 
-  if ($path->[0] eq 'xid') {
+  if ($path->[0] eq 'by-xid') {
     my (undef, $xid) = splice @$path, 0, 2;
     return Moonpig->env->storage->retrieve_ledger_for_xid($xid);
   }
 
-  if ($path->[0] eq 'guid') {
+  if ($path->[0] eq 'by-guid') {
     my (undef, $guid) = splice @$path, 0, 2;
     return Moonpig->env->storage->retrieve_ledger_for_guid($guid);
   }

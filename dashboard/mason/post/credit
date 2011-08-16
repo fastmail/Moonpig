@@ -7,7 +7,7 @@ $ledger_guid
 <%perl>
 my $credit = $m->mp_request(
   POST => sprintf(
-    '/ledger/guid/%s/credits',
+    '/ledger/by-guid/%s/credits',
     $ledger_guid,
   ),
   {

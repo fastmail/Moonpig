@@ -36,7 +36,7 @@ my $app = Moonpig::Web::App->app;
 my $x_username = 'testuser';
 my $u_xid = username_xid($x_username);
 my $a_xid = "test:account:1";
-my $ledger_path = "/ledger/xid/$u_xid";
+my $ledger_path = "/ledger/by-xid/$u_xid";
 
 my $guid_re = re('^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$');
 my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');

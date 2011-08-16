@@ -28,9 +28,9 @@ test "route to and get a simple resource" => sub {
   Moonpig->env->save_ledger($ledger);
 
   # XXX: temporary first draft of a route to get the guid
-  # /ledger/guid/:GUID/gguid
+  # /ledger/by-guid/:GUID/gguid
   my ($resource) = Moonpig->env->route(
-    [ 'ledger', 'guid', $guid ],
+    [ 'ledger', 'by-guid', $guid ],
   );
 
   my $result = $resource->resource_request(get => {});
@@ -54,9 +54,9 @@ test "route to and GET a method on a simple resource" => sub {
   my $guid = $ledger->guid;
 
   # XXX: temporary first draft of a route to get the guid
-  # /ledger/guid/:GUID/gguid
+  # /ledger/by-guid/:GUID/gguid
   my ($resource) = Moonpig->env->route(
-    [ 'ledger', 'guid', $guid, 'gguid' ],
+    [ 'ledger', 'by-guid', $guid, 'gguid' ],
   );
 
   my $result = $resource->resource_request(get => {});

@@ -29,7 +29,7 @@ test "get a ledger guid via web" => sub {
     my ($cb) = @_;
 
     my $req = HTTP::Request->new(
-      GET => "http://localhost/ledger/guid/$guid/gguid",
+      GET => "http://localhost/ledger/by-guid/$guid/gguid",
     );
 
     my $res = $cb->($req);

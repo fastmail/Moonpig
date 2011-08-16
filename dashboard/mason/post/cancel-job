@@ -6,7 +6,7 @@ $ledger_guid
 
 <%perl>
 $m->mp_request(
-  POST => "/ledger/guid/$ledger_guid/jobs/guid/$job_id/cancel", {}
+  POST => "/ledger/by-guid/$ledger_guid/jobs/guid/$job_id/cancel", {}
 );
 
 # We can't redirect back to ourself, right now, because the jobs collection is
