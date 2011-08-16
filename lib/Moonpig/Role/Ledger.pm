@@ -103,6 +103,17 @@ has contact_history => (
   },
 );
 
+publish _replace_contact => {
+  -path        => 'contact',
+  -http_method => 'PUT',
+} => sub {
+  my ($self, $arg) = @_;
+  my $contact = class('Contact')->new($arg->{contact});
+  $self->replace_contact($contact);
+
+  return $contact;
+};
+
 # XXX: This should be a submethod.  And not totally bogus.  -- rjbs, 2011-08-15
 sub BUILDARGS {
   my ($self, $hashref) = @_;
