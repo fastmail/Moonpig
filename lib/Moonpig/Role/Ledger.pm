@@ -92,11 +92,27 @@ use namespace::autoclean;
 # https://trac.pobox.com/wiki/Billing/DB says that there is *one* contact which
 # has *one* address and *one* name but possibly many email addresses.
 # -- rjbs, 2010-10-12
-has contact => (
+has contact_history => (
   is   => 'ro',
-  does => 'Moonpig::Role::Contact',
+  isa  => ArrayRef[ role_type( 'Moonpig::Role::Contact' ) ],
   required => 1,
+  traits   => [ 'Array' ],
+  handles  => {
+    contact         => [ get => -1 ],
+    replace_contact => 'push',
+  },
 );
+
+# XXX: This should be a submethod.  And not totally bogus.  -- rjbs, 2011-08-15
+sub BUILDARGS {
+  my ($self, $hashref) = @_;
+
+  if ($hashref->{contact} and not $hashref->{contact_history}) {
+    $hashref->{contact_history} = [ delete $hashref->{contact} ];
+  }
+
+  return $hashref;
+}
 
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
