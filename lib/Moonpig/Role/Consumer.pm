@@ -7,6 +7,7 @@ use Stick::Publisher::Publish 0.20110324;
 use Moonpig::Trait::Copy;
 
 with(
+  'Moonpig::Role::CanCancel',
   'Moonpig::Role::CanExpire',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
@@ -119,6 +120,9 @@ publish handle_cancel => { -http_method => 'post', -path => 'cancel' } => sub {
 
 sub cancel_service {
   my ($self) = @_;
+  return if $self->is_canceled;
+
+  $self->cancel;
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
@@ -181,6 +185,7 @@ sub terminate_service {
     $self->ident,
   ]);
 
+  $self->handle_event(event('cancel'));
   $self->ledger->mark_consumer_inactive__($self);
 }
 
