@@ -200,8 +200,8 @@ sub copy_to {
         $self->copy_attr_hash__
       );
       $self->copy_subcomponents_to__($target, $copy);
-      { # We have to terminate service before activating service, or else the same xid would be
-        # active in both ledgers at once, which is forbidden
+      { # We have to terminate service before activating service, or else the
+        # same xid would be active in both ledgers at once, which is forbidden
         my $was_active = $self->is_active;
         $self->terminate_service;
         $copy->become_active if $was_active;
@@ -210,7 +210,8 @@ sub copy_to {
   return $copy;
 }
 
-# roles will decorate this method with code to move subcomponents like banks to the copy
+# roles will decorate this method with code to move subcomponents like banks to
+# the copy
 sub copy_subcomponents_to__ {
   my ($self, $target, $copy) = @_;
   $copy->replacement($self->replacement->copy_to($target))
