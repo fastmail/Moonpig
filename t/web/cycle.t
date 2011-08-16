@@ -137,10 +137,12 @@ test "single payment" => sub {
   my $v1 = $self->setup_account;
 
   my $credit = $ua->mp_post(
-    "$ledger_path/credits/accept_payment",
+    "$ledger_path/credits",
     {
-      amount => $price,
       type => 'Simulated',
+      attributes => {
+        amount => $price,
+      },
     });
 
   cmp_deeply(

@@ -7,14 +7,15 @@ $ledger_guid
 <%perl>
 my $credit = $m->mp_request(
   POST => sprintf(
-    '/ledger/guid/%s/credits/accept_payment',
+    '/ledger/guid/%s/credits',
     $ledger_guid,
   ),
   {
-    amount => int($amount * 100_000),  # convert to millicents
-    type   => 'Simulated',
-    # type   => 'Courtesy', # we can't use this w/o reason -- rjbs, 2011-08-15
-    # reason => $reason, # this isn't yet allowed -- rjbs, 2011-08-15
+    type   => 'Courtesy',
+    attributes => {
+      amount => int($amount * 100_000),  # convert to millicents
+      reason => $reason,
+    },
   },
 );
 $m->redirect('/ledger/' . $ledger_guid);

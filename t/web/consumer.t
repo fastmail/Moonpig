@@ -122,10 +122,12 @@ test clobber_replacement => sub {
 
   my $v1 = $self->setup_account;
   my $credit = $ua->mp_post(
-    "$ledger_path/credits/accept_payment",
+    "$ledger_path/credits",
     {
-      amount => $price,
       type => 'Simulated',
+      attributes => {
+        amount => $price,
+      },
     });
   $self->elapse(3);
 
@@ -171,10 +173,12 @@ test cancel_early => sub {
 
   my $v1 = $self->setup_account;
   my $credit = $ua->mp_post(
-    "$ledger_path/credits/accept_payment",
+    "$ledger_path/credits",
     {
-      amount => $price,
       type => 'Simulated',
+      attributes => {
+        amount => $price,
+      },
     });
   $self->elapse(1);
 

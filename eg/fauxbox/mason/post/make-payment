@@ -13,14 +13,16 @@ my $amount    = $payment_p->{amount};
 <%perl>
 my $credit = $m->mp_request(
   POST => sprintf(
-    '/ledger/xid/%s/credits/accept_payment',
+    '/ledger/xid/%s/credits',
     username_xid($client->username),
   ),
-   {
-     amount => int($payment_p->{amount} * 100_000),  # convert to millicents
-     type   => 'Simulated',
-   },
-  );
+  {
+    type   => 'Simulated',
+    attributes => {
+      amount => int($payment_p->{amount} * 100_000),  # convert to millicents
+    },
+  },
+);
 </%perl>
 
 <h2>Credit posted</h2>
