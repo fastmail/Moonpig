@@ -10,6 +10,8 @@ use Moonpig::Types qw(GUID);
 
 use Moonpig::Behavior::Packable;
 
+use Stick::Publisher 0.301; # to make publish_is work in a role
+
 use namespace::autoclean;
 
 with 'Moonpig::Role::StubBuild';
@@ -19,6 +21,7 @@ has guid => (
   isa => GUID,
   init_arg => undef,
   default  => sub { guid_string },
+  publish_is => 'ro',
 );
 
 sub ident {
