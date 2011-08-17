@@ -42,11 +42,6 @@ implicit_event_handlers {
         method_name => 'create_own_replacement',
       ),
     },
-    'cancel' => {
-      cancel_service => Moonpig::Events::Handler::Method->new(
-        method_name => 'cancel_service',
-      ),
-    },
     'fail-over' => {
       default => Moonpig::Events::Handler::Method->new(
         method_name => 'failover',
@@ -112,17 +107,11 @@ sub create_own_replacement {
   return;
 }
 
-publish handle_cancel => { -http_method => 'post', -path => 'cancel' } => sub {
-  my ($self) = @_;
-  $self->handle_event(event('cancel'));
-  return;
-};
-
-sub cancel_service {
-  my ($self) = @_;
+sub handle_cancel {
+  my ($self, $event) = @_;
   return if $self->is_canceled;
 
-  $self->cancel;
+  $self->mark_canceled;
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
