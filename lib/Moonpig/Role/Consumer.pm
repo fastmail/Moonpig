@@ -47,9 +47,9 @@ implicit_event_handlers {
         method_name => 'failover',
       ),
     },
-    'terminate-service' => {
+    'terminate' => {
       default => Moonpig::Events::Handler::Method->new(
-        method_name => 'terminate_service',
+        method_name => 'handle_terminate',
       ),
     },
   };
@@ -133,7 +133,7 @@ before expire => sub {
   $self->handle_event(
     $self->has_replacement
     ? event('fail-over')
-    : event('terminate-service')
+    : event('terminate')
   );
 };
 
@@ -166,8 +166,14 @@ sub failover {
   $self->ledger->failover_active_consumer__($self);
 }
 
-sub terminate_service {
+publish _terminate => { -http_method => 'post', -path => 'terminate' } => sub {
   my ($self) = @_;
+  $self->handle_event(event('terminate'));
+  return;
+};
+
+sub handle_terminate {
+  my ($self, $event) = @_;
 
   $Logger->log([
     'terminating service: %s',
@@ -197,7 +203,7 @@ sub copy_to {
       { # We have to terminate service before activating service, or else the
         # same xid would be active in both ledgers at once, which is forbidden
         my $was_active = $self->is_active;
-        $self->terminate_service;
+        $self->handle_event(event('terminate'));
         $copy->become_active if $was_active;
       }
     });

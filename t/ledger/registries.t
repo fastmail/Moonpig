@@ -118,7 +118,7 @@ test "registered abandoned xid" => sub {
   }
 
   my $consumer = $ledger->{1}->active_consumer_for_xid($xid->{1});
-  $consumer->terminate_service;
+  $consumer->handle_event(event('terminate'));
 
   Moonpig->env->save_ledger($ledger->{1});
 
