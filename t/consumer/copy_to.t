@@ -40,7 +40,7 @@ test dummy => sub {
   is($ledger_a->active_consumer_for_xid($consumer->xid),
      undef,
      "old ledger no longer finds consumer for this xid");
-  is($copy->replacement_mri, $consumer->replacement_mri,
+  is($copy->replacement_mri->as_string, $consumer->replacement_mri->as_string,
      "same replacement_mri");
 };
 
