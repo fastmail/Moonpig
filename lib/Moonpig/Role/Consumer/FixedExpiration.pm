@@ -59,18 +59,20 @@ sub _check_expiry {
 
   return unless $self->expire_date <= Moonpig->env->now;
 
-  $self->ledger->current_journal->charge({
-    desc => $self->description,
-    from => $self->bank,
-    to   => $self,
-    date => Moonpig->env->now,
-    tags => $self->journal_charge_tags,
+  if ($self->has_bank) {
+    $self->ledger->current_journal->charge({
+      desc => $self->description,
+      from => $self->bank,
+      to   => $self,
+      date => Moonpig->env->now,
+      tags => $self->journal_charge_tags,
 
-    # no part of the amount should be applied, so I have expressly said
-    # ->amount and not ->unapplied_amount; if the full amount is an
-    # over-charge, there is a problem -- rjbs, 2011-07-06
-    amount => $self->bank->amount,
-  });
+      # no part of the amount should be applied, so I have expressly said
+      # ->amount and not ->unapplied_amount; if the full amount is an
+      # over-charge, there is a problem -- rjbs, 2011-07-06
+      amount => $self->bank->amount,
+    });
+  }
 
   $self->expire;
 }
