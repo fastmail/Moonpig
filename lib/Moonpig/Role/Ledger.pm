@@ -49,6 +49,12 @@ with(
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
+    item => 'journal',
+    item_roles => [ 'Moonpig::Role::Journal' ],
+    default_sort_key => 'created_at',
+    is => 'ro',
+  },
+  'Stick::Role::HasCollection' => {
     item => 'coupon',
     item_roles => [ 'Moonpig::Role::Coupon' ],
     collection_roles => [ ],
@@ -147,13 +153,14 @@ sub _extra_instance_subroute {
   my ($self, $path, $npr) = @_;
   my ($first) = @$path;
   my %x_rt = (
-    banks => $self->bank_collection,
-    jobs  => $self->job_collection,
+    banks     => $self->bank_collection,
     consumers => $self->consumer_collection,
-    refunds => $self->refund_collection,
-    credits => $self->credit_collection,
-    invoices => $self->invoice_collection,
-    coupons => $self->coupon_collection,
+    coupons   => $self->coupon_collection,
+    credits   => $self->credit_collection,
+    invoices  => $self->invoice_collection,
+    jobs      => $self->job_collection,
+    journals  => $self->journal_collection,
+    refunds   => $self->refund_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
@@ -313,6 +320,10 @@ sub latest_invoice {
 }
 
 sub invoice_array {
+  [ $_[0]->invoices ]
+}
+
+sub journal_array {
   [ $_[0]->invoices ]
 }
 
