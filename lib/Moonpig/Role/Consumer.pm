@@ -4,6 +4,7 @@ use Moose::Role;
 
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
+use Stick::Util qw(true false);
 use Moonpig::Trait::Copy;
 
 with(
@@ -146,7 +147,7 @@ after BUILD => sub {
 sub is_active {
   my ($self) = @_;
 
-  $self->ledger->_is_consumer_active($self);
+  $self->ledger->_is_consumer_active($self) ? true : false;
 }
 
 # note that this might be called before the consumer is added to the ledger.
@@ -242,7 +243,10 @@ sub template_like_this {
 }
 
 PARTIAL_PACK {
-  return { xid => $_[0]->xid };
+  return {
+    xid       => $_[0]->xid,
+    is_active => $_[0]->is_active,
+  };
 };
 
 1;

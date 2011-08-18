@@ -22,6 +22,12 @@ implicit_event_handlers {
   };
 };
 
+use Moonpig::Behavior::Packable;
+PARTIAL_PACK {
+  my ($self) = @_;
+  return { is_canceled => $self->is_canceled }
+};
+
 requires 'handle_cancel';
 
 publish cancel => { -http_method => 'post', -path => 'cancel' } => sub {
