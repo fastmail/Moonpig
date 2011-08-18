@@ -12,10 +12,18 @@ my $xid = $consumer->{xid};
 
 <&| /page/full, title => "Moonpig Consumer $consumer_guid" &>
   <div>Consumer for resource: <% $xid |h %></div>
+
   <form method='post' action='/post/cancel-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' value='Cancel Service' />
+    <input type='submit' value='Cancel Service (do not renew)' />
   </form>
+
+  <form method='post' action='/post/terminate-consumer'>
+    <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+    <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
+    <input type='submit' value='Terminate Service (cancel and deactivate)' />
+  </form>
+
   <& /widget/dump, dump => $consumer, what => 'Consumer' &>
 </&>
