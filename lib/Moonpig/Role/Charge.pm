@@ -31,4 +31,14 @@ has date => (
   default  => sub { Moonpig->env->now() },
 );
 
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    description => $self->description,
+    amount      => $self->amount,
+    date        => $self->date,
+  };
+};
+
 1;
