@@ -1,21 +1,20 @@
 %# vim:set ft=mason:
 <%args>
-$amount
-$reason
 $ledger_guid
 </%args>
 <%perl>
+my $credit_arg = CGI::Expand->expand_hash($r->parameters)->{credit};
+
+$credit_arg->{attributes}{amount} *= 100_000; # convert to millicents
+
 my $credit = $m->mp_request(
   POST => sprintf(
     '/ledger/by-guid/%s/credits',
     $ledger_guid,
   ),
   {
-    type   => 'Courtesy',
-    attributes => {
-      amount => int($amount * 100_000),  # convert to millicents
-      reason => $reason,
-    },
+    type       => $credit_arg->{type},
+    attributes => $credit_arg->{attributes},
   },
 );
 $m->redirect('/ledger/' . $ledger_guid);

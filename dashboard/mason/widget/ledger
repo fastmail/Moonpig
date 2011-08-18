@@ -33,10 +33,21 @@ $ledger
 
   Add a courtesty credit:
   <form method='post' action='/post/credit'>
-    Amount ($): <input name='amount' />
-    Reason (req): <input name='reason' />
+    Amount ($): <input name='credit.attributes.amount' />
+    Reason (req): <input name='credit.attributes.reason' />
     <input type='submit' value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='Courtesy' />
+  </form>
+
+  Add a credit from a check:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Bank name: <input name='credit.attributes.bank_name' />
+    Check №: <input name='credit.attributes.check_number' />
+    <input type='submit' value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='Check' />
   </form>
 </div>
 </%method>

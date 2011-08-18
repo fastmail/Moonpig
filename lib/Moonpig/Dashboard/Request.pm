@@ -4,6 +4,7 @@ package Moonpig::Dashboard::Request;
 use base 'HTML::Mason::Request';
 
 # use HTML::Widget::Factory;
+use CGI::Expand ();
 use JSON;
 use Moonpig::UserAgent;
 
