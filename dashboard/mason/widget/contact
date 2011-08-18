@@ -1,0 +1,17 @@
+<%args>
+$contact
+$ledger
+</%args>
+% my @emails = @{ $contact->{email} };
+% my $email_count = @emails;
+<div class='contact'>
+  <h2>Ledger Contact</h2>
+  <a href='/ledger/<% $ledger->{guid} |h %>/contact'>edit contact</a>
+  <table>
+    <tr><th>Name</th><td><% $contact->{name} |h %></td></tr>
+    <tr><th rowspan='<% $email_count %>'>Email</th><td><% $emails[0] |h %></td></tr>
+% for my $i (1 .. $#emails) {
+    <tr><th></th><td><% $emails[ $i ] |h %></td></tr>
+% }
+  </table>
+</div>

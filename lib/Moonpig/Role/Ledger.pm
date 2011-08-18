@@ -105,10 +105,12 @@ has contact_history => (
 
 publish _replace_contact => {
   -path        => 'contact',
-  -http_method => 'PUT',
+  -http_method => 'put',
+  name            => Str,
+  email_addresses => EmailAddresses,
 } => sub {
   my ($self, $arg) = @_;
-  my $contact = class('Contact')->new($arg->{contact});
+  my $contact = class('Contact')->new($arg);
   $self->replace_contact($contact);
 
   return $contact;

@@ -1,9 +1,10 @@
+%# vim:set ft=mason:
 <%args>
 $ledger
 </%args>
 
 <div class='ledger'>
-  <& SELF:contact, contact => $ledger->{contact} &>
+  <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
   <& SELF:invoices, ledger => $ledger &>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
@@ -120,23 +121,5 @@ $ledger
       view all invoices
     </a>
   </div>
-</div>
-</%method>
-
-<%method contact>
-<%args>
-$contact
-</%args>
-% my @emails = @{ $contact->{email} };
-% my $email_count = @emails;
-<div class='contact'>
-  <h2>Ledger Contact</h2>
-  <table>
-    <tr><th>Name</th><td><% $contact->{name} |h %></td></tr>
-    <tr><th rowspan='<% $email_count %>'>Email</th><td><% $emails[0] |h %></td></tr>
-% for my $i (1 .. $#emails) {
-    <tr><th></th><td><% $emails[ $i ] |h %></td></tr>
-% }
-  </table>
 </div>
 </%method>

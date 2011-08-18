@@ -1,0 +1,20 @@
+%# vim:set ft=mason:
+<%args>
+$ledger_guid
+</%args>
+% my $ledger = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid");
+% $m->redirect('/') unless $ledger;
+<&| /page/full, title => "Moonpig Ledger $ledger_guid Contact" &>
+
+<form action='/post/contact' method='POST'>
+  <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+
+  Name: <input name='contact.name' value='<% $ledger->{contact}{name} |h %>' />
+  <br />
+
+  Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email}[0] |h %>' />
+  <br />
+
+  <input type='submit' value='Save Contact Info' />
+</form>
+</&>

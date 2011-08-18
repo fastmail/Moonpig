@@ -1,7 +1,12 @@
 package Moonpig::UserAgent;
 use Moose;
-use URI;
+
 our $VERSION = 0.20110525;
+
+use HTTP::Request;
+use LWP::UserAgent;
+use URI;
+
 
 has agent_string => (
   is => 'ro',
@@ -13,7 +18,6 @@ has UA => (
   is => 'ro',
   lazy => 1,
   default => sub {
-    require LWP::UserAgent;
     LWP::UserAgent->new($_[0]->agent_string);
   },
   handles => [ qw(get post) ],
@@ -62,14 +66,19 @@ sub mp_request {
   if ($method eq 'get') {
     $res = $self->get($target);
     return undef if $res->code == 404;
-  } elsif ($method eq 'post') {
+  } elsif ($method eq 'post' or $method eq 'put') {
     my $payload = $self->encode($arg);
 
-    $res = $self->post(
+    my $req = HTTP::Request->new(
+      uc $method,
       $target,
-      'Content-Type' => 'application/json',
-      Content => $payload,
+      [ 'Content-Type' => 'application/json' ],
+      $payload,
     );
+
+    $res = $self->UA->request($req);
+  } else {
+    confess "do not know how to make $method-method request";
   }
 
   # eventually there should be exceptions here for all 2xx codes

@@ -1,0 +1,17 @@
+%# vim:set ft=mason:
+<%args>
+$ledger_guid
+</%args>
+<%perl>
+my $contact_arg = CGI::Expand->expand_hash($r->parameters)->{contact};
+
+my $contact = $m->mp_request(
+  PUT => sprintf(
+    '/ledger/by-guid/%s/contact',
+    $ledger_guid,
+  ),
+  $contact_arg,
+);
+
+$m->redirect('/ledger/' . $ledger_guid);
+</%perl>
