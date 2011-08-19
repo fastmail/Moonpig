@@ -14,6 +14,18 @@
       <th>Your email address</th>
       <td><% $m->widget->input({ id => 'signup.email_addresses.0' }) %></td>
     </tr>
+    <tr>
+      <th>Your street address</th>
+      <td><% $m->widget->input({ id => 'signup.address_lines.0' }) %></td>
+    </tr>
+    <tr>
+      <th>Your city</th>
+      <td><% $m->widget->input({ id => 'signup.city' }) %></td>
+    </tr>
+    <tr>
+      <th>Your country</th>
+      <td><% $m->widget->input({ id => 'signup.country' }) %></td>
+    </tr>
   </table>
   <% $m->widget->submit %>
 </form>

@@ -9,6 +9,9 @@ my $user = $m->schema->resultset('Client')->create({
 my $ledger = $m->mp_request(
   POST => '/ledgers' => {
     name => $params->{signup}{name},
+    city => $params->{signup}{city},
+    country => $params->{signup}{country},
+    address_lines   => $params->{signup}{address_lines},
     email_addresses => $params->{signup}{email_addresses},
     consumers => {
       username_xid($params->{signup}{username}) => {
