@@ -2,6 +2,7 @@ package Moonpig::App::Ob::Dumper;
 use strict;
 use warnings;
 use Scalar::Util qw(blessed reftype);
+use Try::Tiny;
 use overload ();
 
 use Sub::Exporter -setup => {
@@ -243,8 +244,17 @@ sub dump_scalar {
 sub dump_scalar_ref {
   my ($self, $sr, $ovl) = @_;
   my @display = defined($ovl) ? ($ovl, "('$sr')") : ($sr);
-  $self->recurse($sr, join(" ", @display),
-                 sub { $self->dump_value($$sr) });
+
+  if (try {
+    $sr->isa('Stick::Entity::Bool')
+    || $sr->isa('JSON::XS::Boolean')
+    || $sr->isa('JSON::Boolean')
+  }) {
+    $self->aplines($sr ? '<true>' : '<false>');
+  } else {
+    $self->recurse($sr, join(" ", @display),
+                   sub { $self->dump_value($$sr) });
+  }
 }
 
 1;
