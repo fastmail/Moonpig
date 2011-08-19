@@ -39,6 +39,9 @@ sub setup_account {
   my $signup_info =
     { name => "Fred Flooney",
       email_addresses => [ 'textuser@example.com' ],
+      address_lines   => [ '1313 Mockingbird Ln.' ],
+      city            => 'Wagstaff',
+      country         => 'USA',
       consumers => {
         $u_xid => {
           template => 'username'

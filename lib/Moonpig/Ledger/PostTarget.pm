@@ -21,8 +21,9 @@ sub resource_post {
     my $class ||= class('Ledger');
 
     my $contact = class('Contact')->new({
-      name            => $arg->{name},
-      email_addresses => $arg->{email_addresses},
+      map {; defined $arg->{$_} ? ($_ => $arg->{$_}) : () } qw(
+        name address_lines city state postal_code country email_addresses 
+      )
     });
 
     $ledger = $class->new({

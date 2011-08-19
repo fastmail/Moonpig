@@ -324,9 +324,13 @@ sub build_contact {
   my @last = qw(Smith Johnson Williams Jones Brown Davis Miller Wilson Moore Taylor);
   my @names = (rnd(@first), rnd('A' .. 'Z') . ".", rnd(@last));
   my $inits = join "", map substr($_, 0, 1), @names;
+
   return class('Contact')->new({
     name => join(" ", @names),
     email_addresses => [ "\L$inits\E\@example.com" ],
+    address_lines   => [ '123 Street Rd.' ],
+    city            => 'Townville',
+    country         => 'USA',
   });
 }
 

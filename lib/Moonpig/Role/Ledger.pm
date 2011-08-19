@@ -635,21 +635,18 @@ publish move_xid_to => { -http_method => 'post', -path => 'handoff',
 # hand off responsibility for this xid to a fresh ledger
 publish split_xid => { -http_method => 'post', -path => 'split',
                        xid => XID,
-                       contact_name => Str,
-                       contact_email_addresses => EmailAddresses,
+                       contact => HashRef,
                      } => sub {
-  my ($self, $args) = @_;
+  my ($self, $arg) = @_;
 
-  my ($xid) = $args->{xid};
+  my ($xid) = $arg->{xid};
   my $cons = $self->active_consumer_for_xid($xid)
     or croak sprintf "Ledger %s has no active consumer for xid '%s'",
       $self->guid, $xid;
 
   return Moonpig->env->storage->do_rw(
     sub {
-      my $contact = class('Contact')->new({
-        name => $args->{contact_name},
-        email_addresses => $args->{contact_email_addresses} });
+      my $contact = class('Contact')->new($arg->{contact});
       my $target = class('Ledger')->new({ contact => $contact });
 
       Moonpig->env->storage->save_ledger($target);

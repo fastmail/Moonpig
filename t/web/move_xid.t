@@ -37,6 +37,9 @@ sub setup_account {
   my $signup_info =
     { name => "Fred Flooney",
       email_addresses => [ 'testuser@example.com' ],
+      address_lines   => [ '1313 Mockingbird Ln.' ],
+      city            => 'Wagstaff',
+      country         => 'USA',
       consumers => {
         $u_xid => {
           template => 'username'
@@ -118,8 +121,13 @@ test split => sub {
     "$ledger_path/split",
     {
       xid => $a_xid,
-      contact_name => "Bill S. Preston",
-      contact_email_addresses => [ "bspesq\@example.com" ],
+      contact => {
+        name => "Mr. Hand",
+        email_addresses => [ 'mrhand@example.com' ],
+        address_lines   => [ '221B Baker St.' ],
+        city            => 'London',
+        country         => 'UK',
+      }
     });
   ok($result, "web service returns new consumer $result");
   my $ledger_b_guid = $ua->mp_get("/ledger/by-xid/$a_xid")->{guid};
@@ -133,8 +141,13 @@ test split => sub {
       "/ledger/by-guid/$ledger_a_guid/split",
       {
         xid => $a_xid,
-        contact_name => "Mr. Hand",
-        contact_email_addresses => [ "mrhand\@example.com" ],
+        contact => {
+          name => "Mr. Hand",
+          email_addresses => [ 'mrhand@example.com' ],
+          address_lines   => [ '221B Baker St.' ],
+          city            => 'London',
+          country         => 'UK',
+        }
       }) },
     undef,
     "properly refusing to split out unmanaged xid");
@@ -155,6 +168,10 @@ test handoff => sub {
       '/ledgers',
       { name => "Ted 'Theodore' Logan",
         email_addresses => [ 'ttl@example.com' ],
+        address_lines   => [ '1 W. Eastside Cir.' ],
+        city            => 'San Dimas',
+        state           => 'CA',
+        country         => 'USA',
       });
     $result->{guid};
   };

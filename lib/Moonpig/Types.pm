@@ -18,6 +18,9 @@ use MooseX::Types -declare => [ qw(
 
   GUID MRI XID
 
+  SingleLine TrimmedSingleLine
+  NonBlankLine TrimmedNonBlankLine
+
   Tag TagSet
 
   Time TimeInterval
@@ -28,6 +31,8 @@ use MooseX::Types -declare => [ qw(
 
   Factory
 ) ];
+
+use 5.14.0;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str Object);
 # use MooseX::Types::Structured qw(Map);
@@ -103,6 +108,21 @@ subtype SimplePath, as Str, where { /\A$simple_str_dotchain\z/ };
 # and I don't feel like fixing it right this second. -- rjbs, 2011-05-23
 subtype Tag, as Str; # XXX Fix this -- rjbs, 2011-06-17
 subtype TagSet, as ArrayRef[ Tag ];
+
+################################################################
+#
+# Lines
+
+subtype SingleLine, as Str, where { ! /\v/ };
+subtype TrimmedSingleLine, as SingleLine, where { /\A\H/ && /\S\z/ };
+coerce TrimmedSingleLine, from SingleLine, via { s/(?:\A\h*)|(\s*\z)//gr };
+
+subtype NonBlankLine, as Str, where { ! /\v/ && /\H/ };
+subtype TrimmedNonBlankLine, as NonBlankLine, where { /\A\H/ && /\S\z/ };
+
+coerce TrimmedNonBlankLine,
+  from NonBlankLine,
+  via { s/(?:\A\h*)|(\s*\z)//gr };
 
 ################################################################
 #
