@@ -5,12 +5,15 @@ $ledger_guid
 <%perl>
 my $contact_arg = CGI::Expand->expand_hash($r->parameters)->{contact};
 
+delete $contact_arg->{$_}
+  for grep {; ! length $contact_arg->{$_} } keys %$contact_arg;
+
 my $contact = $m->mp_request(
   PUT => sprintf(
     '/ledger/by-guid/%s/contact',
     $ledger_guid,
   ),
-  $contact_arg,
+  { attributes => $contact_arg },
 );
 
 $m->redirect('/ledger/' . $ledger_guid);

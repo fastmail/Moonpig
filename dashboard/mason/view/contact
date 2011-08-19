@@ -15,6 +15,21 @@ $ledger_guid
   Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email}[0] |h %>' />
   <br />
 
+  Address: <input name='contact.address_lines.0' value='<% $ledger->{contact}{address}[0] |h %>' />
+  <br />
+
+  City: <input name='contact.city' value='<% $ledger->{contact}{city} |h %>' />
+  <br />
+
+  State: <input name='contact.state' value='<% $ledger->{contact}{state} |h %>' />
+  <br />
+
+  Postal Code: <input name='contact.postal_code' value='<% $ledger->{contact}{postal_code} |h %>' />
+  <br />
+
+  Country: <input name='contact.country' value='<% $ledger->{contact}{country} |h %>' />
+  <br />
+
   <input type='submit' value='Save Contact Info' />
 </form>
 </&>

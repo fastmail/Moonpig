@@ -112,11 +112,10 @@ has contact_history => (
 publish _replace_contact => {
   -path        => 'contact',
   -http_method => 'put',
-  name            => Str,
-  email_addresses => EmailAddresses,
+  attributes   => HashRef,
 } => sub {
   my ($self, $arg) = @_;
-  my $contact = class('Contact')->new($arg);
+  my $contact = class('Contact')->new($arg->{attributes});
   $self->replace_contact($contact);
 
   return $contact;

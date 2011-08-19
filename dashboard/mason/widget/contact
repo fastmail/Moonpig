@@ -2,16 +2,28 @@
 $contact
 $ledger
 </%args>
-% my @emails = @{ $contact->{email} };
-% my $email_count = @emails;
+% my @address_lines   = @{ $contact->{address} };
+% my @email_addresses = @{ $contact->{email} };
 <div class='contact'>
   <h2>Ledger Contact</h2>
   <a href='/ledger/<% $ledger->{guid} |h %>/contact'>edit contact</a>
   <table>
     <tr><th>Name</th><td><% $contact->{name} |h %></td></tr>
-    <tr><th rowspan='<% $email_count %>'>Email</th><td><% $emails[0] |h %></td></tr>
-% for my $i (1 .. $#emails) {
-    <tr><th></th><td><% $emails[ $i ] |h %></td></tr>
+
+    <tr><th rowspan='<% 0 + @address_lines %>'>Address</th><td><% shift @address_lines |h %></td></tr>
+% for my $line (@address_lines) {
+    <tr><th></th><td><% $line |h %></td></tr>
 % }
+
+    <tr><th>City</th><td><% $contact->{city} |h %></td></tr>
+    <tr><th>State/Region</th><td><% $contact->{state} |h %></td></tr>
+    <tr><th>Postal Code</th><td><% $contact->{postal_code} |h %></td></tr>
+    <tr><th>Country</th><td><% $contact->{country} |h %></td></tr>
+
+    <tr><th rowspan='<% 0 + @email_addresses %>'>Email</th><td><% shift @email_addresses |h %></td></tr>
+% for my $email (@email_addresses) {
+    <tr><th></th><td><% $email |h %></td></tr>
+% }
+
   </table>
 </div>
