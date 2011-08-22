@@ -73,39 +73,30 @@ has replacement_mri => (
   traits => [ qw(Copy) ],
 );
 
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-  traits => [ qw(Copy) ],
-);
-
 sub build_and_install_replacement {
   my ($self) = @_;
+
+  # Shouldn't this be fatal? -- rjbs, 2011-08-22
+  return if $self->has_replacement;
 
   my $replacement_mri = $self->replacement_mri;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
-  if ($self->is_replaceable && ! $self->has_replacement) {
-    # The replacement must be a consumer template, of course.
-    my $replacement_template = $replacement_mri->construct({
-      extra => { self => $self }
-    });
+  # The replacement must be a consumer template, of course.
+  my $replacement_template = $replacement_mri->construct({
+    extra => { self => $self }
+  });
 
-    return unless $replacement_template;
+  return unless $replacement_template;
 
-    my $replacement = $self->ledger->add_consumer_from_template(
-      $replacement_template,
-      { xid => $self->xid },
-    );
+  my $replacement = $self->ledger->add_consumer_from_template(
+    $replacement_template,
+    { xid => $self->xid },
+  );
 
-    $self->replacement($replacement);
-    return $replacement;
-  }
-
-  return;
+  $self->replacement($replacement);
+  return $replacement;
 }
 
 sub handle_cancel {
@@ -232,7 +223,6 @@ sub copy_attr_hash__ {
   }
   return \%hash;
 }
-
 
 sub template_like_this {
   my ($self) = @_;
