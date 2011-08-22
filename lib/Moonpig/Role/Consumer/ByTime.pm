@@ -240,14 +240,7 @@ sub reflect_on_mortality {
     # If it has no replacement yet, it should create one
     # XXX code duplicated between ByUsage and here
     unless ($self->has_replacement and $remaining_life > 0) {
-      $self->handle_event(
-        event(
-          'consumer-create-replacement',
-          {
-            mri       => $self->replacement_mri,
-          }
-        )
-       );
+      $self->handle_event( event('consumer-create-replacement') );
     }
   }
 }

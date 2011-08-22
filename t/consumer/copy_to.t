@@ -125,8 +125,7 @@ test with_replacement => sub {
     "dummy",
     { replacement_mri => "moonpig://consumer-template/boring" });
   $cons_a->handle_event(
-    event("consumer-create-replacement",
-          { mri => $cons_a->replacement_mri }));
+    event("consumer-create-replacement"));
   ok($cons_a->has_replacement, "consumer now has replacement");
   my $repl_a = $cons_a->replacement;
   ok($repl_a->does("Moonpig::Role::Consumer::ByTime"),

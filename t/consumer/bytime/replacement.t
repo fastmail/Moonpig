@@ -120,7 +120,7 @@ test "without_successor" => sub {
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   Moonpig->env->stop_clock_at($jan1);
 
-  plan tests => 4 * 3;
+  plan tests => 3 * 3;
 
   my $mri =
     Moonpig::URI->new("moonpig://method?method=template_like_this");
@@ -172,7 +172,6 @@ test "without_successor" => sub {
     my (undef, $ident, $payload) = @{$eq[0] || [undef, undef, {}]};
     is($ident, 'consumer-create-replacement', "event name");
     is($payload->{timestamp}->ymd, $succ_creation_date, "event date");
-    is($payload->{mri}, $mri,  "event MRI");
   }
 };
 

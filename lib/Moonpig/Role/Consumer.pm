@@ -82,9 +82,9 @@ has is_replaceable => (
 );
 
 sub build_and_install_replacement {
-  my ($self, $event, $arg) = @_;
+  my ($self) = @_;
 
-  my $replacement_mri = $event->payload->{mri};
+  my $replacement_mri = $self->replacement_mri;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
