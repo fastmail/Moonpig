@@ -40,7 +40,7 @@ implicit_event_handlers {
     },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
-        method_name => 'create_own_replacement',
+        method_name => 'build_and_install_replacement',
       ),
     },
     'fail-over' => {
@@ -81,7 +81,7 @@ has is_replaceable => (
   traits => [ qw(Copy) ],
 );
 
-sub create_own_replacement {
+sub build_and_install_replacement {
   my ($self, $event, $arg) = @_;
 
   my $replacement_mri = $event->payload->{mri};
