@@ -4,8 +4,8 @@
   "assembler" : [
     "Markdown",
     {
-      "html_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.html",
-      "text_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.txt"
+      "html_wrapper": "/Moonpig/kit/wrapper/moonpig.html",
+      "text_wrapper": "/Moonpig/kit/wrapper/moonpig.txt"
     }
   ],
   "header": [
