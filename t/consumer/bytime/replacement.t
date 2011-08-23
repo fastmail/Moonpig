@@ -5,7 +5,6 @@ use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
-use Moonpig::URI;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
@@ -53,25 +52,28 @@ test "with_successor" => sub {
     my $stuff;
     my $xid = "consumer:test:" . guid_string();
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(initial => { class => class('Consumer::ByTime::FixedCost'),
-                                  bank               => dollars(31),
-                                  old_age            => years(1000),
-                                  charge_description => "test charge",
-                                  cost_amount        => dollars(1),
-                                  cost_period        => days(1),
-                                  replacement        => 'replacement',
-                                  replacement_mri => Moonpig::URI->nothing,
-                                  xid                => $xid,
-                                },
-                     replacement => { class => class('Consumer::ByTime::FixedCost'),
-                                      old_age            => years(1000),
-                                      charge_description => "test charge",
-                                      cost_amount        => dollars(1),
-                                      cost_period        => days(1),
-                                      replacement_mri => Moonpig::URI->nothing,
-                                      xid                => $xid,
-                                    },
-                     );
+      $stuff = build(
+        initial => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          bank               => dollars(31),
+          old_age            => years(1000),
+          charge_description => "test charge",
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          replacement        => 'replacement',
+          replacement_plan   => [ get => '/nothing' ],
+          xid                => $xid,
+        },
+        replacement => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          old_age            => years(1000),
+          charge_description => "test charge",
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          replacement_plan   => [ get => '/nothing' ],
+          xid                => $xid,
+        },
+      );
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 
@@ -120,10 +122,7 @@ test "without_successor" => sub {
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
   Moonpig->env->stop_clock_at($jan1);
 
-  plan tests => 4 * 3;
-
-  my $mri =
-    Moonpig::URI->new("moonpig://method?method=template_like_this");
+  plan tests => 3 * 3;
 
   for my $test (
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
@@ -137,15 +136,18 @@ test "without_successor" => sub {
     my $xid = "consumer:test:" . guid_string();
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer => { class => class('Consumer::ByTime::FixedCost'),
-                                   charge_description => "test charge",
-                                   old_age => days(20),
-                                   replacement_mri => $mri,
-                                   cost_amount        => dollars(1),
-                                   cost_period        => days(1),
-                                   bank => dollars(31),
-                                   xid => $xid,
-                                 });
+      $stuff = build(
+        consumer => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          charge_description => "test charge",
+          old_age            => days(20),
+          replacement_plan   => [ get => 'template-like-this' ],
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          bank               => dollars(31),
+          xid                => $xid,
+        }
+      );
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 
@@ -172,7 +174,6 @@ test "without_successor" => sub {
     my (undef, $ident, $payload) = @{$eq[0] || [undef, undef, {}]};
     is($ident, 'consumer-create-replacement', "event name");
     is($payload->{timestamp}->ymd, $succ_creation_date, "event date");
-    is($payload->{mri}, $mri,  "event MRI");
   }
 };
 
@@ -194,15 +195,18 @@ test "irreplaceable" => sub {
     my $xid = "consumer:test:" . guid_string();
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer => { class => class('Consumer::ByTime::FixedCost'),
-                                   old_age => days(20),
-                                   cost_amount        => dollars(1),
-                                   cost_period        => days(1),
-                                   charge_description => "test charge",
-                                   bank => dollars(10),
-                                   replacement_mri => Moonpig::URI->nothing,
-                                   xid => $xid,
-                                 });
+      $stuff = build(
+        consumer => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          old_age            => days(20),
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          charge_description => "test charge",
+          bank               => dollars(10),
+          replacement_plan   => [ get => '/nothing' ],
+          xid                => $xid,
+        }
+      );
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 

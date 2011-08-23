@@ -16,7 +16,9 @@ use MooseX::Types -declare => [ qw(
   EventName EventHandlerName EventHandler
   EventHandlerMap
 
-  GUID MRI XID
+  GUID XID
+
+  ReplacementPlan
 
   SingleLine TrimmedSingleLine
   NonBlankLine TrimmedNonBlankLine
@@ -35,14 +37,14 @@ use MooseX::Types -declare => [ qw(
 use 5.14.0;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str Object);
-# use MooseX::Types::Structured qw(Map);
+use MooseX::Types::Structured qw(Optional Tuple);
+
 use Data::GUID 0.046 ();
 use DateTime;
 use DateTime::Duration;
 use Email::Address;
 use Email::Valid;
 use Moonpig::DateTime;
-use Moonpig::URI;
 
 use namespace::autoclean;
 
@@ -134,17 +136,13 @@ subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
 
 ################################################################
 #
-# MRI
-{
-  my $str_type = subtype as Str, where { /\Amoonpig:/ };
+# ReplacementPlan
 
-  my $uri_type = subtype as (class_type '__URI_moonpig', +{ class => 'URI' }),
-    where { $_->scheme eq "moonpig" };
-
-  class_type MRI, { class => 'Moonpig::URI' };
-  coerce MRI, from $str_type, via { Moonpig::URI->new($_) },
-              from $uri_type, via { Moonpig::URI->new("$_") };
-}
+subtype ReplacementPlan, as Tuple[
+  enum([ qw(get post) ]),
+  Str,
+  Optional[ HashRef ],
+];
 
 ################################################################
 #

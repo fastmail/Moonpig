@@ -17,10 +17,10 @@ test "job-making invoice charge" => sub {
   Moonpig->env->storage->do_rw(sub {
     my $stuff = build(
       consumer => {
-        class           => class('=t::lib::Role::Consumer::JobCharger'),
-        replacement_mri => Moonpig::URI->nothing(),
-        old_age         => days(30),
-        make_active     => 1,
+        class            => class('=t::lib::Role::Consumer::JobCharger'),
+        replacement_plan => [ get => '/nothing' ],
+        old_age          => days(30),
+        make_active      => 1,
       },
     );
 

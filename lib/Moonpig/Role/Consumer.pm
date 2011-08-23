@@ -24,7 +24,7 @@ with(
 sub _class_subroute { return }
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(Ledger Millicents MRI TimeInterval XID);
+use Moonpig::Types qw(Ledger Millicents TimeInterval XID ReplacementPlan);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
@@ -40,7 +40,7 @@ implicit_event_handlers {
     },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
-        method_name => 'create_own_replacement',
+        method_name => 'build_and_install_replacement',
       ),
     },
     'fail-over' => {
@@ -63,49 +63,68 @@ has replacement => (
   predicate => 'has_replacement',
 );
 
-# If the consumer does not yet have a replacement, it may try to
-# manufacture a replacement as described by this MRI
-has replacement_mri => (
-  is => 'rw',
-  isa => MRI,
+has replacement_plan => (
+  is  => 'rw',
+  isa => ReplacementPlan,
   required => 1,
-  coerce => 1,
-  traits => [ qw(Copy) ],
+  traits   => [ qw(Array Copy) ],
+  handles  => {
+    replacement_plan_parts => 'elements',
+  },
 );
 
-# XXX this is for testing only; when we figure out replacement semantics
-has is_replaceable => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 1,
-  traits => [ qw(Copy) ],
-);
+sub build_and_install_replacement {
+  my ($self) = @_;
 
-sub create_own_replacement {
-  my ($self, $event, $arg) = @_;
-
-  my $replacement_mri = $event->payload->{mri};
+  # Shouldn't this be fatal? -- rjbs, 2011-08-22
+  return if $self->has_replacement;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
-  if ($self->is_replaceable && ! $self->has_replacement) {
-    # The replacement must be a consumer template, of course.
-    my $replacement_template = $replacement_mri->construct({
-      extra => { self => $self }
-    });
+  my $replacement_template = $self->_replacement_template;
 
-    return unless $replacement_template;
+  # i.e., it's okay if we return undef from _replacement_template; that's how
+  # "nothing" will work
+  return unless $replacement_template;
 
-    my $replacement = $self->ledger->add_consumer_from_template(
-      $replacement_template,
-      { xid => $self->xid },
-    );
+  my $replacement = $self->ledger->add_consumer_from_template(
+    $replacement_template,
+    { xid => $self->xid },
+  );
 
-    $self->replacement($replacement);
-    return $replacement;
+  $self->replacement($replacement);
+  return $replacement;
+}
+
+sub _replacement_template {
+  my ($self) = @_;
+
+  my ($method, $uri, $arg) = $self->replacement_plan_parts;
+
+  my @parts = split m{/}, $uri;
+
+  my $wrapped_method;
+
+  if ($parts[0] eq '') {
+    # /foo/bar -> [ '', 'foo', 'bar' ]
+    shift @parts;
+    $wrapped_method = Moonpig->env->route(\@parts);
+  } else {
+    $wrapped_method = $self->route(\@parts);
   }
 
-  return;
+  my $result;
+
+  if ($method eq 'get') {
+    $result = $wrapped_method->resource_get;
+  } elsif ($method eq 'post' or $method eq 'put') {
+    my $call = "resource_$method";
+    $result = $wrapped_method->$call($arg);
+  } else {
+    Moonpig::X->throw("illegal replacement XXX method");
+  }
+
+  return $result;
 }
 
 sub handle_cancel {
@@ -116,7 +135,7 @@ sub handle_cancel {
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
-    $self->replacement_mri(Moonpig::URI->nothing);
+    $self->replacement_plan([ get => '/nothing' ]);
   }
   return;
 }
@@ -233,14 +252,17 @@ sub copy_attr_hash__ {
   return \%hash;
 }
 
-
-sub template_like_this {
+publish template_like_this => {
+  '-http_method' => 'get',
+  '-path'        => 'template-like-this',
+} => sub {
   my ($self) = @_;
+
   return {
     class => $self->meta->name,
     arg   => $self->copy_attr_hash__,
   };
-}
+};
 
 PARTIAL_PACK {
   return {

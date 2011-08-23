@@ -190,8 +190,9 @@ test cancel_early => sub {
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
     ok(! $consumer->replacement, "account has no replacement yet");
-    isnt($consumer->replacement_mri->as_string, "moonpig://nothing",
-         "replacement MRI is not 'nothing'");
+
+    my @plan = $consumer->replacement_plan_parts;
+    isnt($plan[1], "/nothing", "replacement XXX uri is not 'nothing'");
   }
 
   $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
@@ -200,8 +201,9 @@ test cancel_early => sub {
     $ledger = Moonpig->env->storage
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
-    is($consumer->replacement_mri->as_string, "moonpig://nothing",
-       "replacement MRI has been changed to 'nothing'");
+
+    my @plan = $consumer->replacement_plan_parts;
+    is($plan[1], "/nothing", "replacement XXX uri is now 'nothing'");
   }
 };
 

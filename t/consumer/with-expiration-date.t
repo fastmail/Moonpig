@@ -25,15 +25,17 @@ sub jan {
 sub ledger_and_consumer {
   my ($self) = @_;
   Moonpig->env->stop_clock_at(jan(1));
-  my $stuff = build(consumer =>
-                      { class => class('Consumer::FixedExpiration'),
-                        expire_date => jan(3),
-                        cost_amount => 1,
-                        description => 'foo',
-                        old_age     => days(0), # lame
-                        replacement_mri    => Moonpig::URI->nothing(),
-                        xid => $XID
-                       });
+  my $stuff = build(
+    consumer => {
+      class            => class('Consumer::FixedExpiration'),
+      expire_date      => jan(3),
+      cost_amount      => 1,
+      description      => 'foo',
+      old_age          => days(0),                            # lame
+      replacement_plan => [ get => '/nothing' ],
+      xid              => $XID
+    }
+  );
   my ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
 };
 
@@ -41,8 +43,13 @@ test "no replacement" => sub {
   my ($self) = @_;
   Moonpig->env->storage->do_rw(sub {
     my ($ledger, $consumer) = $self->ledger_and_consumer;
-    is($consumer->replacement_mri->as_string, "moonpig://nothing",
-       "replacement: nothing");
+
+    is_deeply(
+      [ $consumer->replacement_plan_parts ],
+      [ get => '/nothing' ],
+      "replacement: nothing",
+    );
+
     is($ledger->active_consumer_for_xid($XID), $consumer,
        "Set up active consumer for this xid");
   });
@@ -59,8 +66,13 @@ test "expiration" => sub {
       $ledger->handle_event(event('heartbeat'));
       ok(($day < 3 xor $consumer->is_expired), "expired on day $day?")
     }
-    is($consumer->replacement_mri->as_string, "moonpig://nothing",
-       "replacement: still nothing");
+
+    is_deeply(
+      [ $consumer->replacement_plan_parts ],
+      [ get => '/nothing' ],
+      "replacement: still nothing",
+    );
+
     is($ledger->active_consumer_for_xid($XID), undef,
        "No longer active consumer for this xid?");
   });

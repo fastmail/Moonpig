@@ -38,16 +38,18 @@ test "charge" => sub {
 
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer =>
-                       { class => class('Consumer::ByTime::FixedCost'),
-                         bank            => dollars(10),
-                         old_age         => years(1000),
-                         cost_amount     => dollars(1),
-                         cost_period     => days(1),
-                         replacement_mri => Moonpig::URI->nothing(),
-                         charge_description => "test charge",
-                         xid             => xid(),
-                       });
+      $stuff = build(
+        consumer => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          bank               => dollars(10),
+          old_age            => years(1000),
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          replacement_plan   => [ get => '/nothing' ],
+          charge_description => "test charge",
+          xid                => xid(),
+        }
+      );
 
       Moonpig->env->save_ledger($stuff->{ledger});
     });
@@ -102,15 +104,17 @@ test "variable charge" => sub {
 
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer => { class => class('Consumer::ByTime',
-                                                  '=CostsTodaysDate'),
-                                   bank  => dollars(500),
-                                   extra_journal_charge_tags => [ "test" ],
-                                   old_age         => years(1000),
-                                   cost_period     => days(1),
-                                   replacement_mri => Moonpig::URI->nothing(),
-                                   xid => xid(),
-                                 });
+      $stuff = build(
+        consumer => {
+          class => class('Consumer::ByTime', '=CostsTodaysDate'),
+          bank  => dollars(500),
+          extra_journal_charge_tags => ["test"],
+          old_age                   => years(1000),
+          cost_period               => days(1),
+          replacement_plan          => [ get => '/nothing' ],
+          xid                       => xid(),
+        }
+      );
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 
@@ -151,15 +155,17 @@ test grace_period => sub {
 
       my $stuff;
       Moonpig->env->storage->do_rw(sub {
-        $stuff = build(consumer =>
-                         { class => class('Consumer::ByTime::FixedCost'),
-                           old_age         => days(0),
-                           cost_amount     => dollars(1),
-                           cost_period     => days(1),
-                           replacement_mri => Moonpig::URI->nothing(),
-                           charge_description => "test charge",
-                           xid             => xid(),
-                         });
+        $stuff = build(
+          consumer => {
+            class              => class('Consumer::ByTime::FixedCost'),
+            old_age            => days(0),
+            cost_amount        => dollars(1),
+            cost_period        => days(1),
+            replacement_plan   => [ get => '/nothing' ],
+            charge_description => "test charge",
+            xid                => xid(),
+          }
+        );
 
         Moonpig->env->save_ledger($stuff->{ledger});
       });

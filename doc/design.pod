@@ -298,7 +298,7 @@ destroyed again.
 
 =back
 
-=head2 External interface, XIDs, and Moonpig::URI
+=head2 External interface, XIDs
 
 Moonpig will support a web API for ICG's other systems to make
 requests of it.  Each entity external to Moonpig, such as a Pobox

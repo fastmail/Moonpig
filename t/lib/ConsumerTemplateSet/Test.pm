@@ -3,7 +3,6 @@ use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
 use Moonpig::Util qw(days dollars);
-use Moonpig::URI;
 
 use Data::GUID qw(guid_string);
 
@@ -28,8 +27,7 @@ sub templates {
           charge_description => 'boring test charge',
           extra_journal_charge_tags  => [ 'a.b.c' ],
 
-          # build the uri based on the $name -- rjbs, 2011-02-09
-          replacement_mri    => "moonpig://consumer-template/$name",
+          replacement_plan   => [ get => '/consumer-template/boring' ],
         },
       }
     },

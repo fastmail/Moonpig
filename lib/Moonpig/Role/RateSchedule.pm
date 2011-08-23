@@ -8,7 +8,7 @@ with(
   'Moonpig::Role::StubBuild',
 );
 
-use Moonpig::Types qw(Millicents MRI);
+use Moonpig::Types qw(Millicents);
 use Moonpig::Logger '$Logger';
 use MooseX::Types::Moose qw(Str);
 

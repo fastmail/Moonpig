@@ -6,6 +6,7 @@ use Moonpig;
 
 with(
   'Moonpig::Role::HandlesEvents',
+  'Stick::Role::Routable::AutoInstance',
   'Stick::Role::Routable::ClassAndInstance',
 );
 
@@ -15,6 +16,10 @@ use Moonpig::Ledger::PostTarget;
 use Moonpig::Util qw(class);
 
 use Moonpig::Context -all, '$Context';
+
+use Stick::Publisher;
+use Stick::Publisher::Publish;
+use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
 use namespace::autoclean;
 
@@ -49,8 +54,10 @@ sub _class_subroute {
   Moonpig::X->throw("cannot route through Moonpig environment class");
 }
 
-sub _instance_subroute {
-  my ($class, $path) = @_;
+publish nothing => { -http_method => 'get' } => sub { return undef };
+
+sub _extra_instance_subroute {
+  my ($self, $path) = @_;
 
   if ($path->[0] eq 'ledger') {
     shift @$path;
@@ -60,6 +67,15 @@ sub _instance_subroute {
   if ($path->[0] eq 'ledgers') {
     shift @$path;
     return 'Moonpig::Ledger::PostTarget';
+  }
+
+  if ($path->[0] eq 'consumer-template') {
+    shift @$path;
+    my $name = shift @$path;
+    return Stick::WrappedMethod->new({
+      invocant   => $self,
+      get_method => sub { $self->consumer_template($name); },
+    });
   }
 
   return;

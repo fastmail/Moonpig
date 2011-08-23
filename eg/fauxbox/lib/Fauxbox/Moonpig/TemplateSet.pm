@@ -3,7 +3,6 @@ use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
 use Moonpig::Util qw(days dollars);
-use Moonpig::URI;
 
 use namespace::autoclean;
 
@@ -14,8 +13,8 @@ sub templates {
 
       return {
         arg   => {
-          make_active     => 1,
-          replacement_mri => "moonpig://consumer-template/$name",
+          make_active      => 1,
+          replacement_plan => [ get => "/consumer-template/$name" ],
         },
       }
     },
@@ -28,10 +27,10 @@ sub templates {
           qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::BasicAccount)
         ],
         arg   => {
-          cost_period     => days(365),
-          old_age         => days(30),
+          cost_period      => days(365),
+          old_age          => days(30),
+          replacement_plan => [ get => "/consumer-template/$name" ],
           extra_journal_charge_tags     => [ 'fauxbox.basic' ],
-          replacement_mri => "moonpig://consumer-template/$name",
         },
       }
     },
@@ -50,7 +49,7 @@ sub templates {
           extra_journal_charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
-          replacement_mri    => "moonpig://consumer-template/$name",
+          replacement_plan => [ get => "/consumer-template/$name" ],
           charge_description => "test charge",
         },
       }

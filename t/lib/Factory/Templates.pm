@@ -5,7 +5,6 @@ with 'Moonpig::Role::ConsumerTemplateSet';
 use Moonpig;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class days dollars years);
-use Moonpig::URI;
 
 use Data::GUID qw(guid_string);
 
@@ -21,8 +20,8 @@ sub templates {
       return {
         roles => [ 'Consumer::Dummy' ],
         arg => {
-          replacement_mri => Moonpig::URI->nothing(),
-          xid             => $dummy_xid,
+          replacement_plan => [ get => '/nothing' ],
+          xid              => $dummy_xid,
          },
        }
     },
@@ -31,9 +30,9 @@ sub templates {
       return {
         roles => [ 'Consumer::DummyWithBank' ],
         arg => {
-          replacement_mri => Moonpig::URI->nothing(),
+          xid     => $dummy_xid,
           old_age => years(1000),
-          xid             => $dummy_xid,
+          replacement_plan => [ get => '/nothing' ],
         },
       }
     },
@@ -47,7 +46,7 @@ sub templates {
           cost_amount => dollars(100),
           cost_period => days(2),
           charge_description => 'quick consumer',
-          replacement_mri => Moonpig::URI->nothing(),
+          replacement_plan   => [ get => '/nothing' ],
         }};
     },
 
@@ -62,7 +61,7 @@ sub templates {
           cost_amount => dollars(500),
           cost_period => days(365 * 5 + 1),
           charge_description => 'long-term consumer',
-          replacement_mri    => "moonpig://consumer-template/free_sixthyear",
+          replacement_plan   => [ get => "/consumer-template/free_sixthyear" ],
 
           coupon_class => class(qw(Coupon::FixedPercentage Coupon::RequiredTags)),
           coupon_args => {
@@ -84,8 +83,8 @@ sub templates {
           cost_amount => dollars(100),
           cost_period => days(365),
           charge_description => 'free sixth-year consumer',
+          replacement_plan   => [ get => "/consumer-template/$name" ],
           extra_invoice_charge_tags  => [ "coupon.b5g1" ],
-          replacement_mri    => "moonpig://consumer-template/$name",
         },
       },
     },

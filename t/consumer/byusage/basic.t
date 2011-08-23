@@ -38,14 +38,15 @@ sub create_consumer {
   $args ||= {};
 
   my $stuff = build(
-    consumer => { class => class('Consumer::ByUsage'),
-                  bank => dollars(1),
-                  cost_per_unit => cents(5),
-                  old_age => days(30),
-                  replacement_mri => Moonpig::URI->nothing(),
-                  make_active => 1,
-                  %$args,
-                },
+    consumer => {
+      class            => class('Consumer::ByUsage'),
+      bank             => dollars(1),
+      cost_per_unit    => cents(5),
+      old_age          => days(30),
+      replacement_plan => [ get => '/nothing' ],
+      make_active      => 1,
+      %$args,
+    },
   );
 
   $Consumer = $stuff->{consumer};
@@ -119,12 +120,11 @@ test failed_hold => sub {
 
 test low_water_replacement => sub {
   my ($self) = @_;
-  my $MRI =
-    Moonpig::URI->new("moonpig://method?method=template_like_this");
+
   my $lwm = 7;
   $self->create_consumer({
     low_water_mark => $lwm,
-    replacement_mri => $MRI,
+    replacement_plan => [ get => 'template-like-this' ],
     old_age => 0,
   });
   my $q = 2;
@@ -188,8 +188,6 @@ test est_lifetime => sub {
 
 test "test lifetime replacement" => sub {
   my ($self) = @_;
-  my $MRI =
-    Moonpig::URI->new("moonpig://method?method=template_like_this");
   my $old_age = days(10);
 
   for my $q (1 .. 3) { # number of units to reserve each time
@@ -201,7 +199,7 @@ test "test lifetime replacement" => sub {
       $self->discard_ledger;
       $self->create_consumer({
         low_water_mark => 0,
-        replacement_mri => $MRI,
+        replacement_plan => [ get => 'template-like-this' ],
         old_age => $old_age,
       });
 
@@ -224,10 +222,9 @@ test "test lifetime replacement" => sub {
 
 test default_low_water_check => sub {
   my ($self) = @_;
-  my $MRI =
-    Moonpig::URI->new("moonpig://method?method=template_like_this");
+
   $self->create_consumer({
-    replacement_mri => $MRI,
+    replacement_plan => [ get => 'template-like-this' ],
     old_age => 0,
   });
   my $q = 0;

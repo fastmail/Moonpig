@@ -35,14 +35,14 @@ sub _test_ledgers_and_xids {
 
   for my $key (qw(1 2)) {
     $xid{ $key }    = $self->random_xid;
-    $ledger{ $key } = build(
-        consumer => {
-            class => class('Consumer::Dummy'),
-            xid   => $xid{$key},
-            make_active        => 1,
-            replacement_mri    => Moonpig::URI->nothing,
-        })->{ledger};
-
+    $ledger{$key}   = build(
+      consumer => {
+        class            => class('Consumer::Dummy'),
+        xid              => $xid{$key},
+        make_active      => 1,
+        replacement_plan => [ get => '/nothing' ],
+      }
+    )->{ledger};
 
     Moonpig->env->save_ledger($ledger{$key});
   }
@@ -86,7 +86,7 @@ test "one-ledger-per-xid safety" => sub {
         xid                => $xid->{2},
         make_active        => 1,
 
-        replacement_mri    => Moonpig::URI->nothing,
+        replacement_plan    => [ get => '/nothing' ],
       },
     );
 
@@ -142,7 +142,7 @@ test "registered abandoned xid" => sub {
       xid                => $xid->{1},
       make_active        => 1,
 
-      replacement_mri    => Moonpig::URI->nothing,
+      replacement_plan    => [ get => '/nothing' ],
     },
   );
 

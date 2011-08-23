@@ -102,10 +102,7 @@ sub create_hold_for_units {
           $self->estimated_lifetime <= $self->old_age) {
       # XXX code duplicated between ByTime and here
       unless ($self->has_replacement) {
-        $self->handle_event(event('consumer-create-replacement',
-                                  { timestamp => Moonpig->env->now,
-                                    mri => $self->replacement_mri,
-                                  }));
+        $self->handle_event(event('consumer-create-replacement'));
       }
     }
   }

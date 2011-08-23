@@ -1,7 +1,6 @@
 use Test::Routine;
 
 use Moonpig::Env::Test;
-use Moonpig::URI;
 use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
 use Test::Routine::Util;
@@ -40,8 +39,12 @@ test dummy => sub {
   is($ledger_a->active_consumer_for_xid($consumer->xid),
      undef,
      "old ledger no longer finds consumer for this xid");
-  is($copy->replacement_mri->as_string, $consumer->replacement_mri->as_string,
-     "same replacement_mri");
+
+  is_deeply(
+    [ $copy->replacement_plan_parts ],
+    [ $consumer->replacement_plan_parts ],
+    "same replacement_plan",
+  );
 };
 
 test bytime => sub {
@@ -54,7 +57,7 @@ test bytime => sub {
         cost_amount => cents(1234),
         cost_period => years(1),
         old_age => days(3),
-        replacement_mri => Moonpig::URI->nothing,
+        replacement_plan    => [ get => '/nothing' ],
         xid => "eat:more:possum:$make_active",
         make_active => $make_active,
       });
@@ -79,7 +82,7 @@ test with_bank => sub {
       cost_amount => cents(1234),
       cost_period => years(1),
       old_age => days(3),
-      replacement_mri => Moonpig::URI->nothing,
+      replacement_plan    => [ get => '/nothing' ],
       xid => $xid,
       make_active => 1,
     });
@@ -123,10 +126,9 @@ test with_replacement => sub {
   my ($self) = @_;
   my $cons_a = $ledger_a->add_consumer_from_template(
     "dummy",
-    { replacement_mri => "moonpig://consumer-template/boring" });
+    { replacement_plan => [ get => "/consumer-template/boring" ] });
   $cons_a->handle_event(
-    event("consumer-create-replacement",
-          { mri => $cons_a->replacement_mri }));
+    event("consumer-create-replacement"));
   ok($cons_a->has_replacement, "consumer now has replacement");
   my $repl_a = $cons_a->replacement;
   ok($repl_a->does("Moonpig::Role::Consumer::ByTime"),
