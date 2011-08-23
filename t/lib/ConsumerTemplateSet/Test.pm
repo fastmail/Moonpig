@@ -27,7 +27,7 @@ sub templates {
           charge_description => 'boring test charge',
           extra_journal_charge_tags  => [ 'a.b.c' ],
 
-          replacement_plan   => [ get => 'template-like-this' ],
+          replacement_plan   => [ get => '/consumer-template/boring' ],
         },
       }
     },

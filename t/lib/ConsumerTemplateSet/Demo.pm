@@ -22,8 +22,7 @@ sub templates {
           extra_journal_charge_tags  => [ 'yoyodyne.basic' ],
           grace_until        => Moonpig->env->now + days(3),
 
-          # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
-          replacement_plan   => [ get => 'template-like-this' ],
+          replacement_plan   => [ get => '/consumer-template/demo-service' ],
         },
       };
     }
