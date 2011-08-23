@@ -38,16 +38,18 @@ test "charge" => sub {
 
     my $stuff;
     Moonpig->env->storage->do_rw(sub {
-      $stuff = build(consumer =>
-                       { class => class('Consumer::ByTime::FixedCost'),
-                         bank            => dollars(10),
-                         old_age         => years(1000),
-                         cost_amount     => dollars(1),
-                         cost_period     => days(1),
-                         replacement_XXX => [ get => '/nothing' ],
-                         charge_description => "test charge",
-                         xid             => xid(),
-                       });
+      $stuff = build(
+        consumer => {
+          class              => class('Consumer::ByTime::FixedCost'),
+          bank               => dollars(10),
+          old_age            => years(1000),
+          cost_amount        => dollars(1),
+          cost_period        => days(1),
+          replacement_plan   => [ get => '/nothing' ],
+          charge_description => "test charge",
+          xid                => xid(),
+        }
+      );
 
       Moonpig->env->save_ledger($stuff->{ledger});
     });
@@ -109,7 +111,7 @@ test "variable charge" => sub {
           extra_journal_charge_tags => ["test"],
           old_age                   => years(1000),
           cost_period               => days(1),
-          replacement_XXX           => [ get => '/nothing' ],
+          replacement_plan          => [ get => '/nothing' ],
           xid                       => xid(),
         }
       );
@@ -159,7 +161,7 @@ test grace_period => sub {
             old_age            => days(0),
             cost_amount        => dollars(1),
             cost_period        => days(1),
-            replacement_XXX    => [ get => '/nothing' ],
+            replacement_plan   => [ get => '/nothing' ],
             charge_description => "test charge",
             xid                => xid(),
           }

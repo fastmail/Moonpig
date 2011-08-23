@@ -61,7 +61,7 @@ test "with_successor" => sub {
           cost_amount        => dollars(1),
           cost_period        => days(1),
           replacement        => 'replacement',
-          replacement_XXX    => [ get => '/nothing' ],
+          replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
         },
         replacement => {
@@ -70,7 +70,7 @@ test "with_successor" => sub {
           charge_description => "test charge",
           cost_amount        => dollars(1),
           cost_period        => days(1),
-          replacement_XXX    => [ get => '/nothing' ],
+          replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
         },
       );
@@ -141,7 +141,7 @@ test "without_successor" => sub {
           class              => class('Consumer::ByTime::FixedCost'),
           charge_description => "test charge",
           old_age            => days(20),
-          replacement_XXX    => [ get => 'template-like-this' ],
+          replacement_plan   => [ get => 'template-like-this' ],
           cost_amount        => dollars(1),
           cost_period        => days(1),
           bank               => dollars(31),
@@ -203,7 +203,7 @@ test "irreplaceable" => sub {
           cost_period        => days(1),
           charge_description => "test charge",
           bank               => dollars(10),
-          replacement_XXX    => [ get => '/nothing' ],
+          replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
         }
       );

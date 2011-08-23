@@ -25,15 +25,17 @@ sub jan {
 sub ledger_and_consumer {
   my ($self) = @_;
   Moonpig->env->stop_clock_at(jan(1));
-  my $stuff = build(consumer =>
-                      { class => class('Consumer::FixedExpiration'),
-                        expire_date => jan(3),
-                        cost_amount => 1,
-                        description => 'foo',
-                        old_age     => days(0), # lame
-                        replacement_XXX    => [ get => '/nothing' ],
-                        xid => $XID
-                       });
+  my $stuff = build(
+    consumer => {
+      class            => class('Consumer::FixedExpiration'),
+      expire_date      => jan(3),
+      cost_amount      => 1,
+      description      => 'foo',
+      old_age          => days(0),                            # lame
+      replacement_plan => [ get => '/nothing' ],
+      xid              => $XID
+    }
+  );
   my ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
 };
 
@@ -43,7 +45,7 @@ test "no replacement" => sub {
     my ($ledger, $consumer) = $self->ledger_and_consumer;
 
     is_deeply(
-      [ $consumer->replacement_XXX_parts ],
+      [ $consumer->replacement_plan_parts ],
       [ get => '/nothing' ],
       "replacement: nothing",
     );
@@ -66,7 +68,7 @@ test "expiration" => sub {
     }
 
     is_deeply(
-      [ $consumer->replacement_XXX_parts ],
+      [ $consumer->replacement_plan_parts ],
       [ get => '/nothing' ],
       "replacement: still nothing",
     );

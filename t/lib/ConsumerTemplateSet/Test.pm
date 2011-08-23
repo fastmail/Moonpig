@@ -27,8 +27,7 @@ sub templates {
           charge_description => 'boring test charge',
           extra_journal_charge_tags  => [ 'a.b.c' ],
 
-          # build the uri based on the $name -- rjbs, 2011-02-09
-          replacement_XXX    => [ get => 'template-like-this' ],
+          replacement_plan   => [ get => 'template-like-this' ],
         },
       }
     },

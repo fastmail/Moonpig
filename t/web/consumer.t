@@ -191,8 +191,8 @@ test cancel_early => sub {
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
     ok(! $consumer->replacement, "account has no replacement yet");
 
-    my @xxx = $consumer->replacement_XXX_parts;
-    isnt($xxx[1], "/nothing", "replacement XXX uri is not 'nothing'");
+    my @plan = $consumer->replacement_plan_parts;
+    isnt($plan[1], "/nothing", "replacement XXX uri is not 'nothing'");
   }
 
   $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
@@ -202,8 +202,8 @@ test cancel_early => sub {
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
 
-    my @xxx = $consumer->replacement_XXX_parts;
-    is($xxx[1], "/nothing", "replacement XXX uri is now 'nothing'");
+    my @plan = $consumer->replacement_plan_parts;
+    is($plan[1], "/nothing", "replacement XXX uri is now 'nothing'");
   }
 };
 

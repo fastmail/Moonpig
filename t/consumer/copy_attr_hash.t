@@ -11,7 +11,7 @@ use t::lib::Factory qw(build);
 
 use Moonpig::Context::Test -all, '$Context';
 
-my @basic = qw(canceled expired replacement_XXX xid);
+my @basic = qw(canceled expired replacement_plan xid);
 my @charges_bank = qw(extra_journal_charge_tags old_age);
 my @invoices = qw(extra_invoice_charge_tags);
 
@@ -32,7 +32,7 @@ test by_time => sub {
       consumer =>
         { class => class("Consumer::ByTime::FixedCost"),
           xid             => 'urn:uuid:' . guid_string,
-          replacement_XXX => [ get => '/nothing' ],
+          replacement_plan => [ get => '/nothing' ],
           charge_description => "dummy",
           cost_amount => dollars(1),
           cost_period => years(1),
@@ -58,13 +58,14 @@ test byusage => sub {
   my ($self) = @_;
   my $stuff = build(
     consumer => {
-      class => class("Consumer::ByUsage"),
-      xid             => 'urn:uuid:' . guid_string,
-      replacement_XXX => [ get => '/nothing' ],
-      cost_per_unit   => dollars(2),
-      low_water_mark  => 3,
-      old_age => years(1),
-    });
+      class            => class("Consumer::ByUsage"),
+      xid              => 'urn:uuid:' . guid_string,
+      replacement_plan => [ get => '/nothing' ],
+      cost_per_unit    => dollars(2),
+      low_water_mark   => 3,
+      old_age          => years(1),
+    }
+  );
   my $h = $stuff->{consumer}->copy_attr_hash__();
   cmp_deeply([keys %$h], bag(@basic, @charges_bank,
                              qw(cost_per_unit low_water_mark)));

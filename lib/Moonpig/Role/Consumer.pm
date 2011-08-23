@@ -63,14 +63,14 @@ has replacement => (
   predicate => 'has_replacement',
 );
 
-has replacement_XXX => (
+has replacement_plan => (
   is  => 'rw',
   isa => 'ArrayRef',
   # isa => 'ReplacementXXX', # XXX -- rjbs, 2011-08-22
   required => 1,
   traits   => [ qw(Array Copy) ],
   handles  => {
-    replacement_XXX_parts => 'elements',
+    replacement_plan_parts => 'elements',
   },
 );
 
@@ -100,7 +100,7 @@ sub build_and_install_replacement {
 sub _replacement_template {
   my ($self) = @_;
 
-  my ($method, $uri, $arg) = $self->replacement_XXX_parts;
+  my ($method, $uri, $arg) = $self->replacement_plan_parts;
 
   my @parts = split m{/}, $uri;
 
@@ -136,7 +136,7 @@ sub handle_cancel {
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
-    $self->replacement_XXX([ get => '/nothing' ]);
+    $self->replacement_plan([ get => '/nothing' ]);
   }
   return;
 }

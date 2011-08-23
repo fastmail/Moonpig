@@ -44,16 +44,18 @@ sub setup {
   $c_extra ||= {};
 
   return build(
-    consumer => { class => $CLASS,
-                  cost_amount        => dollars(1),
-                  cost_period        => days(1),
-                  old_age            => days(0),
-                  replacement_XXX    => [ get => '/nothing' ],
-                  charge_description => "test consumer",
-                  bank               => dollars(3),
-                  make_active        => 1,
-                  %$c_extra,
-                });
+    consumer => {
+      class              => $CLASS,
+      cost_amount        => dollars(1),
+      cost_period        => days(1),
+      old_age            => days(0),
+      replacement_plan   => [ get => '/nothing' ],
+      charge_description => "test consumer",
+      bank               => dollars(3),
+      make_active        => 1,
+      %$c_extra,
+    }
+  );
 }
 
 test "constructor_b" => sub {

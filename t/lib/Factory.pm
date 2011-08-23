@@ -145,15 +145,16 @@ example:
 
 =head2 Examples
 
-         my $stuff = build(
-           consumer => { class => class('Consumer::ByUsage'),
-                         bank => dollars(1),
-                         cost_per_unit => cents(5),
-                         old_age => days(30),
-                         replacement_XXX    => [ get => '/nothing' ],
-                         make_active => 1,
-                       },
-         );
+        my $stuff = build(
+          consumer => {
+            class            => class('Consumer::ByUsage'),
+            bank             => dollars(1),
+            cost_per_unit    => cents(5),
+            old_age          => days(30),
+            replacement_plan => [ get => '/nothing' ],
+            make_active      => 1,
+          },
+        );
 
 The C<$stuff> hash contains two elements.  C<  $stuff->{ledger} > is a
 regular ledger with a randomly-generated contact.  C< $stuff->{consumer} >

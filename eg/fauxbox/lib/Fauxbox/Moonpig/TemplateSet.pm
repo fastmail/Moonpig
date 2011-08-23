@@ -13,8 +13,8 @@ sub templates {
 
       return {
         arg   => {
-          make_active     => 1,
-          replacement_XXX => [ get => "/consumer-template/$name" ],
+          make_active      => 1,
+          replacement_plan => [ get => "/consumer-template/$name" ],
         },
       }
     },
@@ -27,10 +27,10 @@ sub templates {
           qw(Consumer::ByTime =Fauxbox::Moonpig::Consumer::BasicAccount)
         ],
         arg   => {
-          cost_period     => days(365),
-          old_age         => days(30),
+          cost_period      => days(365),
+          old_age          => days(30),
+          replacement_plan => [ get => "/consumer-template/$name" ],
           extra_journal_charge_tags     => [ 'fauxbox.basic' ],
-          replacement_XXX => [ get => "/consumer-template/$name" ],
         },
       }
     },
@@ -49,7 +49,7 @@ sub templates {
           extra_journal_charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
-          replacement_XXX => [ get => "/consumer-template/$name" ],
+          replacement_plan => [ get => "/consumer-template/$name" ],
           charge_description => "test charge",
         },
       }
