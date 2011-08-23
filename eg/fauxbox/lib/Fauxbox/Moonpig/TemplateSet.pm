@@ -15,7 +15,7 @@ sub templates {
       return {
         arg   => {
           make_active     => 1,
-          replacement_mri => "moonpig://consumer-template/$name",
+          replacement_XXX => [ get => "/consumer-template/$name" ],
         },
       }
     },
@@ -31,7 +31,7 @@ sub templates {
           cost_period     => days(365),
           old_age         => days(30),
           extra_journal_charge_tags     => [ 'fauxbox.basic' ],
-          replacement_mri => "moonpig://consumer-template/$name",
+          replacement_XXX => [ get => "/consumer-template/$name" ],
         },
       }
     },
@@ -50,7 +50,7 @@ sub templates {
           extra_journal_charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
-          replacement_mri    => "moonpig://consumer-template/$name",
+          replacement_XXX => [ get => "/consumer-template/$name" ],
           charge_description => "test charge",
         },
       }

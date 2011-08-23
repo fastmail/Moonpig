@@ -40,7 +40,7 @@ sub _test_ledgers_and_xids {
             class => class('Consumer::Dummy'),
             xid   => $xid{$key},
             make_active        => 1,
-            replacement_mri    => Moonpig::URI->nothing,
+            replacement_XXX    => [ get => '/nothing' ],
         })->{ledger};
 
 
@@ -86,7 +86,7 @@ test "one-ledger-per-xid safety" => sub {
         xid                => $xid->{2},
         make_active        => 1,
 
-        replacement_mri    => Moonpig::URI->nothing,
+        replacement_XXX    => [ get => '/nothing' ],
       },
     );
 
@@ -142,7 +142,7 @@ test "registered abandoned xid" => sub {
       xid                => $xid->{1},
       make_active        => 1,
 
-      replacement_mri    => Moonpig::URI->nothing,
+      replacement_XXX    => [ get => '/nothing' ],
     },
   );
 

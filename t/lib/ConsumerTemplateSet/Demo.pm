@@ -24,9 +24,7 @@ sub templates {
           grace_until        => Moonpig->env->now + days(3),
 
           # XXX: I have NFI what to do here, yet. -- rjbs, 2011-01-12
-          replacement_mri    => Moonpig::URI->new(
-            "moonpig://consumer-template/$name",
-          ),
+          replacement_XXX    => [ get => 'template-like-this' ],
         },
       };
     }

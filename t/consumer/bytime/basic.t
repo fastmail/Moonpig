@@ -48,7 +48,7 @@ sub setup {
                   cost_amount        => dollars(1),
                   cost_period        => days(1),
                   old_age            => days(0),
-                  replacement_mri    => Moonpig::URI->nothing(),
+                  replacement_XXX    => [ get => '/nothing' ],
                   charge_description => "test consumer",
                   bank               => dollars(3),
                   make_active        => 1,

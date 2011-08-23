@@ -29,7 +29,7 @@ sub templates {
           extra_journal_charge_tags  => [ 'a.b.c' ],
 
           # build the uri based on the $name -- rjbs, 2011-02-09
-          replacement_mri    => "moonpig://consumer-template/$name",
+          replacement_XXX    => [ get => 'template-like-this' ],
         },
       }
     },

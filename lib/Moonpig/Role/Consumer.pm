@@ -63,14 +63,15 @@ has replacement => (
   predicate => 'has_replacement',
 );
 
-# If the consumer does not yet have a replacement, it may try to
-# manufacture a replacement as described by this MRI
-has replacement_mri => (
-  is => 'rw',
-  isa => MRI,
+has replacement_XXX => (
+  is  => 'rw',
+  isa => 'ArrayRef',
+  # isa => 'ReplacementXXX', # XXX -- rjbs, 2011-08-22
   required => 1,
-  coerce => 1,
-  traits => [ qw(Copy) ],
+  traits   => [ qw(Array Copy) ],
+  handles  => {
+    replacement_XXX_parts => 'elements',
+  },
 );
 
 sub build_and_install_replacement {
@@ -79,15 +80,12 @@ sub build_and_install_replacement {
   # Shouldn't this be fatal? -- rjbs, 2011-08-22
   return if $self->has_replacement;
 
-  my $replacement_mri = $self->replacement_mri;
-
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
-  # The replacement must be a consumer template, of course.
-  my $replacement_template = $replacement_mri->construct({
-    extra => { self => $self }
-  });
+  my $replacement_template = $self->_replacement_template;
 
+  # i.e., it's okay if we return undef from _replacement_template; that's how
+  # "nothing" will work
   return unless $replacement_template;
 
   my $replacement = $self->ledger->add_consumer_from_template(
@@ -99,6 +97,37 @@ sub build_and_install_replacement {
   return $replacement;
 }
 
+sub _replacement_template {
+  my ($self) = @_;
+
+  my ($method, $uri, $arg) = $self->replacement_XXX_parts;
+
+  my @parts = split m{/}, $uri;
+
+  my $wrapped_method;
+
+  if ($parts[0] eq '') {
+    # /foo/bar -> [ '', 'foo', 'bar' ]
+    shift @parts;
+    $wrapped_method = Moonpig->env->route(\@parts);
+  } else {
+    $wrapped_method = $self->route(\@parts);
+  }
+
+  my $result;
+
+  if ($method eq 'get') {
+    $result = $wrapped_method->resource_get;
+  } elsif ($method eq 'post' or $method eq 'put') {
+    my $call = "resource_$method";
+    $result = $wrapped_method->$call($arg);
+  } else {
+    Moonpig::X->throw("illegal replacement XXX method");
+  }
+
+  return $result;
+}
+
 sub handle_cancel {
   my ($self, $event) = @_;
   return if $self->is_canceled;
@@ -107,7 +136,7 @@ sub handle_cancel {
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
-    $self->replacement_mri(Moonpig::URI->nothing);
+    $self->replacement_XXX([ get => '/nothing' ]);
   }
   return;
 }

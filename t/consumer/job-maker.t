@@ -18,7 +18,7 @@ test "job-making invoice charge" => sub {
     my $stuff = build(
       consumer => {
         class           => class('=t::lib::Role::Consumer::JobCharger'),
-        replacement_mri => Moonpig::URI->nothing(),
+        replacement_XXX => [ get => '/nothing' ],
         old_age         => days(30),
         make_active     => 1,
       },

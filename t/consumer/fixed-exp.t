@@ -32,7 +32,7 @@ test "fixed-expiration consumer" => sub {
       old_age     => days(0), # lame
       description => 'test fixed expiration consumer',
       expire_date => $expire_date,
-      replacement_mri    => Moonpig::URI->nothing(),
+      replacement_XXX    => [ get => '/nothing' ],
     });
     my $c = $stuff->{c};
     my $ledger = $c->ledger;

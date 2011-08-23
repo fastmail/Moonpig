@@ -11,7 +11,7 @@ use t::lib::Factory qw(build);
 
 use Moonpig::Context::Test -all, '$Context';
 
-my @basic = qw(canceled expired replacement_mri xid);
+my @basic = qw(canceled expired replacement_XXX xid);
 my @charges_bank = qw(extra_journal_charge_tags old_age);
 my @invoices = qw(extra_invoice_charge_tags);
 
@@ -32,7 +32,7 @@ test by_time => sub {
       consumer =>
         { class => class("Consumer::ByTime::FixedCost"),
           xid             => 'urn:uuid:' . guid_string,
-          replacement_mri => Moonpig::URI->nothing(),
+          replacement_XXX => [ get => '/nothing' ],
           charge_description => "dummy",
           cost_amount => dollars(1),
           cost_period => years(1),
@@ -60,7 +60,7 @@ test byusage => sub {
     consumer => {
       class => class("Consumer::ByUsage"),
       xid             => 'urn:uuid:' . guid_string,
-      replacement_mri => Moonpig::URI->nothing(),
+      replacement_XXX => [ get => '/nothing' ],
       cost_per_unit   => dollars(2),
       low_water_mark  => 3,
       old_age => years(1),

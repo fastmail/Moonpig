@@ -40,8 +40,12 @@ test dummy => sub {
   is($ledger_a->active_consumer_for_xid($consumer->xid),
      undef,
      "old ledger no longer finds consumer for this xid");
-  is($copy->replacement_mri->as_string, $consumer->replacement_mri->as_string,
-     "same replacement_mri");
+
+  is_deeply(
+    [ $copy->replacement_XXX_parts ],
+    [ $consumer->replacement_XXX_parts ],
+    "same replacement_XXX",
+  );
 };
 
 test bytime => sub {
@@ -54,7 +58,7 @@ test bytime => sub {
         cost_amount => cents(1234),
         cost_period => years(1),
         old_age => days(3),
-        replacement_mri => Moonpig::URI->nothing,
+        replacement_XXX    => [ get => '/nothing' ],
         xid => "eat:more:possum:$make_active",
         make_active => $make_active,
       });
@@ -79,7 +83,7 @@ test with_bank => sub {
       cost_amount => cents(1234),
       cost_period => years(1),
       old_age => days(3),
-      replacement_mri => Moonpig::URI->nothing,
+      replacement_XXX    => [ get => '/nothing' ],
       xid => $xid,
       make_active => 1,
     });
@@ -123,7 +127,7 @@ test with_replacement => sub {
   my ($self) = @_;
   my $cons_a = $ledger_a->add_consumer_from_template(
     "dummy",
-    { replacement_mri => "moonpig://consumer-template/boring" });
+    { replacement_XXX => [ get => "/consumer-template/boring" ] });
   $cons_a->handle_event(
     event("consumer-create-replacement"));
   ok($cons_a->has_replacement, "consumer now has replacement");

@@ -151,7 +151,7 @@ example:
                          bank => dollars(1),
                          cost_per_unit => cents(5),
                          old_age => days(30),
-                         replacement_mri => Moonpig::URI->nothing(),
+                         replacement_XXX    => [ get => '/nothing' ],
                          make_active => 1,
                        },
          );
