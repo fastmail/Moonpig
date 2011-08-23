@@ -5,7 +5,6 @@ with 'Moonpig::Role::ConsumerTemplateSet';
 use Moonpig;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class days dollars years);
-use Moonpig::URI;
 
 use Data::GUID qw(guid_string);
 

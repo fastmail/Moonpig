@@ -8,7 +8,6 @@ use Class::MOP ();
 use Data::GUID qw(guid_string);
 
 use Moonpig::Env::Test;
-use Moonpig::URI;
 use Moonpig::Util -all;
 
 use Sub::Exporter -setup => {

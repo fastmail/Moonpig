@@ -3,7 +3,6 @@ use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
 use Moonpig::Util qw(days dollars);
-use Moonpig::URI;
 
 use namespace::autoclean;
 

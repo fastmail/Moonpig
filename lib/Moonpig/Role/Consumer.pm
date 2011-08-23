@@ -24,7 +24,7 @@ with(
 sub _class_subroute { return }
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(Ledger Millicents MRI TimeInterval XID);
+use Moonpig::Types qw(Ledger Millicents TimeInterval XID);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';

@@ -5,7 +5,6 @@ use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
-use Moonpig::URI;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;

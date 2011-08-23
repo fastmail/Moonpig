@@ -33,7 +33,6 @@ contact-humans:
 consumer-create-replacement:
   why    : tells a consumer to set up its replacement
   args   : 
-    mri: replacement MRI
   sent to: consumer
   sent by: itself
   known handlers:

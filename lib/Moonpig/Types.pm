@@ -16,7 +16,7 @@ use MooseX::Types -declare => [ qw(
   EventName EventHandlerName EventHandler
   EventHandlerMap
 
-  GUID MRI XID
+  GUID XID
 
   SingleLine TrimmedSingleLine
   NonBlankLine TrimmedNonBlankLine
@@ -42,7 +42,6 @@ use DateTime::Duration;
 use Email::Address;
 use Email::Valid;
 use Moonpig::DateTime;
-use Moonpig::URI;
 
 use namespace::autoclean;
 
@@ -131,20 +130,6 @@ coerce TrimmedNonBlankLine,
 subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
 
 subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
-
-################################################################
-#
-# MRI
-{
-  my $str_type = subtype as Str, where { /\Amoonpig:/ };
-
-  my $uri_type = subtype as (class_type '__URI_moonpig', +{ class => 'URI' }),
-    where { $_->scheme eq "moonpig" };
-
-  class_type MRI, { class => 'Moonpig::URI' };
-  coerce MRI, from $str_type, via { Moonpig::URI->new($_) },
-              from $uri_type, via { Moonpig::URI->new("$_") };
-}
 
 ################################################################
 #
