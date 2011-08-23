@@ -18,6 +18,8 @@ use MooseX::Types -declare => [ qw(
 
   GUID XID
 
+  ReplacementPlan
+
   SingleLine TrimmedSingleLine
   NonBlankLine TrimmedNonBlankLine
 
@@ -35,7 +37,8 @@ use MooseX::Types -declare => [ qw(
 use 5.14.0;
 
 use MooseX::Types::Moose qw(ArrayRef HashRef Int Num Str Object);
-# use MooseX::Types::Structured qw(Map);
+use MooseX::Types::Structured qw(Optional Tuple);
+
 use Data::GUID 0.046 ();
 use DateTime;
 use DateTime::Duration;
@@ -130,6 +133,16 @@ coerce TrimmedNonBlankLine,
 subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
 
 subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
+
+################################################################
+#
+# ReplacementPlan
+
+subtype ReplacementPlan, as Tuple[
+  enum([ qw(get post) ]),
+  Str,
+  Optional[ HashRef ],
+];
 
 ################################################################
 #

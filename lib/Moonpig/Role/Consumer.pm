@@ -24,7 +24,7 @@ with(
 sub _class_subroute { return }
 
 use MooseX::SetOnce;
-use Moonpig::Types qw(Ledger Millicents TimeInterval XID);
+use Moonpig::Types qw(Ledger Millicents TimeInterval XID ReplacementPlan);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
@@ -65,8 +65,7 @@ has replacement => (
 
 has replacement_plan => (
   is  => 'rw',
-  isa => 'ArrayRef',
-  # isa => 'ReplacementXXX', # XXX -- rjbs, 2011-08-22
+  isa => ReplacementPlan,
   required => 1,
   traits   => [ qw(Array Copy) ],
   handles  => {
