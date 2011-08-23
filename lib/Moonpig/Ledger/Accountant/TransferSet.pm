@@ -1,8 +1,13 @@
+use strict;
+use warnings;
+
 package Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::TransferUtil ();
 
 sub new {
   my ($class, $array) = @_;
+  $array ||= [];
+
   bless [ @$array ] => $class;
 }
 
@@ -66,6 +71,7 @@ sub _make_filter {
 
 BEGIN {
   for my $type (Moonpig::TransferUtil::transfer_types) {
+    no strict 'refs';
     *{"$type\_only"} = _make_filter(sub { $_[0]->type eq $type });
   }
 }
