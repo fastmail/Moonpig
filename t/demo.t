@@ -145,17 +145,19 @@ test "end to end demo" => sub {
 
   $Ledger = build_ledger();
 
+  my $consumer;
+
   Moonpig->env->storage->do_rw(sub {
     Moonpig->env->save_ledger($Ledger);
-  });
 
-  my $consumer = $Ledger->add_consumer_from_template(
-    'demo-service',
-    {
-      xid                => $self->xid,
-      make_active        => 1,
-    },
-  );
+    $consumer = $Ledger->add_consumer_from_template(
+      'demo-service',
+      {
+        xid                => $self->xid,
+        make_active        => 1,
+      },
+    );
+  });
 
   for my $day (1 .. 760) {
     Moonpig->env->process_email_queue;
