@@ -1,5 +1,5 @@
 {
-  "kit_reader": "SWAK",
+  "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
   "renderer"  : [
     "Text::Template",
     {

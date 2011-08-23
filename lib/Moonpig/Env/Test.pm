@@ -208,4 +208,6 @@ sub format_guid {
   return ($reg->{ $guid } ||= $i++)
 }
 
+sub share_roots {}
+
 1;
