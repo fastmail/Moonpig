@@ -35,7 +35,10 @@ use Sub::Exporter -setup => [ qw(
 my $COMPOSITOR = MooseX::ClassCompositor->new({
   class_basename  => 'Moonpig::Class',
   class_metaroles => {
-    class => [ 'MooseX::StrictConstructor::Trait::Class' ],
+    class => [
+      'MooseX::StrictConstructor::Trait::Class',
+      'Stick::Trait::Class::CanQueryPublished',
+    ],
   },
   role_prefixes   => {
    ''    => 'Moonpig::Role::',
