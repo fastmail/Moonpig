@@ -18,7 +18,10 @@ has UA => (
   is => 'ro',
   lazy => 1,
   default => sub {
-    LWP::UserAgent->new($_[0]->agent_string);
+    LWP::UserAgent->new(
+      agent      => $_[0]->agent_string,
+      keep_alive => 1,
+    );
   },
   handles => [ qw(get post) ],
 );
