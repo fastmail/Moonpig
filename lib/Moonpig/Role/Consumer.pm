@@ -224,13 +224,17 @@ sub copy_attr_hash__ {
   return \%hash;
 }
 
-sub template_like_this {
+publish template_like_this => {
+  '-http_method' => 'get',
+  '-path'        => 'template-like-this',
+} => sub {
   my ($self) = @_;
+
   return {
     class => $self->meta->name,
     arg   => $self->copy_attr_hash__,
   };
-}
+};
 
 PARTIAL_PACK {
   return {
