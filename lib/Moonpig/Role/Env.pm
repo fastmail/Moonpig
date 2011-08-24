@@ -90,4 +90,8 @@ sub import {
   Moonpig->set_env($THIS)
 };
 
+sub STORABLE_freeze {
+  confess "attempted to Storable::freeze the environment";
+}
+
 1;
