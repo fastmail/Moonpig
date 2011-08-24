@@ -8,21 +8,9 @@ use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 
-# BEGIN HUGE AWFUL HACK -- rjbs, 2010-12-16
-$ENV{MOONPIG_MKITS_DIR} = 'share/kit';
-use File::ShareDir;
-BEGIN {
-  my $orig = File::ShareDir->can('dist_dir');
-  Sub::Install::reinstall_sub({
-    into => 'File::ShareDir',
-    as   => 'dist_dir',
-    code => sub {
-      return 'share' if $_[0] eq 'Moonpig';
-      return $orig->(@_);
-    },
-  });
-}
-# END HUGE AWFUL HACK -- rjbs, 2010-12-16
+use Test::File::ShareDir -share => {
+  -dist   => { 'Moonpig' => 'share' }
+};
 
 use Carp qw(croak confess);
 use Email::Sender::Transport::Test;

@@ -25,6 +25,15 @@ use namespace::autoclean;
 
 requires 'share_roots';
 
+around share_roots => sub {
+  my ($orig, $self) = @_;
+  my @roots = $self->$orig;
+  return (
+    @roots,
+    File::ShareDir::dist_dir('Moonpig'),
+  );
+};
+
 requires 'register_object';
 requires 'now';
 

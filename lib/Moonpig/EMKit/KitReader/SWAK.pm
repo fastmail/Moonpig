@@ -17,7 +17,6 @@ sub BUILD {
       resolvers => [
         (map {; Path::Resolver::Resolver::FileSystem->new({ root => $_ }), }
           Moonpig->env->share_roots),
-        Path::Resolver::Resolver::DistDir->new({ dist_name => 'Moonpig' }),
       ],
     })
   );
