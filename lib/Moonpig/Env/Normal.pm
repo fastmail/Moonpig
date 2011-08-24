@@ -9,6 +9,8 @@ with 'Moonpig::Role::Env';
 
 use namespace::autoclean;
 
+sub share_roots {}
+
 sub handle_queue_email {
   my ($self, $event, $arg) = @_;
 

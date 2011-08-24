@@ -23,6 +23,8 @@ use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
 use namespace::autoclean;
 
+requires 'share_roots';
+
 requires 'register_object';
 requires 'now';
 
