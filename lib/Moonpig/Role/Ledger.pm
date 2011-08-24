@@ -23,13 +23,23 @@ with(
   'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::HasCollection' => {
     item => 'refund',
-    item_roles => [ 'Moonpig::Role::Refund' ],
+    # These are only because we use the refund collection for collection tests
+    collection_roles => [ [ 'Stick::Role::Collection::Sortable' => "Sortable" =>
+                              { default_sort_key => 'guid' } ],
+                          'Stick::Role::Collection::Pageable',
+                          [ 'Stick::Role::Collection::Mutable' => "Mutable" =>
+                              { add_this_item => "add_this_refund",
+                                item_roles => [ 'Moonpig::Role::Refund' ],
+                              } ],
+                         ],
   },
   'Stick::Role::HasCollection' => {
     item => 'consumer',
-    item_roles => [ 'Moonpig::Role::Consumer' ],
-    collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras' ],
-    post_action => 'add_from_template',
+    collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras',
+                          [ 'Stick::Role::Collection::Mutable' => "Mutable" =>
+                              { add_this_item => 'add_from_template',
+                                item_roles => [ 'Moonpig::Role::Consumer' ],
+                              } ] ],
   },
   'Stick::Role::HasCollection' => {
     item => 'bank',
