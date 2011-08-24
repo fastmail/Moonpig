@@ -1,16 +1,21 @@
 {
-  "kit_reader": "SWAK",
-  "renderer"  : "Text::Template",
+  "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
+  "renderer"  : [
+    "Text::Template",
+    {
+      "template_args": { "DELIMITERS": [ "{{", "}}" ] }
+    }
+  ],
   "assembler" : [
     "Markdown",
     {
-      "html_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.html",
-      "text_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.txt"
+      "html_wrapper": "/Moonpig/kit/wrapper/wrapper.html",
+      "text_wrapper": "/Moonpig/kit/wrapper/wrapper.txt"
     }
   ],
   "header": [
-    { "Subject": "{$subject}" },
-    { "To":      "{ join q{,}, @to_addresses }" },
+    { "Subject": "{{$subject}}" },
+    { "To":      "{{ join q{,}, @to_addresses }}" },
     { "From":    "\"Moonpig Support\" <moonpig@example.com>" }
   ],
   "validator": [

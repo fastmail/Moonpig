@@ -1,5 +1,5 @@
 {
-  "kit_reader": "SWAK",
+  "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
   "renderer"  : [
     "Text::Template",
     {
@@ -9,8 +9,8 @@
   "assembler" : [
     "Markdown",
     {
-      "html_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.html",
-      "text_wrapper": "/dist/Moonpig/kit/wrapper/moonpig.txt"
+      "html_wrapper": "/Moonpig/kit/wrapper/wrapper.html",
+      "text_wrapper": "/Moonpig/kit/wrapper/wrapper.txt"
     }
   ],
   "header": [

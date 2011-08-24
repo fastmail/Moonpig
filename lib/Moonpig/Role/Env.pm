@@ -17,11 +17,38 @@ use Moonpig::Util qw(class);
 
 use Moonpig::Context -all, '$Context';
 
+use Moose::Util::TypeConstraints;
+
 use Stick::Publisher;
 use Stick::Publisher::Publish;
 use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
 use namespace::autoclean;
+
+requires 'share_roots';
+
+around share_roots => sub {
+  my ($orig, $self) = @_;
+  my @roots = $self->$orig;
+  return (
+    @roots,
+    File::ShareDir::dist_dir('Moonpig'),
+  );
+};
+
+requires 'default_from_email_address';
+has from_email_address => (
+  isa => class_type('Email::Address'),
+  lazy     => 1,
+  required => 1,
+  init_arg => undef,
+  builder  => 'default_from_email_address',
+  handles  => {
+    from_email_address_mailbox => 'address',
+    from_email_address_phrase  => 'phrase',
+    from_email_address_string  => 'format',
+  }
+);
 
 requires 'register_object';
 requires 'now';
@@ -87,5 +114,9 @@ sub import {
   my $THIS = $MP_ENV{ $class } ||= $class->new;
   Moonpig->set_env($THIS)
 };
+
+sub STORABLE_freeze {
+  confess "attempted to Storable::freeze the environment";
+}
 
 1;

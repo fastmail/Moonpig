@@ -34,4 +34,15 @@ sub import {
   Moonpig->set_env($THIS)
 };
 
+sub share_roots {
+  return File::Spec->catdir($ENV{FAUXBOX_ROOT}, 'share');
+}
+
+sub default_from_email_address {
+  Email::Address->new(
+    'Moonpig',
+    'moonpig@fauxbox.com',
+  );
+}
+
 1;

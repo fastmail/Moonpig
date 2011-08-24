@@ -466,7 +466,7 @@ sub _send_mkit {
   my ($self, $event, $arg) = @_;
 
   my $to   = [ $self->contact->email_addresses ];
-  my $from = 'devnull@example.com';
+  my $from = Moonpig->env->from_email_address_mailbox;
 
   my $email = Moonpig::MKits->kit($event->payload->{kit})->assemble(
     $event->payload->{arg},

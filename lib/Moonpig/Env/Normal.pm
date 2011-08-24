@@ -9,6 +9,12 @@ with 'Moonpig::Role::Env';
 
 use namespace::autoclean;
 
+sub share_roots {}
+
+sub default_from_email_address {
+  confess "unimplemented";
+}
+
 sub handle_queue_email {
   my ($self, $event, $arg) = @_;
 
