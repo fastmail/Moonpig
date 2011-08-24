@@ -63,6 +63,8 @@ sub perform_dunning {
 sub _send_invoice {
   my ($self, $invoices) = @_;
 
+  # invoices has arrived here pre-sorted by ->perform_dunning
+
   $_->close for grep { $_->is_open } @$invoices;
 
   $Logger->log([
