@@ -17,6 +17,8 @@ use Moonpig::Util qw(class);
 
 use Moonpig::Context -all, '$Context';
 
+use Moose::Util::TypeConstraints;
+
 use Stick::Publisher;
 use Stick::Publisher::Publish;
 use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
@@ -33,6 +35,20 @@ around share_roots => sub {
     File::ShareDir::dist_dir('Moonpig'),
   );
 };
+
+requires 'default_from_email_address';
+has from_email_address => (
+  isa => class_type('Email::Address'),
+  lazy     => 1,
+  required => 1,
+  init_arg => undef,
+  builder  => 'default_from_email_address',
+  handles  => {
+    from_email_address_mailbox => 'address',
+    from_email_address_phrase  => 'phrase',
+    from_email_address_string  => 'format',
+  }
+);
 
 requires 'register_object';
 requires 'now';

@@ -13,6 +13,7 @@ use Test::File::ShareDir -share => {
 };
 
 use Carp qw(croak confess);
+use Email::Address;
 use Email::Sender::Transport::Test;
 use Moonpig::X;
 use Moonpig::DateTime;
@@ -21,6 +22,13 @@ use Moonpig::Types qw(Time);
 use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
+
+sub default_from_email_address {
+  Email::Address->new(
+    'Moonpig',
+    'moonpig@example.com',
+  );
+}
 
 has object_registry => (
   is   => 'ro',
