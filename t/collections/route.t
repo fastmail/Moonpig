@@ -97,7 +97,7 @@ test "add item to a collection" => sub {
   ok($collection);
   is($collection->count, 0, "no banks yet");
   ok($collection->can('resource_post'), "can post");
-  $collection->resource_request(post => { new_item => $b });
+  $collection->resource_request(post => { attributes => $b });
   is($collection->count, 1, "added bank via post");
   is($collection->_subroute(['guid', $b->guid]), $b, "bank is available");
 };

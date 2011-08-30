@@ -27,10 +27,8 @@ with(
     collection_roles => [ [ 'Stick::Role::Collection::Sortable' => "Sortable" =>
                               { default_sort_key => 'guid' } ],
                           'Stick::Role::Collection::Pageable',
-                          [ 'Stick::Role::Collection::Mutable' => "Mutable" =>
-                              { add_this_item => "add_this_refund",
-                                item_roles => [ 'Moonpig::Role::Refund' ],
-                              } ],
+                          'Moonpig::Role::Collection::RefundExtras',
+                          'Stick::Role::Collection::Mutable',
                          ],
   },
   'Stick::Role::HasCollection' => {
@@ -38,41 +36,36 @@ with(
     collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras',
                           [ 'Stick::Role::Collection::Mutable' => "Mutable" =>
                               { add_this_item => 'add_from_template',
-                                item_roles => [ 'Moonpig::Role::Consumer' ],
                               } ] ],
   },
   'Stick::Role::HasCollection' => {
     item => 'bank',
-    item_roles => [ 'Moonpig::Role::Bank' ],
+  # These are only because we use the refund collection for collection tests
+    collection__roles => [ 'Stick::Role::Collection::Pageable' ],
   },
   'Stick::Role::HasCollection' => {
     item => 'credit',
-    item_roles => [ 'Moonpig::Role::Credit' ],
     collection_roles => [ 'Moonpig::Role::Collection::CreditExtras' ],
     post_action => 'add_credit',
   },
   'Stick::Role::HasCollection' => {
     item => 'invoice',
-    item_roles => [ 'Moonpig::Role::Invoice' ],
     collection_roles => [ 'Moonpig::Role::Collection::InvoiceExtras' ],
     default_sort_key => 'created_at',
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
     item => 'journal',
-    item_roles => [ 'Moonpig::Role::Journal' ],
     default_sort_key => 'created_at',
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
     item => 'coupon',
-    item_roles => [ 'Moonpig::Role::Coupon' ],
     collection_roles => [ ],
     default_sort_key => 'created_at',
   },
   'Stick::Role::HasCollection' => {
     item => 'job',
-    item_roles => [ ],
     is => 'ro',
    },
   'Stick::Role::PublicResource::GetSelf',
@@ -233,6 +226,7 @@ sub _generate_subcomponent_methods {
       as   => $add_this_thing,
       code => sub {
         my ($self, $thing) = @_;
+        warn "# thing = $thing\n";
         confess "Can only add this $thing to its own ledger"
           unless $thing->ledger->guid eq $self->guid;
 
