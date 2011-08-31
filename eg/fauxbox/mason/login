@@ -10,6 +10,7 @@
   <li>there are no users!  <a href='/signup'>go sign up!</a></li>
 % }
 % for my $client (@clients) {
-  <li><% $client->username |h %></li>
+  <li><a href='/dashboard?username=<% $client->username |h %>'><%
+  $client->username |h %></a></li>
 % }
 </ul>
