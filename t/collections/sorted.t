@@ -68,8 +68,8 @@ test "miscellaneous tests" => sub {
   my $cc = $Ledger->consumer_collection;
 
   like( exception { $cc->all_sorted },
-        qr/no sort key defined/i,
-        "no default sort key for consumers" );
+        qr/\ACan't locate object method "all_sorted"/i,
+        "consumer collection does not implement sorting" );
 
  # Can't get TODO working with Test::Routine
  TODO: {
