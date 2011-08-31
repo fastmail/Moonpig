@@ -10,6 +10,8 @@ use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(ArrayRef);
 
+use Moonpig::Behavior::Packable;
+
 use namespace::autoclean;
 
 has extra_journal_charge_tags => (
@@ -114,4 +116,13 @@ sub move_bank_to__ {
         $transient_invoice);
     });
 }
+
+PARTIAL_PACK {
+  my ($self) = @_;
+  return {
+    unapplied_amount => $self->has_bank
+                      ? $self->bank->unapplied_amount
+                      : undef,
+  };
+};
 1;
