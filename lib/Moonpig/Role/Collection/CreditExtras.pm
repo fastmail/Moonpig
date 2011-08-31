@@ -24,5 +24,7 @@ publish add_credit => { -http_method => 'post',
   });
 };
 
+*add = \&add_credit;
+
 1;
 

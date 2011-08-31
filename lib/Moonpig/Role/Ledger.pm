@@ -47,8 +47,9 @@ with(
   },
   'Stick::Role::HasCollection' => {
     item => 'credit',
-    collection_roles => [ 'Moonpig::Role::Collection::CreditExtras' ],
-    post_action => 'add_credit',
+    collection_roles => [ 'Moonpig::Role::Collection::CreditExtras',
+                          'Stick::Role::Collection::Mutable',
+                         ],
   },
   'Stick::Role::HasCollection' => {
     item => 'invoice',
