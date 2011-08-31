@@ -82,8 +82,7 @@ test "collection object" => sub {
     is($c->count, @r, "collection contains $_ refund(s)" );
     is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
     last if $_ == 5;
-    push @r, my $next_refund = class('Refund')->new({ledger => $Ledger});
-    $c->add({ attributes => $next_refund });
+    push @r, my $next_refund = $c->add();
     $Ledger->create_transfer({
       type => 'credit_application',
       from => $credit,

@@ -23,7 +23,7 @@ with(
   'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::HasCollection' => {
     item => 'refund',
-    # These are only because we use the refund collection for collection tests
+    # These are only here because we use the refund collection for collection tests
     collection_roles => [ [ 'Stick::Role::Collection::Sortable' => "Sortable" =>
                               { default_sort_key => 'guid' } ],
                           'Stick::Role::Collection::Pageable',
@@ -34,14 +34,16 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'consumer',
     collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras',
-                          [ 'Stick::Role::Collection::Mutable' => "Mutable" =>
-                              { add_this_item => 'add_from_template',
-                              } ] ],
+                          'Stick::Role::Collection::Mutable',
+                         ]
   },
   'Stick::Role::HasCollection' => {
     item => 'bank',
-  # These are only because we use the refund collection for collection tests
-    collection__roles => [ 'Stick::Role::Collection::Pageable' ],
+  # This is only here because we use the bank collection for collection tests
+    collection_roles => [ 'Moonpig::Role::Collection::BankExtras',
+                          'Stick::Role::Collection::Pageable',
+                          'Stick::Role::Collection::Mutable',
+                         ],
   },
   'Stick::Role::HasCollection' => {
     item => 'credit',
@@ -51,18 +53,15 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'invoice',
     collection_roles => [ 'Moonpig::Role::Collection::InvoiceExtras' ],
-    default_sort_key => 'created_at',
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
     item => 'journal',
-    default_sort_key => 'created_at',
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
     item => 'coupon',
     collection_roles => [ ],
-    default_sort_key => 'created_at',
   },
   'Stick::Role::HasCollection' => {
     item => 'job',
@@ -226,7 +225,6 @@ sub _generate_subcomponent_methods {
       as   => $add_this_thing,
       code => sub {
         my ($self, $thing) = @_;
-        warn "# thing = $thing\n";
         confess "Can only add this $thing to its own ledger"
           unless $thing->ledger->guid eq $self->guid;
 

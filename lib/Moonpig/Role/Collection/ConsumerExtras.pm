@@ -20,5 +20,7 @@ publish add_from_template => { -http_method => 'post',
   });
 };
 
+*add = \&add_from_template;
+
 1;
 

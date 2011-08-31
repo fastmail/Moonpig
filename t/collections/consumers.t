@@ -44,9 +44,9 @@ test "route to ad-hoc method" => sub {
   my $ledger = build_ledger();
   my $collection = $ledger->consumer_collection;
   my $cons = $collection->resource_request(
-    post => { attributes => { template => 'boring',
-                              template_args => { make_active => 1 } 
-                             }});
+    post => { template => 'boring',
+              template_args => { make_active => 1 },
+            });
   my @c = $ledger->consumers;
   is(@c, 1, "exactly one consumer");
   is($c[0]->ledger, $ledger, "ledger set correctly");

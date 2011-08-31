@@ -54,7 +54,6 @@ test "pages" => sub {
     push @bank, $b;
     $ledger->add_this_bank($b);
   }
-  1;
 
   my ($collection) = $ledger->bank_collection;
   is($collection->count, 20, "20 banks created");
@@ -91,13 +90,12 @@ test "add item to a collection" => sub {
   my ($self) = @_;
 
   my $ledger = build_ledger();
-  my $b = class('Bank')->new({ ledger => $ledger, amount => dollars(1) });
 
   my ($collection) = $ledger->route([ 'banks' ]);
   ok($collection);
   is($collection->count, 0, "no banks yet");
   ok($collection->can('resource_post'), "can post");
-  $collection->resource_request(post => { attributes => $b });
+  my $b = $collection->resource_request(post => { amount => dollars(1) });
   is($collection->count, 1, "added bank via post");
   is($collection->_subroute(['guid', $b->guid]), $b, "bank is available");
 };
