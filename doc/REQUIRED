@@ -29,12 +29,14 @@ MooseX::Types
 MooseX::Types::Perl
 namespace::autoclean
 Path::Class
+Path::Resolver
 Role::HasMessage::Errf
 Role::HasPayload::Merged
 Role::Identifiable::HasIdent
 Role::Subsystem
 String::Formatter
 Sub::Exporter
+Test::File::Sharedir
 Test::Routine
 Test::Routine::Util
 Text::Markdown
