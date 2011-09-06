@@ -3,13 +3,13 @@ package Moonpig::Role::Ledger;
 
 use Carp qw(confess croak);
 use Moose::Role;
-use Stick::Publisher 0.20110324;
-use Stick::Publisher::Publish 0.20110324;
+use Stick::Publisher 0.306;
+use Stick::Publisher::Publish 0.306;
 use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
-Stick::Role::Routable::AutoInstance->VERSION(0.20110401);
+Stick::Role::Routable::AutoInstance->VERSION(0.306);
 require Stick::Role::HasCollection;
-Stick::Role::HasCollection->VERSION(0.20110802);
+Stick::Role::HasCollection->VERSION(0.306);
 
 _generate_subcomponent_methods(qw(bank consumer refund credit coupon));
 
@@ -24,9 +24,7 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'refund',
     # These are only here because we use the refund collection for collection tests
-    collection_roles => [ [ 'Stick::Role::Collection::Sortable' => "Sortable" =>
-                              { default_sort_key => 'guid' } ],
-                          'Stick::Role::Collection::Pageable',
+    collection_roles => [ 'Stick::Role::Collection::Pageable',
                           'Moonpig::Role::Collection::RefundExtras',
                           'Stick::Role::Collection::Mutable',
                          ],
