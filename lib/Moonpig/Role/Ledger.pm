@@ -3,13 +3,13 @@ package Moonpig::Role::Ledger;
 
 use Carp qw(confess croak);
 use Moose::Role;
-use Stick::Publisher 0.306;
-use Stick::Publisher::Publish 0.306;
+use Stick::Publisher 0.307;
+use Stick::Publisher::Publish 0.307;
 use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
-Stick::Role::Routable::AutoInstance->VERSION(0.306);
+Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
-Stick::Role::HasCollection->VERSION(0.306);
+Stick::Role::HasCollection->VERSION(0.307);
 
 _generate_subcomponent_methods(qw(bank consumer refund credit coupon));
 
@@ -33,7 +33,8 @@ with(
     item => 'consumer',
     collection_roles => [ 'Moonpig::Role::Collection::ConsumerExtras',
                           'Stick::Role::Collection::Mutable',
-                         ]
+                          'Stick::Role::Collection::CanFilter',
+                        ]
   },
   'Stick::Role::HasCollection' => {
     item => 'bank',
@@ -41,6 +42,7 @@ with(
     collection_roles => [ 'Moonpig::Role::Collection::BankExtras',
                           'Stick::Role::Collection::Pageable',
                           'Stick::Role::Collection::Mutable',
+                          'Stick::Role::Collection::CanFilter',
                          ],
   },
   'Stick::Role::HasCollection' => {
@@ -51,7 +53,9 @@ with(
   },
   'Stick::Role::HasCollection' => {
     item => 'invoice',
-    collection_roles => [ 'Moonpig::Role::Collection::InvoiceExtras' ],
+    collection_roles => [ 'Moonpig::Role::Collection::InvoiceExtras',
+                          'Stick::Role::Collection::CanFilter',
+			],
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
