@@ -29,9 +29,6 @@ sub ledger_and_consumer {
     consumer => {
       class            => class('Consumer::FixedExpiration'),
       expire_date      => jan(3),
-      cost_amount      => 1,
-      description      => 'foo',
-      old_age          => days(0),                            # lame
       replacement_plan => [ get => '/nothing' ],
       xid              => $XID
     }

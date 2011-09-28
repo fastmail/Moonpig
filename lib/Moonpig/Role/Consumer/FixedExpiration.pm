@@ -6,8 +6,7 @@ use MooseX::Types::Moose qw(Str);
 use Moonpig::Types qw(PositiveMillicents Time);
 
 with(
-  'Moonpig::Role::Consumer::InvoiceOnCreation',
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer',
 );
 
 use namespace::autoclean;
@@ -31,50 +30,9 @@ has expire_date => (
   required => 1,
 );
 
-has cost_amount => (
-  is  => 'ro',
-  isa => PositiveMillicents,
-  required => 1,
-);
-
-has description => (
-  is  => 'ro',
-  isa => Str,
-  required => 1,
-);
-
-sub invoice_costs {
-  my ($self) = @_;
-  return $self->costs_on( Moonpig->env->now );
-}
-
-sub costs_on {
-  my ($self) = @_;
-
-  return ( $self->description, $self->cost_amount );
-}
-
 sub _check_expiry {
   my ($self) = @_;
-
-  return unless $self->expire_date <= Moonpig->env->now;
-
-  if ($self->has_bank) {
-    $self->ledger->current_journal->charge({
-      desc => $self->description,
-      from => $self->bank,
-      to   => $self,
-      date => Moonpig->env->now,
-      tags => $self->journal_charge_tags,
-
-      # no part of the amount should be applied, so I have expressly said
-      # ->amount and not ->unapplied_amount; if the full amount is an
-      # over-charge, there is a problem -- rjbs, 2011-07-06
-      amount => $self->bank->amount,
-    });
-  }
-
-  $self->expire;
+  $self->expire if $self->expire_date <= Moonpig->env->now;
 }
 
 1;

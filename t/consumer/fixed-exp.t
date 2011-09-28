@@ -25,12 +25,8 @@ test "fixed-expiration consumer" => sub {
     Moonpig->env->stop_clock;
     my $expire_date = Moonpig->env->now + days(30);
 
-    my $cost = dollars(1);
     my $stuff = build(c => {
       class => class('Consumer::FixedExpiration'),
-      cost_amount => $cost,
-      old_age     => days(0), # lame
-      description => 'test fixed expiration consumer',
       expire_date => $expire_date,
       replacement_plan => [ get => '/nothing' ],
     });
@@ -39,19 +35,7 @@ test "fixed-expiration consumer" => sub {
 
     isa_ok($c, class('Consumer::FixedExpiration'));
 
-    my $invoice = $ledger->current_invoice;
-    is($invoice->total_amount, $cost, "made an invoice for whole amount");
-
     $ledger->handle_event( event('heartbeat') );
-
-    my $credit = $ledger->add_credit(
-      class(qw(Credit::Simulated)),
-      {
-        amount => $cost,
-      },
-    );
-
-    $ledger->process_credits;
 
     is($c->expire_date, $expire_date, "expire date is as created");
 
@@ -61,15 +45,11 @@ test "fixed-expiration consumer" => sub {
 
     ok( ! $c->is_expired, "consumer has not expired after 20 days");
 
-    is($c->bank->unapplied_amount, dollars(1), "full payment remains in bank");
-
-    Moonpig->env->elapse_time( days(120) );
+    Moonpig->env->elapse_time( days(20) );
 
     $ledger->handle_event( event('heartbeat') );
 
     ok(   $c->is_expired, "consumer has expired after 40 days");
-
-    is($c->bank->unapplied_amount, 0, "bank is now empty");
   });
 };
 
