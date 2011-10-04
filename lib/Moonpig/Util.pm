@@ -21,7 +21,7 @@ use Sub::Exporter -setup => [ qw(
 
   event
 
-  cents dollars
+  cents dollars to_cents to_dollars
 
   days weeks months years
 
@@ -77,11 +77,25 @@ sub cents {
   return int ($millicents + 0.5);
 }
 
+# returns unrounded fractional cents
+# to_cents(142857) returns 142.857 cents
+sub to_cents {
+  my ($millicents) = @_;
+  return $millicents / 1000;
+}
+
 sub dollars {
   my ($dollars) = @_;
   my $millicents = $dollars * 100 * 1000;
 
   return int ($millicents + 0.5);
+}
+
+# returns unrounded fractional dollars
+# to_dollars(142857) returns 1.42857 dollars
+sub to_dollars {
+  my ($millicents) = @_;
+  return $millicents / (1000 * 100);
 }
 
 sub days { $_[0] * 86400 } # Ignores leap seconds and DST
