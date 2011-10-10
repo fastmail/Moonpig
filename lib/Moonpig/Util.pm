@@ -29,7 +29,7 @@ use Sub::Exporter -setup => [ qw(
 
   percent
 
-  sum
+  sum sumof
 ) ];
 
 my $COMPOSITOR = MooseX::ClassCompositor->new({
@@ -118,6 +118,11 @@ sub same_object {
 sub sum {
   require List::Util;
   return List::Util::reduce(sub { $a + $b }, 0, @_);
+}
+
+sub sumof (&@) {
+  my ($f, @list) = @_;
+  sum(map $f->($_), @list);
 }
 
 sub percent { $_[0] / 100 }
