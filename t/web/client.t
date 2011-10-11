@@ -9,7 +9,7 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';
 
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 around run_test => sub {
   my ($orig) = shift;
   my ($self) = shift;

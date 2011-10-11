@@ -1,4 +1,4 @@
-package t::lib::Role::HasTempdir;
+package Moonpig::Test::Role::HasTempdir;
 use Test::Routine;
 
 use File::Temp qw(tempdir);

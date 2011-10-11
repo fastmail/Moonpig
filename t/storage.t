@@ -6,7 +6,7 @@ use Test::More;
 use Moonpig::Context::Test -all, '$Context';
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 use Moonpig::Test::Factory qw(build build_ledger);

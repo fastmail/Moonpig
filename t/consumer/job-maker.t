@@ -9,7 +9,7 @@ use Test::Routine::Util;
 use Moonpig::Test::Factory qw(build);
 use t::lib::Logger;
 
-with 't::lib::Role::UsesStorage';
+with 'Moonpig::Test::Role::UsesStorage';
 
 use Moonpig::Context::Test -all, '$Context';
 

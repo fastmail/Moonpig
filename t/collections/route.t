@@ -8,7 +8,7 @@ use Moonpig::Util qw(class dollars);
 use Moonpig::Context::Test -all, '$Context';
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 use Moonpig::Test::Factory qw(build_ledger);
 

@@ -5,7 +5,7 @@ use Test::More;
 
 BEGIN { use_ok('Moonpig::App::Ob') }
 
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 
 test "load and ->new module" => sub {
   my ($self) = @_;

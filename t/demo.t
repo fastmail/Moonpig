@@ -4,7 +4,7 @@ use Test::Routine::Util -all;
 use Test::More;
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';

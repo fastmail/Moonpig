@@ -9,7 +9,7 @@ use Test::Routine::Util;
 
 use Moonpig::Context::Test -all, '$Context';
 
-with 't::lib::Role::UsesStorage';
+with 'Moonpig::Test::Role::UsesStorage';
 
 my $XID = "narf";
 

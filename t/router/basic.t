@@ -4,7 +4,7 @@ use Test::More;
 use Test::Fatal;
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 use Moonpig::Test::Factory qw(build_ledger);
 

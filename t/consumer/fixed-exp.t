@@ -15,7 +15,7 @@ use Test::More;
 use Test::Routine::Util;
 use Try::Tiny;
 
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 use Moonpig::Test::Factory qw(build);
 
 test "fixed-expiration consumer" => sub {

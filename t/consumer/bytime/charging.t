@@ -14,7 +14,7 @@ use t::lib::Logger;
 use Moonpig::Test::Factory qw(build);
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 test "charge" => sub {

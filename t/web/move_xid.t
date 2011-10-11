@@ -19,7 +19,7 @@ use Moonpig::Context::Test -all, '$Context';
 
 use strict;
 
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 
 my $ua  = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $app = Moonpig::Web::App->app;

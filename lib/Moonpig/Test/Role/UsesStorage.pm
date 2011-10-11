@@ -1,8 +1,8 @@
-package t::lib::Role::UsesStorage;
+package Moonpig::Test::Role::UsesStorage;
 use Test::Routine;
 
 with(
-  't::lib::Role::HasTempdir',
+  'Moonpig::Test::Role::HasTempdir',
 );
 
 use Moonpig::Util qw(event);

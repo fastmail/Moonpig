@@ -11,7 +11,7 @@ use Moonpig::Test::Factory qw(build);
 use t::lib::Util qw(elapse);
 
 use Moonpig::Context::Test -all, '$Context';
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 
 sub set_up {
   my $stuff = build();

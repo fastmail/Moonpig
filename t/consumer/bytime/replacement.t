@@ -16,7 +16,7 @@ use Moonpig::Test::Factory qw(build);
 use Moonpig::Env::Test;
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
  );
 
 before run_test => sub {

@@ -12,7 +12,7 @@ use t::lib::Util qw(elapse);
 
 use Moonpig::Context::Test -all, '$Context';
 
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 
 before run_test => sub {
   Moonpig->env->reset_clock;

@@ -9,7 +9,7 @@ use Plack::Test;
 use Moonpig::Test::Factory qw(build_ledger);
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 use Moonpig::Context::Test -all, '$Context';

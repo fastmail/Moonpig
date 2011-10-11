@@ -9,7 +9,7 @@ use Moonpig::Env::Test;
 use Moonpig::Util qw(class dollars);
 
 use Moonpig::Test::Factory qw(build_ledger);
-with ('t::lib::Role::UsesStorage');
+with ('Moonpig::Test::Role::UsesStorage');
 
 use Moonpig::Context::Test -all, '$Context';
 

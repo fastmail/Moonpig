@@ -9,7 +9,7 @@ use Scalar::Util qw(refaddr);
 use Moonpig::Context::Test -all, '$Context';
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 use t::lib::ConsumerTemplateSet::Test;

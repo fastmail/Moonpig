@@ -8,7 +8,7 @@ use Moonpig::Context::Test -all, '$Context';
 use Moonpig::Test::Factory qw(build);
 
 with(
-  't::lib::Role::UsesStorage',
+  'Moonpig::Test::Role::UsesStorage',
 );
 
 use Moonpig::Env::Test;
