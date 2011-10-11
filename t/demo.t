@@ -8,7 +8,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 use Moonpig::Context::Test -all, '$Context';
 

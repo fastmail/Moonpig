@@ -7,7 +7,7 @@ use Moonpig::Util qw(class dollars);
 use Moonpig::Context::Test -all, '$Context';
 
 use t::lib::Logger;
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 test pay_and_get_refund => sub {
   my ($self) = @_;

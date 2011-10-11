@@ -13,7 +13,7 @@ with(
 );
 
 use t::lib::ConsumerTemplateSet::Test;
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 test "create consumer" => sub {
   my ($self) = @_;

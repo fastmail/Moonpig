@@ -10,7 +10,7 @@ use Moonpig::Util qw(event);
 use Moonpig::Context::Test '-all', '$Context';
 
 use t::lib::Class::Ledger::ImplicitEvents;
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 with(
   't::lib::Factory::EventHandler',

@@ -12,7 +12,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 use Moonpig::Env::Test;
 

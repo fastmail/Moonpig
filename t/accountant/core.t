@@ -8,7 +8,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 use Moonpig::Context::Test -all, '$Context';
 

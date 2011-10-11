@@ -11,7 +11,7 @@ use Test::Routine::Util;
 use Test::Routine;
 
 use t::lib::Logger;
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 use Moonpig::Env::Test;
 

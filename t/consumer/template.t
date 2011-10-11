@@ -14,7 +14,7 @@ use Try::Tiny;
 use Moonpig::Context::Test -all, '$Context';
 
 use t::lib::ConsumerTemplateSet::Test;
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 test "consumer from template" => sub {
   my ($self) = @_;

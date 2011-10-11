@@ -16,7 +16,7 @@ use Test::Routine::Util;
 use Try::Tiny;
 
 with ('t::lib::Role::UsesStorage');
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 test "fixed-expiration consumer" => sub {
   my ($self) = @_;

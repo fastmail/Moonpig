@@ -5,7 +5,7 @@ use Test::More;
 
 use Moonpig::Context::Test -all, '$Context';
 
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 with(
   't::lib::Role::UsesStorage',

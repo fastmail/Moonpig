@@ -9,7 +9,7 @@ with(
   't::lib::Role::UsesStorage',
 );
 
-use t::lib::Factory qw(build build_ledger);
+use Moonpig::Test::Factory qw(build build_ledger);
 use t::lib::Logger '$Logger';
 
 use Moonpig::Env::Test;

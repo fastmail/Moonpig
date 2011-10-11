@@ -1,4 +1,4 @@
-package t::lib::Factory::Templates;
+package Moonpig::Test::Factory::Templates;
 use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 

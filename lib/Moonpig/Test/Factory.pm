@@ -1,7 +1,7 @@
-package t::lib::Factory;
+package Moonpig::Test::Factory;
 use strict;
 
-use t::lib::Factory::Templates; # default testing template set
+use Moonpig::Test::Factory::Templates; # default testing template set
 
 use Carp qw(confess croak);
 use Class::MOP ();
@@ -16,11 +16,11 @@ use Sub::Exporter -setup => {
 
 =head1 NAME
 
-C<t::lib::Factory> - construct test examples
+C<Moonpig::Test::Factory> - construct test examples
 
 =head1 SYNOPSIS
 
-       use t::lib::Factory qw(build);
+       use Moonpig::Test::Factory qw(build);
 
        my $stuff = build( fred => { template => "consumer template name",
                                     bank     => dollars(100) });

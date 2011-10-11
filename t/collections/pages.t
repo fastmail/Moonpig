@@ -8,7 +8,7 @@ use Test::Routine::Util -all;
 use Moonpig::Env::Test;
 use Moonpig::Util qw(class dollars);
 
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 use Moonpig::Context::Test -all, '$Context';
 

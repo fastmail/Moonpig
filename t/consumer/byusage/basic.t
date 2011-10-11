@@ -8,7 +8,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 use t::lib::Logger;
 
 use Moonpig::Context::Test -all, '$Context';

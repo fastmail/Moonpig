@@ -10,7 +10,7 @@ use Moonpig::Context::Test -all, '$Context';
 with(
   't::lib::Role::UsesStorage',
 );
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 use namespace::autoclean;
 

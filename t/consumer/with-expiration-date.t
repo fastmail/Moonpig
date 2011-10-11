@@ -13,7 +13,7 @@ with 't::lib::Role::UsesStorage';
 
 my $XID = "narf";
 
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 
 sub jan {
   my ($dy) = @_;

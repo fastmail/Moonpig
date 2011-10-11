@@ -6,7 +6,7 @@ use Test::Fatal;
 with(
   't::lib::Role::UsesStorage',
 );
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 use Moonpig::Context::Test -all, '$Context';
 use Moonpig::Env::Test;

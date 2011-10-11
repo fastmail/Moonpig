@@ -5,7 +5,7 @@ use Test::More;
 
 require_ok 'Moonpig' or BAIL_OUT "compilation failures";
 
-my @files = grep { /\.pm$/ } `find lib -type f`;
+my @files = grep { /\.pm$/ && ! m{/Test/} } `find lib -type f`;
 
 chomp @files;
 s{^lib/}{}, s{\.pm$}{}, s{/}{::}g for @files;

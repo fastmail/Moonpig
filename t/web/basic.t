@@ -6,7 +6,7 @@ use HTTP::Request;
 use Moonpig::Web::App;
 use Plack::Test;
 
-use t::lib::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(build_ledger);
 
 with(
   't::lib::Role::UsesStorage',

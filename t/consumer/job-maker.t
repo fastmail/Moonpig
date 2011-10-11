@@ -6,7 +6,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use t::lib::Factory qw(build);
+use Moonpig::Test::Factory qw(build);
 use t::lib::Logger;
 
 with 't::lib::Role::UsesStorage';
