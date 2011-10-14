@@ -1,5 +1,5 @@
 package Moonpig::Role::Consumer::FixedExpiration;
-# ABSTRACT: something that uses up money stored in a bank
+# ABSTRACT: a consumer that expires automatically on a particular date
 use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);
