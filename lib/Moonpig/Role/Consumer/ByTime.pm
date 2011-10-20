@@ -2,7 +2,6 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
-use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Util qw(class days event sum);
@@ -30,14 +29,6 @@ use namespace::autoclean;
 
 sub now { Moonpig->env->now() }
 
-# How often I charge the bank
-has charge_frequency => (
-  is => 'ro',
-  isa     => TimeInterval,
-  default => sub { days(1) },
-  traits => [ qw(Copy) ],
-);
-
 sub cost_amount_on {
   my ($self, $date) = @_;
 
@@ -64,22 +55,10 @@ has cost_period => (
   traits => [ qw(Copy) ],
 );
 
-# Last time I charged the bank
-has last_charge_date => (
-  is   => 'rw',
-  isa  => Time,
-  predicate => 'has_last_charge_date',
-  traits => [ qw(Copy) ],
-);
-
 after become_active => sub {
   my ($self) = @_;
 
   $self->grace_until( Moonpig->env->now  +  $self->grace_period_duration );
-
-  unless ($self->has_last_charge_date) {
-    $self->last_charge_date( $self->now() - $self->charge_frequency );
-  }
 
   $Logger->log([
     '%s: %s became active; grace until %s, last charge date %s',
@@ -113,13 +92,6 @@ sub remaining_life {
   $self->expire_date - $when;
 }
 
-sub next_charge_date {
-  my ($self) = @_;
-  croak "Inactive consumer has no next_charge_date yet"
-    unless $self->has_last_charge_date;
-  return $self->last_charge_date + $self->charge_frequency;
-}
-
 ################################################################
 #
 #
@@ -151,47 +123,29 @@ sub in_grace_period {
 #
 #
 
-sub charge {
-  my ($self, $event, $arg) = @_;
-
-  my $now = $event->payload->{timestamp}
-    or confess "event payload has no timestamp";
+around charge => sub {
+  my $orig = shift;
+  my ($self, @args) = @_;
 
   return if $self->in_grace_period;
   return unless $self->is_active;
 
-  # Keep making charges until the next one is supposed to be charged at a time
-  # later than now. -- rjbs, 2011-01-12
-  CHARGE: until ($self->next_charge_date->follows($now)) {
-    # maybe make a replacement, maybe tell it that it will soon inherit the
-    # kingdom, maybe do nothing -- rjbs, 2011-01-17
-    $self->reflect_on_mortality;
+  $self->$orig(@args);
+};
 
-    my $next_charge_date = $self->next_charge_date;
+around charge_one_day => sub {
+  my $orig = shift;
+  my ($self, @args) = @_;
 
-    unless ($self->can_make_payment_on( $next_charge_date )) {
-      $self->expire;
-      return;
-    }
+  $self->reflect_on_mortality; # set up replacement if needed
 
-    my @costs = $self->calculate_charges_on( $next_charge_date );
-
-    my $iter = natatime 2, @costs;
-
-    while (my ($desc, $amt) = $iter->()) {
-      $self->ledger->current_journal->charge({
-        desc => $desc,
-        from => $self->bank,
-        to   => $self,
-        date => $next_charge_date,
-        tags => $self->journal_charge_tags,
-        amount => $amt,
-      });
-    }
-
-    $self->last_charge_date($self->next_charge_date());
+  unless ($self->can_make_payment_on( $self->next_charge_date )) {
+    $self->expire;
+    return;
   }
-}
+
+  $self->$orig(@args);
+};
 
 # how much do we charge each time we issue a new charge?
 sub calculate_charges_on {
