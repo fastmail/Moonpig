@@ -5,7 +5,6 @@ use Carp qw(confess croak);
 use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
-use Moonpig::Events::Handler::Method;
 use Moonpig::Util qw(class days event sum);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
@@ -19,6 +18,7 @@ use Stick::Publisher::Publish 0.20110324;
 
 with(
   'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 
@@ -27,16 +27,6 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
 use namespace::autoclean;
-
-implicit_event_handlers {
-  return {
-    heartbeat => {
-      charge => Moonpig::Events::Handler::Method->new(
-        method_name => 'charge',
-      ),
-    },
-  };
-};
 
 sub now { Moonpig->env->now() }
 

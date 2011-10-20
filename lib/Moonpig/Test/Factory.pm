@@ -156,8 +156,8 @@ example:
           },
         );
 
-The C<$stuff> hash contains two elements.  C<  $stuff->{ledger} > is a
-regular ledger with a randomly-generated contact.  C< $stuff->{consumer} >
+The C<$stuff> hash contains two elements.  C<< $stuff->{ledger} >> is a
+regular ledger with a randomly-generated contact.  C<< $stuff->{consumer} >>
 is a consumer of class C<class("Moonpig::Role::Consumer::ByUsage")>
 with a bank that contains $1 and other properties as specified.  The
 C<< make_active => 1 >> specification is redundant.
