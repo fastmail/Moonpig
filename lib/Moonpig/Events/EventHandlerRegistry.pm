@@ -107,6 +107,11 @@ sub handle_event {
   for my $handler_name (keys %$handlers) {
     my $handler = $handlers->{ $handler_name };
 
+    if ($ENV{MOONPIG_TRACE_EVENTS}) {
+      warn "# Event <" . $event->ident . "> handled by '$handler_name' in " .
+        $receiver->ident . "\n";
+    }
+
     $handler->handle_event(
       $event,
       $receiver,
