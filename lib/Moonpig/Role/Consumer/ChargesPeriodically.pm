@@ -11,6 +11,7 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Types qw(Time TimeInterval);
 use Moonpig::Util qw(days);
+use Stick::Types qw(StickBool);
 
 with ('Moonpig::Role::HandlesEvents');
 requires 'calculate_charges_on';
@@ -46,6 +47,17 @@ has charge_frequency => (
   traits => [ qw(Copy) ],
 );
 
+# Very few entities can overdraw their funds, because in almost all
+# cases Moonpig requires consumers to be funded. But in a few cases,
+# such as Pobox bulk accounts, is useful to allow consumers to
+# continue providing service on credit.
+has allows_overdrafts => (
+  is => 'ro',
+  isa => StickBool,
+  default => 0,
+  coerce => 1,
+);
+
 sub charge {
   my ($self, $event, $arg) = @_;
 
@@ -79,6 +91,7 @@ sub charge_one_day {
       date => $next_charge_date,
       tags => $self->journal_charge_tags,
       amount => $amt,
+      skip_funds_check => $self->allows_overdrafts,
     });
   }
 }

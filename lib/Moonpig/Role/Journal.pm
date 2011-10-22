@@ -39,6 +39,8 @@ sub charge {
     amount => int($args->{amount}), # Round in favor of customer
     from   => $args->{from},
     to     => $args->{to},
+
+    skip_funds_check => $args->{skip_funds_check},
   });
 
   my $charge = $self->charge_factory->new({
