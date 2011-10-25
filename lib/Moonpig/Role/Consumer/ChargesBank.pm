@@ -105,7 +105,8 @@ sub move_bank_to__ {
           description => sprintf("Transfer management of '%s' from ledger %s",
                                  $self->xid, $ledger->guid),
           amount      => $amount,
-          consumer    => $new_consumer,
+          owner_guid  => $new_consumer->guid,
+          ledger_guid => $new_ledger->guid,
           tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
         }),
        );

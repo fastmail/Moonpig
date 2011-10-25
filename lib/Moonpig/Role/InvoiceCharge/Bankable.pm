@@ -10,11 +10,4 @@ use Moonpig::Util qw(class);
 
 use namespace::autoclean;
 
-has consumer => (
-  is   => 'ro',
-  does => 'Moonpig::Role::Consumer',
-  required => 1,
-  handles  => [ qw(ledger) ],
-);
-
 1;
