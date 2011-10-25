@@ -16,6 +16,7 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Ledger);
 use Moonpig::Util qw(class class_roles);
 use Scalar::Util qw(blessed);
+use SQL::Translator;
 use Storable qw(nfreeze thaw);
 
 use namespace::autoclean;
@@ -62,52 +63,68 @@ has _conn => (
   },
 );
 
-my $sql = <<'END_SQL';
-    CREATE TABLE stuff (
-      guid TEXT NOT NULL,
-      name TEXT NOT NULL,
-      blob BLOB NOT NULL,
-      PRIMARY KEY (guid, name)
-    );
+my $schema_yaml = <<'...';
+---
+schema:
+  tables:
+    stuff:
+      name: stuff
+      fields:
+        guid: { name: guid, data_type: varchar, size: 36, is_nullable: 0 }
+        name: { name: name, data_type: varchar, size: 20, is_nullable: 0 }
+        blob: { name: blob, data_type: blob, is_nullable: 0 }
+      constraints:
+        - type:   PRIMARY KEY
+          fields: [ guid, name ]
 
-    CREATE TABLE xid_ledgers (
-      xid TEXT PRIMARY KEY,
-      ledger_guid TEXT NOT NULL
-    );
+    xid_ledgers:
+      name: xid_ledgers
+      fields:
+        xid: { name: xid, data_type: varchar, size: 256, is_primary_key: 1 }
+        ledger_guid: { name: ledger_guid, data_type: varchar, size: 36, is_nullable: 0 }
 
-    CREATE TABLE metadata (
-      one PRIMARY KEY,
-      schema_md5 TEXT NOT NULL,
-      last_realtime INTEGER NOT NULL,
-      last_moontime INTEGER NOT NULL
-    );
+    metadata:
+      name: metadata
+      fields:
+        one: { name: one, data_type:  unsigned int, is_primary_key: 1 }
+        schema_md5: { name: schema_md5, data_type: varchar, size: 32, is_nullable: 0 }
+        last_realtime: { name: last_realtime, data_type: integer, is_nullable: 0 }
+        last_moontime: { name: last_moontime, data_type: integer, is_nullable: 0 }
 
-    CREATE TABLE jobs (
-      id INTEGER PRIMARY KEY,
-      ledger_guid TEXT NOT NULL,
-      type TEXT NOT NULL,
-      created_at INTEGER NOT NULL,
-      locked_at INTEGER,
-      termination_state TEXT
-    );
+    jobs:
+      name: jobs
+      fields:
+        id: { name: id, data_type: integer, is_auto_increment: 1, is_primary_key: 1 }
+        ledger_guid: { name: ledger_guid, data_type: varchar, size: 36, is_nullable: 0 }
+        type: { name: type, data_type: text, is_nullable: 0 }
+        created_at: { name: created_at, data_type: integer, is_nullable: 0 }
+        locked_at: { name: locked_at, data_type: integer, is_nullable: 1 }
+        termination_state: { name: termination_state, data_type: varchar, size: 32, is_nullable: 1 }
 
-    CREATE TABLE job_documents (
-      job_id INTEGER NOT NULL,
-      ident TEXT NOT NULL,
-      payload TEXT NOT NULL,
-      PRIMARY KEY (job_id, ident),
-      FOREIGN KEY (job_id) REFERENCES jobs (id)
-    );
+    job_documents:
+      name: job_documents
+      fields:
+        job_id: { name: job_id, data_type: integer, is_nullable: 0 }
+        ident: { name: ident, data_type: text, is_nullable: 0 }
+        payload: { name: payload, data_type: text, is_nullable: 0 }
+      constraints:
+        - type:   PRIMARY KEY
+          fields: [ job_id, ident ]
+        - type: FOREIGN KEY
+          fields: [ job_id ]
+          reference_table: jobs
+          reference_fields: [ id ]
 
-    CREATE TABLE job_logs (
-      id INTEGER PRIMARY KEY,
-      job_id INTEGER NOT NULL,
-      logged_at INTEGER NOT NULL,
-      message TEXT NOT NULL
-    );
-END_SQL
+    job_logs:
+      name: job_logs
+      fields:
+        id: { name: id, data_type: integer, is_auto_increment: 1, is_primary_key: 1 }
+        job_id: { name: job_id, data_type: integer, is_nullable: 0 }
+        logged_at: { name: logged_at, data_type: integer, is_nullable: 0 }
+        message: { name: message, data_type: text, is_nullable: 0 }
+...
 
-my $SCHEMA_MD5 = md5_hex($sql);
+my $SCHEMA_MD5 = md5_hex($schema_yaml);
 
 sub _ensure_tables_exist {
   my ($self) = @_;
@@ -124,6 +141,14 @@ sub _ensure_tables_exist {
     return if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
     Carp::croak("database is of an incompatible schema") if defined $schema_md5;
 
+    my $translator = SQL::Translator->new(
+      parser   => "YAML",
+      data     => \$schema_yaml,
+      producer      => 'SQLite',
+      producer_args => { no_transaction => 1 },
+    );
+
+    my $sql = $translator->translate;
     my @hunks = split /\n{2,}/, $sql;
 
     $dbh->do($_) for @hunks;
