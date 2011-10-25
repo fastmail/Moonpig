@@ -480,7 +480,7 @@ sub _store_ledger {
 
     $dbh->do(
       q{
-        INSERT OR REPLACE INTO stuff
+        REPLACE INTO stuff
         (guid, name, blob)
         VALUES (?, 'class_roles', ?)
       },
