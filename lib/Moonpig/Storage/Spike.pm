@@ -21,34 +21,18 @@ use Storable qw(nfreeze thaw);
 
 use namespace::autoclean;
 
-has _root => (
+has sql_translator_producer => (
   is  => 'ro',
   isa => 'Str',
-  init_arg => undef,
-  default  => sub { $ENV{MOONPIG_STORAGE_ROOT} || die('no storage root') },
+  required => 1,
 );
 
-sub _sqlite_filename {
-  my ($self) = @_;
-
-  my $db_file = File::Spec->catfile(
-    $self->_root,
-    "moonpig.sqlite",
-  );
-}
-
-sub _dbi_connect_args {
-  my ($self) = @_;
-  my $db_file = $self->_sqlite_filename;
-
-  return (
-    "dbi:SQLite:dbname=$db_file", undef, undef,
-    {
-      RaiseError => 1,
-      PrintError => 0,
-    },
-  );
-}
+has dbi_connect_args => (
+  isa => 'ArrayRef',
+  required => 1,
+  traits   => [ 'Array' ],
+  handles  => { dbi_connect_args => 'elements' },
+);
 
 has _conn => (
   is   => 'ro',
@@ -59,7 +43,7 @@ has _conn => (
   default  => sub {
     my ($self) = @_;
 
-    return DBIx::Connector->new( $self->_dbi_connect_args );
+    return DBIx::Connector->new( $self->dbi_connect_args );
   },
 );
 
@@ -144,7 +128,7 @@ sub _ensure_tables_exist {
     my $translator = SQL::Translator->new(
       parser   => "YAML",
       data     => \$schema_yaml,
-      producer      => 'SQLite',
+      producer      => $self->sql_translator_producer,
       producer_args => { no_transaction => 1 },
     );
 
@@ -221,7 +205,7 @@ sub queue_job__ {
         Moonpig->env->now->epoch,
       );
 
-      my $job_id = $dbh->sqlite_last_insert_rowid;
+      my $job_id = $dbh->last_insert_id(q{}, q{}, 'jobs', 'id');
 
       for my $ident (keys %{ $arg->{payloads} }) {
         # XXX: barf on reference payloads? -- rjbs, 2011-04-13

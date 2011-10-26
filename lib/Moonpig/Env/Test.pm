@@ -59,6 +59,24 @@ sub storage_class {
   'Moonpig::Storage::Spike';
 }
 
+sub storage_init_args {
+  my ($self) = @_;
+
+  my $root = $ENV{MOONPIG_STORAGE_ROOT} || die('no storage root');
+  my $db_file = File::Spec->catfile($root, "moonpig.sqlite");
+
+  return (
+    sql_translator_producer => 'SQLite',
+    dbi_connect_args        => [
+      "dbi:SQLite:dbname=$db_file", undef, undef,
+      {
+        RaiseError => 1,
+        PrintError => 0,
+      },
+    ],
+  );
+}
+
 has email_sender => (
   is   => 'ro',
   does => 'Email::Sender::Transport',
