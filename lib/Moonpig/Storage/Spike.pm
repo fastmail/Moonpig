@@ -221,7 +221,7 @@ sub queue_job__ {
         Moonpig->env->now->epoch,
       );
 
-      my $job_id = $dbh->sqlite_last_insert_rowid;
+      my $job_id = $dbh->last_insert_id(q{}, q{}, 'jobs', 'id');
 
       for my $ident (keys %{ $arg->{payloads} }) {
         # XXX: barf on reference payloads? -- rjbs, 2011-04-13
