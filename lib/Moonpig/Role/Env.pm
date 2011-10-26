@@ -60,12 +60,17 @@ has storage => (
   does => 'Moonpig::Role::Storage',
   lazy => 1,
   init_arg => undef,
-  default  => sub { $_[0]->storage_class->new },
+  default  => sub {
+    return $_[0]->storage_class->new(
+      $_[0]->storage_init_args,
+    );
+  },
   clearer  => 'clear_storage',
   handles  => [ qw(save_ledger) ],
 );
 
 requires 'storage_class';
+requires 'storage_init_args';
 
 has consumer_template_registry => (
   is  => 'ro',

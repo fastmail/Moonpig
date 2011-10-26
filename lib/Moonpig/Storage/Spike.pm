@@ -1,5 +1,5 @@
 package Moonpig::Storage::Spike;
-use Moose::Role;
+use Moose;
 with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
@@ -21,6 +21,19 @@ use Storable qw(nfreeze thaw);
 
 use namespace::autoclean;
 
+has sql_translator_producer => (
+  is  => 'ro',
+  isa => 'Str',
+  required => 1,
+);
+
+has dbi_connect_args => (
+  isa => 'ArrayRef',
+  required => 1,
+  traits   => [ 'Array' ],
+  handles  => { dbi_connect_args => 'elements' },
+);
+
 has _conn => (
   is   => 'ro',
   isa  => 'DBIx::Connector',
@@ -30,7 +43,7 @@ has _conn => (
   default  => sub {
     my ($self) = @_;
 
-    return DBIx::Connector->new( $self->_dbi_connect_args );
+    return DBIx::Connector->new( $self->dbi_connect_args );
   },
 );
 
@@ -115,7 +128,7 @@ sub _ensure_tables_exist {
     my $translator = SQL::Translator->new(
       parser   => "YAML",
       data     => \$schema_yaml,
-      producer      => $self->_sql_producer,
+      producer      => $self->sql_translator_producer,
       producer_args => { no_transaction => 1 },
     );
 

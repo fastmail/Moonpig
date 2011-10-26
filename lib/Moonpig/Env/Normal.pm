@@ -30,6 +30,8 @@ sub storage_class {
   'Moonpig::Storage::Spike';
 }
 
+sub storage_init_args { return }
+
 sub now {
   return Moonpig::DateTime->now();
 }
