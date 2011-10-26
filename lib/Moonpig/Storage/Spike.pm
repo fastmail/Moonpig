@@ -1,5 +1,5 @@
 package Moonpig::Storage::Spike;
-use Moose;
+use Moose::Role;
 with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
@@ -20,35 +20,6 @@ use SQL::Translator;
 use Storable qw(nfreeze thaw);
 
 use namespace::autoclean;
-
-has _root => (
-  is  => 'ro',
-  isa => 'Str',
-  init_arg => undef,
-  default  => sub { $ENV{MOONPIG_STORAGE_ROOT} || die('no storage root') },
-);
-
-sub _sqlite_filename {
-  my ($self) = @_;
-
-  my $db_file = File::Spec->catfile(
-    $self->_root,
-    "moonpig.sqlite",
-  );
-}
-
-sub _dbi_connect_args {
-  my ($self) = @_;
-  my $db_file = $self->_sqlite_filename;
-
-  return (
-    "dbi:SQLite:dbname=$db_file", undef, undef,
-    {
-      RaiseError => 1,
-      PrintError => 0,
-    },
-  );
-}
 
 has _conn => (
   is   => 'ro',
@@ -144,7 +115,7 @@ sub _ensure_tables_exist {
     my $translator = SQL::Translator->new(
       parser   => "YAML",
       data     => \$schema_yaml,
-      producer      => 'SQLite',
+      producer      => $self->_sql_producer,
       producer_args => { no_transaction => 1 },
     );
 

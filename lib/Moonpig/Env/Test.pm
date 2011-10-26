@@ -55,8 +55,8 @@ sub register_object {
 }
 
 sub storage_class {
-  require Moonpig::Storage::Spike;
-  'Moonpig::Storage::Spike';
+  require Moonpig::Storage::Spike::SQLite;
+  'Moonpig::Storage::Spike::SQLite';
 }
 
 has email_sender => (
