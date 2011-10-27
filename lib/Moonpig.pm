@@ -6,8 +6,9 @@ package Moonpig;
 use Config ();
 use Carp ();
 
-Carp::croak("Moonpig requires a perl compile with use64bitint")
-  unless $Config::Config{use64bitint} || $ENV{Moonpig32BitsOK};
+# XXX: We need to disable this for now. -- rjbs, 2011-10-27
+# Carp::croak("Moonpig requires a perl compile with use64bitint")
+#   unless $Config::Config{use64bitint} || $ENV{Moonpig32BitsOK};
 
 my $env;
 
