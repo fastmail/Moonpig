@@ -3,7 +3,7 @@ package Moonpig::Role::InvoiceCharge::CouponCreator;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::InvoiceCharge',
+  'Moonpig::Role::InvoiceCharge::Active',
 );
 
 use Moonpig;
@@ -13,24 +13,6 @@ use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(HashRef);
 
 use namespace::autoclean;
-use Moonpig::Behavior::EventHandlers;
-use Moonpig::Events::Handler::Method;
-
-implicit_event_handlers {
-  return {
-    'paid' => {
-      'create_coupon' => Moonpig::Events::Handler::Method->new('create_coupon'),
-    },
-  }
-};
-
-# Do we really need this? Is there no other way to find the ledger?
-has ledger => (
-  is => 'ro',
-  isa => Ledger,
-  required => 1,
-  weak_ref => 1,
-);
 
 has coupon_class => (
   is => 'ro',
@@ -44,7 +26,8 @@ has coupon_args => (
   default => sub { {} },
 );
 
-sub create_coupon {
+sub when_paid {
+  # Create the coupon
   my ($self, $event) = @_;
 
   my $coupon;
@@ -52,6 +35,7 @@ sub create_coupon {
     sub {
       $coupon = $self->ledger->add_coupon($self->coupon_class, $self->coupon_args);
       $Logger->log([ 'created coupon %s in ledger %s', $coupon->ident, $self->ledger->ident ]);
+      Moonpig->env->storage->save_ledger($self->ledger);
     });
   return $coupon;
 }
