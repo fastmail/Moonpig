@@ -436,6 +436,13 @@ sub _queue_changed_ledger {
   push @$q, $ledger;
 }
 
+sub _search_queue_for_ledger {
+  my ($self, $guid) = @_;
+  my $q = $self->_ledger_queue;
+  my ($ledger) = grep { $_->guid eq $guid } @$q;
+  return $ledger;
+}
+
 sub _execute_saves {
   my ($self) = @_;
 
@@ -568,6 +575,15 @@ sub retrieve_ledger_for_guid {
   my ($self, $guid) = @_;
 
   $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
+
+  # If someone saved a modified ledger, but it hasn't been written yet,
+  # return the modified version directly from the queue
+  if ($self->_has_update_mode && $self->_in_update_mode) {
+    if (my $ledger = $self->_search_queue_for_ledger($guid)) {
+      warn "#># returning ledger from queue\n";
+      return $ledger;
+    }
+  }
 
   my $dbh = $self->_conn->dbh;
   my ($class_blob) = $dbh->selectrow_array(
