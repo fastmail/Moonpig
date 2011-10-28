@@ -8,7 +8,7 @@ use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 
-use Test::File::ShareDir -share => {
+use Test::File::ShareDir 0.003001 -share => {
   -dist   => { 'Moonpig' => 'share' }
 };
 

@@ -40,7 +40,7 @@ $d_pid or do {
 
   use Path::Class;
   my $dir = dir('share')->absolute->stringify;
-  my $use = qq[use Test::File::ShareDir -share => { -dist => { q{Moonpig} => q{$dir} } };];
+  my $use = qq[use Test::File::ShareDir 0.003001 -share => { -dist => { q{Moonpig} => q{$dir} } };];
 
   exec "plackup -p 5002 -e '$use' share/dashboard/dashboard.psgi $colorize green";
 };
