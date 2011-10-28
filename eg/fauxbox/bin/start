@@ -37,7 +37,12 @@ $ul_pid or do {
 my $d_pid = fork;
 $d_pid or do {
   $ENV{MOONPIG_URI} = 'http://localhost:5001';
-  exec "plackup -p 5002 dashboard/dashboard.psgi $colorize green";
+
+  use Path::Class;
+  my $dir = dir('share')->absolute->stringify;
+  my $use = qq[use Test::File::ShareDir -share => { -dist => { q{Moonpig} => q{$dir} } };];
+
+  exec "plackup -p 5002 -e '$use' share/dashboard/dashboard.psgi $colorize green";
 };
 
 $SIG{INT} = sub { kill 0, 2 };

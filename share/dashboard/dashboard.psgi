@@ -4,6 +4,7 @@ use warnings;
 
 use lib 'lib';
 
+use File::ShareDir qw(dist_dir);
 use File::Spec;
 use HTML::Mason::Interp;
 use Path::Class;
@@ -26,9 +27,11 @@ package HTML::Mason::Commands {
 
 my $router = Router::Dumb->new;
 
+my $root   = dir( dist_dir('Moonpig') )->subdir(qw(dashboard));
+
 # GET targets
 Router::Dumb::Helper::FileMapper->new({
-  root          => 'dashboard/mason/public',
+  root          => $root->subdir(qw(dashboard public))->stringify,
   target_munger => sub {
     my ($self, $filename) = @_;
     dir('public')->file( file($filename)->relative($self->root) )->stringify;
@@ -37,7 +40,7 @@ Router::Dumb::Helper::FileMapper->new({
 
 # POST targets
 Router::Dumb::Helper::FileMapper->new({
-  root          => 'dashboard/mason/post',
+  root          => $root->subdir(qw(dashboard post))->stringify,
   parts_munger  => sub { unshift @{ $_[1] }, 'post'; $_[1] },
   target_munger => sub {
     my ($self, $filename) = @_;
@@ -45,8 +48,9 @@ Router::Dumb::Helper::FileMapper->new({
   },
 })->add_routes_to($router);
 
-Router::Dumb::Helper::RouteFile->new({ filename => 'dashboard/routes' })
-                               ->add_routes_to($router);
+Router::Dumb::Helper::RouteFile
+  ->new({ filename => $root->file('routes')->stringify })
+  ->add_routes_to($router);
 
 warn "ROUTING TABLE: \n";
 for my $route ($router->ordered_routes) {
@@ -54,7 +58,7 @@ for my $route ($router->ordered_routes) {
 }
 
 my $interp = HTML::Mason::Interp->new(
-  comp_root     => File::Spec->rel2abs("dashboard/mason"),
+  comp_root     => "$root",
   request_class => 'Moonpig::Dashboard::Request',
   allow_globals => [ '$r' ],
 );
@@ -101,7 +105,7 @@ builder {
   enable(
     "Plack::Middleware::Static",
     path => qr{^/(images|js|css)/},
-    root => 'dashboard/static/'
+    root => $root->subdir(qw(dashboard static)),
   );
 
   mount "/moonpig" => Plack::App::Proxy->new(
