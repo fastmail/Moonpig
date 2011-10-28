@@ -49,6 +49,7 @@ has ledger => (
   isa => 'Moonpig::Role::Ledger',
   required => 1,
   handles => [ qw(accountant) ],
+  weak_ref => 1,
 );
 
 sub BUILD {
