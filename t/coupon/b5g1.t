@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars event years);
+use Moonpig::Util qw(class days dollars event months);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -21,7 +21,7 @@ before run_test => sub {
 sub set_up_b5 {
   my ($self) = @_;
 
-  my $stuff = build(b5 => { template => 'fiveyear', xid => $xid });
+  my $stuff = build(b5 => { template => 'fivemonth', xid => $xid });
   return @{$stuff}{qw(ledger b5)};
 }
 
@@ -64,20 +64,20 @@ sub set_up_g1 {
   Moonpig->env->stop_clock();
   print "# Time passes";
   until ($b5->has_replacement) {
-    Moonpig->env->elapse_time(days(21));
+    Moonpig->env->elapse_time(days(7));
     Moonpig->env->storage->do_rw(sub {
                                    $ledger->handle_event( event('heartbeat') );
                                  });
     print ".";
 
-    Moonpig->env->clock_offset > years(5.5)
+    Moonpig->env->clock_offset > months(5.5)
       and die "b5 never set up its replacement!!\n";
   }
   print "\n";
   { my $days =  Moonpig->env->clock_offset / days(1);
-    my $years = int($days / 365);
-    $days -= $years * 365;
-    note sprintf "Replacement set up after %d yr %.2f dy", $years, $days
+    my $months = int($days / 30);
+    $days -= $months * 30;
+    note sprintf "Replacement set up after %d mo %.2f dy", $months, $days
   }
   my $g1 = $b5->replacement;
   return ($ledger, $b5, $g1);

@@ -50,18 +50,18 @@ sub templates {
         }};
     },
 
-    fiveyear => sub {
+    fivemonth => sub {
       my ($name) = @_;
 
       return {
         roles => [ 'Consumer::ByTime::FixedCost', 't::Consumer::CouponCreator' ],
         arg   => {
           xid         => $b5g1_xid,
-          old_age     => days(30),
+          old_age     => days(7),
           cost_amount => dollars(500),
-          cost_period => days(365 * 5 + 1),
+          cost_period => days(30 * 5),
           charge_description => 'long-term consumer',
-          replacement_plan   => [ get => "/consumer-template/free_sixthyear" ],
+          replacement_plan   => [ get => "/consumer-template/free_sixthmonth" ],
 
           coupon_class => class(qw(Coupon::FixedPercentage Coupon::RequiredTags)),
           coupon_args => {
@@ -72,17 +72,17 @@ sub templates {
         },
       }
     },
-    free_sixthyear => sub {
+    free_sixthmonth => sub {
       my ($name) = @_;
 
       return {
         roles => [ 'Consumer::ByTime::FixedCost' ],
         arg   => {
           xid         => $b5g1_xid,
-          old_age     => days(30),
+          old_age     => days(7),
           cost_amount => dollars(100),
-          cost_period => days(365),
-          charge_description => 'free sixth-year consumer',
+          cost_period => days(30),
+          charge_description => 'free sixth-month consumer',
           replacement_plan   => [ get => "/consumer-template/$name" ],
           extra_invoice_charge_tags  => [ "coupon.b5g1" ],
         },
