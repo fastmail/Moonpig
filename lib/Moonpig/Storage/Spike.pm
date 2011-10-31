@@ -27,6 +27,13 @@ has sql_translator_producer => (
   required => 1,
 );
 
+has sql_translator_producer_args => (
+  isa => 'HashRef',
+  default => sub {  {}  },
+  traits  => [ qw(Hash) ],
+  handles => { sql_translator_producer_args => 'elements' },
+);
+
 has dbi_connect_args => (
   isa => 'ArrayRef',
   required => 1,
@@ -129,7 +136,10 @@ sub _ensure_tables_exist {
       parser   => "YAML",
       data     => \$schema_yaml,
       producer      => $self->sql_translator_producer,
-      producer_args => { no_transaction => 1 },
+      producer_args => {
+        no_transaction => 1,
+        $self->sql_translator_producer_args,
+      },
     );
 
     my $sql = $translator->translate;
