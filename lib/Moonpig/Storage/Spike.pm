@@ -70,7 +70,7 @@ schema:
     metadata:
       name: metadata
       fields:
-        one: { name: one, data_type:  unsigned int, is_primary_key: 1 }
+        one: { name: one, data_type: int unsigned, is_primary_key: 1 }
         schema_md5: { name: schema_md5, data_type: varchar, size: 32, is_nullable: 0 }
         last_realtime: { name: last_realtime, data_type: integer, is_nullable: 0 }
         last_moontime: { name: last_moontime, data_type: integer, is_nullable: 0 }
