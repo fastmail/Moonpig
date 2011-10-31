@@ -456,6 +456,7 @@ sub _search_queue_for_ledger {
 sub _execute_saves {
   my ($self) = @_;
 
+  return unless @{ $self->_ledger_queue };
   $self->txn(sub {
     for my $ledger (@{ $self->_ledger_queue }) {
       $self->_store_ledger($ledger);
