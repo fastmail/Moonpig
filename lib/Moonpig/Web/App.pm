@@ -16,7 +16,9 @@ sub test_routes {
   my ($path, $storage) = @_;
   my @path = @$path;
 
-  $storage->_reinstate_stored_time;
+  if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {
+    $storage->_reinstate_stored_time;
+  }
 
   if (@path == 1 and $path[0] eq 'heartbeat-all') {
     $storage->do_rw(sub {
@@ -62,8 +64,11 @@ sub test_routes {
     my $s = $path[1];
     Moonpig->env->stop_clock_at( Moonpig->env->now + $s );
     Moonpig->env->restart_clock;
-    $storage->_store_time;
-    $storage->_reinstate_stored_time;
+
+    if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {
+      $storage->_store_time;
+      $storage->_reinstate_stored_time;
+    }
 
     return [
       200,
