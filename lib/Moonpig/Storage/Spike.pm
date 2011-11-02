@@ -4,6 +4,7 @@ with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
 
+use Carp ();
 use Class::Rebless 0.009;
 use Digest::MD5 qw(md5_hex);
 use DBI;
@@ -159,17 +160,37 @@ sub _ensure_tables_exist {
   });
 }
 
-has _in_update_mode => (
+has _update_mode_stack => (
   is  => 'ro',
-  isa => 'Bool',
-  traits  => [ 'Bool' ],
-  handles => {
-    _set_update_mode   => 'set',
-    _set_noupdate_mode => 'unset',
-  },
-  predicate => '_has_update_mode',
-  clearer   => '_clear_update_mode',
+  isa => 'ArrayRef',
+  default => sub { [] },
 );
+
+sub _has_update_mode {
+  @{$_[0]->_update_mode_stack} > 0;
+}
+
+sub _in_update_mode {
+  my $stack = $_[0]->_update_mode_stack;
+  @$stack && $stack->[-1];
+}
+
+sub _clear_update_mode {
+  my ($self) = @_;
+  if ($self->_has_update_mode) {
+    pop @{$self->_update_mode_stack};
+  } else {
+    Carp::confess "popped empty update stack";
+  }
+}
+
+sub _set_update_mode {
+  push @{$_[0]->_update_mode_stack}, 1;
+}
+
+sub _set_noupdate_mode {
+  push @{$_[0]->_update_mode_stack}, 0;
+}
 
 sub do_rw {
   my ($self, $code) = @_;
