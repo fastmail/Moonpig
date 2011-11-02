@@ -431,7 +431,7 @@ sub save_ledger {
   # EITHER:
   # 1. we are in a do_rw transaction -- save this ledger to write later
   # 2. we are in a do_ro transaction -- die
-  # 3. we are not in a transaction -- do one right now to save immediately
+  # 3. we are not in a transaction -- die (mjd, 2011-11-02)
   # -- rjbs, 2011-04-11
   if ($self->_has_update_mode) {
     if ($self->_in_update_mode) {
@@ -440,7 +440,7 @@ sub save_ledger {
       Moonpig::X->throw("save ledger inside read-only transaction");
     }
   } else {
-    $self->_store_ledger($ledger);
+    Moonpig::X->throw("save ledger outside transaction");
   }
 }
 
