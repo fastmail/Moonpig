@@ -8,6 +8,23 @@ use namespace::autoclean;
 requires 'do_rw';
 requires 'do_ro';
 
+requires 'do_with_ledgers';
+
+sub do_with_ledger {
+  my ($self, $guid, $code) = @_;
+  $self->do_with_ledgers({ ledger => $guid }, $code);
+}
+
+sub do_with_fresh_ledger {
+  my ($self, $args) = @_;
+  $self->do_with_
+}
+
+sub do_with_this_ledger {
+  my ($self, $ledger) = @_;
+  die "unimplemented";
+}
+
 requires 'queue_job__';
 requires 'iterate_jobs';
 requires 'undone_jobs_for_ledger';

@@ -4,7 +4,7 @@ with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
 
-use Carp ();
+use Carp qw(carp croak);
 use Class::Rebless 0.009;
 use Digest::MD5 qw(md5_hex);
 use DBI;
@@ -14,7 +14,7 @@ use File::Spec;
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
-use Moonpig::Types qw(Ledger);
+use Moonpig::Types qw(Ledger Factory);
 use Moonpig::Util qw(class class_roles);
 use Scalar::Util qw(blessed);
 use SQL::Translator;
@@ -196,6 +196,42 @@ sub do_ro {
   my $rv = $self->txn(sub {
     $code->();
   });
+  $self->_clear_update_mode;
+  return $rv;
+}
+
+has ledger_context_factory => (
+  is => 'ro',
+  isa => Factory,
+  default => sub { "Moonpig::Storage::LedgerContext" },
+);
+
+sub do_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $guids ||= {};
+  $opts ||= {};
+  $opts->{ro} ||= 0;
+
+  my $ledgers = $self->ledger_context_factory->new();
+  for my $name (keys %$guids) {
+    my $ledger = $self->retrieve_ledger_for_guid($guids->{$name})
+      or croak "Couldn't find ledger for guid '$guids->{name}'";
+    $ledgers->put($name, $ledger);
+  }
+
+  # XXX this does not properly handle nested transactions - mjd 20111102
+  if ($opts->{ro}) {
+    $self->_set_noupdate_mode;
+  } else {
+    $self->_set_update_mode;
+  }
+
+  my $rv = $self->txn(sub {
+    my $rv = $code->(\%ledgers);
+    $self->_execute_saves unless $ro;
+    return $rv;
+  });
+
   $self->_clear_update_mode;
   return $rv;
 }
