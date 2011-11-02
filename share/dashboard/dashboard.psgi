@@ -58,7 +58,7 @@ for my $route ($router->ordered_routes) {
 }
 
 my $interp = HTML::Mason::Interp->new(
-  comp_root     => "$root",
+  comp_root     => $root->subdir('mason')->stringify,
   request_class => 'Moonpig::Dashboard::Request',
   allow_globals => [ '$r' ],
 );
