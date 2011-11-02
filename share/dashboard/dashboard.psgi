@@ -31,7 +31,7 @@ my $root   = dir( dist_dir('Moonpig') )->subdir(qw(dashboard));
 
 # GET targets
 Router::Dumb::Helper::FileMapper->new({
-  root          => $root->subdir(qw(dashboard public))->stringify,
+  root          => $root->subdir(qw(mason public))->stringify,
   target_munger => sub {
     my ($self, $filename) = @_;
     dir('public')->file( file($filename)->relative($self->root) )->stringify;
@@ -40,7 +40,7 @@ Router::Dumb::Helper::FileMapper->new({
 
 # POST targets
 Router::Dumb::Helper::FileMapper->new({
-  root          => $root->subdir(qw(dashboard post))->stringify,
+  root          => $root->subdir(qw(mason post))->stringify,
   parts_munger  => sub { unshift @{ $_[1] }, 'post'; $_[1] },
   target_munger => sub {
     my ($self, $filename) = @_;
@@ -105,7 +105,7 @@ builder {
   enable(
     "Plack::Middleware::Static",
     path => qr{^/(images|js|css)/},
-    root => $root->subdir(qw(dashboard static)),
+    root => $root->subdir(qw(static)),
   );
 
   mount "/moonpig" => Plack::App::Proxy->new(
