@@ -13,7 +13,7 @@ use File::Spec;
 
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
-
+use Moonpig::Storage::UpdateModeStack;
 use Moonpig::Types qw(Ledger);
 use Moonpig::Util qw(class class_roles);
 use Scalar::Util qw(blessed);
@@ -162,34 +162,20 @@ sub _ensure_tables_exist {
 
 has _update_mode_stack => (
   is  => 'ro',
-  isa => 'ArrayRef',
-  default => sub { [] },
+  isa => 'Moonpig::Storage::UpdateModeStack',
+  default => sub { Moonpig::Storage::UpdateModeStack->new() },
+  handles => {
+    _has_update_mode => 'is_nonempty',
+    _clear_update_mode => 'pop_stack',
+    _set_update_mode => 'push_true',
+    _set_noupdate_mode => 'push_false',
+  },
 );
 
-sub _has_update_mode {
-  @{$_[0]->_update_mode_stack} > 0;
-}
-
 sub _in_update_mode {
-  my $stack = $_[0]->_update_mode_stack;
-  @$stack && $stack->[-1];
-}
-
-sub _clear_update_mode {
   my ($self) = @_;
-  if ($self->_has_update_mode) {
-    pop @{$self->_update_mode_stack};
-  } else {
-    Carp::confess "popped empty update stack";
-  }
-}
-
-sub _set_update_mode {
-  push @{$_[0]->_update_mode_stack}, 1;
-}
-
-sub _set_noupdate_mode {
-  push @{$_[0]->_update_mode_stack}, 0;
+  $self->_has_update_mode &&
+    $self->_update_mode_stack->get_top;
 }
 
 sub do_rw {
