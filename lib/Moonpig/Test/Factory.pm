@@ -20,12 +20,40 @@ C<Moonpig::Test::Factory> - construct test examples
 
 =head1 SYNOPSIS
 
-       use Moonpig::Test::Factory qw(build);
+       use Moonpig::Test::Factory qw(do_with_test_ledger);
 
-       my $stuff = build( fred => { template => "consumer template name",
-                                    bank     => dollars(100) });
-       my $ledger = $stuff->{ledger};
-       my $consumer = $stuff->{fred};
+       do_with_test_ledger({ fred => { template => "consumer template name",
+                                       bank     => dollars(100) } }, sub {
+         my ($ledger) = @_;
+         my $consumer = $ledger->get_component("fred");
+         ...
+       });
+
+
+=head2 C<do_with_test_ledger>
+
+	do_with_test_ledger($args, $code, $opts);
+
+This builds a new ledger and associated components with C<<
+build(%$args) >> (see below) and tells Moonpig to propagate it into a
+new read-write transaction that executes the action in C<$code>.  The
+ledger is passed to C<$code> as an argument.
+
+The ledger supports a special method, C<get_component>, which can be
+used to access the ledger's components by names given to them in the
+C<$args> hash; see below for details.
+
+The new ledger's GUID may be safely captured and re-used in a later
+call to C<Moonpig::Storage::do_with_ledger>.
+
+The C<$opts> argument is an option hashref of options. You may use C<< ro => 1 >>
+to run C<$code> in a read-only transaction. See
+C<Moonpig::Role::Storage::do_with_ledgers> for further details.
+
+=head2 C<do_ro_with_test_ledger>
+
+The same as C<do_with_test_ledger>, but forces a read-only
+transaction.
 
 =head1 C<build>
 
@@ -34,6 +62,18 @@ specifies a component to be constructed, such as a ledger or a
 consumer.  The returned value is a reference to a hash with the same
 keys; the corresponding values are the components that were
 constructed.
+
+=head2 WARNING
+
+If you construct a ledger object with C<build> and then perform
+Moonpig operations on it, you run a risk that the object will become
+invalid relative to the state of the Moonpig persistent database.
+Calls to Moonpig to retrieve the ledger may return a different ledger
+object representing the same ledger. Moonpig methods may create and
+modify such objects internally, without propagating the appropriate
+changes out to your ledger object.  To avoid this problem, you should
+not usually called C<build> directly, but always implicitly via
+C<do_with_test_ledger>.
 
 =head2 C<ledger>
 
@@ -47,14 +87,22 @@ form:
 
           { class => CLASSNAME, contact => $contact }
 
-The classname defaults to C< class('Ledger') >.  If omitted, a contact
-will be generated at random using the C<build_contact> method.
+The classname defaults to:
 
-=head2 Consumer keys
+    Moonpig::Util::class('Ledger', 'Moonpig::Test::Role::Ledger')
+
+If you supply your own classname, it must compose the simple role
+C<Moonpig::Test::Role::Ledger> or implement equivalent functionality.
+
+If a contact is omitted, one will be generated at random using the
+C<build_contact> method.
+
+=head2 Component keys
 
 All other keys are taken to be names of consumers.  You may include as
 many consumers as you want.  The consumers are created as specified
-and added to the ledger.
+and added to the ledger.  You can retrieve the consumers later by using
+C<< $ledger->get_component( $name ) >>.
 
 The corresponding values are hashes.   Each hash must contain either a
 C<template> key which specifies a template name, or a C<class> key
@@ -102,8 +150,8 @@ indicated amount of money and is used.  For example:
 
 If the money amount is zero, no bank will be created.
 
-If a consumer's key in the returned hash is I<X>, then the bank will
-be returned under the key I<X>C<.bank>.
+If a consumer's key for C<< ->get_component >> is I<X>, then the bank will
+be accessible with C<< ->get_component(I<X>.bank) >>.
 
 =item *
 
@@ -117,7 +165,7 @@ the consumer C<fred> receives the xid C<test:consumer:fred>.
 
 Note that if consumer I<B> is the replacement for consumer I<A>, they
 will still not be assigned the same xid by default; this is probably
-not what you want.  
+not what you want.
 
 =item *
 
@@ -214,14 +262,15 @@ sub build {
 sub build_ledger {
   my ($args) = @_;
   my %args = %{$args || {}};
-  my $class = delete $args{class} || class('Ledger');
+  my $class = delete $args{class} || class('Ledger', '=Moonpig::Test::Role::Ledger');
   $args{contact} ||= build_contact();
   return $class->new(\%args);
 }
 
 sub build_consumers {
   my ($ledger, $args) = @_;
-  my $stuff = { ledger => $ledger };
+  my $stuff = $ledger->_component_name_map;
+  $stuff->{ledger} = $ledger;
   _build_consumers($args, $stuff);
 }
 
@@ -334,41 +383,11 @@ sub build_contact {
   });
 }
 
-=head1 Transactions
-
-If you construct a ledger object and then perform Moonpig operations
-on it, you run a risk that the object will become invalid relative to
-the state of the Moonpig persistent database.  Calls to Moonpig to
-retrieve the ledger may return a different ledger object representing
-the same ledger. Moonpig methods may create and modify such object
-internally, without propagating changes out to your ledger object.
-
-=head2 C<do_with_test_ledger>
-
-To avoid this possibility, use C<do_with_test_ledger>:
-
-	do_with_test_ledger($args, $code, $opts);
-
-This builds a new ledger with C<< build(%@args) >> and tells Moonpig
-to propagate it into new read-write transaction that executes the
-action in C<$code>.  The new ledger is passed to C<$code> as an
-argument.  The new ledger's GUID may be safely captured and re-used in
-a later call to C<Moonpig::Storage::do_with_ledger>.
-
-The C<$opts> argument is an option hashref of options. You may use C<< ro => 1 >>
-to run C<$code> in a read-only transaction. See
-C<Moonpig::Role::Storage::do_with_ledgers> for further details.
-
-=head2 C<do_ro_with_test_ledger>
-
-The same, but forces a read-only transaction.
-
-=cut
-
 sub do_with_test_ledger {
   my ($args, $code, $opts) = @_;
   my $stuff = build(%$args);
-  return Moonpig->env->storage->do_with_this_ledger($stuff->{ledger}, $code, $opts);
+  my $ledger = delete $stuff->{ledger};
+  return Moonpig->env->storage->do_with_this_ledger($ledger, $code, $opts);
 }
 
 sub do_ro_with_test_ledger {
