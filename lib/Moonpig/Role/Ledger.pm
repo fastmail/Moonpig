@@ -683,6 +683,12 @@ sub job_array {
   Moonpig->env->storage->undone_jobs_for_ledger($_[0]);
 }
 
+sub save {
+  my ($self) = @_;
+  Moonpig->env->storage->save_ledger($self);
+  return $self;
+}
+
 PARTIAL_PACK {
   my ($self) = @_;
 
