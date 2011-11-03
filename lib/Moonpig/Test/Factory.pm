@@ -334,6 +334,37 @@ sub build_contact {
   });
 }
 
+=head1 Transactions
+
+If you construct a ledger object and then perform Moonpig operations
+on it, you run a risk that the object will become invalid relative to
+the state of the Moonpig persistent database.  Calls to Moonpig to
+retrieve the ledger may return a different ledger object representing
+the same ledger. Moonpig methods may create and modify such object
+internally, without propagating changes out to your ledger object.
+
+=head2 C<do_with_test_ledger>
+
+To avoid this possibility, use C<do_with_test_ledger>:
+
+	do_with_test_ledger($args, $code, $opts);
+
+This builds a new ledger with C<< build(%@args) >> and tells Moonpig
+to propagate it into new read-write transaction that executes the
+action in C<$code>.  The new ledger is passed to C<$code> as an
+argument.  The new ledger's GUID may be safely captured and re-used in
+a later call to C<Moonpig::Storage::do_with_ledger>.
+
+The C<$opts> argument is an option hashref of options. You may use C<< ro => 1 >>
+to run C<$code> in a read-only transaction. See
+C<Moonpig::Role::Storage::do_with_ledgers> for further details.
+
+=head2 C<do_ro_with_test_ledger>
+
+The same, but forces a read-only transaction.
+
+=cut
+
 sub do_with_test_ledger {
   my ($args, $code, $opts) = @_;
   my $stuff = build(%$args);
