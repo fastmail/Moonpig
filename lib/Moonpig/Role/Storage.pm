@@ -10,14 +10,12 @@ requires 'do_ro';
 
 requires 'do_with_ledgers';
 
+# instead of a hash of name-to-guid mappings, get just a single guid
+# and instead of passing the code a hash of name-to-ledger mappings,
+# just pass a single guid
 sub do_with_ledger {
-  my ($self, $guid, $code) = @_;
-  $self->do_with_ledgers({ ledger => $guid }, $code);
-}
-
-sub do_with_fresh_ledger {
-  my ($self, $args) = @_;
-  $self->do_with_
+  my ($self, $guid, $code, $opts) = @_;
+  $self->do_with_ledgers({ ledger => $guid }, sub { $code->($_[0]{ledger}) }, $opts);
 }
 
 sub do_with_this_ledger {
