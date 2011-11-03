@@ -200,23 +200,17 @@ sub do_ro {
   return $rv;
 }
 
-has ledger_context_factory => (
-  is => 'ro',
-  isa => Factory,
-  default => sub { "Moonpig::Storage::LedgerContext" },
-);
-
 sub do_with_ledgers {
   my ($self, $guids, $code, $opts) = @_;
   $guids ||= {};
   $opts ||= {};
   $opts->{ro} ||= 0;
 
-  my $ledgers = $self->ledger_context_factory->new();
+  my %ledgers = ();
   for my $name (keys %$guids) {
     my $ledger = $self->retrieve_ledger_for_guid($guids->{$name})
       or croak "Couldn't find ledger for guid '$guids->{name}'";
-    $ledgers->put($name, $ledger);
+    $ledgers{$name} = $ledger;
   }
 
   # XXX this does not properly handle nested transactions - mjd 20111102
