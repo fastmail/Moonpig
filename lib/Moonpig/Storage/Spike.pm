@@ -598,7 +598,6 @@ sub retrieve_ledger_for_guid {
   # return the modified version directly from the queue
   if ($self->_has_update_mode && $self->_in_update_mode) {
     if (my $ledger = $self->_search_queue_for_ledger($guid)) {
-      warn "#># returning ledger from queue\n";
       return $ledger;
     }
   }
