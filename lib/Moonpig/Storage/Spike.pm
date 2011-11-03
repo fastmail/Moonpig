@@ -165,10 +165,12 @@ has _update_mode_stack => (
   isa => 'Moonpig::Storage::UpdateModeStack',
   default => sub { Moonpig::Storage::UpdateModeStack->new() },
   handles => {
-    _has_update_mode => 'is_nonempty',
     _clear_update_mode => 'pop_stack',
-    _set_update_mode => 'push_true',
+    _has_update_mode => 'is_nonempty',
+    _pop_update_mode => 'pop_stack',
+    _push_update_mode => 'push',
     _set_noupdate_mode => 'push_false',
+    _set_update_mode => 'push_true',
   },
 );
 
@@ -203,8 +205,13 @@ sub do_ro {
 sub do_with_ledgers {
   my ($self, $guids, $code, $opts) = @_;
   $guids ||= {};
-  $opts ||= {};
-  $opts->{ro} ||= 0;
+  my %opts = %{$opts || {}};
+  my $ro = delete($opts{ro}) || 0;
+
+  if (%opts) {
+    my $keys = join " ", sort keys %opts;
+    croak "Unknown options '%keys' to do_with_ledgers";
+  }
 
   my %ledgers = ();
   for my $name (keys %$guids) {
@@ -213,12 +220,7 @@ sub do_with_ledgers {
     $ledgers{$name} = $ledger;
   }
 
-  # XXX this does not properly handle nested transactions - mjd 20111102
-  if ($opts->{ro}) {
-    $self->_set_noupdate_mode;
-  } else {
-    $self->_set_update_mode;
-  }
+  $self->_push_update_mode(! $ro);
 
   my $rv = $self->txn(sub {
     my $rv = $code->(\%ledgers);
