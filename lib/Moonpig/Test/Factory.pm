@@ -11,7 +11,7 @@ use Moonpig::Env::Test;
 use Moonpig::Util -all;
 
 use Sub::Exporter -setup => {
-  exports => [ qw(build build_consumers build_ledger) ], # The other stuff is really not suitable for exportation
+  exports => [ qw(build build_consumers build_ledger do_with_test_ledger do_ro_with_test_ledger) ],
 };
 
 =head1 NAME
@@ -332,6 +332,17 @@ sub build_contact {
     city            => 'Townville',
     country         => 'USA',
   });
+}
+
+sub do_with_test_ledger {
+  my ($args, $code, $opts) = @_;
+  my $stuff = build(%$args);
+  return Moonpig->env->storage->do_with_this_ledger($stuff->{ledger}, $code, $opts);
+}
+
+sub do_ro_with_test_ledger {
+ my ($args, $code, $opts) = @_;
+  do_with_test_ledger($args, $code, { %$opts, ro => 1 });
 }
 
 1;

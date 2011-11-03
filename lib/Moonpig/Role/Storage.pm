@@ -18,9 +18,16 @@ sub do_with_ledger {
   $self->do_with_ledgers({ ledger => $guid }, sub { $code->($_[0]{ledger}) }, $opts);
 }
 
+# Take a prefabricated ledger, and run a transaction with it
+# WARNING: the ledger variable may become invalid after the transaction completes,
+# meaning that it may no longer reflect the correct state of the ledger!
+# This method is for testing only.
 sub do_with_this_ledger {
-  my ($self, $ledger) = @_;
-  die "unimplemented";
+  my ($self, $ledger, $code, $opts) = @_;
+  $self->do_rw(sub {
+    $ledger->save();
+    $self->do_with_ledger($ledger->guid, $code, $opts);
+  });
 }
 
 requires 'queue_job__';
