@@ -9,12 +9,13 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 use Test::File::ShareDir 0.003001 -share => {
-  -dist   => { 'Moonpig' => 'share' }
+  -dist => { 'Test-Moonpig' => 'share' }
 };
 
 use Carp qw(croak confess);
 use Email::Address;
 use Email::Sender::Transport::Test;
+use File::ShareDir ();
 use Moonpig::X;
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Code;
@@ -22,6 +23,10 @@ use Moonpig::Types qw(Time);
 use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
+
+sub share_roots {
+  return File::ShareDir::dist_dir('Test-Moonpig');
+}
 
 sub default_from_email_address {
   Email::Address->new(
