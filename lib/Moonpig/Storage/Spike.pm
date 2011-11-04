@@ -64,7 +64,7 @@ schema:
       fields:
         guid: { name: guid, data_type: varchar, size: 36, is_nullable: 0 }
         name: { name: name, data_type: varchar, size: 20, is_nullable: 0 }
-        blob: { name: blob, data_type: blob, is_nullable: 0 }
+        payload: { name: payload, data_type: blob, is_nullable: 0 }
       constraints:
         - type:   PRIMARY KEY
           fields: [ guid, name ]
@@ -489,8 +489,8 @@ sub _store_ledger {
 
     $dbh->do(
       q{
-        REPLACE INTO stuff
-        (guid, name, blob)
+        INSERT OR REPLACE INTO stuff
+        (guid, name, payload)
         VALUES (?, 'class_roles', ?)
       },
       undef,
@@ -501,7 +501,7 @@ sub _store_ledger {
     $dbh->do(
       q{
         INSERT OR REPLACE INTO stuff
-        (guid, name, blob)
+        (guid, name, payload)
         VALUES (?, 'ledger', ?)
       },
       undef,
@@ -605,13 +605,13 @@ sub retrieve_ledger_for_guid {
 
   my $dbh = $self->_conn->dbh;
   my ($class_blob) = $dbh->selectrow_array(
-    q{SELECT blob FROM stuff WHERE guid = ? AND name = 'class_roles'},
+    q{SELECT payload FROM stuff WHERE guid = ? AND name = 'class_roles'},
     undef,
     $guid,
   );
 
   my ($ledger_blob) = $dbh->selectrow_array(
-    q{SELECT blob FROM stuff WHERE guid = ? AND name = 'ledger'},
+    q{SELECT payload FROM stuff WHERE guid = ? AND name = 'ledger'},
     undef,
     $guid,
   );
