@@ -3,7 +3,7 @@ use Test::Routine::Util -all;
 use Test::More;
 use Test::Fatal;
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::DateTime;
 
 before "run_test" => sub {

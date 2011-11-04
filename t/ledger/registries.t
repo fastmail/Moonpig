@@ -14,7 +14,7 @@ with(
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(build);
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 
 use Moonpig::Events::Handler::Code;
 

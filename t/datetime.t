@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use Test::Fatal;
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::DateTime;
 
 sub jan {

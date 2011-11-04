@@ -1,6 +1,6 @@
 use Test::Routine;
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use t::lib::Logger '$Logger';
 
 use Moonpig::Context::Test '-all', '$Context';

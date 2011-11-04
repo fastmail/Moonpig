@@ -3,7 +3,7 @@ use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
 use Moonpig;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util qw(class days dollars years);
 
 use Data::GUID qw(guid_string);

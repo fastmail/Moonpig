@@ -4,7 +4,7 @@ use warnings;
 use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 use Moonpig;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;

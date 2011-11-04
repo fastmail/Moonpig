@@ -1,5 +1,5 @@
 package t::lib::Util;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use strict;
 
 use Carp qw(confess croak);

@@ -13,7 +13,7 @@ use Test::Routine;
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(build);
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 
 with(
   'Moonpig::Test::Role::UsesStorage',

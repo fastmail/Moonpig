@@ -2,7 +2,7 @@ use Test::Routine;
 
 use Carp qw(confess croak);
 use Moonpig;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util -all;
 use Test::Exception;
 use Test::More;

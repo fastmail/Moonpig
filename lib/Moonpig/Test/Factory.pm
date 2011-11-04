@@ -7,7 +7,7 @@ use Carp qw(confess croak);
 use Class::MOP ();
 use Data::GUID qw(guid_string);
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util -all;
 
 use Sub::Exporter -setup => {

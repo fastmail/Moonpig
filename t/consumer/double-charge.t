@@ -11,7 +11,7 @@ with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Events::Handler::Code;
 
 use Moonpig::Util qw(class days event);

@@ -5,7 +5,7 @@ use Test::More;
 use Test::Fatal;
 use Test::Routine;
 use Test::Routine::Util -all;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars);
 
 use Moonpig::Test::Factory qw(build_ledger);

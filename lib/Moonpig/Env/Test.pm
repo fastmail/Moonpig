@@ -8,10 +8,6 @@ use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 
-use Test::File::ShareDir 0.003001 -share => {
-  -dist => { 'Test-Moonpig' => 'share' }
-};
-
 use Carp qw(croak confess);
 use Email::Address;
 use Email::Sender::Transport::Test;
@@ -24,9 +20,7 @@ use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
 
-sub share_roots {
-  return File::ShareDir::dist_dir('Test-Moonpig');
-}
+sub share_roots { }
 
 sub default_from_email_address {
   Email::Address->new(

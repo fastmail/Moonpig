@@ -1,6 +1,6 @@
 use Test::Routine;
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
 use Test::Routine::Util;

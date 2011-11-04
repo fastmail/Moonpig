@@ -2,7 +2,7 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 use Test::Fatal;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars);
 
 use Moonpig::Context::Test -all, '$Context';

@@ -1,6 +1,6 @@
 use Test::Routine;
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 
 use Carp qw(confess croak);
 use Moonpig::Events::Handler::Code;

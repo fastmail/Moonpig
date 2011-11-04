@@ -1,6 +1,6 @@
 
 use JSON;
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::UserAgent;
 use Moonpig::Web::App;
 use Plack::Test;

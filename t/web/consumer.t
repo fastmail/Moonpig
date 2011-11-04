@@ -3,7 +3,7 @@ use Test::Routine::Util '-all';
 
 use JSON;
 use Moonpig::App::Ob::Dumper qw();
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 use Moonpig::UserAgent;
 use Moonpig::Util qw(days dollars);
 use Moonpig::Web::App;

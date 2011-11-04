@@ -12,7 +12,7 @@ with(
 use Moonpig::Test::Factory qw(build build_ledger);
 use t::lib::Logger '$Logger';
 
-use Moonpig::Env::Test;
+use t::lib::TestEnv;
 
 use Data::Dumper qw(Dumper);
 use Data::GUID qw(guid_string);
