@@ -12,7 +12,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 use Moonpig::Env::Test;
 
@@ -35,18 +35,18 @@ sub _test_ledgers_and_xids {
 
   for my $key (qw(1 2)) {
     $xid{ $key }    = $self->random_xid;
-    $ledger{$key}   = build(
-      consumer => {
-        class            => class('Consumer::Dummy'),
-        xid              => $xid{$key},
-        make_active      => 1,
-        replacement_plan => [ get => '/nothing' ],
-      }
-    )->{ledger};
-
-    Moonpig->env->save_ledger($ledger{$key});
+    $ledger{$key} = do_with_test_ledger({
+        consumer => {
+            class            => class('Consumer::Dummy'),
+            xid              => $xid{$key},
+            make_active      => 1,
+            replacement_plan => [ get => '/nothing' ],
+        }}, sub {
+          my ($ledger) = @_;
+          $ledger->save;
+          return $ledger;
+    })
   }
-
   return( \%ledger, \%xid );
 }
 
@@ -75,23 +75,23 @@ test "global xid lookup" => sub {
 test "one-ledger-per-xid safety" => sub {
   my ($self) = @_;
 
-  my $Ledger = class('Ledger');
-
-  my ($ledger, $xid) = $self->_test_ledgers_and_xids;
+  my ($lhash, $xid) = $self->_test_ledgers_and_xids;
 
   my $err = exception {
-    $ledger->{1}->add_consumer(
-      class(qw(Consumer::Dummy)),
-      {
-        xid                => $xid->{2},
-        make_active        => 1,
+    Moonpig->env->storage->do_with_ledger($lhash->{1}->guid, sub {
+      my ($ledger) = @_;
+      $ledger->add_consumer(
+        class(qw(Consumer::Dummy)),
+        {
+          xid                => $xid->{2},
+          make_active        => 1,
 
-        replacement_plan    => [ get => '/nothing' ],
-      },
-    );
+          replacement_plan    => [ get => '/nothing' ],
+        },
+      );
 
-    Moonpig->env->save_ledger($ledger->{1});
-  };
+      $ledger->save;
+    })};
 
   ok($err, "we can't register 1 id with 2 ledgers");
 
@@ -104,8 +104,6 @@ test "one-ledger-per-xid safety" => sub {
 test "registered abandoned xid" => sub {
   my ($self) = @_;
 
-  my $Ledger = class('Ledger');
-
   my ($ledger, $xid) = $self->_test_ledgers_and_xids;
 
   # first, ensure that both X-1 and X-2 are taken by L-1 and L-2
@@ -117,10 +115,12 @@ test "registered abandoned xid" => sub {
     );
   }
 
-  my $consumer = $ledger->{1}->active_consumer_for_xid($xid->{1});
-  $consumer->handle_event(event('terminate'));
-
-  Moonpig->env->save_ledger($ledger->{1});
+  Moonpig->env->storage->do_with_ledger($ledger->{1}->guid, sub {
+    my ($ledger) = @_;
+    my $consumer = $ledger->active_consumer_for_xid($xid->{1});
+    $consumer->handle_event(event('terminate'));
+    $ledger->save;
+  });
 
   # now, X-1 should go nowhere, but X-2 is still taken by L-2
   is(
@@ -136,17 +136,19 @@ test "registered abandoned xid" => sub {
   );
 
   # Since X-1 is unclaimed, we can give it to L-2
-  $ledger->{2}->add_consumer(
-    class(qw(Consumer::Dummy)),
-    {
-      xid                => $xid->{1},
-      make_active        => 1,
+  Moonpig->env->storage->do_with_ledger($ledger->{2}->guid, sub {
+    my ($ledger) = @_;
+    $ledger->add_consumer(
+      class(qw(Consumer::Dummy)),
+      {
+        xid                => $xid->{1},
+        make_active        => 1,
 
-      replacement_plan    => [ get => '/nothing' ],
-    },
-  );
+        replacement_plan    => [ get => '/nothing' ],
+      });
+    $ledger->save;
+  });
 
-  Moonpig->env->save_ledger($ledger->{2});
 
   # Now make sure that both X-1 and X-2 are on L-2
   for (1, 2) {
