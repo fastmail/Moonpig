@@ -1,4 +1,5 @@
 package Moonpig::Storage::Spike;
+# ABSTRACT: Basic implementation of Moonpig persistent storage
 use Moose;
 with 'Moonpig::Role::Storage';
 
@@ -224,7 +225,10 @@ sub do_with_ledgers {
 
   my $rv = $self->txn(sub {
     my $rv = $code->(\%ledgers);
-    $self->_execute_saves unless $ro;
+    unless ($ro) {
+      $_->save for values(%ledgers);
+      $self->_execute_saves;
+    }
     return $rv;
   });
 
