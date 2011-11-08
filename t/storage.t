@@ -22,15 +22,6 @@ use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
-sub fresh_ledger {
-  my ($self) = @_;
-
-  do_with_test_ledger({}, sub {
-    my ($ledger) = @_;
-    $ledger->save;
-  });
-}
-
 test "store and retrieve" => sub {
   my ($self) = @_;
 
@@ -74,9 +65,9 @@ test "store and retrieve" => sub {
 test "job queue" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->fresh_ledger;
+  do_with_test_ledger({}, sub {
+    my ($ledger) = @_;
 
-  Moonpig->env->storage->do_rw(sub {
     $ledger->queue_job('test.job.a' => {
       foo => $^T,
       bar => 'serious business',
@@ -147,9 +138,9 @@ test "job queue" => sub {
 test "job lock and unlock" => sub {
   my ($self) = @_;
 
-  my $ledger = $self->fresh_ledger;
+  do_with_test_ledger({}, sub {
+    my ($ledger) = @_;
 
-  Moonpig->env->storage->do_rw(sub {
     $ledger->queue_job('test.job' => {
       foo => $^T,
       bar => 'serious business',

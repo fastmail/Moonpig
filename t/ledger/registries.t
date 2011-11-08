@@ -41,12 +41,8 @@ sub _test_ledgers_and_xids {
             xid              => $xid{$key},
             make_active      => 1,
             replacement_plan => [ get => '/nothing' ],
-        }}, sub {
-          my ($ledger) = @_;
-          $ledger->save;
-          return $ledger;
-    })
-  }
+        }}, sub { return $_[0] })}
+
   return( \%ledger, \%xid );
 }
 
@@ -89,8 +85,6 @@ test "one-ledger-per-xid safety" => sub {
           replacement_plan    => [ get => '/nothing' ],
         },
       );
-
-      $ledger->save;
     })};
 
   ok($err, "we can't register 1 id with 2 ledgers");
@@ -119,7 +113,6 @@ test "registered abandoned xid" => sub {
     my ($ledger) = @_;
     my $consumer = $ledger->active_consumer_for_xid($xid->{1});
     $consumer->handle_event(event('terminate'));
-    $ledger->save;
   });
 
   # now, X-1 should go nowhere, but X-2 is still taken by L-2
@@ -146,7 +139,6 @@ test "registered abandoned xid" => sub {
 
         replacement_plan    => [ get => '/nothing' ],
       });
-    $ledger->save;
   });
 
 

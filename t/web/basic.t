@@ -21,7 +21,6 @@ test "get a ledger guid via web" => sub {
 
   my $guid = do_with_test_ledger({}, sub {
     my ($ledger) = @_;
-    $ledger->save;
     return $ledger->guid;
   });
 
