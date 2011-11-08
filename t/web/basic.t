@@ -6,7 +6,7 @@ use HTTP::Request;
 use Moonpig::Web::App;
 use Plack::Test;
 
-use Moonpig::Test::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -19,11 +19,11 @@ use namespace::autoclean;
 test "get a ledger guid via web" => sub {
   my ($self) = @_;
 
-  my $ledger = build_ledger();
-
-  my $guid = $ledger->guid;
-
-  Moonpig->env->save_ledger($ledger);
+  my $guid = do_with_test_ledger({}, sub {
+    my ($ledger) = @_;
+    $ledger->save;
+    return $ledger->guid;
+  });
 
   test_psgi(Moonpig::Web::App->app, sub {
     my ($cb) = @_;
