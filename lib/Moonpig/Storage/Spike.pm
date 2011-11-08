@@ -59,21 +59,23 @@ my $schema_yaml = <<'...';
 ---
 schema:
   tables:
-    stuff:
-      name: stuff
+    ledgers:
+      name: ledgers
       fields:
-        guid: { name: guid, data_type: varchar, size: 36, is_nullable: 0 }
-        name: { name: name, data_type: varchar, size: 20, is_nullable: 0 }
-        payload: { name: payload, data_type: blob, is_nullable: 0 }
-      constraints:
-        - type:   PRIMARY KEY
-          fields: [ guid, name ]
+        guid: { name: guid, data_type: varchar, size: 36, is_primary_key: 1 }
+        frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
+        frozen_classes: { name: frozen_classes, data_type: blob, is_nullable: 0 }
 
     xid_ledgers:
       name: xid_ledgers
       fields:
         xid: { name: xid, data_type: varchar, size: 256, is_primary_key: 1 }
         ledger_guid: { name: ledger_guid, data_type: varchar, size: 36, is_nullable: 0 }
+      constraints:
+        - type: FOREIGN KEY
+          fields: [ ledger_guid ]
+          reference_table: ledgers
+          reference_fields: [ guid ]
 
     metadata:
       name: metadata
@@ -92,6 +94,11 @@ schema:
         created_at: { name: created_at, data_type: integer, is_nullable: 0 }
         locked_at: { name: locked_at, data_type: integer, is_nullable: 1 }
         termination_state: { name: termination_state, data_type: varchar, size: 32, is_nullable: 1 }
+      constraints:
+        - type: FOREIGN KEY
+          fields: [ ledger_guid ]
+          reference_table: ledgers
+          reference_fields: [ guid ]
 
     job_documents:
       name: job_documents
@@ -489,24 +496,14 @@ sub _store_ledger {
 
     $dbh->do(
       q{
-        INSERT OR REPLACE INTO stuff
-        (guid, name, payload)
-        VALUES (?, 'class_roles', ?)
-      },
-      undef,
-      $ledger->guid,
-      nfreeze( class_roles ),
-    );
-
-    $dbh->do(
-      q{
-        INSERT OR REPLACE INTO stuff
-        (guid, name, payload)
-        VALUES (?, 'ledger', ?)
+        INSERT OR REPLACE INTO ledgers
+        (guid, frozen_ledger, frozen_classes)
+        VALUES (?, ?, ?)
       },
       undef,
       $ledger->guid,
       nfreeze( $ledger ),
+      nfreeze( class_roles ),
     );
 
     $dbh->do(
@@ -567,7 +564,7 @@ sub ledger_guids {
   my ($self) = @_;
   my $dbh = $self->_conn->dbh;
 
-  my $guids = $dbh->selectcol_arrayref(q{SELECT DISTINCT guid FROM stuff});
+  my $guids = $dbh->selectcol_arrayref(q{SELECT DISTINCT guid FROM ledgers});
   return @$guids;
 }
 
@@ -603,14 +600,8 @@ sub retrieve_ledger_for_guid {
   }
 
   my $dbh = $self->_conn->dbh;
-  my ($class_blob) = $dbh->selectrow_array(
-    q{SELECT payload FROM stuff WHERE guid = ? AND name = 'class_roles'},
-    undef,
-    $guid,
-  );
-
-  my ($ledger_blob) = $dbh->selectrow_array(
-    q{SELECT payload FROM stuff WHERE guid = ? AND name = 'ledger'},
+  my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
+    q{SELECT frozen_ledger, frozen_classes FROM ledgers WHERE guid = ?},
     undef,
     $guid,
   );
