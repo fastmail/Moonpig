@@ -9,7 +9,7 @@ with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
-use Moonpig::Test::Factory qw(build build_ledger);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 use t::lib::Logger '$Logger';
 
 use Moonpig::Env::Test;
@@ -25,14 +25,10 @@ use namespace::autoclean;
 sub fresh_ledger {
   my ($self) = @_;
 
-  my $ledger;
-
-  Moonpig->env->storage->do_rw(sub {
-    $ledger = build_ledger();
-    Moonpig->env->save_ledger($ledger);
+  do_with_test_ledger({}, sub {
+    my ($ledger) = @_;
+    $ledger->save;
   });
-
-  return $ledger;
 }
 
 test "store and retrieve" => sub {
@@ -55,10 +51,10 @@ test "store and retrieve" => sub {
       die("error with child: " . Dumper(\%waitpid));
     }
   } else {
-    my $ledger = build(consumer => { template => 'demo-service', xid => $xid })->{ledger};
-
-    Moonpig->env->save_ledger($ledger);
-
+    do_with_test_ledger({consumer => { template => 'demo-service', xid => $xid }}, sub {
+      my ($ledger) = @_;
+      $ledger->save;
+    });
     exit(0);
   }
 
@@ -66,11 +62,12 @@ test "store and retrieve" => sub {
 
   is(@guids, 1, "we have stored one guid");
 
-  my $ledger = Moonpig->env->storage->retrieve_ledger_for_guid($guids[0]);
+  Moonpig->env->storage->
+    do_with_ledger($guids[0], sub {
+                     my $consumer = $_[0]->active_consumer_for_xid($xid);
+                   }, { ro => 1 });
 
-  my $consumer = $ledger->active_consumer_for_xid($xid);
   # diag explain $retr_ledger;
-
   pass('we lived');
 };
 
