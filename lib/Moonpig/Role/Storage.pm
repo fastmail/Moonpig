@@ -18,6 +18,15 @@ sub do_with_ledger {
   $self->do_with_ledgers({ ledger => $guid }, sub { $code->($_[0]{ledger}) }, $opts);
 }
 
+# instead of a hash of name-to-guid mappings, get an array of guids
+# and instead of passing the a hash of name-to-ledger mappings,
+# pass an array of ledgers
+sub do_with_ledger_array {
+  my ($self, $guids, $code, $opts) = @_;
+  my %guids = map { $_ => $_ } @$guids;
+  $self->do_with_ledger(\%guids, sub { $code->values(%{$_[0]}) }, $opts);
+}
+
 sub do_rw_with_ledger {
   my ($self, $guid, $code, $opts) = @_;
   $opts ||= {};
