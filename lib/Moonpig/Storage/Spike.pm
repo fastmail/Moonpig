@@ -232,6 +232,20 @@ sub do_with_ledgers {
   return $rv;
 }
 
+sub do_rw_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_rw_with_ledgers" if exists $opts->{ro};
+  $self->do_with_ledgers($guids, $code, { %$opts, ro => 0 });
+}
+
+sub do_ro_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_ro_with_ledgers" if exists $opts->{ro};
+  $self->do_with_ledgers($guids, $code, { %$opts, ro => 1 });
+}
+
 has _ledger_queue => (
   is  => 'ro',
   isa => 'ArrayRef',

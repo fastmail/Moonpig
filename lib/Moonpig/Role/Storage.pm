@@ -2,7 +2,7 @@ package Moonpig::Role::Storage;
 use Moose::Role;
 
 use Moonpig::Context::Test -all, '$Context';
-
+use Carp 'croak';
 use namespace::autoclean;
 
 requires 'do_rw';
@@ -16,6 +16,20 @@ requires 'do_with_ledgers';
 sub do_with_ledger {
   my ($self, $guid, $code, $opts) = @_;
   $self->do_with_ledgers({ ledger => $guid }, sub { $code->($_[0]{ledger}) }, $opts);
+}
+
+sub do_rw_with_ledger {
+  my ($self, $guid, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_rw_with_ledger" if exists $opts->{ro};
+  $self->do_with_ledger($guid, $code, { %$opts, ro => 0 });
+}
+
+sub do_ro_with_ledger {
+  my ($self, $guid, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_ro_with_ledger" if exists $opts->{ro};
+  $self->do_with_ledger($guid, $code, { %$opts, ro => 1 });
 }
 
 # Take a prefabricated ledger, and run a transaction with it
