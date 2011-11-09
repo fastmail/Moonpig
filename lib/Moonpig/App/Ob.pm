@@ -181,7 +181,11 @@ sub run {
   my @guids = $st->ledger_guids();
   my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
   $self->last_result( [ @ledgers ] );
-  $st->_reinstate_stored_time();
+
+  if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {
+    $storage->_reinstate_stored_time;
+  }
+
   $self->_initial_display(\@guids);
 
   while (defined ($_ = $self->readline)) {
