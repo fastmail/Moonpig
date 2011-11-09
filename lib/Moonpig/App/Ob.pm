@@ -183,7 +183,7 @@ sub run {
   $self->last_result( [ @ledgers ] );
 
   if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {
-    $storage->_reinstate_stored_time;
+    $st->_reinstate_stored_time;
   }
 
   $self->_initial_display(\@guids);
