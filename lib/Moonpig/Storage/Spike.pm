@@ -496,7 +496,7 @@ sub _store_ledger {
 
     $dbh->do(
       q{
-        INSERT OR REPLACE INTO ledgers
+        REPLACE INTO ledgers
         (guid, frozen_ledger, frozen_classes)
         VALUES (?, ?, ?)
       },
