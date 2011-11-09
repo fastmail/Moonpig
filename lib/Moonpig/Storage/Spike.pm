@@ -494,17 +494,37 @@ sub _store_ledger {
   $conn->txn(sub {
     my ($dbh) = $_;
 
-    $dbh->do(
-      q{
-        REPLACE INTO ledgers
-        (guid, frozen_ledger, frozen_classes)
-        VALUES (?, ?, ?)
-      },
+    my ($count) = $dbh->selectrow_array(
+      q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
       undef,
       $ledger->guid,
+    );
+
+    my $rv = $dbh->do(
+      q{
+        UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?
+        WHERE guid = ?
+      },
+      undef,
       nfreeze( $ledger ),
       nfreeze( class_roles ),
+      $ledger->guid,
     );
+
+    if ($rv and $rv == 0) {
+      # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
+      $dbh->do(
+        q{
+          INSERT INTO ledgers
+          (guid, frozen_ledger, frozen_classes)
+          VALUES (?, ?, ?)
+        },
+        undef,
+        $ledger->guid,
+        nfreeze( $ledger ),
+        nfreeze( class_roles ),
+      );
+    }
 
     $dbh->do(
       q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
