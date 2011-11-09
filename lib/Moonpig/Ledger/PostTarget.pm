@@ -34,11 +34,15 @@ sub resource_post {
       my $consumers = $arg->{consumers};
 
       for my $xid (keys %$consumers) {
+        my $template_args = $consumers->{$xid}{template_args} || {};
+        $template_args->{xid} //= $xid;
+
+        Moonpig::X->throw("xid in template_args differs from given key")
+          unless $xid eq $template_args->{xid};
+
         $ledger->add_consumer_from_template(
           $consumers->{$xid}{template},
-          {
-            xid => $xid,
-          },
+          $template_args,
         );
       }
     }
