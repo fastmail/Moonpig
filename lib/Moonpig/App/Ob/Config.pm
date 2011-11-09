@@ -1,7 +1,6 @@
 package Moonpig::App::Ob::Config;
 use Moose;
 use Moonpig;
-use t::lib::TestEnv;
 use Moose::Util::TypeConstraints qw(role_type);
 
 sub env {

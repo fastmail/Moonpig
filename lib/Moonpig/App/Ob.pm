@@ -5,6 +5,7 @@ use Moonpig::App::Ob::CommandArgs;
 use Moonpig::App::Ob::Functions;
 use Moonpig::Types qw(Factory);
 
+use Class::Load ();
 use Moose;
 use Moose::Util::TypeConstraints qw(duck_type class_type);
 use Term::ReadLine;
@@ -238,9 +239,15 @@ sub parse_ARGV {
   my ($self, $argv) = @_;
   my @argv = @$argv;
   my $BAD = 0;
+
+  my $env = 'Moonpig::Env::Test';
+
   while (@argv) {
     if ($argv[0] eq '-d') {
       $ENV{$_} = $argv[1] for qw(FAUXBOX_STORAGE_ROOT MOONPIG_STORAGE_ROOT);
+      splice @argv, 0, 2;
+    } elsif ($argv[0] eq '-e') {
+      $env = $argv[1];
       splice @argv, 0, 2;
     } else {
       $self->obwarn("Unknown option '$argv[0]'\n");
@@ -252,6 +259,10 @@ sub parse_ARGV {
     $self->usage();
     exit 1;
   }
+
+  Class::Load::load_class($env);
+  $env->import;
+
   return $self;
 }
 
