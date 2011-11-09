@@ -1,7 +1,8 @@
-
 use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
+
+use Moonpig::Env::Test;
 
 BEGIN { use_ok('Moonpig::App::Ob') }
 
