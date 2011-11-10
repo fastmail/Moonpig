@@ -9,66 +9,71 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
+
 use t::lib::Util qw(elapse);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
 sub set_up {
-  my $stuff = build();
-  my $L = $stuff->{ledger};
+  my $guid = do_with_test_ledger({ consumer => { template => 'dummy' }}, sub {
+    my ($L) = @_;
 
-  for (1..5) {
-    $L->add_coupon(class("Coupon::FixedAmount", "Coupon::Universal"),
-                   { flat_discount_amount => dollars(10),
-                     description => '$10 off',
-                   });
-  }
-  for (1..5) {
-    $L->add_coupon(class("Coupon::FixedPercentage", "Coupon::Universal"),
-                   { discount_rate => percent(10),
-                     description => '10% off',
-                   });
-  }
-  return $stuff;
+    for (1..5) {
+      $L->add_coupon(class("Coupon::FixedAmount", "Coupon::Universal"),
+                     { flat_discount_amount => dollars(10),
+                       description => '$10 off',
+                     });
+    }
+    for (1..5) {
+      $L->add_coupon(class("Coupon::FixedPercentage", "Coupon::Universal"),
+                     { discount_rate => percent(10),
+                       description => '10% off',
+                     });
+    }
+    return $L->guid;
+  });
 }
 
 test "order" => sub {
-  my $stuff;
+  my $guid;
 
   # keep trying until we get some of the coupons out of order
   { my @c;
     do {
-      $stuff = set_up();
-      @c = $stuff->{ledger}->coupons;
+      Moonpig->env->storage->do_with_ledger(set_up(), sub {
+        my ($ledger) = @_;
+        @c = $ledger->coupons;
+        $guid = $ledger->guid;
+      })
     } until (grep $_->does("Moonpig::Role::Coupon::FixedAmount"), @c[0..4]);
   }
 
-  my $L = $stuff->{ledger};
-  {
+  Moonpig->env->storage->do_with_ledger($guid, sub {
+    my ($L) = @_;
     my @c = $L->coupons;
     is(@c, 10, "created ten assorted coupons");
-  }
 
-  my $inv = $L->current_invoice;
-  $inv->add_charge(
-    class( "InvoiceCharge" )->new({
-      description => "One hundred assorted fruit pies",
-      amount      => dollars(100),
-      tags        => [],
-    }));
+    my $inv = $L->current_invoice;
+    $inv->add_charge(
+      class( "InvoiceCharge" )->new({
+        description => "One hundred assorted fruit pies",
+        amount      => dollars(100),
+        tags        => [],
+      }));
 
-  until ($L->payable_invoices) {
-    Moonpig->env->storage->do_rw(sub { elapse($L, 1) });
-  }
+    until ($L->payable_invoices) {
+      elapse($L, 1);
+    }
 
-  is($L->credits, 0, "no credits yet");
-  $L->process_credits;
-  ok ($inv->is_paid, "invoice was paid");
-  is($L->credits, 10, "each coupon made a credit");
-  for my $c ($L->credits) {
-    is($c->unapplied_amount, 0, "credit fully applied");
-  }
+    is($L->credits, 0, "no credits yet");
+    $L->process_credits;
+    ok ($inv->is_paid, "invoice was paid");
+    is($L->credits, 10, "each coupon made a credit");
+    for my $c ($L->credits) {
+      is($c->unapplied_amount, 0, "credit fully applied");
+    }
+  });
 };
 
 run_me;
