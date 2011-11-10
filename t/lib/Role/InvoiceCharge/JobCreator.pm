@@ -15,7 +15,7 @@ sub create_job {
   my ($self, $event) = @_;
 
   $self->ledger->queue_job('job.on.payment' => {
-    consumer_guid => $self->consumer->guid,
+    consumer_guid => $self->owner_guid,
     created_by    => __PACKAGE__,
   });
 }

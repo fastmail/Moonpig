@@ -28,7 +28,7 @@ after _invoice => sub {
   my ($self) = @_;
   $self->ledger->current_invoice->add_charge(
     class("InvoiceCharge::CouponCreator")->new({
-      ledger => $self->ledger,
+      consumer => $self,
       coupon_class => $self->coupon_class,
       coupon_args => $self->coupon_args,
       description => "Pseudocharge to trigger coupon creation on behalf of consumer for " .
