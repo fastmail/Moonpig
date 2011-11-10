@@ -35,12 +35,11 @@ sub pop_stack {
   }
 }
 
-sub push_true {
-  push @{$_[0]->stack}, 1;
+sub push {
+  push @{$_[0]->stack}, $_[1];
 }
 
-sub push_false {
-  push @{$_[0]->stack}, 0;
-}
+sub push_false { $_[0]->push(0) }
+sub push_true { $_[0]->push(1) }
 
 1;

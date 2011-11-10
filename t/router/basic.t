@@ -6,7 +6,7 @@ use Test::Fatal;
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
-use Moonpig::Test::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 use Moonpig::Context::Test -all, '$Context';
 use t::lib::TestEnv;
@@ -21,19 +21,19 @@ use Moonpig::Util qw(class);
 test "route to and get a simple resource" => sub {
   my ($self) = @_;
 
-  my $ledger = build_ledger();
+  my ($guid, $ledger);
+  my $result = do_with_test_ledger({}, sub {
+    ($ledger) = @_;
+    $guid = $ledger->guid;
 
-  my $guid = $ledger->guid;
+    # XXX: temporary first draft of a route to get the guid
+    # /ledger/by-guid/:GUID/gguid
+    my ($resource) = Moonpig->env->route(
+      [ 'ledger', 'by-guid', $guid ],
+     );
 
-  Moonpig->env->save_ledger($ledger);
-
-  # XXX: temporary first draft of a route to get the guid
-  # /ledger/by-guid/:GUID/gguid
-  my ($resource) = Moonpig->env->route(
-    [ 'ledger', 'by-guid', $guid ],
-  );
-
-  my $result = $resource->resource_request(get => {});
+    return $resource->resource_request(get => {});
+  });
 
   isa_ok(
     $result,
@@ -47,19 +47,19 @@ test "route to and get a simple resource" => sub {
 test "route to and GET a method on a simple resource" => sub {
   my ($self) = @_;
 
-  my $ledger = build_ledger();
+  my ($guid, $ledger);
+  my $result = do_with_test_ledger({}, sub {
+    ($ledger) = @_;
+    $guid = $ledger->guid;
 
-  Moonpig->env->save_ledger($ledger);
+    # XXX: temporary first draft of a route to get the guid
+    # /ledger/by-guid/:GUID/gguid
+    my ($resource) = Moonpig->env->route(
+      [ 'ledger', 'by-guid', $guid, 'gguid' ],
+     );
 
-  my $guid = $ledger->guid;
-
-  # XXX: temporary first draft of a route to get the guid
-  # /ledger/by-guid/:GUID/gguid
-  my ($resource) = Moonpig->env->route(
-    [ 'ledger', 'by-guid', $guid, 'gguid' ],
-  );
-
-  my $result = $resource->resource_request(get => {});
+    return $resource->resource_request(get => {});
+  });
 
   is($result, $guid, "we can get the ledger's guid by routing to it");
 };

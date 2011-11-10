@@ -1,10 +1,11 @@
 package Moonpig::Storage::Spike;
+# ABSTRACT: Basic implementation of Moonpig persistent storage
 use Moose;
 with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
 
-use Carp ();
+use Carp qw(carp croak);
 use Class::Rebless 0.009;
 use Digest::MD5 qw(md5_hex);
 use DBI;
@@ -14,7 +15,7 @@ use File::Spec;
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
-use Moonpig::Types qw(Ledger);
+use Moonpig::Types qw(Ledger Factory);
 use Moonpig::Util qw(class class_roles);
 use Scalar::Util qw(blessed);
 use SQL::Translator;
@@ -172,10 +173,12 @@ has _update_mode_stack => (
   isa => 'Moonpig::Storage::UpdateModeStack',
   default => sub { Moonpig::Storage::UpdateModeStack->new() },
   handles => {
-    _has_update_mode => 'is_nonempty',
     _clear_update_mode => 'pop_stack',
-    _set_update_mode => 'push_true',
+    _has_update_mode => 'is_nonempty',
+    _pop_update_mode => 'pop_stack',
+    _push_update_mode => 'push',
     _set_noupdate_mode => 'push_false',
+    _set_update_mode => 'push_true',
   },
 );
 
@@ -205,6 +208,53 @@ sub do_ro {
   });
   $self->_clear_update_mode;
   return $rv;
+}
+
+sub do_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $guids ||= {};
+  my %opts = %{$opts || {}};
+  my $ro = delete($opts{ro}) || 0;
+
+  if (%opts) {
+    my $keys = join " ", sort keys %opts;
+    croak "Unknown options '%keys' to do_with_ledgers";
+  }
+
+  my %ledgers = ();
+  for my $name (keys %$guids) {
+    my $ledger = $self->retrieve_ledger_for_guid($guids->{$name})
+      or croak "Couldn't find ledger for guid '$guids->{name}'";
+    $ledgers{$name} = $ledger;
+  }
+
+  $self->_push_update_mode(! $ro);
+
+  my $rv = $self->txn(sub {
+    my $rv = $code->(\%ledgers);
+    unless ($ro) {
+      $_->save for values(%ledgers);
+      $self->_execute_saves;
+    }
+    return $rv;
+  });
+
+  $self->_clear_update_mode;
+  return $rv;
+}
+
+sub do_rw_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_rw_with_ledgers" if exists $opts->{ro};
+  $self->do_with_ledgers($guids, $code, { %$opts, ro => 0 });
+}
+
+sub do_ro_with_ledgers {
+  my ($self, $guids, $code, $opts) = @_;
+  $opts ||= {};
+  croak "ro option forbidden in do_ro_with_ledgers" if exists $opts->{ro};
+  $self->do_with_ledgers($guids, $code, { %$opts, ro => 1 });
 }
 
 has _ledger_queue => (
@@ -438,7 +488,7 @@ sub save_ledger {
   # EITHER:
   # 1. we are in a do_rw transaction -- save this ledger to write later
   # 2. we are in a do_ro transaction -- die
-  # 3. we are not in a transaction -- do one right now to save immediately
+  # 3. we are not in a transaction -- die (mjd, 2011-11-02)
   # -- rjbs, 2011-04-11
   if ($self->_has_update_mode) {
     if ($self->_in_update_mode) {
@@ -447,7 +497,7 @@ sub save_ledger {
       Moonpig::X->throw("save ledger inside read-only transaction");
     }
   } else {
-    $self->_store_ledger($ledger);
+    Moonpig::X->throw("save ledger outside transaction");
   }
 }
 
