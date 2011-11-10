@@ -14,7 +14,6 @@ use Email::Sender::Transport::Test;
 use File::ShareDir ();
 use Moonpig::X;
 use Moonpig::DateTime;
-use Moonpig::Events::Handler::Code;
 use Moonpig::Types qw(Time);
 use Moonpig::Util qw(class);
 

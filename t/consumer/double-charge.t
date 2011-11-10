@@ -12,7 +12,6 @@ with(
 );
 
 use t::lib::TestEnv;
-use Moonpig::Events::Handler::Code;
 
 use Moonpig::Util qw(class days event);
 

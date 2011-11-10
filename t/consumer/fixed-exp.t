@@ -7,7 +7,6 @@ use Moonpig::Context::Test '-all', '$Context';
 
 use Carp qw(confess croak);
 use DateTime;
-use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
 use Test::Fatal;

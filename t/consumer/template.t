@@ -3,7 +3,6 @@ use Test::Routine;
 use t::lib::TestEnv;
 
 use Carp qw(confess croak);
-use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
 use Test::Fatal;

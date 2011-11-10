@@ -1,28 +1,28 @@
 package t::lib::Class::EventHandler::Test;
+# ABSTRACT: an event handler that accumulates a log of each time it is invoked
 use Moose;
-extends 'Moonpig::Events::Handler::Code';
+with 'Moonpig::Role::EventHandler';
 
-has calls => (
+use MooseX::StrictConstructor;
+
+use namespace::autoclean;
+
+has log => (
   isa => 'ArrayRef',
-  init_arg => undef,
   default  => sub {  []  },
   traits   => [ 'Array' ],
   handles  => {
-    clear_calls => 'clear',
+    clear_log   => 'clear',
     record_call => 'push',
     calls       => 'elements',
     call        => 'get',
   },
 );
 
-has '+code' => (
-  default => sub {
-    return sub {
-      my ($receiver, $event, $arg, $self) = @_;
+sub handle_event {
+  my ($self, $event, $receiver, $arg) = @_;
 
-      $self->record_call([ $receiver, $event, $arg ]);
-    };
-  },
-);
+  $self->record_call([ $receiver, $event, $arg ]);
+}
 
 1;

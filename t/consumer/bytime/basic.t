@@ -3,7 +3,6 @@ use warnings;
 
 use Carp qw(confess croak);
 use DateTime;
-use Moonpig::Events::Handler::Code;
 use Moonpig::Util -all;
 use Test::Deep qw(cmp_deeply);
 use Test::Fatal;
@@ -13,6 +12,7 @@ use Test::Routine::Util;
 use Try::Tiny;
 
 use Moonpig::Context::Test -all, '$Context';
+use t::lib::Class::EventHandler::Test;
 
 use Moonpig::Test::Factory qw(build);
 
@@ -118,17 +118,12 @@ test expire_date => sub {
 sub queue_handler {
   my ($name, $queue) = @_;
   $queue ||= [];
-  return Moonpig::Events::Handler::Code->new(
-    code => sub {
-      my ($receiver, $event, $args, $handler) = @_;
-      push @$queue, [ $receiver, $event->ident, $event->payload ];
-    },
-   );
+  return t::lib::Class::EventHandler::Test->new({ log => $queue });
 }
 
 test "basic_event" => sub {
   my ($self) = @_;
-  plan tests => 1;
+  plan tests => 3;
 
   my $stuff = $self->setup({
     cost_amount        => dollars(1),
@@ -137,11 +132,15 @@ test "basic_event" => sub {
 
   my @eq;
   $c->register_event_handler('test', 'testhandler', queue_handler("c", \@eq));
-  $c->handle_event(event('test', { noise => 'thumpa' }));
-  cmp_deeply(\@eq, [ [ $c, 'test',
-                       { noise => 'thumpa',
-                         timestamp => Test::Deep::isa('DateTime'),
-                        } ] ]);
+  my $e = event('test', { noise => 'thumpa' });
+  $c->handle_event($e);
+  { my ($receiver, $event) = @{$eq[0]};
+    is($receiver, $c);
+    is($event, $e);
+    cmp_deeply($event->payload, { noise => 'thumpa',
+				  timestamp => Test::Deep::isa('DateTime'),
+				});
+  }
 };
 
 run_me;

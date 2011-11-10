@@ -16,8 +16,6 @@ use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 use t::lib::TestEnv;
 
-use Moonpig::Events::Handler::Code;
-
 use Data::GUID qw(guid_string);
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);

@@ -3,7 +3,6 @@ use warnings;
 
 use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
-use Moonpig::Events::Handler::Code;
 use Moonpig::Events::Handler::Noop;
 use Moonpig::Util -all;
 use Test::More;
@@ -11,6 +10,7 @@ use Test::Routine::Util;
 use Test::Routine;
 
 use t::lib::Logger;
+use t::lib::Class::EventHandler::Test;
 use Moonpig::Test::Factory qw(build);
 
 use t::lib::TestEnv;
@@ -26,12 +26,7 @@ before run_test => sub {
 sub queue_handler {
   my ($name, $queue) = @_;
   $queue ||= [];
-  return Moonpig::Events::Handler::Code->new(
-    code => sub {
-      my ($receiver, $event, $args, $handler) = @_;
-      push @$queue, [ $receiver, $event->ident, $event->payload ];
-    },
-  );
+  return t::lib::Class::EventHandler::Test->new({ log => $queue });
 }
 
 test "with_successor" => sub {
@@ -171,9 +166,9 @@ test "without_successor" => sub {
     }
 
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
-    my (undef, $ident, $payload) = @{$eq[0] || [undef, undef, {}]};
-    is($ident, 'consumer-create-replacement', "event name");
-    is($payload->{timestamp}->ymd, $succ_creation_date, "event date");
+    my ($receiver, $event) = @{$eq[0] || [undef, undef]};
+    is($event->ident, 'consumer-create-replacement', "event name");
+    is($event->payload->{timestamp}->ymd, $succ_creation_date, "event date");
   }
 };
 
