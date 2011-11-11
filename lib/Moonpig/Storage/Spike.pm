@@ -223,6 +223,8 @@ sub do_with_ledgers {
 
   my %ledgers = ();
   for my $name (keys %$guids) {
+    defined($guids->{$name})
+      or croak "Guid '$name' was undefined";
     my $ledger = $self->retrieve_ledger_for_guid($guids->{$name})
       or croak "Couldn't find ledger for guid '$guids->{name}'";
     $ledgers{$name} = $ledger;

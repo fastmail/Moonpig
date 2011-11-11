@@ -15,6 +15,7 @@ requires 'do_with_ledgers';
 # just pass a single guid
 sub do_with_ledger {
   my ($self, $guid, $code, $opts) = @_;
+  $Carp::Internal{ (__PACKAGE__) }++;
   $self->do_with_ledgers({ ledger => $guid }, sub { $code->($_[0]{ledger}) }, $opts);
 }
 
@@ -23,12 +24,14 @@ sub do_with_ledger {
 # pass an array of ledgers
 sub do_with_ledger_array {
   my ($self, $guids, $code, $opts) = @_;
+  $Carp::Internal{ (__PACKAGE__) }++;
   my %guids = map { $_ => $_ } @$guids;
   $self->do_with_ledger(\%guids, sub { $code->values(%{$_[0]}) }, $opts);
 }
 
 sub do_rw_with_ledger {
   my ($self, $guid, $code, $opts) = @_;
+  $Carp::Internal{ (__PACKAGE__) }++;
   $opts ||= {};
   croak "ro option forbidden in do_rw_with_ledger" if exists $opts->{ro};
   $self->do_with_ledger($guid, $code, { %$opts, ro => 0 });
@@ -36,6 +39,7 @@ sub do_rw_with_ledger {
 
 sub do_ro_with_ledger {
   my ($self, $guid, $code, $opts) = @_;
+  $Carp::Internal{ (__PACKAGE__) }++;
   $opts ||= {};
   croak "ro option forbidden in do_ro_with_ledger" if exists $opts->{ro};
   $self->do_with_ledger($guid, $code, { %$opts, ro => 1 });
@@ -47,6 +51,7 @@ sub do_ro_with_ledger {
 # This method is for testing only.
 sub do_with_this_ledger {
   my ($self, $ledger, $code, $opts) = @_;
+  $Carp::Internal{ (__PACKAGE__) }++;
   $self->do_rw(sub {
     $ledger->save();
     $self->do_with_ledger($ledger->guid, $code, $opts);
