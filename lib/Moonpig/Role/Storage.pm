@@ -26,7 +26,7 @@ sub do_with_ledger_array {
   my ($self, $guids, $code, $opts) = @_;
   $Carp::Internal{ (__PACKAGE__) }++;
   my %guids = map { $_ => $_ } @$guids;
-  $self->do_with_ledger(\%guids, sub { $code->values(%{$_[0]}) }, $opts);
+  $self->do_with_ledgers(\%guids, sub { $code->(values %{$_[0]}) }, $opts);
 }
 
 sub do_rw_with_ledger {
