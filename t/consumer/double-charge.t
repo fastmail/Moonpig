@@ -5,7 +5,7 @@ use Test::More;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -19,49 +19,44 @@ use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
-my ($ledger, $consumer);
-
 test "check amounts" => sub {
   my ($self) = @_;
 
   Moonpig->env->stop_clock;
 
-  my $stuff = build(
+  do_with_test_ledger({
       consumer => {
           template    => 'demo-service',
           xid         => "test:thing:xid",
           make_active => 1,
-      });
-  ($ledger, $consumer) = @{$stuff}{qw(ledger consumer)};
+      }}, sub {
+    my ($ledger) = @_;
 
-  my $inv;
-  Moonpig->env->storage->do_rw(
-    sub {
-      do {
+    my $inv;
+    do {
         $ledger->handle_event( event('heartbeat') );
         Moonpig->env->elapse_time(days(1));
-      } until $inv = $self->payable_invoice;
-    });
-  my $amount = $inv->total_amount;
-  note "Found invoice for amount $amount; paying\n";
+    } until $inv = $self->payable_invoice($ledger);
 
-  Moonpig->env->storage->do_rw(
-    sub {
-      $ledger->add_credit(
-        class(qw(Credit::Simulated)),
-        { amount => $amount },
-       );
-      $ledger->process_credits;
-    });
+    my $amount = $inv->total_amount;
+    note "Found invoice for amount $amount; paying\n";
 
-  ok($inv->is_paid, "invoice paid");
-  my $bank = $consumer->bank;
-  ok($bank, "bank exists");
-  is($bank->amount, $amount, "bank for correct amount");
+    $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => $amount },
+    );
+
+    $ledger->process_credits;
+
+    ok($inv->is_paid, "invoice paid");
+    my $bank = $ledger->get_component('consumer')->bank;
+    ok($bank, "bank exists");
+    is($bank->amount, $amount, "bank for correct amount");
+  });
 };
 
 sub payable_invoice {
-  my ($self) = @_;
+  my ($self, $ledger) = @_;
   my ($inv) = grep { ! $_->is_open and ! $_->is_paid }
     $ledger->invoices;
   return $inv;
