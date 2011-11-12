@@ -69,6 +69,11 @@ sub create_transfer {
   croak "missing transfer type" unless defined $type;
   croak "missing amount" unless defined $arg->{amount};
 
+  if ($ENV{MOONPIG_TRACE_TRANSFERS}) {
+    warn "# transfer $arg->{amount} from " . $from->ident . " to " .
+      $to->ident . " ($type)\n";
+  }
+
   my $skip_funds_check = delete $arg->{skip_funds_check};
   if (! $skip_funds_check && $from->unapplied_amount < $arg->{amount}) {
     croak "Refusing overdraft transfer of $arg->{amount} from " .

@@ -108,8 +108,9 @@ sub handle_event {
     my $handler = $handlers->{ $handler_name };
 
     if ($ENV{MOONPIG_TRACE_EVENTS}) {
-      warn "# Event <" . $event->ident . "> handled by '$handler_name' in " .
-        $receiver->ident . "\n";
+      my $rcv = $receiver->can('ident') ? $receiver->ident : "$receiver";
+      warn "# Event <" . $event->ident .
+	"> handled by '$handler_name' in $rcv\n";
     }
 
     $handler->handle_event(
