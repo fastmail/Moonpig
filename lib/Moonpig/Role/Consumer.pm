@@ -219,6 +219,7 @@ sub copy_to {
         $self->meta->name,
         $self->copy_attr_hash__
       );
+      $target->save;
       $self->copy_subcomponents_to__($target, $copy);
       { # We have to terminate service before activating service, or else the
         # same xid would be active in both ledgers at once, which is forbidden
