@@ -2,7 +2,10 @@ package Moonpig::Env::Test;
 # ABSTRACT: a testing environment for Moonpig
 
 use Moose;
-with 'Moonpig::Role::Env::WithMockedTime';
+with(
+  'Moonpig::Role::Env::WithMockedTime',
+  'Moonpig::Role::Env::EmailSender',
+);
 
 use MooseX::StrictConstructor;
 
@@ -73,39 +76,6 @@ sub storage_init_args {
       },
     ],
   );
-}
-
-has email_sender => (
-  is   => 'ro',
-  does => 'Email::Sender::Transport',
-  builder => 'build_email_sender',
-);
-
-sub build_email_sender {
-  Email::Sender::Transport::Test->new;
-}
-
-sub process_email_queue {
-  my ($self) = @_;
-
-  my $count = 0;
-
-  $self->storage->iterate_jobs('send-email', sub {
-    my ($job) = @_;
-    my $email = Email::Simple->new($job->payload('email'));
-
-    my $env = JSON->new->decode( $job->payload('env') );
-    Moonpig->env->send_email($email, $env);
-    $job->mark_complete;
-    $count++;
-  });
-
-  return $count;
-}
-
-sub send_email {
-  my ($self, $email, $env) = @_;
-  $self->email_sender->send_email($email, $env);
 }
 
 has _guid_serial_number_registry => (
