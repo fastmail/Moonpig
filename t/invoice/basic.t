@@ -21,14 +21,13 @@ before run_test => sub {
 test charge_close_and_send => sub {
   my ($self) = @_;
   my $guid;
-  my $invoice_guid;
 
   do_with_test_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
     $guid = $ledger->guid;
 
     my $invoice = $ledger->current_invoice;
-    $invoice_guid = $invoice->guid;
+    $ledger->name_component("initial invoice", $invoice);
 
     my $paid_h = $self->make_event_handler('t::Test');
     $invoice->register_event_handler('paid', 'default', $paid_h);
@@ -64,9 +63,7 @@ test charge_close_and_send => sub {
   Moonpig->env->storage->do_with_ledger($guid, sub {
     my ($ledger) = @_;
 
-    # The invoice we want is no longer ->current_invoice, since it was just closed.
-    # Find the old one again.
-    my ($invoice) = grep { $_->guid eq $invoice_guid } $ledger->invoices;
+    my $invoice = $ledger->get_component("initial invoice");
 
     my $credit = $ledger->add_credit(
       class(qw(Credit::Simulated)),

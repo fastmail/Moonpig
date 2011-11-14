@@ -8,7 +8,17 @@ has _component_name_map => (
   default => sub { {} },
   handles => {
     get_component => 'get',
+    has_component => 'exists',
   },
 );
+
+sub name_component {
+  my ($self, $name, $component) = @_;
+  if ($self->has_component($name)) {
+    require Carp;
+    Carp::croak("Ledger already has a '$name' component");
+  }
+  $self->_component_name_map->{$name} = $component;
+}
 
 1;

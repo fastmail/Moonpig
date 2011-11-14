@@ -88,7 +88,6 @@ test with_bank => sub {
   my $xid = "eat:more:possum";
 
   my ($ledger_a, $ledger_b);
-  my ($cons_a_guid, $cons_b_guid);
 
   Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
@@ -104,20 +103,18 @@ test with_bank => sub {
 	xid => $xid,
 	make_active => 1,
       });
-    $cons_a_guid = $cons_a->guid;
+    $ledger_a->name_component("original consumer", $cons_a);
     is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
     my $cons_b = $cons_a->copy_to($ledger_b);
-    $cons_b_guid = $cons_b->guid;
+    $ledger_b->name_component("copy consumer", $cons_b);
   });
 
   Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
-    my $cons_a = $ledger_a->consumer_collection->find_by_guid({guid => $cons_a_guid});
+    my $cons_a = $ledger_a->get_component("original consumer");
     my $bank_a = $cons_a->bank;
-    my $cons_b = $ledger_b->consumer_collection->find_by_guid({guid => $cons_b_guid});
+    my $cons_b = $ledger_b->get_component("copy consumer");
     my $bank_b = $cons_b->bank;
-    note "cons a: " . $cons_a->ident . "\n";
-    note "cons b: " . $cons_b->ident . "\n";
 
     ok($bank_b, "bank is in new ledger");
     isnt($bank_b->guid, $bank_a->guid, "bank was copied");
