@@ -19,7 +19,7 @@ use Moonpig::Context -all, '$Context';
 
 use Moose::Util::TypeConstraints;
 
-use Stick::Publisher;
+use Stick::Publisher 0.308;
 use Stick::Publisher::Publish;
 use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
