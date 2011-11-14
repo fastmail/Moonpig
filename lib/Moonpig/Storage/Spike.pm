@@ -232,16 +232,27 @@ sub do_with_ledgers {
     $ledgers{$name} = $ledger;
   }
 
-  my $popper = $self->_push_update_mode(! $ro);
+  my $rv;
+  {
+    my $popper = $self->_push_update_mode(! $ro);
 
-  my $rv = $self->txn(sub {
-    my $rv = $code->(\%ledgers);
-    unless ($ro) {
-      $_->save for values(%ledgers);
-      $self->_execute_saves;
-    }
-    return $rv;
-  });
+    $rv = $self->txn(sub {
+      my $rv = $code->(\%ledgers);
+      unless ($ro) {
+        $_->save for values(%ledgers);
+        $self->_execute_saves;
+      }
+      return $rv;
+    });
+  }
+
+  # Properly, we should track which ledgers are used in each nested
+  # transaction, and whenver a transaction ends, flush the ones that
+  # were used by only that transaction, but eh, that's too much
+  # trouble. So instead, we just hold them all until the final
+  # transaction ends and flush them all then. mjd 2011-11-14
+
+  $self->_flush_ledger_cache unless $self->_in_transaction;
 
   return $rv;
 }
@@ -258,6 +269,24 @@ sub do_ro_with_ledgers {
   $opts ||= {};
   croak "ro option forbidden in do_ro_with_ledgers" if exists $opts->{ro};
   $self->do_with_ledgers($guids, $code, { %$opts, ro => 1 });
+}
+
+has _ledger_cache => (
+  is => 'ro',
+  isa => 'HashRef',
+  init_arg => undef,
+  traits => [ 'Hash' ],
+  default => sub { {} },
+  handles => {
+    _has_cached_ledger => 'exists',
+    _cached_ledger => 'get',
+    _flush_ledger_cache => 'clear',
+  },
+);
+
+sub _cache_ledger {
+  my ($self, $ledger) = @_;
+  $self->_ledger_cache->{$ledger->guid} = $ledger;
 }
 
 has _ledger_queue => (
@@ -507,6 +536,10 @@ sub save_ledger {
 sub _queue_changed_ledger {
   my ($self, $ledger) = @_;
   my $q = $self->_ledger_queue;
+
+  # Put it in the ledger cache
+  $self->_cache_ledger($ledger);
+
   # put the new ledger at the end
   # if it was in there already, remove it and put it at the end
   @$q = grep { $_->guid ne $ledger->guid } @$q;
@@ -664,13 +697,7 @@ sub retrieve_ledger_for_guid {
 
   $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
 
-  # If someone saved a modified ledger, but it hasn't been written yet,
-  # return the modified version directly from the queue
-  if ($self->_has_update_mode && $self->_in_update_mode) {
-    if (my $ledger = $self->_search_queue_for_ledger($guid)) {
-      return $ledger;
-    }
-  }
+  return $self->_cached_ledger($guid) if $self->_has_cached_ledger($guid);
 
   my $dbh = $self->_conn->dbh;
   my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
@@ -706,7 +733,11 @@ sub retrieve_ledger_for_guid {
     },
   });
 
-  $self->save_ledger($ledger) if $self->_in_update_mode;
+  if ($self->_in_update_mode) {
+    $self->save_ledger($ledger); # also put it in the cache
+  } else {
+    $self->_cache_ledger($ledger);
+  }
 
   return $ledger;
 }
