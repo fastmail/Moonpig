@@ -174,6 +174,7 @@ has _update_mode_stack => (
   default => sub { Moonpig::Storage::UpdateModeStack->new() },
   handles => {
     _has_update_mode => 'is_nonempty',
+    _in_transaction => 'is_nonempty',
     _pop_update_mode => 'pop_stack',
     _push_update_mode => 'push',
     _set_noupdate_mode => 'push_false',
@@ -492,7 +493,7 @@ sub save_ledger {
   # 2. we are in a do_ro transaction -- die
   # 3. we are not in a transaction -- die (mjd, 2011-11-02)
   # -- rjbs, 2011-04-11
-  if ($self->_has_update_mode) {
+  if ($self->_in_transaction) {
     if ($self->_in_update_mode) {
       $self->_queue_changed_ledger($ledger);
     } else {
