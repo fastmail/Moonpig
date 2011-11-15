@@ -16,7 +16,7 @@
   "header": [
     { "Subject": "{{$subject}}" },
     { "To":      "{{ join q{,}, @to_addresses }}" },
-    { "From":    "\"Moonpig Support\" <moonpig@example.com>" }
+    { "From":    "{{ Moonpig->env->default_from_email_address->as_string }}" }
   ],
   "validator": [
     "Rx",
