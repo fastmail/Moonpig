@@ -5,9 +5,9 @@ use Test::More;
 use Test::Fatal;
 use Test::Deep qw(cmp_deeply all ignore methods superhashof);
 
-use Moonpig::Util qw(event);
+use t::lib::TestEnv;
 
-use Moonpig::Context::Test '-all', '$Context';
+use Moonpig::Util qw(event);
 
 use t::lib::Class::Ledger::ImplicitEvents;
 use Moonpig::Test::Factory qw(build_ledger);

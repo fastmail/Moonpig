@@ -7,10 +7,11 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
+
 use Moonpig::Test::Factory qw(build);
 use t::lib::Util qw(elapse);
 
-use Moonpig::Context::Test -all, '$Context';
 with ('Moonpig::Test::Role::UsesStorage');
 
 sub set_up {

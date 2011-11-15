@@ -7,7 +7,7 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
-use Moonpig::Context::Test -all, '$Context';
+use t::lib::TestEnv;
 
 with 'Moonpig::Test::Role::UsesStorage';
 

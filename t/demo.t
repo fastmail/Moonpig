@@ -3,14 +3,14 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 
+use t::lib::TestEnv;
+
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(build_ledger);
-
-use Moonpig::Context::Test -all, '$Context';
 
 use t::lib::TestEnv;
 

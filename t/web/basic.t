@@ -6,13 +6,13 @@ use HTTP::Request;
 use Moonpig::Web::App;
 use Plack::Test;
 
+use t::lib::TestEnv;
+
 use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
-
-use Moonpig::Context::Test -all, '$Context';
 
 use namespace::autoclean;
 

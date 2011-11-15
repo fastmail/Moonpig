@@ -2,11 +2,11 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
+use t::lib::Logger;
+
 use Moonpig::Util qw(class dollars);
 
-use Moonpig::Context::Test -all, '$Context';
-
-use t::lib::Logger;
 use Moonpig::Test::Factory qw(build_ledger);
 
 test pay_and_get_refund => sub {

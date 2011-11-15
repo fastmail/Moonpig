@@ -3,7 +3,7 @@ use Test::Routine;
 use Test::Routine::Util -all;
 use Test::More;
 
-use Moonpig::Context::Test -all, '$Context';
+use t::lib::TestEnv;
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -11,8 +11,6 @@ with(
 
 use Moonpig::Test::Factory qw(do_with_test_ledger);
 use t::lib::Logger '$Logger';
-
-use t::lib::TestEnv;
 
 use Data::Dumper qw(Dumper);
 use Data::GUID qw(guid_string);

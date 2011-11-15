@@ -6,12 +6,12 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Test::Factory qw(build);
+use t::lib::TestEnv;
 use t::lib::Logger;
 
-with 'Moonpig::Test::Role::UsesStorage';
+use Moonpig::Test::Factory qw(build);
 
-use Moonpig::Context::Test -all, '$Context';
+with 'Moonpig::Test::Role::UsesStorage';
 
 test "job-making invoice charge" => sub {
   Moonpig->env->storage->do_rw(sub {

@@ -8,10 +8,10 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
+
 use Moonpig::Test::Factory qw(build);
 use t::lib::Logger;
-
-use Moonpig::Context::Test -all, '$Context';
 
 my ($Ledger, $Consumer);
 has hold => (

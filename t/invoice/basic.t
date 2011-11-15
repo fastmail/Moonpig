@@ -2,6 +2,8 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
+
 use Moonpig::Util qw(class dollars event years);
 
 with(
@@ -11,8 +13,6 @@ with(
 
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(build_ledger);
-
-use Moonpig::Context::Test -all, '$Context';
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;

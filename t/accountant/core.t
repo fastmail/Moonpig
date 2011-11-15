@@ -8,9 +8,8 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
 use Moonpig::Test::Factory qw(build_ledger);
-
-use Moonpig::Context::Test -all, '$Context';
 
 test basic => sub {
   my ($self) = @_;

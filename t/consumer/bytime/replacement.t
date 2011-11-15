@@ -9,6 +9,8 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
+use t::lib::TestEnv;
+
 use t::lib::Logger;
 use t::lib::Class::EventHandler::Test;
 use Moonpig::Test::Factory qw(build);

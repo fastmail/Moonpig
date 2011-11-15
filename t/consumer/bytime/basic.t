@@ -11,7 +11,7 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-use Moonpig::Context::Test -all, '$Context';
+use t::lib::TestEnv;
 use t::lib::Class::EventHandler::Test;
 
 use Moonpig::Test::Factory qw(build);

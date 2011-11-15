@@ -7,10 +7,10 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
+use t::lib::TestEnv;
+
 use Moonpig::Test::Factory qw(build);
 with ('Moonpig::Test::Role::UsesStorage');
-
-use Moonpig::Context::Test -all, '$Context';
 
 my $xid = "consumer:5y:test";
 

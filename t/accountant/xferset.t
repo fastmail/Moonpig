@@ -7,9 +7,9 @@ use Test::Deep qw(bag cmp_bag);
 use Test::More;
 use Test::Routine::Util;
 
-use Moonpig::Test::Factory qw(build);
+use t::lib::TestEnv;
 
-use Moonpig::Context::Test -all, '$Context';
+use Moonpig::Test::Factory qw(build);
 
 sub jan {
   my ($day) = @_;

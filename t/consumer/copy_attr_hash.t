@@ -7,9 +7,9 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
 
-use Moonpig::Test::Factory qw(build);
+use t::lib::TestEnv;
 
-use Moonpig::Context::Test -all, '$Context';
+use Moonpig::Test::Factory qw(build);
 
 my @basic = qw(canceled expired replacement_plan xid);
 my @charges_bank = qw(extra_journal_charge_tags old_age);

@@ -3,13 +3,12 @@ use Test::Routine::Util -all;
 use Test::More;
 use Test::Fatal;
 
+use t::lib::TestEnv;
+
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
 use Moonpig::Test::Factory qw(do_with_test_ledger);
-
-use Moonpig::Context::Test -all, '$Context';
-use t::lib::TestEnv;
 
 # use Moonpig::Util qw(class days dollars event);
 

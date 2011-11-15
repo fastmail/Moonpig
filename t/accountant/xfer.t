@@ -5,9 +5,9 @@ use Test::Routine;
 use Test::Routine::Util;
 use Try::Tiny;
 
-use Moonpig::Test::Factory qw(build);
+use t::lib::TestEnv;
 
-use Moonpig::Context::Test -all, '$Context';
+use Moonpig::Test::Factory qw(build);
 
 test "basics of transfer" => sub {
   my ($self) = @_;

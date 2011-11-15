@@ -3,14 +3,15 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util -all;
 use Test::Exception;
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
-use Moonpig::Test::Factory qw(build);
 
-use Moonpig::Context::Test -all, '$Context';
+use t::lib::TestEnv;
+use Moonpig::Util -all;
+
+use Moonpig::Test::Factory qw(build);
 
 sub setup {
   my ($self) = @_;
