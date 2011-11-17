@@ -10,7 +10,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Test::Factory qw(build_ledger);
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 use t::lib::TestEnv;
 
@@ -38,39 +38,45 @@ has invoices_to_pay => (
   },
 );
 
-my $Ledger;
+my $Ledger_GUID;
+sub Ledger {
+  Moonpig->env->storage->retrieve_ledger_for_guid($Ledger_GUID);
+}
 
 sub active_consumer {
   my ($self) = @_;
 
-  $Ledger->active_consumer_for_xid( $self->xid );
+  $self->Ledger->active_consumer_for_xid( $self->xid );
 }
 
 sub pay_any_open_invoice {
   my ($self) = @_;
 
-  if (
-    $self->invoices_to_pay
-    and
-    grep { ! $_->is_open and ! $_->is_paid } $Ledger->invoices
-  ) {
-    # There are unpaid invoices!
-    my @invoices = $Ledger->last_dunned_invoices;
+  Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
+    my ($Ledger) = @_;
+    if (
+      $self->invoices_to_pay
+        and
+          grep { ! $_->is_open and ! $_->is_paid } $self->Ledger->invoices
+    ) {
+      # There are unpaid invoices!
+      my @invoices = $Ledger->last_dunned_invoices;
 
-    # 4. pay and apply payment to invoice
+      # 4. pay and apply payment to invoice
 
-    my $total = sum map { $_->total_amount } @invoices;
+      my $total = sum map { $_->total_amount } @invoices;
 
-    $Ledger->add_credit(
-      class(qw(Credit::Simulated)),
-      { amount => $total },
-    );
+      $Ledger->add_credit(
+        class(qw(Credit::Simulated)),
+        { amount => $total },
+       );
 
-    $Ledger->process_credits;
+      $Ledger->process_credits;
 
-    $self->dec_invoices_to_pay;
-    $Logger->('...');
-  }
+      $self->dec_invoices_to_pay;
+      $Logger->('...');
+    }
+  });
 }
 
 sub log_current_bank_balance {
@@ -110,7 +116,7 @@ sub log_current_bank_balance {
 # 11b. cancel account (if replacement unfunded)
 
 sub process_daily_assertions {
-  my ($self, $day) = @_;
+  my ($self, $day, $Ledger) = @_;
 
   if ($day == 370) {
     # by this time, consumer 1 should've failed over to consumer 2
@@ -141,14 +147,11 @@ test "end to end demo" => sub {
 
   Moonpig->env->stop_clock;
 
-  $Ledger = build_ledger();
+  do_with_test_ledger({}, sub {
+    my ($Ledger) = @_;
+    $Ledger_GUID = $Ledger->guid;
 
-  my $consumer;
-
-  Moonpig->env->storage->do_rw(sub {
-    Moonpig->env->save_ledger($Ledger);
-
-    $consumer = $Ledger->add_consumer_from_template(
+    $Ledger->add_consumer_from_template(
       'demo-service',
       {
         xid                => $self->xid,
@@ -160,9 +163,11 @@ test "end to end demo" => sub {
   for my $day (1 .. 760) {
     Moonpig->env->process_email_queue;
 
-    $self->process_daily_assertions($day);
+    Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
+      my ($Ledger) = @_;
 
-    Moonpig->env->storage->do_rw(sub {
+      $self->process_daily_assertions($day, $Ledger);
+
       $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $day % 30 == 0;
 
       $Ledger->handle_event( event('heartbeat') );
@@ -176,13 +181,16 @@ test "end to end demo" => sub {
     });
   }
 
-  my @consumers = $Ledger->consumers;
-  is(@consumers, 3, "three consumers created over the lifetime");
+  Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
+    my ($Ledger) = @_;
+    my @consumers = $Ledger->consumers;
+    is(@consumers, 3, "three consumers created over the lifetime");
 
-  my $active_consumer = $Ledger->active_consumer_for_xid( $self->xid );
-  is($active_consumer, undef, "...but they're all inactive now");
+    my $active_consumer = $Ledger->active_consumer_for_xid( $self->xid );
+    is($active_consumer, undef, "...but they're all inactive now");
 
-  $Ledger->_collect_spare_change;
+    $Ledger->_collect_spare_change;
+  });
 };
 
 run_me;

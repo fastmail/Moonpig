@@ -8,9 +8,9 @@ use Test::Routine;
 use Test::Routine::Util;
 
 use t::lib::TestEnv;
-
-use Moonpig::Test::Factory qw(build);
 use t::lib::Util qw(elapse);
+
+use Moonpig::Test::Factory qw(do_with_test_ledger);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
@@ -48,36 +48,41 @@ sub try_coupon {
   my @x_charge_tags = ();
   push @x_charge_tags, "nonprofit" if $non_profit;
 
-  my $stuff = build(c => { template => 'quick',
-                           cost_amount => $cost_amount,
-                           extra_invoice_charge_tags => \@x_charge_tags });
-  my $L = $stuff->{ledger};
+  do_with_test_ledger({ c => { template => 'quick',
+			       cost_amount => $cost_amount,
+			       extra_invoice_charge_tags => \@x_charge_tags }},
+    sub {
+      my ($L) = @_;
 
-  $L->add_coupon(class("Coupon::BulkDiscount"),
-                 { target_tags => [],
-                   description => 'bulk discount for accounts',
-                 });
-  $L->add_credit(class('Credit::Simulated'), { amount => dollars(100) });
-  $self->pay_unpaid_invoices($L);
-  { my ($inv) = $L->invoices;
-    ok($inv->is_paid, "invoice is paid");
-  }
+      $L->add_coupon(class("Coupon::BulkDiscount"),
+		     { target_tags => [],
+		       description => 'bulk discount for accounts',
+		     });
+      $L->add_credit(class('Credit::Simulated'), { amount => dollars(100) });
+      $self->pay_unpaid_invoices($L);
+      { my ($inv) = $L->invoices;
+	ok($inv->is_paid, "invoice is paid");
+      }
 
-  {
-    my @cred = $L->credits;
-    is(@cred, 2, "Two credits");
-    my $remaining_credit = sum map $_->unapplied_amount, @cred;
+      {
+	my @cred = $L->credits;
+	is(@cred, 2, "Two credits");
+	my $remaining_credit = sum map $_->unapplied_amount, @cred;
+	my ($payment_cred, $coupon_cred) = $cred[0]->as_string eq "discount" ?
+	  @cred[1,0] : @cred[0,1];
 
-    my ($payment_cred, $coupon_cred) = $cred[0]->as_string eq "discount" ?
-      @cred[1,0] : @cred[0,1];
+	is ($coupon_cred->amount, $coupon_discount,
+	    sprintf "coupon create \$%.2f credit", $coupon_discount/100000);
+	is ($coupon_cred->unapplied_amount, 0, "coupon credit used up");
+	is ($payment_cred->amount, dollars(100), "paid \$100");
+	is ($payment_cred->unapplied_amount, $total_discount,
+	    sprintf "\$%.2f left over from pmt", $total_discount/100000);
+      }
 
-    is ($coupon_cred->amount, $coupon_discount,
-        sprintf "coupon create \$%.2f credit", $coupon_discount/100000);
-    is ($coupon_cred->unapplied_amount, 0, "coupon credit used up");
-    is ($payment_cred->amount, dollars(100), "paid \$100");
-    is ($payment_cred->unapplied_amount, $total_discount,
-        sprintf "\$%.2f left over from pmt", $total_discount/100000);
-  }
+      # This is so that the next time we run this test, we don't get an
+      # xid conflict
+      $L->get_component('c')->expire;
+    });
 }
 
 test "bulk discount" => sub {

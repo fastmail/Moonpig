@@ -14,6 +14,7 @@ publish add => { -http_method => 'post',
     my $refund = $self->owner->add_refund(
       class("Refund"),
      );
+    $self->owner->save;
     return $refund;
   });
 };

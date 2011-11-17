@@ -77,10 +77,9 @@ sub move_bank_to__ {
   my $amount = $self->unapplied_amount;
   return if $amount == 0;
 
-  my $ledger = $self->ledger;
-  my $new_ledger = $new_consumer->ledger;
   Moonpig->env->storage->do_rw(
     sub {
+      my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
       $ledger->current_journal->charge({
         desc        => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
@@ -114,6 +113,7 @@ sub move_bank_to__ {
         [{ credit => $credit,
            amount => $amount }],
         $transient_invoice);
+      $new_ledger->save;
     });
 }
 
