@@ -633,7 +633,9 @@ publish move_xid_to => { -http_method => 'post', -path => 'handoff',
   my $cons = $self->active_consumer_for_xid($xid)
     or croak sprintf "Ledger %s has no active consumer for xid '%s'",
       $self->guid, $xid;
-  return $cons->copy_to($target);
+  my $new_consumer = $cons->copy_to($target);
+  $_->save for $self, $target;
+  return $new_consumer;
 };
 
 # hand off responsibility for this xid to a fresh ledger
@@ -651,10 +653,11 @@ publish split_xid => { -http_method => 'post', -path => 'split',
   return Moonpig->env->storage->do_rw(
     sub {
       my $contact = class('Contact')->new($arg->{contact});
-      my $target = class('Ledger')->new({ contact => $contact });
+      my $target = class('Ledger')->new({ contact => $contact })->save;
 
-      Moonpig->env->storage->save_ledger($target);
-      return $cons->copy_to($target);
+      my $new_cons = $cons->copy_to($target);
+      $_->save for $self, $target;
+      return $new_cons;
     });
 };
 

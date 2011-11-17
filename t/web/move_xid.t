@@ -135,7 +135,7 @@ test split => sub {
   $self->check_xid($a_xid, $ledger_b_guid, $ledger_a_guid);
   # TODO: check to make sure the new ledger has the right contact info
 
-  note "Splitting nonexistent sservice should fail";
+  note "Splitting nonexistent service should fail";
   isnt( exception {
     $ua->mp_post(
       "/ledger/by-guid/$ledger_a_guid/split",
