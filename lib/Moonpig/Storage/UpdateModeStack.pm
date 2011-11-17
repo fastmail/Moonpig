@@ -8,12 +8,14 @@ has stack => (
   default => sub { [] },
 );
 
+sub depth { scalar(@{$_[0]->stack}) }
+
 sub is_nonempty {
-  @{$_[0]->stack} > 0;
+  $_[0]->depth > 0;
 }
 
 sub is_empty {
-  @{$_[0]->stack} == 0;
+  $_[0]->depth == 0;
 }
 
 sub get_top {

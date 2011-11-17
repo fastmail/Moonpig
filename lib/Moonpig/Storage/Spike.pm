@@ -187,12 +187,16 @@ sub _in_update_mode {
     $self->_update_mode_stack->get_top;
 }
 
+sub _in_nested_transaction {
+  $_[0]->_update_mode_stack->depth > 1;
+}
+
 sub do_rw {
   my ($self, $code) = @_;
   my $popper = $self->_set_update_mode;
   my $rv = $self->txn(sub {
     my $rv = $code->();
-    $self->_execute_saves;
+    $self->_execute_saves unless $self->_in_nested_transaction;
     return $rv;
   });
   return $rv;
