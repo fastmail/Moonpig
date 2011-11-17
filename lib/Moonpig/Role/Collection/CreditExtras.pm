@@ -19,7 +19,9 @@ publish add_credit => { -http_method => 'post',
       $arg->{attributes},
     );
 
+    $self->owner->save;
     $self->owner->process_credits;
+    $self->owner->save;
     return $credit;
   });
 };

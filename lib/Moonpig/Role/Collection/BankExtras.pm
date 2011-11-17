@@ -11,7 +11,9 @@ publish add => { -http_method => 'post',
                  amount => NonNegativeMillicents,
                } => sub {
   my ($self, $arg) = @_;
-  $self->owner->add_bank(class('Bank'), $arg);
+  my $bank = $self->owner->add_bank(class('Bank'), $arg);
+  $self->owner->save;
+  return $bank;
 };
 
 1;

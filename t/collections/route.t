@@ -89,16 +89,21 @@ sub _count_items_in_pages {
 test "add item to a collection" => sub {
   my ($self) = @_;
 
+  my ($ledger_guid, $b);
   do_with_test_ledger({}, sub {
     my ($ledger) = @_;
-    my ($collection) = $ledger->route([ 'banks' ]);
+    $ledger_guid = $ledger->guid;
+    my $collection = $ledger->route([ 'banks' ]);
     ok($collection);
     is($collection->count, 0, "no banks yet");
     ok($collection->can('resource_post'), "can post");
-    my $b = $collection->resource_request(post => { amount => dollars(1) });
+    $b = $collection->resource_request(post => { amount => dollars(1) });
     is($collection->count, 1, "added bank via post");
-    is($collection->_subroute(['guid', $b->guid]), $b, "bank is available");
   });
+
+  Moonpig->env->storage->do_with_ledger($ledger_guid, sub {
+    is($_[0]->route([ 'banks' ])->_subroute(['guid', $b->guid]), $b, "bank is available");
+  }, { ro => 1 });
 };
 
 run_me;

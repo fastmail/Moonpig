@@ -16,6 +16,7 @@ publish add_from_template => { -http_method => 'post',
         $arg->{template},
         $arg->{template_args},
        );
+    $self->owner->save;
     return $new_consumer;
   });
 };
