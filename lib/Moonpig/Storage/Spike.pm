@@ -173,7 +173,6 @@ has _update_mode_stack => (
   isa => 'Moonpig::Storage::UpdateModeStack',
   default => sub { Moonpig::Storage::UpdateModeStack->new() },
   handles => {
-    _clear_update_mode => 'pop_stack',
     _has_update_mode => 'is_nonempty',
     _pop_update_mode => 'pop_stack',
     _push_update_mode => 'push',
@@ -190,23 +189,21 @@ sub _in_update_mode {
 
 sub do_rw {
   my ($self, $code) = @_;
-  $self->_set_update_mode;
+  my $popper = $self->_set_update_mode;
   my $rv = $self->txn(sub {
     my $rv = $code->();
     $self->_execute_saves;
     return $rv;
   });
-  $self->_clear_update_mode;
   return $rv;
 }
 
 sub do_ro {
   my ($self, $code) = @_;
-  $self->_set_noupdate_mode;
+  my $popper = $self->_set_noupdate_mode;
   my $rv = $self->txn(sub {
     $code->();
   });
-  $self->_clear_update_mode;
   return $rv;
 }
 
@@ -230,7 +227,7 @@ sub do_with_ledgers {
     $ledgers{$name} = $ledger;
   }
 
-  $self->_push_update_mode(! $ro);
+  my $popper = $self->_push_update_mode(! $ro);
 
   my $rv = $self->txn(sub {
     my $rv = $code->(\%ledgers);
@@ -241,7 +238,6 @@ sub do_with_ledgers {
     return $rv;
   });
 
-  $self->_clear_update_mode;
   return $rv;
 }
 
