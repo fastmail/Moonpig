@@ -5,7 +5,7 @@ with 'Moonpig::Role::Storage';
 
 use MooseX::StrictConstructor;
 
-use Carp qw(carp croak);
+use Carp qw(carp confess croak);
 use Class::Rebless 0.009;
 use Digest::MD5 qw(md5_hex);
 use DBI;
@@ -546,6 +546,12 @@ sub _queue_changed_ledger {
   # Put it in the ledger cache
   $self->_cache_ledger($ledger);
 
+  {
+    my ($x) = $self->_search_queue_for_ledger($ledger);
+    if ($x && $x != $ledger) {
+      confess("Saved two different ledger objects for guid " . $x->guid . "!\n");
+    }
+  }
   # put the new ledger at the end
   # if it was in there already, remove it and put it at the end
   @$q = grep { $_->guid ne $ledger->guid } @$q;
