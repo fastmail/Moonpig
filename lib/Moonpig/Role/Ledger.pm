@@ -95,8 +95,6 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
-use Moonpig::Context -all, '$Context';
-
 use namespace::autoclean;
 
 # Should this be plural?  Or what?  Maybe it's a ContactManager subsystem...
@@ -710,10 +708,6 @@ PARTIAL_PACK {
         $self->xids_handled
     },
   };
-};
-
-after BUILD => sub {
-  $Context->stack->current_frame->add_memorandum($_[0]);
 };
 
 1;

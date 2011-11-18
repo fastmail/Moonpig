@@ -15,8 +15,6 @@ use Test::Routine::Util '-all';
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 
-use Moonpig::Context::Test -all, '$Context';
-
 use strict;
 
 with ('Moonpig::Test::Role::UsesStorage');

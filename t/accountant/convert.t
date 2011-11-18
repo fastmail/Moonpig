@@ -9,8 +9,6 @@ use Test::More;
 use Test::Routine::Util;
 use Moonpig::Test::Factory qw(build);
 
-use Moonpig::Context::Test -all, '$Context';
-
 has stuff => (
   is => 'rw',
   isa => 'HashRef',

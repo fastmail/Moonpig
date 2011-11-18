@@ -16,8 +16,6 @@ use Fauxbox::Moonpig::TemplateSet;
 
 with ('Moonpig::Test::Role::UsesStorage');
 
-use Moonpig::Context::Test -all, '$Context';
-
 around run_test => sub {
   my ($orig) = shift;
   my ($self) = shift;

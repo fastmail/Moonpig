@@ -3,8 +3,6 @@ use Test::Routine;
 use t::lib::TestEnv;
 use t::lib::Logger '$Logger';
 
-use Moonpig::Context::Test '-all', '$Context';
-
 use Carp qw(confess croak);
 use DateTime;
 use Moonpig::Util -all;

@@ -9,8 +9,6 @@ use t::lib::ConsumerTemplateSet::Test;
 with qw(Moonpig::Test::Role::HasTempdir);
 use Moonpig::Test::Factory qw(build_ledger);
 
-use Moonpig::Context::Test '-all', '$Context';
-
 my ($A, $B);
 
 around run_test => sub {

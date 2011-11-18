@@ -9,6 +9,4 @@ use Test::File::ShareDir 0.003001 -share => {
 
 use Moonpig::Env::Test;
 
-use Moonpig::Context::Test '$Context';
-
 1;

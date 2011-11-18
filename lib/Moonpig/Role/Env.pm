@@ -15,8 +15,6 @@ use Moonpig::Events::Handler::Method;
 use Moonpig::Ledger::PostTarget;
 use Moonpig::Util qw(class);
 
-use Moonpig::Context -all, '$Context';
-
 use Moose::Util::TypeConstraints;
 
 use Stick::Publisher 0.308;

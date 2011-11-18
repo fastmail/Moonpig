@@ -10,8 +10,6 @@ use Moonpig::Util qw(class cents dollars);
 
 use Moonpig::Test::Factory qw(build_ledger);
 
-use Moonpig::Context::Test -all, '$Context';
-
 my ($Ledger, $Credit);
 
 before run_test => sub {

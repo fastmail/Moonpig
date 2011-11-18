@@ -5,8 +5,6 @@ use Test::Fatal;
 use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars);
 
-use Moonpig::Context::Test -all, '$Context';
-
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
