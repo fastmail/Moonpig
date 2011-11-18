@@ -9,7 +9,7 @@ with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use t::lib::Logger '$Logger';
 
 use Data::Dumper qw(Dumper);
@@ -40,7 +40,7 @@ test "store and retrieve" => sub {
       die("error with child: " . Dumper(\%waitpid));
     }
   } else {
-    do_with_test_ledger({consumer => { template => 'demo-service', xid => $xid }}, sub {
+    do_with_fresh_ledger({consumer => { template => 'demo-service', xid => $xid }}, sub {
       my ($ledger) = @_;
       $ledger->save;
     });
@@ -52,9 +52,9 @@ test "store and retrieve" => sub {
   is(@guids, 1, "we have stored one guid");
 
   Moonpig->env->storage->
-    do_with_ledger($guids[0], sub {
+    do_with_ledger({ ro => 1 }, $guids[0], sub {
                      my $consumer = $_[0]->active_consumer_for_xid($xid);
-                   }, { ro => 1 });
+                   });
 
   # diag explain $retr_ledger;
   pass('we lived');
@@ -63,7 +63,7 @@ test "store and retrieve" => sub {
 test "job queue" => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
 
     $ledger->queue_job('test.job.a' => {
@@ -136,7 +136,7 @@ test "job queue" => sub {
 test "job lock and unlock" => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
 
     $ledger->queue_job('test.job' => {

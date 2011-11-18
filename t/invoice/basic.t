@@ -12,7 +12,7 @@ with(
 );
 
 use t::lib::Logger;
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
@@ -22,7 +22,7 @@ test charge_close_and_send => sub {
   my ($self) = @_;
   my $guid;
 
-  do_with_test_ledger({ c => { template => 'dummy' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
     $guid = $ledger->guid;
 
@@ -85,7 +85,7 @@ test charge_close_and_send => sub {
 test underpayment => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({ c => { template => 'dummy' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
 
     my $invoice = $ledger->current_invoice;
@@ -128,7 +128,7 @@ test underpayment => sub {
 test overpayment  => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({ c => { template => 'dummy' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
 
     my $invoice = $ledger->current_invoice;
@@ -171,7 +171,7 @@ test overpayment  => sub {
 test create_bank_on_payment => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({ c => { template => 'dummy_with_bank' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy_with_bank' }}, sub {
     my ($ledger) = @_;
 
     my $consumer = $ledger->get_component('c');
@@ -216,7 +216,7 @@ test create_bank_on_payment => sub {
 test payment_by_two_credits => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({ c => { template => 'dummy' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
 
     my $invoice = $ledger->current_invoice;

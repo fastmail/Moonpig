@@ -8,7 +8,7 @@ use Plack::Test;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -19,7 +19,7 @@ use namespace::autoclean;
 test "get a ledger guid via web" => sub {
   my ($self) = @_;
 
-  my $guid = do_with_test_ledger({}, sub {
+  my $guid = do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
     return $ledger->guid;
   });

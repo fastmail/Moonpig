@@ -10,7 +10,7 @@ use Data::GUID qw(guid_string);
 use Moonpig::Util -all;
 
 use Sub::Exporter -setup => {
-  exports => [ qw(build build_consumers build_ledger do_with_test_ledger do_ro_with_test_ledger) ],
+  exports => [ qw(build build_consumers build_ledger do_with_fresh_ledger do_ro_with_test_ledger) ],
 };
 
 =head1 NAME
@@ -19,9 +19,9 @@ C<Moonpig::Test::Factory> - construct test examples
 
 =head1 SYNOPSIS
 
-       use Moonpig::Test::Factory qw(do_with_test_ledger);
+       use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-       do_with_test_ledger({ fred => { template => "consumer template name",
+       do_with_fresh_ledger({ fred => { template => "consumer template name",
                                        bank     => dollars(100) } }, sub {
          my ($ledger) = @_;
          my $consumer = $ledger->get_component("fred");
@@ -29,9 +29,9 @@ C<Moonpig::Test::Factory> - construct test examples
        });
 
 
-=head2 C<do_with_test_ledger>
+=head2 C<do_with_fresh_ledger>
 
-	do_with_test_ledger($args, $code, $opts);
+	do_with_fresh_ledger($args, $code);
 
 This builds a new ledger and associated components with C<<
 build(%$args) >> (see below) and tells Moonpig to propagate it into a
@@ -45,13 +45,15 @@ C<$args> hash; see below for details.
 The new ledger's GUID may be safely captured and re-used in a later
 call to C<Moonpig::Storage::do_with_ledger>.
 
-The C<$opts> argument is an option hashref of options. You may use C<< ro => 1 >>
-to run C<$code> in a read-only transaction. See
+If C<$args> contains a C<do_opts> element, it should be hashref of
+options to be supplied to the lower-level C<do_with_ledgers> function;
+it is not passed to C<<build>>. You may use C<< ro => 1 >> to run
+C<$code> in a read-only transaction. See
 C<Moonpig::Role::Storage::do_with_ledgers> for further details.
 
 =head2 C<do_ro_with_test_ledger>
 
-The same as C<do_with_test_ledger>, but forces a read-only
+The same as C<do_with_fresh_ledger>, but forces a read-only
 transaction.
 
 =head1 C<build>
@@ -72,7 +74,7 @@ object representing the same ledger. Moonpig methods may create and
 modify such objects internally, without propagating the appropriate
 changes out to your ledger object.  To avoid this problem, you should
 not usually called C<build> directly, but always implicitly via
-C<do_with_test_ledger>.
+C<do_with_fresh_ledger>.
 
 =head2 C<ledger>
 
@@ -382,16 +384,18 @@ sub build_contact {
   });
 }
 
-sub do_with_test_ledger {
-  my ($args, $code, $opts) = @_;
+sub do_with_fresh_ledger {
+  my ($args, $code) = @_;
+  my $opts = delete($args->{do_opts}) || {};
   my $stuff = build(%$args);
   my $ledger = delete $stuff->{ledger};
-  return Moonpig->env->storage->do_with_this_ledger($ledger, $code, $opts);
+  return Moonpig->env->storage->do_with_this_ledger($opts, $ledger, $code);
 }
 
 sub do_ro_with_test_ledger {
- my ($args, $code, $opts) = @_;
-  do_with_test_ledger($args, $code, { %$opts, ro => 1 });
+  my ($args, $code) = @_;
+  $args->{do_opts}{ro} = 1;
+  do_with_fresh_ledger($args, $code);
 }
 
 1;

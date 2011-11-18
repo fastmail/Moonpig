@@ -8,7 +8,7 @@ use t::lib::TestEnv;
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 # use Moonpig::Util qw(class days dollars event);
 
@@ -21,7 +21,7 @@ test "route to and get a simple resource" => sub {
   my ($self) = @_;
 
   my ($guid, $ledger);
-  my $result = do_with_test_ledger({}, sub {
+  my $result = do_with_fresh_ledger({}, sub {
     ($ledger) = @_;
     $guid = $ledger->guid;
 
@@ -47,7 +47,7 @@ test "route to and GET a method on a simple resource" => sub {
   my ($self) = @_;
 
   my ($guid, $ledger);
-  my $result = do_with_test_ledger({}, sub {
+  my $result = do_with_fresh_ledger({}, sub {
     ($ledger) = @_;
     $guid = $ledger->guid;
 

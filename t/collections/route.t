@@ -10,14 +10,14 @@ use Moonpig::Context::Test -all, '$Context';
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
-use Moonpig::Test::Factory qw(build_ledger do_with_test_ledger);
+use Moonpig::Test::Factory qw(build_ledger do_with_fresh_ledger);
 
 use namespace::autoclean;
 
 test "check for existence of collection routes" => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
     ok($ledger->route(['consumers']));
     is($ledger->route(['consumers'])->count, 0);
@@ -31,7 +31,7 @@ test "check for existence of collection routes" => sub {
 test "route to get a collection" => sub {
   my ($self) = @_;
 
-  my $guid = do_with_test_ledger({}, sub { return $_[0]->guid });
+  my $guid = do_with_fresh_ledger({}, sub { return $_[0]->guid });
 
   my ($collection) = Moonpig->env->route(
     [ 'ledger', 'by-guid', $guid, 'refunds' ],
@@ -45,7 +45,7 @@ test "route to get a collection" => sub {
 test "pages" => sub {
   my ($self) = @_;
 
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
     my @bank;
     for my $i (1..20) {
@@ -90,7 +90,7 @@ test "add item to a collection" => sub {
   my ($self) = @_;
 
   my ($ledger_guid, $b);
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
     $ledger_guid = $ledger->guid;
     my $collection = $ledger->route([ 'banks' ]);
@@ -101,9 +101,9 @@ test "add item to a collection" => sub {
     is($collection->count, 1, "added bank via post");
   });
 
-  Moonpig->env->storage->do_with_ledger($ledger_guid, sub {
+  Moonpig->env->storage->do_with_ledger({ ro => 1 }, $ledger_guid, sub {
     is($_[0]->route([ 'banks' ])->_subroute(['guid', $b->guid]), $b, "bank is available");
-  }, { ro => 1 });
+  });
 };
 
 run_me;

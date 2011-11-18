@@ -10,7 +10,7 @@ use Test::Routine::Util;
 use t::lib::TestEnv;
 use t::lib::Util qw(elapse);
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
@@ -48,7 +48,7 @@ sub try_coupon {
   my @x_charge_tags = ();
   push @x_charge_tags, "nonprofit" if $non_profit;
 
-  do_with_test_ledger({ c => { template => 'quick',
+  do_with_fresh_ledger({ c => { template => 'quick',
 			       cost_amount => $cost_amount,
 			       extra_invoice_charge_tags => \@x_charge_tags }},
     sub {

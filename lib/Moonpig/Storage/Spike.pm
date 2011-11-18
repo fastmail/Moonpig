@@ -175,7 +175,6 @@ has _update_mode_stack => (
   handles => {
     _has_update_mode => 'is_nonempty',
     _in_transaction => 'is_nonempty',
-    _pop_update_mode => 'pop_stack',
     _push_update_mode => 'push',
     _set_noupdate_mode => 'push_false',
     _set_update_mode => 'push_true',
@@ -213,9 +212,12 @@ sub do_ro {
 }
 
 sub do_with_ledgers {
-  my ($self, $guids, $code, $opts) = @_;
-  $guids ||= {};
-  my %opts = %{$opts || {}};
+  if (@_ == 3) {
+    splice @_, 1, 0, {}; # $opts was omitted, so splice it in
+  }
+  my ($self, $opts, $guids, $code) = @_;
+  $guids ||= [];
+  my %opts = %$opts;
   my $ro = delete($opts{ro}) || 0;
 
   if (%opts) {
@@ -223,13 +225,13 @@ sub do_with_ledgers {
     croak "Unknown options '%keys' to do_with_ledgers";
   }
 
-  my %ledgers = ();
-  for my $name (keys %$guids) {
-    defined($guids->{$name})
-      or croak "Guid '$name' was undefined";
-    my $ledger = $self->retrieve_ledger_for_guid($guids->{$name})
-      or croak "Couldn't find ledger for guid '$guids->{name}'";
-    $ledgers{$name} = $ledger;
+  my @ledgers = ();
+  for my $i (0 .. $#$guids) {
+    defined($guids->[$i])
+      or croak "Guid element $i was undefined";
+    my $ledger = $self->retrieve_ledger_for_guid($guids->[$i])
+      or croak "Couldn't find ledger for guid '$guids->[$i]'";
+    push @ledgers, $ledger;
   }
 
   my $rv;
@@ -237,9 +239,9 @@ sub do_with_ledgers {
     my $popper = $self->_push_update_mode(! $ro);
 
     $rv = $self->txn(sub {
-      my $rv = $code->(\%ledgers);
+      my $rv = $code->(@ledgers);
       unless ($ro) {
-        $_->save for values(%ledgers);
+        $_->save for @ledgers;
         $self->_execute_saves;
       }
       return $rv;
@@ -258,17 +260,21 @@ sub do_with_ledgers {
 }
 
 sub do_rw_with_ledgers {
-  my ($self, $guids, $code, $opts) = @_;
-  $opts ||= {};
+  if (@_ == 3) {
+    splice @_, 1, 0, {}; # $opts was omitted, so splice it in
+  }
+  my ($self, $opts, $guids, $code) = @_;
   croak "ro option forbidden in do_rw_with_ledgers" if exists $opts->{ro};
-  $self->do_with_ledgers($guids, $code, { %$opts, ro => 0 });
+  $self->do_with_ledgers({ %$opts, ro => 0 }, $guids, $code);
 }
 
 sub do_ro_with_ledgers {
-  my ($self, $guids, $code, $opts) = @_;
-  $opts ||= {};
-  croak "ro option forbidden in do_ro_with_ledgers" if exists $opts->{ro};
-  $self->do_with_ledgers($guids, $code, { %$opts, ro => 1 });
+  if (@_ == 3) {
+    splice @_, 1, 0, {}; # $opts was omitted, so splice it in
+  }
+  my ($self, $opts, $guids, $code) = @_;
+  croak "ro option forbidden in do_rw_with_ledgers" if exists $opts->{ro};
+  $self->do_with_ledgers({ %$opts, ro => 1 }, $guids, $code);
 }
 
 has _ledger_cache => (

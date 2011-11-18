@@ -10,7 +10,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use t::lib::TestEnv;
 
@@ -147,7 +147,7 @@ test "end to end demo" => sub {
 
   Moonpig->env->stop_clock;
 
-  do_with_test_ledger({}, sub {
+  do_with_fresh_ledger({}, sub {
     my ($Ledger) = @_;
     $Ledger_GUID = $Ledger->guid;
 

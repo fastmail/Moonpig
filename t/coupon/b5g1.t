@@ -9,7 +9,7 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
@@ -21,7 +21,7 @@ before run_test => sub {
 
 sub do_with_b5 {
   my ($self, $code) = @_;
-  do_with_test_ledger({ b5 => { template => 'fivemonth', xid => $xid } }, sub {
+  do_with_fresh_ledger({ b5 => { template => 'fivemonth', xid => $xid } }, sub {
     my ($ledger) = @_;
     my $b5 = $ledger->get_component('b5');
     $code->($ledger, $b5);

@@ -9,12 +9,12 @@ use Test::Routine::Util;
 use t::lib::TestEnv;
 use t::lib::Logger;
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with 'Moonpig::Test::Role::UsesStorage';
 
 test "job-making invoice charge" => sub {
-  do_with_test_ledger(
+  do_with_fresh_ledger(
     {
       consumer => {
         class            => class('=t::lib::Role::Consumer::JobCharger'),

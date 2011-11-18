@@ -5,7 +5,7 @@ use Test::More;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -24,7 +24,7 @@ test "check amounts" => sub {
 
   Moonpig->env->stop_clock;
 
-  do_with_test_ledger({
+  do_with_fresh_ledger({
       consumer => {
           template    => 'demo-service',
           xid         => "test:thing:xid",

@@ -32,7 +32,7 @@ around run_test => sub {
 
 test dummy => sub {
   my ($self) = @_;
-  Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
+  Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
     my $consumer = $ledger_a->add_consumer_from_template("dummy", { make_active => 1 });
     my $copy = $consumer->copy_to($ledger_b);
@@ -61,7 +61,7 @@ test bytime => sub {
   my ($self) = @_;
   for my $make_active (0, 1) {
     note(($make_active ? "active" : "inactive") . " consumer");
-    Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
+    Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
       my ($ledger_a, $ledger_b) = @_;
       my $consumer = $ledger_a->add_consumer(
         class("Consumer::ByTime::FixedCost"),
@@ -89,7 +89,7 @@ test with_bank => sub {
 
   my ($ledger_a, $ledger_b);
 
-  Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
+  Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
     my $bank_a = $ledger_a->add_bank(class('Bank'), { amount => dollars(100) });
     my $cons_a = $ledger_a->add_consumer(
@@ -109,7 +109,7 @@ test with_bank => sub {
     $ledger_b->name_component("copy consumer", $cons_b);
   });
 
-  Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
+  Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
     my $cons_a = $ledger_a->get_component("original consumer");
     my $bank_a = $cons_a->bank;
@@ -151,7 +151,7 @@ test with_bank => sub {
 
 test with_replacement => sub {
   my ($self) = @_;
-  Moonpig->env->storage->do_with_ledger_array([ $A, $B ], sub {
+  Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
     my $cons_a = $ledger_a->add_consumer_from_template(
       "dummy",

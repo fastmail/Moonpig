@@ -9,14 +9,14 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use t::lib::Util qw(elapse);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
 sub set_up {
-  my $guid = do_with_test_ledger({ consumer => { template => 'dummy' }}, sub {
+  my $guid = do_with_fresh_ledger({ consumer => { template => 'dummy' }}, sub {
     my ($L) = @_;
 
     for (1..5) {

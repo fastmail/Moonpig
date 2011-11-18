@@ -12,7 +12,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Test::Factory qw(do_with_test_ledger);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use t::lib::TestEnv;
 
@@ -33,7 +33,7 @@ sub _test_ledgers_and_xids {
 
   for my $key (qw(1 2)) {
     $xid{ $key }    = $self->random_xid;
-    $ledger{$key} = do_with_test_ledger({
+    $ledger{$key} = do_with_fresh_ledger({
         consumer => {
             class            => class('Consumer::Dummy'),
             xid              => $xid{$key},
