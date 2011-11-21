@@ -160,7 +160,8 @@ subtype TimeInterval, as Num;
 }
 {
   my $zero = DateTime->from_epoch ( epoch => 0 );
-  my $dt_type = class_type '__DateTime', +{ class => 'DateTime::Duration' };
+  my $dt_type = class_type '__DateTime::Duration',
+    +{ class => 'DateTime::Duration' };
   coerce TimeInterval, from $dt_type,
     via { $zero->add_duration($_)->epoch }
 }
