@@ -124,6 +124,16 @@ publish _replace_contact => {
   return $contact;
 };
 
+# We can't just use "publish_is" on the contact_history attr, because it's an
+# array. -- rjbs, 2011-11-18
+publish _get_contact => {
+  -path        => 'contact',
+  -http_method => 'get',
+} => sub {
+  my ($self) = @_;
+  return $self->contact;
+};
+
 # XXX: This should be a submethod.  And not totally bogus.  -- rjbs, 2011-08-15
 sub BUILDARGS {
   my ($self, $hashref) = @_;
