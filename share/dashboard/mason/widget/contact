@@ -8,7 +8,10 @@ $ledger
   <h2>Ledger Contact</h2>
   <a href='/ledger/<% $ledger->{guid} |h %>/contact'>edit contact</a>
   <table>
-    <tr><th>Name</th><td><% $contact->{name} |h %></td></tr>
+    <tr><th>Name</th><td>
+      <% $contact->{first_name} |h %>
+      <% $contact->{last_name} |h %>
+    </td></tr>
 
     <tr><th rowspan='<% 0 + @address_lines %>'>Address</th><td><% shift @address_lines |h %></td></tr>
 % for my $line (@address_lines) {
@@ -19,6 +22,8 @@ $ledger
     <tr><th>State/Region</th><td><% $contact->{state} |h %></td></tr>
     <tr><th>Postal Code</th><td><% $contact->{postal_code} |h %></td></tr>
     <tr><th>Country</th><td><% $contact->{country} |h %></td></tr>
+
+    <tr><th>Phone number</th><td><% $contact->{phone_number} |h %></td></tr>
 
     <tr><th rowspan='<% 0 + @email_addresses %>'>Email</th><td><% shift @email_addresses |h %></td></tr>
 % for my $email (@email_addresses) {

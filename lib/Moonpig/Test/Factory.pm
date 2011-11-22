@@ -375,8 +375,12 @@ sub build_contact {
   my @names = (rnd(@first), rnd('A' .. 'Z') . ".", rnd(@last));
   my $inits = join "", map substr($_, 0, 1), @names;
 
+  my $phone = join "", map { int rand 10 } (1 .. 10);
+
   return class('Contact')->new({
-    name => join(" ", @names),
+    first_name      => $names[0],
+    last_name       => $names[2],
+    phone_number    => $phone,
     email_addresses => [ "\L$inits\E\@example.com" ],
     address_lines   => [ '123 Street Rd.' ],
     city            => 'Townville',

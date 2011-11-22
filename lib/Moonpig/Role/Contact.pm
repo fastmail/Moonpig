@@ -17,11 +17,24 @@ with(
 
 use namespace::autoclean;
 
-# TODO: make this structured, etc, later; also add mailing address.
-# -- rjbs, 2010-10-12
-has name => (
+has first_name => (
   is  => 'ro',
-  isa => 'Str',
+  isa => TrimmedSingleLine,
+  required => 1,
+);
+
+has last_name => (
+  is  => 'ro',
+  isa => TrimmedSingleLine,
+  required => 1,
+);
+
+# XXX: I hate phone number fields, but we'll need to do a conversion to
+# structured phone data later, since we need to import all our unstructured
+# phone numbers first. -- rjbs, 2011-11-22
+has phone_number => (
+  is  => 'ro',
+  isa => TrimmedSingleLine,
   required => 1,
 );
 
@@ -61,13 +74,15 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return {
-    name        => $self->name,
-    address     => [ $self->address_lines ],
-    city        => $self->city,
-    state       => $self->state,
-    country     => $self->country,
-    postal_code => $self->postal_code,
-    email       => [ $self->email_addresses ],
+    first_name   => $self->first_name,
+    last_name    => $self->last_name,
+    phone_number => $self->phone_number,
+    address      => [ $self->address_lines ],
+    city         => $self->city,
+    state        => $self->state,
+    country      => $self->country,
+    postal_code  => $self->postal_code,
+    email        => [ $self->email_addresses ],
   };
 };
 

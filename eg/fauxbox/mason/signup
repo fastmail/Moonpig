@@ -4,7 +4,8 @@
   <table>
     <tr>
       <th>Your name</th>
-      <td><% $m->widget->input({ id => 'signup.name' }) %></td>
+      <td><% $m->widget->input({ id => 'signup.first_name' }) %></td>
+      <td><% $m->widget->input({ id => 'signup.last_name' }) %></td>
     </tr>
     <tr>
       <th>Your desired username</th>
@@ -13,6 +14,10 @@
     <tr>
       <th>Your email address</th>
       <td><% $m->widget->input({ id => 'signup.email_addresses.0' }) %></td>
+    </tr>
+    <tr>
+      <th>Your phone number</th>
+      <td><% $m->widget->input({ id => 'signup.phone_number' }) %></td>
     </tr>
     <tr>
       <th>Your street address</th>

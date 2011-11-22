@@ -33,7 +33,9 @@ sub setup_account {
   my %rv;
 
   my $signup_info =
-    { name => "Fred Flooney",
+    { first_name => "Fred",
+      last_name  => "Flooney",
+      phone_number    => '12345678',
       email_addresses => [ 'testuser@example.com' ],
       address_lines   => [ '1313 Mockingbird Ln.' ],
       city            => 'Wagstaff',
@@ -120,7 +122,9 @@ test split => sub {
     {
       xid => $a_xid,
       contact => {
-        name => "Mr. Hand",
+        first_name => "Mr.",
+        last_name  => "Hand",
+        phone_number    => "8675309",
         email_addresses => [ 'mrhand@example.com' ],
         address_lines   => [ '221B Baker St.' ],
         city            => 'London',
@@ -140,7 +144,9 @@ test split => sub {
       {
         xid => $a_xid,
         contact => {
-          name => "Mr. Hand",
+          first_name => "Mr.",
+          last_name  => "Hand",
+          phone_number    => "8675309",
           email_addresses => [ 'mrhand@example.com' ],
           address_lines   => [ '221B Baker St.' ],
           city            => 'London',
@@ -164,7 +170,9 @@ test handoff => sub {
   my $ledger_b_guid = do {
     my $result = $ua->mp_post(
       '/ledgers',
-      { name => "Ted 'Theodore' Logan",
+      { first_name => "Ted (Theodore)",
+        last_name  => "Logan",
+        phone_number    => "69",
         email_addresses => [ 'ttl@example.com' ],
         address_lines   => [ '1 W. Eastside Cir.' ],
         city            => 'San Dimas',

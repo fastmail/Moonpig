@@ -9,7 +9,13 @@ $ledger_guid
 <form action='/post/contact' method='POST'>
   <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
 
-  Name: <input name='contact.name' value='<% $ledger->{contact}{name} |h %>' />
+  First name: <input name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
+  <br />
+
+  Last name: <input name='contact.last_name' value='<% $ledger->{contact}{last_name} |h %>' />
+  <br />
+
+  Phone number: <input name='contact.phone_number' value='<% $ledger->{contact}{phone_number} |h %>' />
   <br />
 
   Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email}[0] |h %>' />
