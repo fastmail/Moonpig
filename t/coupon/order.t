@@ -60,6 +60,7 @@ test "order" => sub {
         description => "One hundred assorted fruit pies",
         amount      => dollars(100),
         tags        => [],
+        consumer    => $L->get_component('consumer'),
       }));
 
     until ($L->payable_invoices) {

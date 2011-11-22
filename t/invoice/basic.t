@@ -36,6 +36,7 @@ test charge_close_and_send => sub {
       class(qw(InvoiceCharge))->new({
         description => 'test charge (setup)',
         amount      => dollars(10),
+        consumer    => $ledger->get_component('c'),
       }),
      );
 
@@ -43,6 +44,7 @@ test charge_close_and_send => sub {
       class(qw(InvoiceCharge))->new({
         description => 'test charge (maintenance)',
         amount      => dollars(5),
+        consumer    => $ledger->get_component('c'),
       }),
      );
 
@@ -97,6 +99,7 @@ test underpayment => sub {
       class(qw(InvoiceCharge))->new({
         description => 'test charge (setup)',
         amount      => dollars(10),
+        consumer    => $ledger->get_component('c'),
       }),
      );
 
@@ -140,6 +143,7 @@ test overpayment  => sub {
       class(qw(InvoiceCharge))->new({
         description => 'test charge (setup)',
         amount      => dollars(10),
+        consumer    => $ledger->get_component('c'),
       }),
     );
 
@@ -228,6 +232,7 @@ test payment_by_two_credits => sub {
       class(qw(InvoiceCharge))->new({
         description => 'test charge (setup)',
         amount      => dollars(10),
+        consumer    => $ledger->get_component('c'),
       }),
     );
 
