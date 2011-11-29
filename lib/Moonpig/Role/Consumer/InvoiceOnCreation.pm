@@ -33,6 +33,7 @@ implicit_event_handlers {
 # [ 'basic account' => dollars(50), 'allmail' => dollars(20), 'support' => .. ]
 # This is an arrayref so we can have ordered line items for display.
 requires 'costs_on';
+requires 'build_charge';
 
 has extra_invoice_charge_tags => (
   is  => 'ro',
@@ -57,7 +58,7 @@ sub _invoice {
 
   while (my ($desc, $amt) = $iter->()) {
     $invoice->add_charge(
-      class( "InvoiceCharge::Bankable" )->new({
+      $self->build_charge({
         description => $desc,
         amount      => $amt,
         tags        => $self->invoice_charge_tags,

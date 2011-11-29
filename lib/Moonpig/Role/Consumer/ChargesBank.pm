@@ -117,6 +117,11 @@ sub move_bank_to__ {
     });
 }
 
+sub build_charge {
+  my ($self, $args) = @_;
+  return class("InvoiceCharge::Bankable")->new($args);
+}
+
 PARTIAL_PACK {
   my ($self) = @_;
   return {
@@ -125,4 +130,5 @@ PARTIAL_PACK {
                       : undef,
   };
 };
+
 1;
