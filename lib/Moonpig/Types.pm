@@ -82,7 +82,7 @@ subtype Factory, as Str | Object;
 #
 # Events
 
-my $simple_str            = qr/[-a-z0-9]+/i;
+my $simple_str            = qr/[-a-z0-9.]+/i;
 my $simple_str_dotchain   = qr/ (?: $simple_str \. )* $simple_str ? /x;
 my $simple_str_colonchain = qr/ (?: $simple_str \: )* $simple_str ? /x;
 
