@@ -89,12 +89,14 @@ sub build_and_install_replacement {
 
   my $replacement = $self->ledger->add_consumer_from_template(
     $replacement_template,
-    { xid => $self->xid },
+    { xid => $self->xid, $self->_replacement_extra_args },
   );
 
   $self->replacement($replacement);
   return $replacement;
 }
+
+sub _replacement_extra_args { return () }
 
 sub _replacement_template {
   my ($self) = @_;
@@ -130,7 +132,6 @@ sub _replacement_template {
 sub handle_cancel {
   my ($self, $event) = @_;
   return if $self->is_canceled;
-
   $self->mark_canceled;
   if ($self->has_replacement) {
     $self->replacement->expire
