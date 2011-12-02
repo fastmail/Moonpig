@@ -24,6 +24,7 @@ use Sub::Exporter -setup => [ qw(
   cents dollars to_cents to_dollars
 
   days weeks months years
+  days_in_year
 
   same_object
 
@@ -103,6 +104,14 @@ sub weeks { $_[0] * 86400 * 7 }
 sub months { $_[0] * 86400 * 30 } # also ignores varying month lengths
 sub years { $_[0] * 86400 * 365.25 } # also ignores the Gregorian calendar
                                      # Hail Caesar!
+
+sub days_in_year {
+  my ($y) = @_;
+  croak "4-digit year required" if $y < 1000;
+  $y % 400 == 0 ? 366 :
+  $y % 100 == 0 ? 365 :
+  $y %   4 == 0 ? 366 : 365;
+}
 
 sub same_object {
   my ($a, $b) = @_;
