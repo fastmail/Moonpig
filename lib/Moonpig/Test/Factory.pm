@@ -10,7 +10,7 @@ use Data::GUID qw(guid_string);
 use Moonpig::Util -all;
 
 use Sub::Exporter -setup => {
-  exports => [ qw(build build_consumers build_ledger do_with_fresh_ledger do_ro_with_test_ledger) ],
+  exports => [ qw(build build_consumers build_ledger do_with_fresh_ledger do_ro_with_fresh_ledger) ],
 };
 
 =head1 NAME
@@ -51,7 +51,7 @@ it is not passed to C<<build>>. You may use C<< ro => 1 >> to run
 C<$code> in a read-only transaction. See
 C<Moonpig::Role::Storage::do_with_ledgers> for further details.
 
-=head2 C<do_ro_with_test_ledger>
+=head2 C<do_ro_with_fresh_ledger>
 
 The same as C<do_with_fresh_ledger>, but forces a read-only
 transaction.
@@ -396,7 +396,7 @@ sub do_with_fresh_ledger {
   return Moonpig->env->storage->do_with_this_ledger($opts, $ledger, $code);
 }
 
-sub do_ro_with_test_ledger {
+sub do_ro_with_fresh_ledger {
   my ($args, $code) = @_;
   $args->{do_opts}{ro} = 1;
   do_with_fresh_ledger($args, $code);
