@@ -6,6 +6,7 @@ use Moonpig;
 
 with(
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::StubBuild',
   'Stick::Role::Routable::AutoInstance',
   'Stick::Role::Routable::ClassAndInstance',
 );
