@@ -9,9 +9,53 @@ use Email::MIME::Kit 2;
 
 use namespace::autoclean;
 
+has _global_mkit_overrides => (
+  is   => 'ro',
+  default => sub { [] },
+);
+
+has _per_mkit_overrides => (
+  is      => 'ro',
+  default => sub { {} },
+);
+
+sub _overrides_for_kitname {
+  my ($self, $kitname) = @_;
+
+  my $for_kit   = $self->_per_mkit_overrides->{ $kitname };
+  my @overrides = $for_kit ? @$for_kit : ();
+
+  push @overrides, @{ $self->_global_mkit_overrides };
+
+  return @overrides;
+}
+
+sub add_override {
+  my ($self, $kitname, $sub) = @_;
+
+  if ($kitname eq '*') {
+    push @{ $self->_global_mkit_overrides }, $sub;
+  } else {
+    push @{ $self->_per_mkit_overrides->{ $kitname } }, $sub;
+  }
+}
+
+sub _kitname_for {
+  my ($self, $kitname, $arg) = @_;
+
+  for my $override ($self->_overrides_for_kitname($kitname)) {
+    my $result = $override->( $kitname, $arg );
+    next unless defined $result;
+    return $result;
+  }
+
+  return $kitname;
+}
+
 sub _kit_for {
   my ($self, $kitname, $arg) = @_;
 
+  $kitname = $self->_kitname_for($kitname, $arg);
   $kitname .= '.mkit';
 
   my @path = map {; File::Spec->catdir($_, 'kit' ) } Moonpig->env->share_roots;
