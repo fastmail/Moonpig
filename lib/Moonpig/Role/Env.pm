@@ -13,6 +13,7 @@ with(
 use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Ledger::PostTarget;
+use Moonpig::MKits;
 use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
@@ -46,6 +47,13 @@ has from_email_address => (
     from_email_address_phrase  => 'phrase',
     from_email_address_string  => 'format',
   }
+);
+
+has mkits => (
+  is  => 'ro',
+  isa => class_type('Moonpig::MKits'),
+  init_arg => undef,
+  default  => sub { Moonpig::MKits->new },
 );
 
 requires 'register_object';

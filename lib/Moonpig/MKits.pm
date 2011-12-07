@@ -1,6 +1,5 @@
-use strict;
-use warnings;
 package Moonpig::MKits;
+use Moose;
 # ABSTRACT: the access point for Moonpig's message kits
 
 use Carp ();
@@ -8,8 +7,10 @@ use File::ShareDir;
 use File::Spec;
 use Email::MIME::Kit 2;
 
-sub kit {
-  my ($self, $kitname) = @_;
+use namespace::autoclean;
+
+sub _kit_for {
+  my ($self, $kitname, $arg) = @_;
 
   $kitname .= '.mkit';
 
@@ -22,6 +23,13 @@ sub kit {
   }
 
   Carp::confess "unknown mkit <$kitname>";
+}
+
+sub assemble_kit {
+  my ($self, $kitname, $arg) = @_;
+
+  my $kit = $self->_kit_for($kitname, $arg);
+  return $kit->assemble($arg);
 }
 
 1;
