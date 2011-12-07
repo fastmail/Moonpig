@@ -8,6 +8,10 @@
       <td><% $m->widget->input({ id => 'signup.last_name' }) %></td>
     </tr>
     <tr>
+      <th>Your organization</th>
+      <td><% $m->widget->input({ id => 'signup.organization' }) %></td>
+    </tr>
+    <tr>
       <th>Your desired username</th>
       <td><% $m->widget->input({ id => 'signup.username' }) %></td>
     </tr>

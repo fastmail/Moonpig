@@ -10,6 +10,7 @@ my $ledger = $m->mp_request(
   POST => '/ledgers' => {
     first_name => $params->{signup}{first_name},
     last_name  => $params->{signup}{last_name},
+    organization => $params->{signup}{organization},
     city => $params->{signup}{city},
     country => $params->{signup}{country},
     address_lines   => $params->{signup}{address_lines},

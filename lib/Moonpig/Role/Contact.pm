@@ -29,6 +29,11 @@ has last_name => (
   required => 1,
 );
 
+has organization => (
+  is  => 'ro',
+  isa => TrimmedSingleLine,
+);
+
 # XXX: I hate phone number fields, but we'll need to do a conversion to
 # structured phone data later, since we need to import all our unstructured
 # phone numbers first. -- rjbs, 2011-11-22
@@ -76,6 +81,7 @@ PARTIAL_PACK {
   return {
     first_name   => $self->first_name,
     last_name    => $self->last_name,
+    organization => $self->organization,
     phone_number => $self->phone_number,
     address      => [ $self->address_lines ],
     city         => $self->city,

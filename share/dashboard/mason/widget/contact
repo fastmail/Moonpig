@@ -12,6 +12,7 @@ $ledger
       <% $contact->{first_name} |h %>
       <% $contact->{last_name} |h %>
     </td></tr>
+    <tr><th>Organization</th><td><% $contact->{organization} |h %></td></tr>
 
     <tr><th rowspan='<% 0 + @address_lines %>'>Address</th><td><% shift @address_lines |h %></td></tr>
 % for my $line (@address_lines) {
