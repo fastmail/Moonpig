@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- cperl -*-
 
-use lib qw(lib eg/fauxbox/lib);
+# use lib qw(lib eg/fauxbox/lib);
 use Moonpig;
 use Moonpig::App::Ob;
 use Data::Dumper;
