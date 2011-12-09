@@ -6,7 +6,6 @@ with(
 );
 
 use Moonpig::Trait::Copy;
-use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(ArrayRef);
 
@@ -25,16 +24,6 @@ sub journal_charge_tags {
   my ($self) = @_;
   return [ $self->xid, @{$self->extra_journal_charge_tags} ]
 }
-
-# When the object has less than this long to live, it will
-# start posting low-balance events to its successor, or to itself if
-# it has no successor
-has old_age => (
-  is => 'ro',
-  required => 1,
-  isa => TimeInterval,
-  traits => [ qw(Copy) ],
-);
 
 has bank => (
   reader => 'bank',

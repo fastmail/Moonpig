@@ -19,6 +19,7 @@ with(
   'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
+  'Moonpig::Role::Consumer::MakesReplacement',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -92,6 +93,8 @@ sub remaining_life {
   $self->expire_date - $when;
 }
 
+sub will_die_soon { 0 } # Provided by MakesReplacement
+
 ################################################################
 #
 #
@@ -137,8 +140,6 @@ around charge_one_day => sub {
   my $orig = shift;
   my ($self, @args) = @_;
 
-  $self->reflect_on_mortality; # set up replacement if needed
-
   unless ($self->can_make_payment_on( $self->next_charge_date )) {
     $self->expire;
     return;
@@ -166,27 +167,6 @@ sub calculate_charge_on {
   my $charge = sum(map { $costs[$_] } grep { $_ % 2 } keys @costs);
 
   return $charge;
-}
-
-sub reflect_on_mortality {
-  my ($self) = @_;
-
-  return unless $self->has_bank;
-
-  # XXX: noise while testing
-  # $Logger->log([ '%s', $self->remaining_life( $tick_time ) ]);
-
-  # if this object does not have long to live...
-  my $remaining_life = $self->remaining_life();
-
-  if ($remaining_life <= $self->old_age) {
-
-    # If it has no replacement yet, it should create one
-    # XXX code duplicated between ByUsage and here
-    unless ($self->has_replacement and $remaining_life > 0) {
-      $self->handle_event( event('consumer-create-replacement') );
-    }
-  }
 }
 
 sub can_make_payment_on {

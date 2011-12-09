@@ -30,7 +30,6 @@ sub templates {
         roles => [ 'Consumer::DummyWithBank' ],
         arg => {
           xid     => $dummy_xid,
-          old_age => years(1000),
           replacement_plan => [ get => '/nothing' ],
         },
       }

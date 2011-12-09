@@ -74,8 +74,6 @@ sub charge {
 
 sub charge_one_day {
   my ($self, $now) = @_;
-    # maybe make a replacement, maybe tell it that it will soon inherit the
-    # kingdom, maybe do nothing -- rjbs, 2011-01-17
 
   my $next_charge_date = $self->next_charge_date;
 
@@ -94,6 +92,8 @@ sub charge_one_day {
       skip_funds_check => $self->allows_overdrafts,
     });
   }
+
+  $self->maybe_make_replacement;
 }
 
 sub set_up_last_charge_date {
