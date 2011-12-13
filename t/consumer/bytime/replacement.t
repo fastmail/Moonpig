@@ -19,7 +19,7 @@ use t::lib::TestEnv;
 
 with(
   'Moonpig::Test::Role::UsesStorage',
- );
+);
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
@@ -127,19 +127,20 @@ test "without_successor" => sub {
     [ 'missed', [ 29, 30, 31 ], "2000-01-29" ], # successor delayed until 29th
    ) {
     my ($name, $schedule, $succ_creation_date) = @$test;
-    $succ_creation_date ||= "2000-01-12"; # Should be created on Jan 12
+    note "Doing test schedule '$name'";
+    $succ_creation_date ||= "2000-01-11"; # Should be created on Jan 11
     Moonpig->env->stop_clock_at($jan1);
 
     my $xid = "consumer:test:" . guid_string();
     do_with_fresh_ledger({ consumer => {
-      class              => class('Consumer::ByTime::FixedCost'),
-      charge_description => "test charge",
-      replacement_lead_time            => days(20),
-      replacement_plan   => [ get => 'template-like-this' ],
-      cost_amount        => dollars(1),
-      cost_period        => days(1),
-      bank               => dollars(31),
-      xid                => $xid,
+      class                 => class('Consumer::ByTime::FixedCost'),
+      charge_description    => "test charge",
+      replacement_lead_time => days(20),
+      replacement_plan      => [ get => 'template-like-this' ],
+      cost_amount           => dollars(1),
+      cost_period           => days(1),
+      bank                  => dollars(31),
+      xid                   => $xid,
     }}, sub {
       my ($ledger) = @_;
       $ledger->register_event_handler(
