@@ -13,7 +13,7 @@ use t::lib::TestEnv;
 
 use t::lib::Logger;
 use t::lib::Class::EventHandler::Test;
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 
 use t::lib::TestEnv;
 
@@ -131,46 +131,41 @@ test "without_successor" => sub {
     Moonpig->env->stop_clock_at($jan1);
 
     my $xid = "consumer:test:" . guid_string();
-    my $stuff;
-    Moonpig->env->storage->do_rw(sub {
-      $stuff = build(
-        consumer => {
-          class              => class('Consumer::ByTime::FixedCost'),
-          charge_description => "test charge",
-          replacement_lead_time            => days(20),
-          replacement_plan   => [ get => 'template-like-this' ],
-          cost_amount        => dollars(1),
-          cost_period        => days(1),
-          bank               => dollars(31),
-          xid                => $xid,
-        }
+    do_with_fresh_ledger({ consumer => {
+      class              => class('Consumer::ByTime::FixedCost'),
+      charge_description => "test charge",
+      replacement_lead_time            => days(20),
+      replacement_plan   => [ get => 'template-like-this' ],
+      cost_amount        => dollars(1),
+      cost_period        => days(1),
+      bank               => dollars(31),
+      xid                => $xid,
+    }}, sub {
+      my ($ledger) = @_;
+      $ledger->register_event_handler(
+        'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
       );
-      Moonpig->env->save_ledger($stuff->{ledger});
+
+      my ($consumer) = $ledger->get_component("consumer");
+      my @eq;
+      $consumer->register_event_handler(
+        'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
+      );
+      for my $day (@$schedule) {
+        my $tick_time = Moonpig::DateTime->new(
+          year => 2000, month => 1, day => $day
+         );
+        Moonpig->env->stop_clock_at($tick_time);
+        $self->heartbeat_and_send_mail(
+          $ledger,
+          { timestamp => $tick_time },
+        );
+      }
+      is(@eq, 1, "received one request to create replacement (schedule '$name')");
+      my ($receiver, $event) = @{$eq[0] || [undef, undef]};
+      is($event->ident, 'consumer-create-replacement', "event name");
+      is($event->payload->{timestamp}->ymd, $succ_creation_date, "event date");
     });
-
-    $stuff->{ledger}->register_event_handler(
-      'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()
-     );
-
-    my @eq;
-    $stuff->{consumer}->register_event_handler(
-      'consumer-create-replacement', 'noname', queue_handler("ld", \@eq)
-    );
-    for my $day (@$schedule) {
-      my $tick_time = Moonpig::DateTime->new(
-        year => 2000, month => 1, day => $day
-      );
-      Moonpig->env->stop_clock_at($tick_time);
-      $self->heartbeat_and_send_mail(
-        $stuff->{ledger},
-        { timestamp => $tick_time },
-      );
-    }
-
-    is(@eq, 1, "received one request to create replacement (schedule '$name')");
-    my ($receiver, $event) = @{$eq[0] || [undef, undef]};
-    is($event->ident, 'consumer-create-replacement', "event name");
-    is($event->payload->{timestamp}->ymd, $succ_creation_date, "event date");
   }
 };
 
