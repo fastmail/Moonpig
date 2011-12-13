@@ -174,11 +174,4 @@ sub can_make_payment_on {
   return $self->unapplied_amount >= $self->calculate_charge_on($date);
 }
 
-# My predecessor is running out of money
-sub predecessor_running_out {
-  my ($self, $event, $args) = @_;
-  my $remaining_life = $event->payload->{remaining_life}  # In seconds
-    or confess("predecessor didn't advise me how long it has to live");
-}
-
 1;
