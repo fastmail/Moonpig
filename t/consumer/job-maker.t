@@ -19,7 +19,6 @@ test "job-making invoice charge" => sub {
       consumer => {
         class            => class('=t::lib::Role::Consumer::JobCharger'),
         replacement_plan => [ get => '/nothing' ],
-        old_age          => days(30),
         make_active      => 1,
       },
     },

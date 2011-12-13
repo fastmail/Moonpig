@@ -21,7 +21,7 @@ sub templates {
         roles => [ 'Consumer::ByTime::FixedCost' ],
         arg   => {
           xid         => 'urn:uuid:' . guid_string,
-          old_age     => days(30),
+          replacement_lead_time     => days(30),
           cost_amount => dollars(100),
           cost_period => days(365),
           charge_description => 'boring test charge',

@@ -30,7 +30,6 @@ sub templates {
         roles => [ 'Consumer::DummyWithBank' ],
         arg => {
           xid     => $dummy_xid,
-          old_age => years(1000),
           replacement_plan => [ get => '/nothing' ],
         },
       }
@@ -41,7 +40,7 @@ sub templates {
       return {
         roles => [ 'Consumer::ByTime::FixedCost' ],
         arg => {
-          old_age     => years(1000),
+          replacement_lead_time     => years(1000),
           cost_amount => dollars(100),
           cost_period => days(2),
           charge_description => 'quick consumer',
@@ -56,7 +55,7 @@ sub templates {
         roles => [ 'Consumer::ByTime::FixedCost', 't::Consumer::CouponCreator' ],
         arg   => {
           xid         => $b5g1_xid,
-          old_age     => days(7),
+          replacement_lead_time     => days(7),
           cost_amount => dollars(500),
           cost_period => days(30 * 5),
           charge_description => 'long-term consumer',
@@ -78,7 +77,7 @@ sub templates {
         roles => [ 'Consumer::ByTime::FixedCost' ],
         arg   => {
           xid         => $b5g1_xid,
-          old_age     => days(7),
+          replacement_lead_time     => days(7),
           cost_amount => dollars(100),
           cost_period => days(30),
           charge_description => 'free sixth-month consumer',

@@ -15,10 +15,11 @@ with(
   'Moonpig::Role::Consumer::ChargesBank',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
+  'Moonpig::Role::Consumer::MakesReplacement',
 );
 
 use Moonpig::Behavior::EventHandlers;
-use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
+use Moonpig::Types qw(PositiveMillicents PositiveInt Time TimeInterval);
 
 use namespace::autoclean;
 
@@ -38,11 +39,17 @@ has cost_per_unit => (
 # create a replacement when the available funds are no longer enough
 # to purchase this many of the commodity
 # (if omitted, create replacement when estimated running-out time
-# is less than old_age)
+# is less than replacement_lead_time)
 has low_water_mark => (
   is => 'ro',
   isa => Num,
   predicate => 'has_low_water_mark',
+  traits => [ qw(Copy) ],
+);
+
+has most_recent_request => (
+  is => 'rw',
+  isa => PositiveInt,
   traits => [ qw(Copy) ],
 );
 
@@ -89,26 +96,26 @@ sub create_hold_for_units {
     $self->cost_per_unit * $units_requested,
     $subsidiary_hold,
   );
+  $self->most_recent_request($units_requested);
 
   unless ($hold) {
     $subsidiary_hold->delete_hold() if $subsidiary_hold;
     return;
   }
 
-  {
-    my $low_water_mark =
-      $self->has_low_water_mark ? $self->low_water_mark : $units_requested;
-    if ($self->units_remaining <= $low_water_mark ||
-          $self->estimated_lifetime <= $self->old_age) {
-      # XXX code duplicated between ByTime and here
-      unless ($self->has_replacement) {
-        $self->handle_event(event('consumer-create-replacement'));
-      }
-    }
-  }
+  $self->maybe_make_replacement;
 
   return $hold;
 }
+
+sub will_die_soon {
+  my ($self) = @_;
+  my $low_water_mark =
+    $self->has_low_water_mark ? $self->low_water_mark : $self->most_recent_request;
+  $self->units_remaining <= $low_water_mark;
+}
+
+sub remaining_life { $_[0]->estimated_lifetime }
 
 sub units_remaining {
   my ($self) = @_;

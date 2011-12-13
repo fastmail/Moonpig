@@ -84,7 +84,7 @@ sub setup_account {
             xid         => $a_xid,
             make_active => 1,
             cost_amount => $price,
-            old_age     => days(2),
+            replacement_lead_time     => days(2),
             charge_frequency => days(1),
           },
         };

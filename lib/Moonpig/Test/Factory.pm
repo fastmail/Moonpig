@@ -199,7 +199,7 @@ example:
             class            => class('Consumer::ByUsage'),
             bank             => dollars(1),
             cost_per_unit    => cents(5),
-            old_age          => days(30),
+            replacement_lead_time          => days(30),
             replacement_plan => [ get => '/nothing' ],
             make_active      => 1,
           },

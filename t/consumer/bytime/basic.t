@@ -48,7 +48,7 @@ sub setup {
       class              => $CLASS,
       cost_amount        => dollars(1),
       cost_period        => days(1),
-      old_age            => days(0),
+      replacement_lead_time            => days(0),
       replacement_plan   => [ get => '/nothing' ],
       charge_description => "test consumer",
       bank               => dollars(3),
