@@ -170,7 +170,7 @@ test "without_successor" => sub {
     is(@eq, 1, "received one request to create replacement (schedule '$name')");
     my ($receiver, $event) = @{$eq[0] || [undef, undef]};
     is($event->ident, 'consumer-create-replacement', "event name");
-    is($event->payload->{timestamp}->ymd, $succ_creation_date, "event date");
+    is($event->timestamp->ymd, $succ_creation_date, "event date");
   }
 };
 

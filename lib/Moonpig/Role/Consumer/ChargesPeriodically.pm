@@ -61,8 +61,7 @@ has allows_overdrafts => (
 sub charge {
   my ($self, $event, $arg) = @_;
 
-  my $now = $event->payload->{timestamp}
-    or confess "event payload has no timestamp";
+  my $now = $event->timestamp;
 
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12

@@ -1,5 +1,6 @@
 package Moonpig::Events::Event;
 # ABSTRACT: an event fired by one object for another to consume
+use Carp qw(confess croak);
 use Moose;
 use MooseX::StrictConstructor;
 
@@ -18,5 +19,7 @@ with(
 has '+ident' => (
   isa => EventName,
 );
+
+sub timestamp { $_[0]->payload->{timestamp} or confess "event payload has no timestamp" }
 
 1;
