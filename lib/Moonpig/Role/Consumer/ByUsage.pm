@@ -39,7 +39,7 @@ has cost_per_unit => (
 # create a replacement when the available funds are no longer enough
 # to purchase this many of the commodity
 # (if omitted, create replacement when estimated running-out time
-# is less than old_age)
+# is less than replacement_lead_time)
 has low_water_mark => (
   is => 'ro',
   isa => Num,

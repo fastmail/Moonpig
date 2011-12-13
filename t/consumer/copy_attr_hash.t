@@ -12,7 +12,7 @@ use t::lib::TestEnv;
 use Moonpig::Test::Factory qw(build);
 
 my @basic = qw(canceled expired replacement_plan xid);
-my @charges_bank = qw(extra_journal_charge_tags old_age);
+my @charges_bank = qw(extra_journal_charge_tags replacement_lead_time);
 my @invoices = qw(extra_invoice_charge_tags);
 
 test dummy => sub {
@@ -36,7 +36,7 @@ test by_time => sub {
           charge_description => "dummy",
           cost_amount => dollars(1),
           cost_period => years(1),
-          old_age => years(1),
+          replacement_lead_time => years(1),
           make_active => $make_active,
         });
 
@@ -63,7 +63,7 @@ test byusage => sub {
       replacement_plan => [ get => '/nothing' ],
       cost_per_unit    => dollars(2),
       low_water_mark   => 3,
-      old_age          => years(1),
+      replacement_lead_time          => years(1),
     }
   );
   my $h = $stuff->{consumer}->copy_attr_hash__();

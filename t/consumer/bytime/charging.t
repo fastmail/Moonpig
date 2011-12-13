@@ -42,7 +42,7 @@ test "charge" => sub {
         consumer => {
           class              => class('Consumer::ByTime::FixedCost'),
           bank               => dollars(10),
-          old_age            => years(1000),
+          replacement_lead_time            => years(1000),
           cost_amount        => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
@@ -109,7 +109,7 @@ test "variable charge" => sub {
           class => class('Consumer::ByTime', '=CostsTodaysDate'),
           bank  => dollars(500),
           extra_journal_charge_tags => ["test"],
-          old_age                   => years(1000),
+          replacement_lead_time                   => years(1000),
           cost_period               => days(1),
           replacement_plan          => [ get => '/nothing' ],
           xid                       => xid(),
@@ -158,7 +158,7 @@ test grace_period => sub {
         $stuff = build(
           consumer => {
             class              => class('Consumer::ByTime::FixedCost'),
-            old_age            => days(0),
+            replacement_lead_time            => days(0),
             cost_amount        => dollars(1),
             cost_period        => days(1),
             replacement_plan   => [ get => '/nothing' ],

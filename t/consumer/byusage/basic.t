@@ -42,7 +42,7 @@ sub create_consumer {
       class            => class('Consumer::ByUsage'),
       bank             => dollars(1),
       cost_per_unit    => cents(5),
-      old_age          => days(30),
+      replacement_lead_time          => days(30),
       replacement_plan => [ get => '/nothing' ],
       make_active      => 1,
       %$args,
@@ -125,7 +125,7 @@ test low_water_replacement => sub {
   $self->create_consumer({
     low_water_mark => $lwm,
     replacement_plan => [ get => 'template-like-this' ],
-    old_age => 0,
+    replacement_lead_time => 0,
   });
   my $q = 2;
   my $held = 0;
@@ -188,7 +188,7 @@ test est_lifetime => sub {
 
 test "test lifetime replacement" => sub {
   my ($self) = @_;
-  my $old_age = days(10);
+  my $replacement_lead_time = days(10);
 
   for my $q (1 .. 3) { # number of units to reserve each time
     for my $t (1 .. 3) { # number of days between holds
@@ -200,7 +200,7 @@ test "test lifetime replacement" => sub {
       $self->create_consumer({
         low_water_mark => 0,
         replacement_plan => [ get => 'template-like-this' ],
-        old_age => $old_age,
+        replacement_lead_time => $replacement_lead_time,
       });
 
       until ($Consumer->has_replacement) {
@@ -211,9 +211,9 @@ test "test lifetime replacement" => sub {
         $cur_est_life = $Consumer->estimated_lifetime;
       }
       ok($Consumer->has_replacement, "replacement consumer created");
-      cmp_ok($cur_est_life, '<=', $old_age,
+      cmp_ok($cur_est_life, '<=', $replacement_lead_time,
              "replacement created not created too soon");
-      cmp_ok($prev_est_life, '>', $old_age,
+      cmp_ok($prev_est_life, '>', $replacement_lead_time,
              "replacement created as soon as appropriate");
       note "This test finished on Jan $day.\n";
     }
@@ -225,7 +225,7 @@ test default_low_water_check => sub {
 
   $self->create_consumer({
     replacement_plan => [ get => 'template-like-this' ],
-    old_age => 0,
+    replacement_lead_time => 0,
   });
   my $q = 0;
   my $held = 0;

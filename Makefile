@@ -8,6 +8,6 @@ default:
 	@echo 'Use "make test" to run tests'
 
 test:
-	prove -Ilib -r t
+	prove -j2 -Ilib -r t
 
 doc:	doc/design.html
