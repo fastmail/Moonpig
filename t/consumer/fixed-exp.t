@@ -13,39 +13,38 @@ use Test::Routine::Util;
 use Try::Tiny;
 
 with ('Moonpig::Test::Role::UsesStorage');
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 test "fixed-expiration consumer" => sub {
   my ($self) = @_;
 
-  Moonpig->env->storage->do_rw(sub {
+  do_with_fresh_ledger({}, sub {
+    my ($ledger) = @_;
     Moonpig->env->stop_clock;
     my $expire_date = Moonpig->env->now + days(30);
 
-    my $stuff = build(c => {
-      class => class('Consumer::FixedExpiration'),
-      expire_date => $expire_date,
-      replacement_plan => [ get => '/nothing' ],
-    });
-    my $c = $stuff->{c};
-    my $ledger = $c->ledger;
+    my $c = $ledger->add_consumer(
+      class('Consumer::FixedExpiration'),
+      { expire_date => $expire_date,
+        replacement_plan => [ get => '/nothing' ],
+        xid => "some:random:xid",
+      });
 
     isa_ok($c, class('Consumer::FixedExpiration'));
+    is($c->remaining_life, days(30), "initial remaining life");
 
     $ledger->handle_event( event('heartbeat') );
-
+    is($c->remaining_life, days(30), "remaining life after first heartbeat");
     is($c->expire_date, $expire_date, "expire date is as created");
 
     Moonpig->env->elapse_time( days(20) );
-
     $ledger->handle_event( event('heartbeat') );
-
+    is($c->remaining_life, days(10), "remaining life after 20 days");
     ok( ! $c->is_expired, "consumer has not expired after 20 days");
 
     Moonpig->env->elapse_time( days(20) );
-
     $ledger->handle_event( event('heartbeat') );
-
+    is($c->remaining_life, days(0), "remaining life after 40 days is zero");
     ok(   $c->is_expired, "consumer has expired after 40 days");
   });
 };

@@ -35,4 +35,11 @@ sub _check_expiry {
   $self->expire if $self->expire_date <= Moonpig->env->now;
 }
 
+sub remaining_life {
+  my ($self, $when) = @_;
+  $when ||= Moonpig->env->now;
+  my $diff = $self->expire_date - $when;
+  return $diff < 0 ? 0 : $diff;
+}
+
 1;
