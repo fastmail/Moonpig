@@ -13,14 +13,14 @@ test "legal transfer mapping" => sub {
   ok(! transfer_type_ok('consumer', 'bank', 'transfer'));
   ok(! transfer_type_ok('consumer', 'bank', 'potato'));
   ok(! transfer_type_ok('consumer', 'bank', 'hold'));
-  ok(  transfer_type_ok('bank', 'credit', 'bank_credit'));
-  ok(! transfer_type_ok('potato', 'credit', 'bank_credit'));
-  ok(! transfer_type_ok('potato', 'potato', 'bank_credit'));
+  ok(  transfer_type_ok('bank', 'credit', 'bank_cashout'));
+  ok(! transfer_type_ok('potato', 'credit', 'bank_cashout'));
+  ok(! transfer_type_ok('potato', 'potato', 'bank_cashout'));
 };
 
 test "valid transfer types" => sub {
   ok(  valid_type('transfer'));
-  ok(  valid_type('bank_credit'));
+  ok(  valid_type('bank_cashout'));
   ok(! valid_type('potato'));
 };
 

@@ -73,4 +73,4 @@ __DATA__
 bank    consumer  transfer
 bank    consumer  hold
 credit  payable   credit_application
-bank    credit    bank_credit
+bank    credit    bank_cashout

@@ -596,7 +596,7 @@ sub _collect_spare_change {
     my ($bank, $amount) = @$bank_pair;
 
     $self->create_transfer({
-      type    => 'bank_credit',
+      type    => 'bank_cashout',
       from    => $bank,
       to      => $credit,
       amount  => $amount,

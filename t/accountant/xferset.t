@@ -68,7 +68,7 @@ test "to" => sub {
 # incoming and outgoing transfers, so we'll use that to test.
 #
 # bank      ->     credit        ->          payable
-#      bank_credit        credit_application
+#     bank_cashout       credit_application
 test "all_for" => sub {
   my ($self) = @_;
   my $amount = dollars(1.50);
@@ -82,7 +82,7 @@ test "all_for" => sub {
     },
   );
   my $t1 = $Ledger->create_transfer({
-    type   => 'bank_credit',
+    type   => 'bank_cashout',
     from   => $b[0],
     to     => $credit,
     amount => $amount,
