@@ -13,15 +13,11 @@ use Moonpig::Types qw(Ledger PositiveMillicents);
 
 use namespace::autoclean;
 
-# The initial amount in the piggy bank
-# The amount *available* is this initial amount,
-# minus all the charges that transfer from this bank.
-has amount => (
-  is  => 'ro',
-  isa =>  PositiveMillicents,
-  coerce   => 1,
-  required => 1,
-);
+sub amount {
+  my ($self) = @_;
+  my $xferset = $self->ledger->accountant->select({ target => $self });
+  return $xferset->total;
+}
 
 sub unapplied_amount {
   my ($self) = @_;

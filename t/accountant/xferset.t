@@ -58,7 +58,10 @@ test "from" => sub {
 test "to" => sub {
   my ($self) = @_;
   my %t = %Transfers;
-  cmp_bag([ $Ledger->accountant->to_bank($b[0])->all ], [ ]);
+
+  my @deposits = $Ledger->accountant->to_bank($b[0])->all;
+  is(@deposits, 1, "we made 1 deposit to find the bank");
+
   cmp_bag([ $Ledger->accountant->to_consumer($c[0])->all ], [ @t{"10", "00"} ]);
   cmp_bag([ $Ledger->accountant->to_consumer($c[1])->all ], [ @t{"11", "01"} ]);
 };

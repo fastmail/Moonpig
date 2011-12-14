@@ -64,19 +64,19 @@ test bytime => sub {
       my $consumer = $ledger_a->add_consumer(
         class("Consumer::ByTime::FixedCost"),
         { charge_description => "monkey meat",
-	  cost_amount => cents(1234),
-	  cost_period => years(1),
-	  replacement_lead_time => days(3),
-	  replacement_plan    => [ get => '/nothing' ],
-	  xid => "eat:more:possum:$make_active",
-	  make_active => $make_active,
-	});
+        cost_amount => cents(1234),
+        cost_period => years(1),
+        replacement_lead_time => days(3),
+        replacement_plan    => [ get => '/nothing' ],
+        xid => "eat:more:possum:$make_active",
+        make_active => $make_active,
+      });
       my $copy = $consumer->copy_to($ledger_b);
       Moonpig->env->elapse_time( days(1) );
       is($copy->grace_period_duration,
-	 $consumer->grace_period_duration, "same grace period length");
+        $consumer->grace_period_duration, "same grace period length");
       is($copy->grace_until,
-	 $consumer->grace_until, "same grace period");
+        $consumer->grace_until, "same grace period");
     });
   }
 };
@@ -89,17 +89,33 @@ test with_bank => sub {
 
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
-    my $bank_a = $ledger_a->add_bank(class('Bank'), { amount => dollars(100) });
+
+    ### BEGIN BANK-ADDING CRAP
+    my $credit = $ledger_a->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => dollars(100) },
+    );
+
+    my $bank_a = $ledger_a->add_bank(class('Bank'));
+
+    $ledger_a->create_transfer({
+      type   => 'test_bank_deposit',
+      from   => $credit,
+      to     => $bank_a,
+      amount => dollars(100),
+    });
+    ### END BANK-ADDING CRAP
+
     my $cons_a = $ledger_a->add_consumer(
       class("Consumer::ByTime::FixedCost"),
       { bank => $bank_a,
-	charge_description => "monkey meat",
-	cost_amount => cents(1234),
-	cost_period => years(1),
-	replacement_lead_time => days(3),
-	replacement_plan    => [ get => '/nothing' ],
-	xid => $xid,
-	make_active => 1,
+        charge_description => "monkey meat",
+        cost_amount => cents(1234),
+        cost_period => years(1),
+        replacement_lead_time => days(3),
+        replacement_plan    => [ get => '/nothing' ],
+        xid => $xid,
+        make_active => 1,
       });
     $ledger_a->name_component("original consumer", $cons_a);
     is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
@@ -127,13 +143,13 @@ test with_bank => sub {
     my ($charge_a, $d4) = $ledger_a->current_journal->all_charges;
     ok($charge_a && ! $d4, "found unique charge on source ledger");
     like($charge_a->description,
-	 qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
-	 "...checked its description");
+         qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
+         "...checked its description");
 
-    my ($cred_b, $d1) = $ledger_b->credits;
-    ok($cred_b && ! $d1, "found unique credit in target ledger");
-    is($cred_b->as_string, "transient credit", "...checked its credit type");
-    is($cred_b->amount, dollars(100), "credit amount");
+          my ($cred_b, $d1) = $ledger_b->credits;
+          ok($cred_b && ! $d1, "found unique credit in target ledger");
+          is($cred_b->as_string, "transient credit", "...checked its credit type");
+          is($cred_b->amount, dollars(100), "credit amount");
     my ($xfer_b, $d2) = $ledger_b->accountant->from_credit($cred_b)->all;
     ok($xfer_b && ! $d2, "found unique credit transfer in target ledger");
     my ($invoice_b) = $xfer_b->target;
@@ -142,8 +158,8 @@ test with_bank => sub {
     my ($charge_b, $d5) = $invoice_b->all_charges;
     ok($charge_b && ! $d5, "found unique charge on target invoice from consumer");
     like($charge_b->description,
-	 qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,
-	 "...checked its description");
+      qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,
+      "...checked its description");
   });
 };
 

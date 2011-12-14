@@ -19,14 +19,14 @@ C<Moonpig::Test::Factory> - construct test examples
 
 =head1 SYNOPSIS
 
-       use Moonpig::Test::Factory qw(do_with_fresh_ledger);
+   use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-       do_with_fresh_ledger({ fred => { template => "consumer template name",
-                                       bank     => dollars(100) } }, sub {
-         my ($ledger) = @_;
-         my $consumer = $ledger->get_component("fred");
-         ...
-       });
+   do_with_fresh_ledger({ fred => { template => "consumer template name",
+                                   bank     => dollars(100) } }, sub {
+     my ($ledger) = @_;
+     my $consumer = $ledger->get_component("fred");
+     ...
+   });
 
 
 =head2 C<do_with_fresh_ledger>
@@ -322,8 +322,7 @@ sub build_consumer {
 
   my $bank;
   if (exists $c_args{bank} && ! ref($c_args{bank}) && $c_args{bank} > 0) {
-    $stuff->{"$name.bank"} =
-      $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
+    $stuff->{"$name.bank"} = $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
   }
 
   my $class = delete $c_args{class};
@@ -358,9 +357,23 @@ sub build_consumer {
 sub build_bank {
   my ($args, $stuff) = @_;
 
-  return $stuff->{ledger}->add_bank(
+  my $bank = $stuff->{ledger}->add_bank(
     class("Bank"),
-    { amount => $args->{amount} });
+  );
+
+  my $credit = $stuff->{ledger}->add_credit(
+    class(qw(Credit::Simulated)),
+    { amount => $args->{amount} },
+  );
+
+  $stuff->{ledger}->create_transfer({
+    type   => 'test_bank_deposit',
+    from   => $credit,
+    to     => $bank,
+    amount => $args->{amount},
+  });
+
+  return $bank;
 }
 
 sub rnd {
