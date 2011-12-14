@@ -15,7 +15,7 @@ use namespace::autoclean;
 
 sub amount {
   my ($self) = @_;
-  my $xferset = $self->ledger->accountant->select({ target => $self });
+  my $xferset = $self->ledger->accountant->to_bank($self);
   return $xferset->total;
 }
 
