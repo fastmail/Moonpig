@@ -58,7 +58,10 @@ test "from" => sub {
 test "to" => sub {
   my ($self) = @_;
   my %t = %Transfers;
-  cmp_bag([ $Ledger->accountant->to_bank($b[0])->all ], [ ]);
+
+  my @deposits = $Ledger->accountant->to_bank($b[0])->all;
+  is(@deposits, 1, "we made 1 deposit to find the bank");
+
   cmp_bag([ $Ledger->accountant->to_consumer($c[0])->all ], [ @t{"10", "00"} ]);
   cmp_bag([ $Ledger->accountant->to_consumer($c[1])->all ], [ @t{"11", "01"} ]);
 };
@@ -68,7 +71,7 @@ test "to" => sub {
 # incoming and outgoing transfers, so we'll use that to test.
 #
 # bank      ->     credit        ->          payable
-#      bank_credit        credit_application
+#     bank_cashout       credit_application
 test "all_for" => sub {
   my ($self) = @_;
   my $amount = dollars(1.50);
@@ -82,7 +85,7 @@ test "all_for" => sub {
     },
   );
   my $t1 = $Ledger->create_transfer({
-    type   => 'bank_credit',
+    type   => 'bank_cashout',
     from   => $b[0],
     to     => $credit,
     amount => $amount,

@@ -60,6 +60,12 @@ sub _pay_charges {
   $_->handle_event($event) for $self->all_charges;
 }
 
+sub unapplied_amount {
+  my ($self) = @_;
+  my $xferset = $self->ledger->accountant->select({ target => $self });
+  return $xferset->total;
+}
+
 sub _bankable_charges_by_consumer {
   my ($self) = @_;
   my %res;
@@ -77,14 +83,21 @@ sub _create_banks {
   while (my ($consumer_guid, $charges) = each %$by_consumer) {
     # XXX This method path is too long.  The consumer collection should handle
     # ->find_consumer_by_guid.
-    my $consumer = $self->ledger->consumer_collection->find_by_guid({ guid => $consumer_guid });
+    my $consumer = $self->ledger->consumer_collection->find_by_guid({
+      guid => $consumer_guid,
+    });
     my $total = sum(map $_->amount, @$charges);
 
     my $bank = $self->ledger->add_bank(
       class(qw(Bank)),
-      {
-        amount => $total,
-      });
+    );
+
+    $self->ledger->create_transfer({
+      type   => 'bank_deposit',
+      from   => $self,
+      to     => $bank,
+      amount => $total,
+    });
 
     $consumer->_set_bank($bank);
   }

@@ -357,7 +357,8 @@ sub process_credits {
     @credits = grep { $_->unapplied_amount > 0 } @credits;
 
     my @coupon_apps = $self->find_coupon_applications__($invoice);
-    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}), @coupon_apps;
+    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
+      @coupon_apps;
 
     my $to_pay = $invoice->total_amount;
 
@@ -386,6 +387,8 @@ sub process_credits {
     }
 
     if ($to_pay == 0) {
+      # We didn't fall off the end of the loop above; we have enough credit to
+      # pay this invoice, and will now do so. -- rjbs, 2011-12-14
       $self->apply_credits_to_invoice__( \@to_apply, $invoice );
       $_->{coupon}->applied for @coupon_apps;
     } else {
@@ -596,7 +599,7 @@ sub _collect_spare_change {
     my ($bank, $amount) = @$bank_pair;
 
     $self->create_transfer({
-      type    => 'bank_credit',
+      type    => 'bank_cashout',
       from    => $bank,
       to      => $credit,
       amount  => $amount,

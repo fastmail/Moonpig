@@ -69,8 +69,10 @@ sub deletable {
 1;
 
 __DATA__
-# FROM  TO       TYPE
+# FROM  TO        TYPE
 bank    consumer  transfer
 bank    consumer  hold
 credit  payable   credit_application
-bank    credit    bank_credit
+bank    credit    bank_cashout
+payable bank      bank_deposit
+credit  bank      test_bank_deposit

@@ -128,7 +128,7 @@ test "ledger->transfer" => sub {
                          });
   my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
 
-    for my $type (qw(transfer bank_credit DEFAULT)) {
+    for my $type (qw(transfer bank_cashout DEFAULT)) {
         my $err;
         my $t = try {
            $ledger->transfer({
