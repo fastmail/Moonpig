@@ -79,24 +79,17 @@ sub pay_any_open_invoice {
   });
 }
 
-sub log_current_bank_balance {
+sub log_current_balance {
   my ($self) = @_;
 
   if (my $consumer = $self->active_consumer) {
     $Logger->log([ "CURRENTLY ACTIVE: %s", $consumer->ident ]);
 
-    if (my $bank = $consumer->bank) {
-      $Logger->log([
-        "%s still has %s in it",
-        $consumer->bank->ident,
-        $consumer->bank->unapplied_amount,
-      ]);
-    } else {
-      $Logger->log([
-        "%s is still without a bank",
-        $consumer->ident,
-      ]);
-    }
+    $Logger->log([
+      "%s has %s in it",
+      $consumer->ident,
+      $consumer->unapplied_amount,
+    ]);
   }
 }
 
@@ -106,9 +99,9 @@ sub log_current_bank_balance {
 # 2. create consumer
 # 3. charge, finalize, send invoice
 # 4. pay and apply payment to invoice
-# 5. create and link bank to consumer
+# 5. fund the consumer
 # 6. heartbeats, until...
-# 7. consumer charges bank
+# 7. consumer spends funds
 # 8. until low-funds, goto 6
 # 9. setup replacement
 # 10. funds expire
@@ -173,7 +166,7 @@ test "end to end demo" => sub {
       $Ledger->handle_event( event('heartbeat') );
 
       # Just a little more noise, to see how things are going.
-      $self->log_current_bank_balance if $day % 30 == 0;
+      $self->log_current_balance if $day % 30 == 0;
 
       $self->pay_any_open_invoice;
 

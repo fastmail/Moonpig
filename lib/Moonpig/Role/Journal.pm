@@ -1,5 +1,5 @@
 package Moonpig::Role::Journal;
-# ABSTRACT: a journal of charges made by consumers against banks
+# ABSTRACT: a journal of how consumers funds are spent
 
 use Carp qw(croak);
 use Moonpig::Util qw(class);
@@ -9,6 +9,7 @@ use Moonpig::Logger '$Logger';
 
 with(
   'Moonpig::Role::HasCharges' => { charge_role => 'JournalCharge' },
+  'Moonpig::Role::CanTransfer' => { transferer_type => "journal" },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',

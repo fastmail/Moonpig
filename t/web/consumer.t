@@ -145,7 +145,7 @@ test clobber_replacement => sub {
        "replacement is different");
   ok($consumer->replacement->does("Moonpig::Role::Consumer::ByTime"),
        "replacement is another ByTime");
-  ok(! $consumer->replacement->bank, "replacement is unfunded");
+  ok(! $consumer->replacement->unapplied_amount, "replacement is unfunded");
   ok(! $consumer->replacement->is_expired, "replacement has not yet expired");
 
   $ua->mp_post("$ledger_path/consumers/active/$a_xid/cancel", {});

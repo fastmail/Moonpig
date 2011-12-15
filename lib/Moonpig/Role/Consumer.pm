@@ -1,5 +1,5 @@
 package Moonpig::Role::Consumer;
-# ABSTRACT: something that uses up money stored in a bank
+# ABSTRACT: something that uses up money
 use Moose::Role;
 
 use Stick::Publisher 0.20110324;
@@ -205,6 +205,13 @@ sub handle_terminate {
   $self->ledger->mark_consumer_inactive__($self);
 }
 
+sub unapplied_amount {
+  my ($self) = @_;
+  my $xfers_in  = $self->ledger->accountant->select({ target => $self });
+  my $xfers_out = $self->ledger->accountant->select({ source => $self });
+  return $xfers_in->total - $xfers_out->total;
+}
+
 # Create a copy of myself in the specified ledger; commit suicide,
 # and return the copy.
 # This method is called "copy_to" and not "move_to" by analogy with
@@ -232,8 +239,7 @@ sub copy_to {
   return $copy;
 }
 
-# roles will decorate this method with code to move subcomponents like banks to
-# the copy
+# roles will decorate this method with code to move subcomponents to the copy
 sub copy_subcomponents_to__ {
   my ($self, $target, $copy) = @_;
   $copy->replacement($self->replacement->copy_to($target))

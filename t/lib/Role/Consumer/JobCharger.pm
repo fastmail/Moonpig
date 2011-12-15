@@ -6,7 +6,7 @@ use Moonpig::Util qw(class dollars);
 use namespace::autoclean;
 
 with(
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer::Charges',
   # 'Moonpig::Role::Consumer::FixedCost',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );

@@ -31,7 +31,7 @@ implicit_event_handlers {
   };
 };
 
-# Last time I charged the bank
+# Last time I charged
 has last_charge_date => (
   is   => 'rw',
   isa  => Time,
@@ -83,8 +83,8 @@ sub charge_one_day {
   while (my ($desc, $amt) = $iter->()) {
     $self->ledger->current_journal->charge({
       desc => $desc,
-      from => $self->bank,
-      to   => $self,
+      from => $self,
+      to   => $self->ledger->current_journal,
       date => $next_charge_date,
       tags => $self->journal_charge_tags,
       amount => $amt,

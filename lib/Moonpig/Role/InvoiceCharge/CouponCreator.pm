@@ -1,5 +1,5 @@
 package Moonpig::Role::InvoiceCharge::CouponCreator;
-# ABSTRACT: a charge that, when paid, should have a bank created for the paid amount
+# ABSTRACT: a charge that, when paid, should have a coupon created
 use Moose::Role;
 
 with(

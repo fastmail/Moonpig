@@ -90,25 +90,9 @@ test with_bank => sub {
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
 
-    ### BEGIN BANK-ADDING CRAP
-    my $credit = $ledger_a->add_credit(
-      class(qw(Credit::Simulated)),
-      { amount => dollars(100) },
-    );
-
-    my $bank_a = $ledger_a->add_bank(class('Bank'));
-
-    $ledger_a->create_transfer({
-      type   => 'test_bank_deposit',
-      from   => $credit,
-      to     => $bank_a,
-      amount => dollars(100),
-    });
-    ### END BANK-ADDING CRAP
-
     my $cons_a = $ledger_a->add_consumer(
       class("Consumer::ByTime::FixedCost"),
-      { bank => $bank_a,
+      {
         charge_description => "monkey meat",
         cost_amount => cents(1234),
         cost_period => years(1),
@@ -118,6 +102,19 @@ test with_bank => sub {
         make_active => 1,
       });
     $ledger_a->name_component("original consumer", $cons_a);
+
+    my $credit = $ledger_a->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => dollars(100) },
+    );
+
+    $ledger_a->create_transfer({
+      type   => 'test_consumer_funding',
+      from   => $credit,
+      to     => $cons_a,
+      amount => dollars(100),
+    });
+
     is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
     my $cons_b = $cons_a->copy_to($ledger_b);
     $ledger_b->name_component("copy consumer", $cons_b);

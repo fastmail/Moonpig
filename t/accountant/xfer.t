@@ -13,16 +13,17 @@ test "basics of transfer" => sub {
   my ($self) = @_;
   plan tests => 4;
 
-  my $stuff = build(c => { template => 'dummy_with_bank',
-                           bank => dollars(100),
-                         });
-  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
+  my $amount = dollars(100);
 
-  my $amount = $bank->amount;
+  my $stuff = build(c => { template => 'dummy_with_bank',
+                           bank => $amount,
+                         });
+  my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};
+
   is(
+    $consumer->unapplied_amount,
     $amount,
-    $bank->unapplied_amount,
-    "we start with M $amount, total and remaining",
+    "we start with M $amount remaining, too",
   );
 
   assert($amount > 5000, 'we have at least M 5000 in the bank');
@@ -34,15 +35,15 @@ test "basics of transfer" => sub {
 
     push @xfers, $ledger->transfer({
       amount   => 5000,
-      from   => $bank,
-      to     => $consumer,
+      from   => $consumer,
+      to     => $ledger->current_journal,
     });
 
     is(@xfers, 1, "we made a transfer");
     is($xfers[0]->type, 'transfer', "the 1st transfer");
 
     is(
-      $bank->unapplied_amount,
+      $consumer->unapplied_amount,
       $amount - 5000,
       "the transfer has affected the apparent remaining amount",
     );
@@ -53,17 +54,17 @@ test "basics of transfer" => sub {
 
     push @xfers, $ledger->transfer({
       amount => $amount - 5000,
-      from => $bank,
-      to   => $consumer,
+      from => $consumer,
+      to   => $ledger->current_journal,
     });
 
     is(@xfers, 2, "we made a transfer");
     is($xfers[1]->type, 'transfer', "the 2nd transfer");
 
     is(
-      $bank->unapplied_amount,
+      $consumer->unapplied_amount,
       0,
-      "we've got M 0 left in our bank",
+      "we've got M 0 left in funds",
     );
   };
 
@@ -74,8 +75,8 @@ test "basics of transfer" => sub {
     my $ok = try {
       push @xfers, $ledger->transfer({
         amount => 1,
-        from => $bank,
-        to   => $consumer,
+        from => $consumer,
+        to   => $ledger->current_journal,
       });
       1;
     } catch {
@@ -83,9 +84,9 @@ test "basics of transfer" => sub {
       return;
     };
 
-    ok(! $ok, "we couldn't transfer anything from an empty bank");
+    ok(! $ok, "we couldn't transfer anything from an empty consumer");
     like($err, qr{Refusing overdraft transfer}, "got the right error");
-    is($bank->unapplied_amount, 0, "still have M 0 in bank");
+    is($consumer->unapplied_amount, 0, "still have M 0 in consumer");
     is(@xfers, 2, "the new transfer was never registered");
   };
 };
@@ -96,45 +97,46 @@ test "multiple transfer types" => sub {
   my $stuff = build(c => { template => 'dummy_with_bank',
                            bank => dollars(100),
                          });
-  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
-  my $amt = $bank->amount;
+  my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};
+  my $amt = $consumer->unapplied_amount;
 
   my $h = $ledger->create_transfer({
     type   => 'hold',
-    to     => $consumer,
-    from   => $bank,
+    from   => $consumer,
+    to     => $ledger->current_journal,
     amount => dollars(1),
   });
-  is($bank->unapplied_amount, $amt - dollars(1), "hold for \$1");
+
+  is($consumer->unapplied_amount, $amt - dollars(1), "hold for \$1");
 
   my $t = $ledger->create_transfer({
     type   => 'transfer',
-    to     => $consumer,
-    from   => $bank,
+    to     => $ledger->current_journal,
+    from   => $consumer,
     amount => dollars(2),
    });
-  is($bank->unapplied_amount, $amt - dollars(3), "transfer of \$2");
+  is($consumer->unapplied_amount, $amt - dollars(3), "transfer of \$2");
 
   $h->delete();
-  is($bank->unapplied_amount, $amt - dollars(2), "deleted hold");
+  is($consumer->unapplied_amount, $amt - dollars(2), "deleted hold");
 };
 
 test "ledger->transfer" => sub {
-    my ($self) = @_;
-    plan tests => 6;
+  my ($self) = @_;
+  plan tests => 6;
 
   my $stuff = build(c => { template => 'dummy_with_bank',
                            bank => dollars(100),
                          });
-  my ($ledger, $bank, $consumer) = @{$stuff}{qw(ledger c.bank c)};
+  my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};
 
-    for my $type (qw(transfer bank_cashout DEFAULT)) {
+    for my $type (qw(transfer cashout DEFAULT)) {
         my $err;
         my $t = try {
            $ledger->transfer({
                amount => 1,
-               from => $bank,
-               to   => $consumer,
+               from => $consumer,
+               to   => $ledger->current_journal,
                $type eq "DEFAULT" ? () : (type => $type),
            });
         } catch {

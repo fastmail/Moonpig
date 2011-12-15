@@ -12,7 +12,7 @@ use MooseX::Types::Moose qw(Num);
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer::Charges',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Consumer::MakesReplacement',
@@ -62,12 +62,12 @@ sub _create_hold_for_amount {
 
   # This should have been caught before, in create_hold_for_units
   confess "insufficient funds to satisfy $amount"
-    unless $self->has_bank && $amount <= $self->unapplied_amount;
+    if $amount > $self->unapplied_amount;
 
   my $hold = $self->ledger->create_transfer({
     type   => 'hold',
-    from   => $self->bank,
-    to     => $self,
+    from   => $self,
+    to     => $self->ledger->current_journal,
     amount => $amount,
   });
 
@@ -127,17 +127,15 @@ sub create_charge_for_hold {
 
   croak "No hold provided" unless $hold;
   croak "No charge description provided" unless $description;
-  $hold->target->guid eq $self->guid
+  $hold->source->guid eq $self->guid
     or confess "misdirected hold";
-  $self->has_bank
-    or confess "charge committed on bankless consumer";
 
   my $now = Moonpig->env->now;
 
   $self->ledger->current_journal->charge({
     desc => $description,
-    from => $hold->source,
-    to   => $self,
+    from => $self,
+    to   => $self->ledger->current_journal,
     date => $now,
     tags => $self->journal_charge_tags,
     amount    => $hold->amount,
@@ -149,12 +147,12 @@ sub create_charge_for_hold {
 sub recent_usage {
   my ($self, $max_age) = @_;
 
-  return $self->accountant->from_bank($self->bank)
+  return $self->accountant->from_consumer($self)
     ->newer_than($max_age)->total;
 }
 
 # based on the last $days days of transfers, how long might we expect
-# the current bank to last, in seconds?
+# the current funds to last, in seconds?
 # If no estimate is possible, return 365d
 sub estimated_lifetime {
   my ($self) = @_;

@@ -17,90 +17,102 @@ sub jan {
 }
 
 my ($Ledger, %Transfers);
-my (@b, @c);
+my (@consumers, @credits);
 
 sub setup {
   my ($self) = @_;
 
-  my $stuff = build(c1 => { template => "dummy_with_bank",
-                            bank => dollars(100),
-                          },
-                    c2 => { template => "dummy_with_bank",
-                            bank => dollars(100),
-                          },
-                   );
+  my $stuff = build(
+    c0 => {
+      template => "dummy_with_bank",
+      bank     => dollars(100),
+    },
+    c1 => {
+      template => "dummy_with_bank",
+    },
+  );
 
   $Ledger = $stuff->{ledger};
-  @c = @{$stuff}{'c1', 'c2'};
-  @b = map $_->bank, @c;
 
-  for my $b (0..1) {
-    for my $c (0..1) {
-      my $t = $Ledger->transfer({
-        from => $b[$b],
-        to => $c[$c],
-        amount => 100 + $b*10 + $c,
-        date => jan(10 + $b*10 + $c), # 10, 11, 20, 21
-      });
-      $Transfers{"$b$c"} = $t;
-    }
-  }
+  @consumers = @{$stuff}{qw( c0 c1 )};
+  @credits   = $Ledger->credits; # there will be one, xfer made to c1
+
+  ($Transfers{funding}) = $Ledger->accountant->to_consumer($consumers[0])
+                          ->all;
+
+  $Transfers{transfer} = $Ledger->transfer({
+    from => $consumers[0],
+    to   => $Ledger->current_journal,
+    amount => dollars(50),
+    date   => jan(1),
+  });
 }
 
 test "from" => sub {
   my ($self) = @_;
   my %t = %Transfers;
-  cmp_bag([ $Ledger->accountant->from_bank($b[0])->all ], [ @t{"00", "01"} ]);
-  cmp_bag([ $Ledger->accountant->from_bank($b[1])->all ], [ @t{"10", "11"} ]);
-  cmp_bag([ $Ledger->accountant->from_consumer($c[0])->all ], [ ]);
+
+  cmp_bag(
+    [ $Ledger->accountant->from_credit($credits[0])->all ],
+    [ $t{funding} ],
+    "one transfer from initial credit",
+  );
+
+  cmp_bag(
+    [ $Ledger->accountant->from_consumer($consumers[0])->all ],
+    [ $t{transfer} ],
+    "one transfer from consumer",
+  );
+
+  cmp_bag(
+    [ $Ledger->accountant->from_consumer($consumers[1])->all ],
+    [ ],
+    "no transfers from unfunded consumer",
+  );
 };
 
 test "to" => sub {
   my ($self) = @_;
   my %t = %Transfers;
 
-  my @deposits = $Ledger->accountant->to_bank($b[0])->all;
-  is(@deposits, 1, "we made 1 deposit to find the bank");
+  my @deposits = $Ledger->accountant->to_consumer($consumers[0])->all;
+  is(@deposits, 1, "we made 1 deposit to fund the consumer");
 
-  cmp_bag([ $Ledger->accountant->to_consumer($c[0])->all ], [ @t{"10", "00"} ]);
-  cmp_bag([ $Ledger->accountant->to_consumer($c[1])->all ], [ @t{"11", "01"} ]);
+  cmp_bag(
+    [ $Ledger->accountant->to_consumer($consumers[0])->all ],
+    [ $t{funding} ],
+    "we did one transfer to the funded consumer",
+  );
+
+  cmp_bag(
+    [ $Ledger->accountant->to_journal($Ledger->current_journal)->all ],
+    [ $t{transfer} ],
+    "we find one transfer to the journal",
+  );
+
+  cmp_bag(
+    [ $Ledger->accountant->to_consumer($consumers[1])->all ],
+    [ ],
+    "no transfers to fund the unfunded consumer",
+  );
 };
 
-
-# Right now credits are the only CanTransfer that supports both
-# incoming and outgoing transfers, so we'll use that to test.
-#
-# bank      ->     credit        ->          payable
-#     bank_cashout       credit_application
 test "all_for" => sub {
   my ($self) = @_;
-  my $amount = dollars(1.50);
+  my %t = %Transfers;
 
-  # Bank to credit
-  my $credit = $Ledger->add_credit(
-    class(qw(t::Refundable::Test Credit::Courtesy)),
-    {
-      amount => $amount,
-      reason => 'ran over your dog',
-    },
+  cmp_bag(
+    [ $Ledger->accountant->all_for_consumer($consumers[0])->all ],
+    [ $t{funding}, $t{transfer} ],
+    "there are xfers in and out of the funded consumer",
   );
-  my $t1 = $Ledger->create_transfer({
-    type   => 'bank_cashout',
-    from   => $b[0],
-    to     => $credit,
-    amount => $amount,
-  });
 
-  # Credit to payable
-  my $refund = $credit->issue_refund;
-  my $t2 = do {
-    my @t = $Ledger->accountant->to_payable($refund)->all;
-    is(@t, 1, "one transfer to refund object");
-    $t[0];
-  };
+  my ($in)  = $Ledger->accountant->to_consumer(  $consumers[0])->all;
+  my ($out) = $Ledger->accountant->from_consumer($consumers[0])->all;
 
-  cmp_bag([ $Ledger->accountant->all_for_credit($credit)->all ], [ $t1, $t2 ]);
-  is($credit->unapplied_amount, 0, "no credit left");
+  my $remaining = $in->amount - $out->amount;
+
+  is($remaining, dollars(50), 'we have $50 remaining');
 };
 
 before run_test => \&setup;

@@ -16,7 +16,7 @@ Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
 
 with(
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer::Charges',
   'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
@@ -75,9 +75,9 @@ publish expire_date => { } => sub {
 
   $self->has_last_charge_date ||
     confess "Can't calculate remaining life for inactive consumer";
-  my $bank = $self->bank ||
+
+  my $remaining = $self->unapplied_amount ||
     confess "Can't calculate remaining life for unfunded consumer";
-  my $remaining = $bank->unapplied_amount();
 
   my $n_charge_periods_left
     = int($remaining / $self->calculate_charge_on( Moonpig->env->now ));

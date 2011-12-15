@@ -133,8 +133,7 @@ test coupon_payment => sub {
 
      is($ledger->latest_invoice->total_amount, dollars(100), "new invoice for correct amount");
      $ledger->process_credits;
-     ok($g1->has_bank, "g1 has bank");
-     is($g1->unapplied_amount, dollars(100), "bank contains \$100");
+     is($g1->unapplied_amount, dollars(100), 'consumer has $100');
      my ($coupon) = $ledger->coupon_array;
    });
 };

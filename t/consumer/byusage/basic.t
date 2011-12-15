@@ -55,7 +55,7 @@ sub create_consumer {
   ok($Consumer, "set up consumer");
   ok($Consumer->does('Moonpig::Role::Consumer::ByUsage'),
      "consumer is correct type");
-  is($Consumer->unapplied_amount, dollars(1), "its bank contains \$1");
+  is($Consumer->unapplied_amount, dollars(1), 'it has $1');
 }
 
 test "consumer creation" => sub {
@@ -72,8 +72,8 @@ sub successful_hold {
   my $amt = $n_units * cents(5);
   ok($h, "made hold");
   $self->hold($h);
-  is($h->target, $Consumer, "hold has correct consumer");
-  is($h->source, $Consumer->bank, "hold has correct bank");
+  is($h->target, $Consumer->ledger->current_journal, "hold has correct target");
+  is($h->source, $Consumer, "hold has correct source");
   is($h->amount, $amt, "hold is for $amt mc");
   my $x_remaining = 20 - $n_units;
   is($Consumer->units_remaining, $x_remaining,
@@ -89,33 +89,31 @@ test "successful hold" => sub {
 test release_hold => sub {
   my ($self) = @_;
   $self->successful_hold;
-  is($Consumer->units_remaining, 13, "still 13 left in bank");
+  is($Consumer->units_remaining, 13, "still 13 left fundable");
   $self->hold->delete;
   is($Consumer->units_remaining, 20, "20 left after releasing hold");
 };
 
 test commit_hold => sub {
   my ($self) = @_;
-  my @journals;
+
   $self->successful_hold;
-  @journals = $Ledger->journals;
-  is(@journals, 0, "no journal yet");
+
   note("creating charge for hold");
   $Consumer->create_charge_for_hold($self->hold, "test charge");
-  is($Consumer->units_remaining, 13, "still 13 left in bank");
-  @journals = $Ledger->journals;
-  is(@journals, 1, "now one journal");
-  is($journals[0]->total_amount, cents(35),
-     "total charges now \$.35");
+  is($Consumer->units_remaining, 13, "still 13 left fundable");
+
+  my @journals = $Ledger->journals;
+  is($journals[0]->total_amount, cents(35), "total charges now \$.35");
 };
 
 test failed_hold => sub {
   my ($self) = @_;
   $self->successful_hold;
-  is($Consumer->units_remaining, 13, "still 13 left in bank");
+  is($Consumer->units_remaining, 13, "still 13 left fundable");
   my $hold = $Consumer->create_hold_for_units(14);
   is(undef(), $hold, "cannot create hold for 14 units");
-  is($Consumer->units_remaining, 13, "still 13 left in bank");
+  is($Consumer->units_remaining, 13, "still 13 left fundable");
 };
 
 test low_water_replacement => sub {

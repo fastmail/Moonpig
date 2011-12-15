@@ -19,7 +19,7 @@ sub setup {
                               bank => dollars(100),
                             });
 
-  return @{$stuff}{qw(ledger cons.bank cons)};
+  return @{$stuff}{qw(ledger cons)};
 }
 
 # This is to test that when the hold is for more than 50% of the
@@ -29,22 +29,22 @@ sub setup {
 test "get and commit hold" => sub {
   my ($self) = @_;
   plan tests => 6;
-  my ($Ledger, $b, $c) = $self->setup;
-  my $amount = int($b->unapplied_amount * 0.75);
-  my $x_remaining = $b->unapplied_amount - $amount;
+  my ($Ledger, $c) = $self->setup;
+  my $amount = int($c->unapplied_amount * 0.75);
+  my $x_remaining = $c->unapplied_amount - $amount;
   my $h = $Ledger->create_transfer({
     type => 'hold',
-    from => $b,
-    to => $c,
+    from => $c,
+    to   => $Ledger->current_journal,
     amount => $amount,
   });
   ok($h);
-  is($b->unapplied_amount, $x_remaining);
+  is($c->unapplied_amount, $x_remaining);
   my $t = $Ledger->accountant->commit_hold($h);
   ok($t);
   is($t->amount, $amount);
   is($t->type, 'transfer');
-  is($b->unapplied_amount, $x_remaining);
+  is($c->unapplied_amount, $x_remaining);
 };
 
 run_me;

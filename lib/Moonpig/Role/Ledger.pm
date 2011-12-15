@@ -11,7 +11,7 @@ Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.307);
 
-_generate_subcomponent_methods(qw(bank consumer refund credit coupon));
+_generate_subcomponent_methods(qw(consumer refund credit coupon));
 
 with(
   'Moonpig::Role::HasGuid',
@@ -35,15 +35,6 @@ with(
                           'Stick::Role::Collection::Mutable',
                           'Stick::Role::Collection::CanFilter',
                         ]
-  },
-  'Stick::Role::HasCollection' => {
-    item => 'bank',
-  # This is only here because we use the bank collection for collection tests
-    collection_roles => [ 'Moonpig::Role::Collection::BankExtras',
-                          'Stick::Role::Collection::Pageable',
-                          'Stick::Role::Collection::Mutable',
-                          'Stick::Role::Collection::CanFilter',
-                         ],
   },
   'Stick::Role::HasCollection' => {
     item => 'credit',
@@ -165,7 +156,6 @@ sub _extra_instance_subroute {
   my ($self, $path, $npr) = @_;
   my ($first) = @$path;
   my %x_rt = (
-    banks     => $self->bank_collection,
     consumers => $self->consumer_collection,
     coupons   => $self->coupon_collection,
     credits   => $self->credit_collection,
@@ -181,8 +171,7 @@ sub _extra_instance_subroute {
   return;
 }
 
-# Compile-time generation of accessors for subcomponents such as
-# banks and refunds
+# Compile-time generation of accessors for subcomponents such as refunds
 sub _generate_subcomponent_methods {
   for my $thing (@_) {
     my $predicate = "_has_$thing";
@@ -467,7 +456,6 @@ sub _reheartbeat {
 
   for my $target (
     # $self->contact,
-    $self->banks,
     $self->consumers,
     $self->invoices,
     $self->journals,
@@ -575,14 +563,15 @@ sub failover_active_consumer__ {
 sub _collect_spare_change {
   my ($self) = @_;
 
-  my @consumers = grep {; $_->does('Consumer::ChargesBank') &&
-                          $_->has_bank && ! $_->is_expired } $self->consumers;
+  my @consumers = grep {; $_->does('Consumer::Charges') && ! $_->is_expired }
+                  $self->consumers;
+
   my %consider  = map  {; $_->[0]->guid => $_ }
                   grep {; $_->[1] }
                   map  {; [ $_, $_->unapplied_amount ] }
-                  $self->banks;
+                  $self->consumers;
 
-  delete $consider{ $_->bank->guid } for @consumers;
+  delete $consider{ $_->guid } for @consumers;
 
   my $total = sum(map { $_->[1] } values %consider);
 
@@ -595,12 +584,12 @@ sub _collect_spare_change {
     },
   );
 
-  for my $bank_pair (values %consider) {
-    my ($bank, $amount) = @$bank_pair;
+  for my $consumer_pair (values %consider) {
+    my ($consumer, $amount) = @$consumer_pair;
 
     $self->create_transfer({
-      type    => 'bank_cashout',
-      from    => $bank,
+      type    => 'cashout',
+      from    => $consumer,
       to      => $credit,
       amount  => $amount,
     });

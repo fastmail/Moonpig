@@ -49,9 +49,11 @@ test "check amounts" => sub {
     $ledger->process_credits;
 
     ok($inv->is_paid, "invoice paid");
-    my $bank = $ledger->get_component('consumer')->bank;
-    ok($bank, "bank exists");
-    is($bank->amount, $amount, "bank for correct amount");
+    is(
+      $ledger->get_component('consumer')->unapplied_amount,
+      $amount,
+      "consumer funded for correct amount",
+    );
   });
 };
 

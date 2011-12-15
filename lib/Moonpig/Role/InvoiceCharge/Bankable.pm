@@ -1,5 +1,5 @@
 package Moonpig::Role::InvoiceCharge::Bankable;
-# ABSTRACT: a charge that, when paid, should have a bank created for the paid amount
+# ABSTRACT: a charge that, when paid, should fund the consumer
 use Moose::Role;
 
 # You might want this to be an InvoiceCharge::Active, with a when_paid

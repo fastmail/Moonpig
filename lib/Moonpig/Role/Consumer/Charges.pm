@@ -1,5 +1,5 @@
-package Moonpig::Role::Consumer::ChargesBank;
-# ABSTRACT: a consumer that can issue journal charges to a bank
+package Moonpig::Role::Consumer::Charges;
+# ABSTRACT: a consumer that can issue journal charges
 use Moose::Role;
 with(
   'Moonpig::Role::Consumer',
@@ -24,37 +24,6 @@ sub journal_charge_tags {
   my ($self) = @_;
   return [ $self->xid, @{$self->extra_journal_charge_tags} ]
 }
-
-has bank => (
-  reader => 'bank',
-  writer => '_set_bank',
-  does   => 'Moonpig::Role::Bank',
-  traits => [ qw(SetOnce) ],
-  predicate => 'has_bank',
-);
-
-before _set_bank => sub {
-  my ($self, $bank) = @_;
-
-  unless ($self->ledger->guid eq $bank->ledger->guid) {
-    confess sprintf(
-      "cannot associate consumer from %s with bank from %s",
-      $self->ledger->ident,
-      $bank->ledger->ident,
-    );
-  }
-};
-
-sub unapplied_amount {
-  my ($self) = @_;
-  return $self->has_bank ? $self->bank->unapplied_amount : 0;
-}
-
-# when copying this consumer to another ledger, copy its bank as well
-after copy_subcomponents_to__ => sub {
-  my ($self, $target, $copy) = @_;
-  $self->move_bank_to__($copy);
-};
 
 # "Move" my bank to a different consumer.  This will work even if the
 # consumer is in a different ledger.  It works by entering a charge to
@@ -114,9 +83,7 @@ sub build_charge {
 PARTIAL_PACK {
   my ($self) = @_;
   return {
-    unapplied_amount => $self->has_bank
-                      ? $self->bank->unapplied_amount
-                      : undef,
+    unapplied_amount => $self->unapplied_amount,
   };
 };
 

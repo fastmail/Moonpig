@@ -6,7 +6,7 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::Consumer',
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer::Charges',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );
