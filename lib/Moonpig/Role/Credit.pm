@@ -5,7 +5,10 @@ use Moose::Role;
 with(
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
-  'Moonpig::Role::CanTransfer' => { transferer_type => "credit" },
+  'Moonpig::Role::CanTransfer' => {
+    -excludes => 'unapplied_amount',
+    transferer_type => "credit"
+  },
 );
 
 use Moonpig::Behavior::Packable;

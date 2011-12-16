@@ -60,13 +60,6 @@ sub _pay_charges {
   $_->handle_event($event) for $self->all_charges;
 }
 
-sub unapplied_amount {
-  my ($self) = @_;
-  my $xfers_in  = $self->ledger->accountant->select({ target => $self });
-  my $xfers_out = $self->ledger->accountant->select({ source => $self });
-  return $xfers_in->total - $xfers_out->total;
-}
-
 sub _bankable_charges_by_consumer {
   my ($self) = @_;
   my %res;
