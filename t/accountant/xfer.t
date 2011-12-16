@@ -15,7 +15,7 @@ test "basics of transfer" => sub {
 
   my $amount = dollars(100);
 
-  my $stuff = build(c => { template => 'dummy_with_bank',
+  my $stuff = build(c => { template => 'dummy',
                            bank => $amount,
                          });
   my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};
@@ -94,7 +94,7 @@ test "basics of transfer" => sub {
 test "multiple transfer types" => sub {
   my ($self) = @_;
   plan tests => 3;
-  my $stuff = build(c => { template => 'dummy_with_bank',
+  my $stuff = build(c => { template => 'dummy',
                            bank => dollars(100),
                          });
   my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};
@@ -125,7 +125,7 @@ test "ledger->transfer" => sub {
   my ($self) = @_;
   plan tests => 6;
 
-  my $stuff = build(c => { template => 'dummy_with_bank',
+  my $stuff = build(c => { template => 'dummy',
                            bank => dollars(100),
                          });
   my ($ledger, $consumer) = @{$stuff}{qw(ledger c)};

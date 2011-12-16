@@ -12,7 +12,7 @@ use Moonpig::Test::Factory qw(build);
 has stuff => (
   is => 'rw',
   isa => 'HashRef',
-  default => sub { build(consumer => { template => 'dummy_with_bank',
+  default => sub { build(consumer => { template => 'dummy',
                                        bank => dollars(100) } ) },
 );
 

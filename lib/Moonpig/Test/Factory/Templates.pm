@@ -24,17 +24,6 @@ sub templates {
          },
        }
     },
-    dummy_with_bank => sub {
-      my ($name) = @_;
-      return {
-        roles => [ 'Consumer::DummyWithBank' ],
-        arg => {
-          xid     => $dummy_xid,
-          replacement_plan => [ get => '/nothing' ],
-        },
-      }
-    },
-
     quick => sub {
       my ($name) = @_;
       return {

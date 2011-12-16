@@ -24,11 +24,11 @@ sub setup {
 
   my $stuff = build(
     c0 => {
-      template => "dummy_with_bank",
+      template => "dummy",
       bank     => dollars(100),
     },
     c1 => {
-      template => "dummy_with_bank",
+      template => "dummy",
     },
   );
 

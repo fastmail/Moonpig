@@ -175,7 +175,7 @@ test overpayment  => sub {
 test get_paid_on_payment => sub {
   my ($self) = @_;
 
-  do_with_fresh_ledger({ c => { template => 'dummy_with_bank' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
 
     my $consumer = $ledger->get_component('c');

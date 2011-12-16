@@ -15,7 +15,7 @@ use Moonpig::Test::Factory qw(build);
 
 sub setup {
   my ($self) = @_;
-  my $stuff = build(cons => { template => 'dummy_with_bank',
+  my $stuff = build(cons => { template => 'dummy',
                               bank => dollars(100),
                             });
 
