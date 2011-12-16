@@ -75,8 +75,12 @@ publish expire_date => { } => sub {
   $self->has_last_charge_date ||
     confess "Can't calculate remaining life for inactive consumer";
 
-  my $remaining = $self->unapplied_amount ||
-    confess "Can't calculate remaining life for unfunded consumer";
+  my $remaining = $self->unapplied_amount;
+
+  if ($remaining <= 0) {
+    return $self->grace_until if $self->in_grace_period;
+    return Moonpig->env->now;
+  }
 
   my $n_charge_periods_left
     = int($remaining / $self->calculate_charge_on( Moonpig->env->now ));
