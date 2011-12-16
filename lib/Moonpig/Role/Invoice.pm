@@ -70,8 +70,7 @@ sub unapplied_amount {
 sub _bankable_charges_by_consumer {
   my ($self) = @_;
   my %res;
-  for my $charge ( grep { $_->does("Moonpig::Role::InvoiceCharge::Bankable") }
-                     $self->all_charges ) {
+  for my $charge ( $self->all_charges ) {
     push @{$res{$charge->owner_guid}}, $charge;
   }
   return \%res;

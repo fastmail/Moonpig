@@ -24,6 +24,7 @@ with(
 sub _class_subroute { return }
 
 use MooseX::SetOnce;
+use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(Ledger Millicents TimeInterval XID ReplacementPlan);
 use Moonpig::Util qw(class event);
 
@@ -273,7 +274,7 @@ sub copy_balance_to__ {
          ledger      => $new_ledger,
       });
       my $charge = $transient_invoice->add_charge(
-        class('InvoiceCharge::Bankable')->new({
+        class('InvoiceCharge')->new({
           description => sprintf("Transfer management of '%s' from ledger %s",
                                  $self->xid, $ledger->guid),
           amount      => $amount,
@@ -323,10 +324,28 @@ publish template_like_this => {
   };
 };
 
+has extra_journal_charge_tags => (
+  is  => 'ro',
+  isa => ArrayRef,
+  default => sub { [] },
+  traits => [ qw(Copy) ],
+);
+
+sub journal_charge_tags {
+  my ($self) = @_;
+  return [ $self->xid, @{$self->extra_journal_charge_tags} ]
+}
+
+sub build_charge {
+  my ($self, $args) = @_;
+  return class('InvoiceCharge')->new($args);
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,
     is_active => $_[0]->is_active,
+    unapplied_amount => $_[0]->unapplied_amount,
   };
 };
 

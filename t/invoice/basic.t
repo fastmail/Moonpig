@@ -185,7 +185,7 @@ test get_paid_on_payment => sub {
 
     my $invoice = $ledger->current_invoice;
 
-    my $charge = class(qw(InvoiceCharge::Bankable))->new({
+    my $charge = class(qw(InvoiceCharge))->new({
       description => 'test charge (maintenance)',
       consumer    => $consumer,
       amount      => dollars(5),

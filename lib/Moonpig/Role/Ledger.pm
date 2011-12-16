@@ -563,7 +563,7 @@ sub failover_active_consumer__ {
 sub _collect_spare_change {
   my ($self) = @_;
 
-  my @consumers = grep {; $_->does('Consumer::Charges') && ! $_->is_expired }
+  my @consumers = grep {; $_->does('Consumer') && ! $_->is_expired }
                   $self->consumers;
 
   my %consider  = map  {; $_->[0]->guid => $_ }

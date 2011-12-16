@@ -16,7 +16,6 @@ Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
 
 with(
-  'Moonpig::Role::Consumer::Charges',
   'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
