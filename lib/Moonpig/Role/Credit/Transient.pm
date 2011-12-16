@@ -12,7 +12,7 @@ with(
 
 sub as_string { "transient credit" }
 
-has [qw(source_ledger_guid source_consumer_guid source_bank_guid)] => (
+has [qw(source_ledger_guid source_guid)] => (
   is => 'ro',
   isa => GUID,
   required => 1,

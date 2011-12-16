@@ -25,56 +25,6 @@ sub journal_charge_tags {
   return [ $self->xid, @{$self->extra_journal_charge_tags} ]
 }
 
-# "Move" my bank to a different consumer.  This will work even if the
-# consumer is in a different ledger.  It works by entering a charge to
-# my bank for its entire remaining funds, then creating a credit in
-# the recipient consumer's ledger and using the credit to set up a
-# fresh bank for the recipient.
-sub move_bank_to__ {
-  my ($self, $new_consumer) = @_;
-  my $amount = $self->unapplied_amount;
-  return if $amount == 0;
-
-  Moonpig->env->storage->do_rw(
-    sub {
-      my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
-      $ledger->current_journal->charge({
-        desc        => sprintf("Transfer management of '%s' to ledger %s",
-                               $self->xid, $new_ledger->guid),
-        from        => $self->bank,
-        to          => $self,
-        date        => Moonpig->env->now,
-        amount      => $amount,
-        tags        => [ @{$self->journal_charge_tags}, "transient" ],
-      });
-      my $credit = $new_ledger->add_credit(
-        class('Credit::Transient'),
-        {
-          amount               => $amount,
-          source_bank_guid     => $self->bank->guid,
-          source_consumer_guid => $self->guid,
-          source_ledger_guid   => $ledger->guid,
-        });
-      my $transient_invoice = class("Invoice")->new({
-         ledger      => $new_ledger,
-      });
-      my $charge = $transient_invoice->add_charge(
-        class('InvoiceCharge::Bankable')->new({
-          description => sprintf("Transfer management of '%s' from ledger %s",
-                                 $self->xid, $ledger->guid),
-          amount      => $amount,
-          consumer    => $new_consumer,
-          tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
-        }),
-       );
-      $new_ledger->apply_credits_to_invoice__(
-        [{ credit => $credit,
-           amount => $amount }],
-        $transient_invoice);
-      $new_ledger->save;
-    });
-}
-
 sub build_charge {
   my ($self, $args) = @_;
   return class("InvoiceCharge::Bankable")->new($args);
