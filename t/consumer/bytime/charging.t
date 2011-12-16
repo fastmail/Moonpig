@@ -22,7 +22,7 @@ test "charge" => sub {
 
   my @eq;
 
-  plan tests => 2*(4 + 5 + 2);
+  plan tests => (4 + 5 + 2);
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
@@ -66,7 +66,6 @@ test "charge" => sub {
       $self->heartbeat_and_send_mail($stuff->{ledger});
 
       is($stuff->{consumer}->unapplied_amount, dollars(10 - $day));
-      is($stuff->{consumer}->bank->unapplied_amount, dollars(10 - $day));
     }
   }
 };

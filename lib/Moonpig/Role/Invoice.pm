@@ -49,8 +49,8 @@ sub is_unpaid {
 implicit_event_handlers {
   return {
     'paid' => {
-      redistribute => Moonpig::Events::Handler::Method->new('_pay_charges'),
-      create_banks => Moonpig::Events::Handler::Method->new('_create_banks'),
+      redistribute   => Moonpig::Events::Handler::Method->new('_pay_charges'),
+      fund_consumers => Moonpig::Events::Handler::Method->new('_fund_consumers'),
     }
   };
 };
@@ -60,23 +60,16 @@ sub _pay_charges {
   $_->handle_event($event) for $self->all_charges;
 }
 
-sub unapplied_amount {
-  my ($self) = @_;
-  my $xferset = $self->ledger->accountant->select({ target => $self });
-  return $xferset->total;
-}
-
 sub _bankable_charges_by_consumer {
   my ($self) = @_;
   my %res;
-  for my $charge ( grep { $_->does("Moonpig::Role::InvoiceCharge::Bankable") }
-                     $self->all_charges ) {
+  for my $charge ( $self->all_charges ) {
     push @{$res{$charge->owner_guid}}, $charge;
   }
   return \%res;
 }
 
-sub _create_banks {
+sub _fund_consumers {
   my ($self, $event) = @_;
   my $by_consumer = $self->_bankable_charges_by_consumer;
 
@@ -88,18 +81,12 @@ sub _create_banks {
     });
     my $total = sum(map $_->amount, @$charges);
 
-    my $bank = $self->ledger->add_bank(
-      class(qw(Bank)),
-    );
-
     $self->ledger->create_transfer({
-      type   => 'bank_deposit',
+      type   => 'consumer_funding',
       from   => $self,
-      to     => $bank,
+      to     => $consumer,
       amount => $total,
     });
-
-    $consumer->_set_bank($bank);
   }
 }
 

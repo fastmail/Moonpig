@@ -29,7 +29,7 @@ with 'Role::Subsystem' => {
 # Each transfer is listed exactly once in each of the three following hashes:
 # By source in %by_src, by destination in %by_dst, and by GUID in %by_id.
 
-# This is a hash whose keys are GUIDs of objects such as banks or
+# This is a hash whose keys are GUIDs of objects such as invoices or
 # consumers, and whose values are arrays of transfers.  For object X,
 # all transfers from X are listed in $by_src{$X->guid}.
 has by_src => (

@@ -142,17 +142,10 @@ C<fred> will be consumer C<steve>.
 
 =item *
 
-The value of C<bank> may either be a bank object to use, or a simple
-money amount.  In the latter case, a bank is manufactured with the
-indicated amount of money and is used.  For example:
+The value of C<bank> is a money amount.  For example:
 
     use Moonpig::Util qw(dollars);
     build(fred => { template => 'test', bank => dollars(15) });
-
-If the money amount is zero, no bank will be created.
-
-If a consumer's key for C<< ->get_component >> is I<X>, then the bank will
-be accessible with C<< ->get_component(I<X>.bank) >>.
 
 =item *
 
@@ -320,13 +313,9 @@ sub build_consumer {
       build_consumer($replacement_name, $args, $stuff);
   }
 
-  my $bank;
-  if (exists $c_args{bank} && ! ref($c_args{bank}) && $c_args{bank} > 0) {
-    $stuff->{"$name.bank"} = $c_args{bank} = build_bank({ amount => $c_args{bank} }, $stuff);
-  }
-
   my $class = delete $c_args{class};
   my $template = delete $c_args{template};
+  my $amount   = delete $c_args{bank};
 
   my $consumer;
   if ($class) {
@@ -351,29 +340,21 @@ sub build_consumer {
 
   $consumer->become_active if $become_active;
 
+  if (defined $amount && $amount > 0) {
+    my $credit = $stuff->{ledger}->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => $amount },
+    );
+
+    $stuff->{ledger}->create_transfer({
+      type   => 'test_consumer_funding',
+      from   => $credit,
+      to     => $consumer,
+      amount => $amount,
+    });
+  }
+
   return $consumer;
-}
-
-sub build_bank {
-  my ($args, $stuff) = @_;
-
-  my $bank = $stuff->{ledger}->add_bank(
-    class("Bank"),
-  );
-
-  my $credit = $stuff->{ledger}->add_credit(
-    class(qw(Credit::Simulated)),
-    { amount => $args->{amount} },
-  );
-
-  $stuff->{ledger}->create_transfer({
-    type   => 'test_bank_deposit',
-    from   => $credit,
-    to     => $bank,
-    amount => $args->{amount},
-  });
-
-  return $bank;
 }
 
 sub rnd {

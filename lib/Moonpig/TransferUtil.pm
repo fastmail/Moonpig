@@ -14,7 +14,7 @@ our @EXPORT_OK = qw(
 our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
 my %TYPE; # Maps valid transfer type names to 1, others to false
-my %CANTRANSFER; # Maps valid transferer names ("bank") to 1, others to false
+my %CANTRANSFER; # Maps valid transferer names ("payable") to 1, others to false
 my %TYPEMAP; # Maps valid (from, to, type) triples to 1, others to false
 my $INITIALIZED;
 
@@ -69,10 +69,10 @@ sub deletable {
 1;
 
 __DATA__
-# FROM  TO        TYPE
-bank    consumer  transfer
-bank    consumer  hold
-credit  payable   credit_application
-bank    credit    bank_cashout
-payable bank      bank_deposit
-credit  bank      test_bank_deposit
+# FROM     TO        TYPE
+consumer   journal   transfer
+consumer   journal   hold
+credit     payable   credit_application
+consumer   credit    cashout
+payable    consumer  consumer_funding
+credit     consumer  test_consumer_funding

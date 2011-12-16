@@ -1,5 +1,5 @@
 package Moonpig::Role::Consumer;
-# ABSTRACT: something that uses up money stored in a bank
+# ABSTRACT: something that uses up money
 use Moose::Role;
 
 use Stick::Publisher 0.20110324;
@@ -24,6 +24,7 @@ with(
 sub _class_subroute { return }
 
 use MooseX::SetOnce;
+use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(Ledger Millicents TimeInterval XID ReplacementPlan);
 use Moonpig::Util qw(class event);
 
@@ -221,6 +222,7 @@ sub copy_to {
         $self->copy_attr_hash__
       );
       $target->save;
+      $self->copy_balance_to__($copy);
       $self->copy_subcomponents_to__($target, $copy);
       { # We have to terminate service before activating service, or else the
         # same xid would be active in both ledgers at once, which is forbidden
@@ -232,8 +234,57 @@ sub copy_to {
   return $copy;
 }
 
-# roles will decorate this method with code to move subcomponents like banks to
-# the copy
+# "Move" my balance to a different consumer.  This will work even if
+# the consumer is in a different ledger.  It works by entering a
+# charge to the source consumer for its entire remaining funds, then
+# creating a credit in the recipient consumer's ledger and
+# transferring the credit to the recipient.
+sub copy_balance_to__ {
+  my ($self, $new_consumer) = @_;
+  my $amount = $self->unapplied_amount;
+  return if $amount == 0;
+
+  Moonpig->env->storage->do_rw(
+    sub {
+      my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
+      $ledger->current_journal->charge({
+        desc        => sprintf("Transfer management of '%s' to ledger %s",
+                               $self->xid, $new_ledger->guid),
+        from        => $self,
+        to          => $ledger->current_journal,
+        date        => Moonpig->env->now,
+        amount      => $amount,
+        tags        => [ @{$self->journal_charge_tags}, "transient" ],
+      });
+      my $credit = $new_ledger->add_credit(
+        class('Credit::Transient'),
+        {
+          amount               => $amount,
+          source_guid          => $self->guid,
+          source_ledger_guid   => $ledger->guid,
+        });
+      my $transient_invoice = class("Invoice")->new({
+         ledger      => $new_ledger,
+      });
+      my $charge = $transient_invoice->add_charge(
+        class('InvoiceCharge')->new({
+          description => sprintf("Transfer management of '%s' from ledger %s",
+                                 $self->xid, $ledger->guid),
+          amount      => $amount,
+          consumer    => $new_consumer,
+          tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
+        }),
+       );
+      $new_ledger->apply_credits_to_invoice__(
+        [{ credit => $credit,
+           amount => $amount }],
+        $transient_invoice);
+      $new_ledger->save;
+    });
+}
+
+
+# roles will decorate this method with code to move subcomponents to the copy
 sub copy_subcomponents_to__ {
   my ($self, $target, $copy) = @_;
   $copy->replacement($self->replacement->copy_to($target))
@@ -266,10 +317,28 @@ publish template_like_this => {
   };
 };
 
+has extra_journal_charge_tags => (
+  is  => 'ro',
+  isa => ArrayRef,
+  default => sub { [] },
+  traits => [ qw(Copy) ],
+);
+
+sub journal_charge_tags {
+  my ($self) = @_;
+  return [ $self->xid, @{$self->extra_journal_charge_tags} ]
+}
+
+sub build_charge {
+  my ($self, $args) = @_;
+  return class('InvoiceCharge')->new($args);
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,
     is_active => $_[0]->is_active,
+    unapplied_amount => $_[0]->unapplied_amount,
   };
 };
 

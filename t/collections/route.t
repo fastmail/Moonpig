@@ -41,6 +41,7 @@ test "route to get a collection" => sub {
 };
 
 test "pages" => sub {
+  plan skip_all => "rewrite to not use banks; we can't just create banks";
   my ($self) = @_;
 
   do_with_fresh_ledger({}, sub {

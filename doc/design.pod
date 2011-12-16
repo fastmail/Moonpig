@@ -12,9 +12,9 @@ More details are in <events.pod>.
 =head3 Ledger
 
 A ledger wraps up an account history.  It contains the entire history
-number of banks, consumers, journals, and invoices.  It singles out
-the currently-active banks and consumers, and the current invoice.  It
-contains contact information for the account.
+number of consumers, journals, and invoices.  It singles out the
+currently-active consumers, and the current invoice.  It contains
+contact information for the account.
 
 =head3 Invoice
 
@@ -24,10 +24,10 @@ account will be asked to pay.  Its implementation is as a charge container
 
 =head3 Journal
 
-A journal represents a summary of transfers made from banks to consumers over a
-span of time.  It is represented as a charge container.  A journal can be
-marked as closed, at which time new transfers will be recorded on a new
-journal.
+A journal represents a summary of spending by consumers over a span of time.
+It is represented as a charge container.  A journal can be marked as closed, at
+which time new transfers will be recorded on a new journal.  Money consumed by
+a consumer is transferred I<to> the journal.
 
 =head3 Consumer
 
@@ -35,28 +35,17 @@ A consumer represents a service for which a consumer pays.  At present there
 appear to be three sorts: periodically assessed services; pay-as-you-go
 services, and pay-once services.  Periodically, the service object will decide
 that it needs to make a charge.  Charges are added to the current journal, and
-a transfer is made from the consumer's bank to the consumer.  If the consumer
-has not been associated with a bank, the consumer can't make charges.  If there
-are not sufficient funds, it is responsible for issuing appropriate warnings to
-the use and eventually for cutting off service.
+a transfer is made from the consumer to the journal.  If the consumer
+has no funds, the consumer is responsible for issuing appropriate warnings to
+the user and eventually for cutting off service.
 
-A service such as Listbox posting can ask a consumer if its banks are
-sufficiently well-funded, and can deny service if not.
+A service such as Listbox posting can ask a consumer if it is sufficiently
+well-funded, and can deny service if not.
 
 Consumers will generally have an event handler that fires when they're first
 made.  This handler will make a request for payment by adding a new charge to
-an invoice.  The charge, when paid, will set up an initial bank for the
-consumer.
-
-=head3 Bank
-
-A bank represents a pool of funds converted from a credit or customer
-payment, and generally associated with a consumer.  The consumer will perform
-transfers as needed to pay for its continued operation.
-
-The bank has some initial value, corresponding to the amount received on
-payment.  At any given moment, it has as much remaining value as its initial
-value minus and transfers or holds.
+an invoice.  The charge, when paid, will have its value transferred to the
+consumer that placed the charge.
 
 =head3 Credit
 
@@ -82,9 +71,10 @@ paid by credits on hand.
 =head4 Journal Charges
 
 Journal charge represents a certain amount of service that we have provided,
-and are automatically charged by consumers against their banks.  These are not
-sent to customers on invoices.  They are a purely internal means of accounting
-how the customer's payments were eventually converted into service.
+and are automatically filed by consumers, transferring funds from the consumer
+to the journal.  These are not sent to customers on invoices.  They are a
+purely internal means of accounting how the customer's payments were eventually
+converted into service.
 
 =head2 Subsidiary entities
 
@@ -97,19 +87,19 @@ credit card numbers.)
 
 The Accountant is a subsystem of the ledger which is responsible for
 creating and tracking transfers of funds between funds-bearing
-entities such as banks, consumers, credits, and refunds.
+entities such as consumers, credits, and refunds.
 
 It contains methods for selecting all the transfers that satisfy
 pecified criteria, such as the set of all transfers out of a certain
-bank, and for adding up the values of the transfers.
+credit, and for adding up the values of the transfers.
 
 =head3 Transfer
 
-Each transfer has a source object (typically a bank), a target object
+Each transfer has a source object (typically a consumer), a target object
 (typically a consumer), a date, an amount of money transferred, and a
 type.  The type is a string the describes the function of the
-transfer.  For example, the normal transfer of money from a bank to a
-consumer that occurs when the consumer enters a charge is has type
+transfer.  For example, the normal transfer of money from a consumer to a
+journal that occurs when the consumer enters a charge is has type
 "transfer".  But the transfer from a credit to an invoice that occurs
 when an invoice is paid has type "credit_application".  The accountant
 will refuse to make a transfer if the transfer type does not match the
@@ -210,9 +200,8 @@ invoice distributes this event to all of its subsidiary charges.
 
 =item 8.
 
-Because one of the invoice charges composes the "Bankable" role, it
-creates a bank for the appropriate amount and associates it to the
-consumer.
+Because one of the invoice charges composes the "Bankable" role, its value is
+transferred from the invoice to the consumer.
 
 The consumer is now set up.
 
@@ -242,7 +231,7 @@ and things proceed from there.
 
 =item 2.
 
-If the consumer's bank is exhausted, it calls its C<expire> method.
+If the consumer's funds are exhausted, it calls its C<expire> method.
 If it has a replacement consumer, C<expire> tells the ledger that the
 replacement is now managing this service.  If not, it tells the ledger
 to terminate the service.
@@ -251,7 +240,7 @@ to terminate the service.
 
 The consumer enters a charge on the ledger's current journal.  The
 ledger's accountant uses this record when asked to compute the amount
-of money still in the consumer's bank.
+of money still in the consumer's funds.
 
 =back
 
@@ -267,10 +256,9 @@ C<accept_payment> method on the ledger's credit collection.
 
 =item 1.
 
-The method first scans over all the banks looking for "spare change":
-banks with outstanding funds that are attached to expired consumers.
-It transfers all the funds from these inactive banks to a fresh
-credit.
+The method first scans over all the consumers looking for "spare change":
+consumers with outstanding funds that are expired.  It transfers all the funds
+from these inactive consumers to a fresh credit.
 
 =item 2.
 
@@ -356,10 +344,9 @@ For example, A Pobox account costs $20 per year.  We will assess this
 as a $20/12 payment per month.  (Or possibly a $20/365 payment per
 year?)  Each day the consumer object will receive a heartbeat event.
 It will check if it has processed a charge yet this month.  If not, it
-will try to process a charge against its bank.  If the piggy
-bank is sufficiently well-funded, that is all that is needed; the
-charge is now in the right cost tree and the later receipt will inform
-the customer.
+will try to transfer funds to the journal.  If the consumer is
+sufficiently well-funded, that is all that is needed; the charge is now
+in the right cost tree and the later receipt will inform the customer.
 
 TODO
 
@@ -445,8 +432,7 @@ construct dollar and cent amounts.  For example, 150000,
 C<dollars(1.50)>, and C<cents(150)> are all the same amount of money.
 
 Many money attributes are required to be positive amounts.  For
-example, you cannot create a bank that contains a negative or zero
-amount of money, or transfer a negative or zero amount of money from
+example, you cannot transfer a negative or zero amount of money from
 anywhere to anywhere.
 
 =head3 TransferSets

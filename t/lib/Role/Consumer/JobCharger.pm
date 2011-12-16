@@ -6,7 +6,7 @@ use Moonpig::Util qw(class dollars);
 use namespace::autoclean;
 
 with(
-  'Moonpig::Role::Consumer::ChargesBank',
+  'Moonpig::Role::Consumer',
   # 'Moonpig::Role::Consumer::FixedCost',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
@@ -24,7 +24,7 @@ sub _extra_invoice_charges {
   my ($self) = @_;
 
   my $class = class( qw(
-    InvoiceCharge::Bankable
+    InvoiceCharge
     =t::lib::Role::InvoiceCharge::JobCreator
   ) );
 

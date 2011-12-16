@@ -9,18 +9,18 @@ use Test::More;
 use Test::Routine::Util;
 
 test "legal transfer mapping" => sub {
-  ok(  transfer_type_ok('bank', 'consumer', 'transfer'));
-  ok(! transfer_type_ok('consumer', 'bank', 'transfer'));
-  ok(! transfer_type_ok('consumer', 'bank', 'potato'));
-  ok(! transfer_type_ok('consumer', 'bank', 'hold'));
-  ok(  transfer_type_ok('bank', 'credit', 'bank_cashout'));
-  ok(! transfer_type_ok('potato', 'credit', 'bank_cashout'));
-  ok(! transfer_type_ok('potato', 'potato', 'bank_cashout'));
+  ok(  transfer_type_ok('consumer', 'journal',  'transfer'));
+  ok(! transfer_type_ok('journal',  'consumer', 'transfer'));
+  ok(! transfer_type_ok('consumer', 'journal',  'potato'));
+  ok(! transfer_type_ok('journal',  'consumer', 'hold'));
+  ok(  transfer_type_ok('consumer', 'credit',   'cashout'));
+  ok(! transfer_type_ok('potato',   'credit',   'cashout'));
+  ok(! transfer_type_ok('potato',   'potato',   'cashout'));
 };
 
 test "valid transfer types" => sub {
   ok(  valid_type('transfer'));
-  ok(  valid_type('bank_cashout'));
+  ok(  valid_type('cashout'));
   ok(! valid_type('potato'));
 };
 
@@ -30,13 +30,13 @@ test "deletable transfer types" => sub {
 };
 
 test "transfer-capable entities" => sub {
-  ok(  is_transfer_capable('bank'));
+  ok(  is_transfer_capable('journal'));
   ok(  is_transfer_capable('consumer'));
   ok(! is_transfer_capable('potato'));
 };
 
 test transferer_type => sub {
-  is(class('Bank')->transferer_type, 'bank');
+  is(class('Journal')->transferer_type, 'journal');
   is(class('Consumer::Dummy')->transferer_type, 'consumer');
 };
 

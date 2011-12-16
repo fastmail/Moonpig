@@ -11,8 +11,8 @@ use t::lib::TestEnv;
 
 use Moonpig::Test::Factory qw(build);
 
-my @basic = qw(canceled expired replacement_plan xid);
-my @charges_bank = qw(extra_journal_charge_tags replacement_lead_time);
+my @basic = qw(canceled expired replacement_plan xid extra_journal_charge_tags);
+my @makes_replacement = qw(replacement_lead_time);
 my @invoices = qw(extra_invoice_charge_tags);
 
 test dummy => sub {
@@ -42,7 +42,7 @@ test by_time => sub {
 
     my $h = $stuff->{consumer}->copy_attr_hash__();
     cmp_deeply([keys %$h],
-               bag(@basic, @charges_bank, @invoices,
+               bag(@basic, @makes_replacement, @invoices,
                    qw(charge_description charge_frequency
                       cost_amount cost_period grace_period_duration
                     ),
@@ -67,7 +67,7 @@ test byusage => sub {
     }
   );
   my $h = $stuff->{consumer}->copy_attr_hash__();
-  cmp_deeply([keys %$h], bag(@basic, @charges_bank,
+  cmp_deeply([keys %$h], bag(@basic, @makes_replacement,
                              qw(cost_per_unit low_water_mark)));
 };
 

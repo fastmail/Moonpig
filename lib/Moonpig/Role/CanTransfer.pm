@@ -12,6 +12,14 @@ role {
   my $tti = $p->transferer_type;
 
   method transferer_type => sub { $tti };
+
+  method unapplied_amount => sub {
+    my ($self) = @_;
+
+    my $xfers_in  = $self->ledger->accountant->select({ target => $self });
+    my $xfers_out = $self->ledger->accountant->select({ source => $self });
+    return $xfers_in->total - $xfers_out->total;
+  }
 };
 
 1;

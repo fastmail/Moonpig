@@ -12,7 +12,7 @@ use Moonpig::Test::Factory qw(build);
 has stuff => (
   is => 'rw',
   isa => 'HashRef',
-  default => sub { build(consumer => { template => 'dummy_with_bank',
+  default => sub { build(consumer => { template => 'dummy',
                                        bank => dollars(100) } ) },
 );
 
@@ -23,8 +23,8 @@ sub make_hold {
   my ($self) = @_;
   my $h = $self->ledger->create_transfer({
     type => 'hold',
-    from => $self->stuff->{consumer}->bank,
-    to => $self->stuff->{consumer},
+    from => $self->stuff->{consumer},
+    to   => $self->ledger->current_journal,
     amount => 1
   });
   return $h;
@@ -61,8 +61,8 @@ test commit_failures => sub {
   plan tests => 4;
   my $t = $self->ledger->create_transfer({
     type => "transfer",
-    from => $self->stuff->{consumer}->bank,
-    to   => $self->stuff->{consumer},
+    from => $self->stuff->{consumer},
+    to   => $self->ledger->current_journal,
     amount => 1,
   });
 
@@ -71,8 +71,8 @@ test commit_failures => sub {
 
   my $h = $self->ledger->create_transfer({
     type => "hold",
-    from => $self->stuff->{consumer}->bank,
-    to   => $self->stuff->{consumer},
+    from => $self->stuff->{consumer},
+    to   => $self->ledger->current_journal,
     amount => 1,
   });
 

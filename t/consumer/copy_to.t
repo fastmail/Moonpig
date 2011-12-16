@@ -90,25 +90,9 @@ test with_bank => sub {
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
 
-    ### BEGIN BANK-ADDING CRAP
-    my $credit = $ledger_a->add_credit(
-      class(qw(Credit::Simulated)),
-      { amount => dollars(100) },
-    );
-
-    my $bank_a = $ledger_a->add_bank(class('Bank'));
-
-    $ledger_a->create_transfer({
-      type   => 'test_bank_deposit',
-      from   => $credit,
-      to     => $bank_a,
-      amount => dollars(100),
-    });
-    ### END BANK-ADDING CRAP
-
     my $cons_a = $ledger_a->add_consumer(
       class("Consumer::ByTime::FixedCost"),
-      { bank => $bank_a,
+      {
         charge_description => "monkey meat",
         cost_amount => cents(1234),
         cost_period => years(1),
@@ -118,6 +102,19 @@ test with_bank => sub {
         make_active => 1,
       });
     $ledger_a->name_component("original consumer", $cons_a);
+
+    my $credit = $ledger_a->add_credit(
+      class(qw(Credit::Simulated)),
+      { amount => dollars(100) },
+    );
+
+    $ledger_a->create_transfer({
+      type   => 'test_consumer_funding',
+      from   => $credit,
+      to     => $cons_a,
+      amount => dollars(100),
+    });
+
     is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
     my $cons_b = $cons_a->copy_to($ledger_b);
     $ledger_b->name_component("copy consumer", $cons_b);
@@ -126,30 +123,27 @@ test with_bank => sub {
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
     my $cons_a = $ledger_a->get_component("original consumer");
-    my $bank_a = $cons_a->bank;
     my $cons_b = $ledger_b->get_component("copy consumer");
-    my $bank_b = $cons_b->bank;
 
-    ok($bank_b, "bank is in new ledger");
-    isnt($bank_b->guid, $bank_a->guid, "bank was copied");
+    isnt($cons_a->guid, $cons_b->guid, "consumer was copied");
 
     is($cons_a->unapplied_amount, 0, "all monies transferred out of cons A");
     is($cons_b->unapplied_amount, dollars(100),
        "cons B fully funded");
 
-    my ($xfer_a, $d3) = $ledger_a->accountant->from_bank($bank_a)->all;
+    my ($xfer_a, $d3) = $ledger_a->accountant->from_consumer($cons_a)->all;
     ok($xfer_a && ! $d3, "found unique bank transfer in source ledger");
-    is($xfer_a->target, $cons_a, "... checked its target");
+    is($xfer_a->target, $ledger_a->current_journal, "... checked its target");
     my ($charge_a, $d4) = $ledger_a->current_journal->all_charges;
     ok($charge_a && ! $d4, "found unique charge on source ledger");
     like($charge_a->description,
          qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
          "...checked its description");
 
-          my ($cred_b, $d1) = $ledger_b->credits;
-          ok($cred_b && ! $d1, "found unique credit in target ledger");
-          is($cred_b->as_string, "transient credit", "...checked its credit type");
-          is($cred_b->amount, dollars(100), "credit amount");
+    my ($cred_b, $d1) = $ledger_b->credits;
+    ok($cred_b && ! $d1, "found unique credit in target ledger");
+    is($cred_b->as_string, "transient credit", "...checked its credit type");
+    is($cred_b->amount, dollars(100), "credit amount");
     my ($xfer_b, $d2) = $ledger_b->accountant->from_credit($cred_b)->all;
     ok($xfer_b && ! $d2, "found unique credit transfer in target ledger");
     my ($invoice_b) = $xfer_b->target;

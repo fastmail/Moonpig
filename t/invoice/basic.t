@@ -172,21 +172,20 @@ test overpayment  => sub {
   pass("everything ran to completion without dying");
 };
 
-test create_bank_on_payment => sub {
+test get_paid_on_payment => sub {
   my ($self) = @_;
 
-  do_with_fresh_ledger({ c => { template => 'dummy_with_bank' }}, sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
 
     my $consumer = $ledger->get_component('c');
     $ledger->save;
 
-    is_deeply($ledger->_banks, {}, "there are no banks on our ledger yet");
-    ok(! $consumer->has_bank, "...nor on our consumer");
+    is($consumer->unapplied_amount, 0, "no money in our consumer yet");
 
     my $invoice = $ledger->current_invoice;
 
-    my $charge = class(qw(InvoiceCharge::Bankable))->new({
+    my $charge = class(qw(InvoiceCharge))->new({
       description => 'test charge (maintenance)',
       consumer    => $consumer,
       amount      => dollars(5),
@@ -206,14 +205,11 @@ test create_bank_on_payment => sub {
 
     $ledger->process_credits;
 
-    ok($consumer->has_bank, "after applying credit, consumer has bank");
-
-    my $bank = $consumer->bank;
     is(
-      $bank->amount,
+      $consumer->unapplied_amount,
       $invoice->total_amount,
-      "the bank is for the invoice amount",
-     );
+      "after processing credits, consumer is funded",
+    );
   });
 };
 

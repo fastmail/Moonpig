@@ -30,7 +30,7 @@ test "job-making invoice charge" => sub {
       ok($consumer->does('t::lib::Role::Consumer::JobCharger'),
          "consumer is correct type");
 
-      ok(! $consumer->has_bank, "still has no bank for now");
+      ok(! $consumer->unapplied_amount, "still has no funds for now");
 
       $ledger->handle_event( event('heartbeat') );
 
