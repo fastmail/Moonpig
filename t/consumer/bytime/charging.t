@@ -70,6 +70,87 @@ test "charge" => sub {
   }
 };
 
+test "top up" => sub {
+  my ($self) = @_;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan = sub {
+    Moonpig::DateTime->new( year => 2000, month => 1, day => $_[0] );
+  };
+
+  Moonpig->env->stop_clock_at($jan->(1));
+
+  my $stuff;
+  Moonpig->env->storage->do_rw(sub {
+    $stuff = build(
+      consumer => {
+        class              => class('Consumer::ByTime::FixedCost'),
+        bank               => dollars(10),
+        cost_amount        => dollars(30),
+        cost_period        => days(30),
+        replacement_plan   => [ get => '/nothing' ],
+        charge_description => "test charge",
+        xid                => xid(),
+        replacement_lead_time => years(1000),
+      }
+    );
+
+    Moonpig->env->save_ledger($stuff->{ledger});
+  });
+
+  $stuff->{consumer}->clear_grace_until;
+
+  for my $day (2 .. 5) {
+    my $tick_time = Moonpig::DateTime->new(
+      year => 2000, month => 1, day => $day
+    );
+
+    Moonpig->env->stop_clock_at($tick_time);
+
+    $self->heartbeat_and_send_mail($stuff->{ledger});
+
+    is($stuff->{consumer}->unapplied_amount, dollars(10 - $day));
+
+    cmp_ok(
+      $stuff->{consumer}->expire_date,
+      '==',
+      $jan->(11),
+      "Jan $day, expiration predicted for Jan 11",
+    );
+  }
+
+  my $credit = $stuff->{ledger}->add_credit(
+    class('Credit::Simulated'),
+    { amount => dollars(20) },
+  );
+
+  $stuff->{ledger}->create_transfer({
+    type   => 'test_consumer_funding',
+    from   => $credit,
+    to     => $stuff->{consumer},
+    amount => dollars(20),
+  });
+
+  for my $day (5 .. 10) {
+    my $tick_time = Moonpig::DateTime->new(
+      year => 2000, month => 1, day => $day
+    );
+
+    Moonpig->env->stop_clock_at($tick_time);
+
+    $self->heartbeat_and_send_mail($stuff->{ledger});
+
+    is($stuff->{consumer}->unapplied_amount, dollars(30 - $day));
+
+    cmp_ok(
+      $stuff->{consumer}->expire_date,
+      '==',
+      $jan->(31),
+      "post top-up, Jan $day, expiration predicted for Jan 31",
+    );
+  }
+};
+
 {
   package CostsTodaysDate;
   use Moose::Role;
