@@ -75,5 +75,6 @@ consumer   journal   transfer
 credit     refund    refund
 credit     invoice   credit_application
 consumer   credit    cashout
+consumer   invoice   rollover
 invoice    consumer  consumer_funding
 credit     consumer  test_consumer_funding
