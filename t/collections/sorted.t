@@ -27,7 +27,7 @@ sub refund {
   my $refund = $Ledger->add_refund(class('Refund'));
   $amount ||= dollars(1);
   $Ledger->create_transfer({
-    type => 'credit_application',
+    type => 'refund',
     from => $Credit,
     to => $refund,
     amount => $amount,

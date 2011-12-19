@@ -42,9 +42,9 @@ test "page" => sub {
   for (1..30) {
     push @r, my $next_refund = $Ledger->add_refund(class('Refund'));
     $Ledger->create_transfer({
-      type => 'credit_application',
+      type => 'refund',
       from => $credit,
-      to => $next_refund,
+      to   => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
     });
     is($Ledger->refund_collection->pages,     int($_ / 20))

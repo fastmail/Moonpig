@@ -5,14 +5,14 @@ use Moose::Role;
 with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HasGuid',
-  'Moonpig::Role::Payable',
+  'Moonpig::Role::CanTransfer' => { transferer_type => "refund" },
 );
 
 use namespace::autoclean;
 
 sub amount {
   my ($self) = @_;
-  return $self->accountant->all_for_payable($self)->total;
+  return $self->accountant->all_for_refund($self)->total;
 }
 
 1;

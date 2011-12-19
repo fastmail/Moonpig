@@ -21,7 +21,7 @@ sub issue_refund {
   );
 
   $self->ledger->create_transfer({
-    type  => 'credit_application',
+    type  => 'refund',
     from  => $self,
     to    => $refund,
     amount  => $self->amount,

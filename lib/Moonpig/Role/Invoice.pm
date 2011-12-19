@@ -7,7 +7,7 @@ with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
-  'Moonpig::Role::Payable',
+  'Moonpig::Role::CanTransfer' => { transferer_type => "invoice" },
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
 );

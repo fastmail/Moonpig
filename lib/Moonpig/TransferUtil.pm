@@ -70,9 +70,10 @@ sub deletable {
 
 __DATA__
 # FROM     TO        TYPE
-consumer   journal   transfer
 consumer   journal   hold
-credit     payable   credit_application
+consumer   journal   transfer
+credit     refund    refund
+credit     invoice   credit_application
 consumer   credit    cashout
-payable    consumer  consumer_funding
+invoice    consumer  consumer_funding
 credit     consumer  test_consumer_funding

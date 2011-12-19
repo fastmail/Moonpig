@@ -67,7 +67,7 @@ test "collection object" => sub {
     last if $_ == 2;
     push @r, my $next_refund = $Ledger->add_refund(class('Refund'));
     $Ledger->create_transfer({
-      type => 'credit_application',
+      type => 'refund',
       from => $credit,
       to => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
@@ -83,7 +83,7 @@ test "collection object" => sub {
     last if $_ == 5;
     push @r, my $next_refund = $c->add();
     $Ledger->create_transfer({
-      type => 'credit_application',
+      type => 'refund',
       from => $credit,
       to => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
