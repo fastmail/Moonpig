@@ -28,12 +28,6 @@ implicit_event_handlers {
   };
 };
 
-# For any given date, what do we think the total costs of ownership for this
-# consumer are?  Example:
-# [ 'basic account' => dollars(50), 'allmail' => dollars(20), 'support' => .. ]
-# This is an arrayref so we can have ordered line items for display.
-requires 'costs_on';
-
 sub _invoice {
   my ($self) = @_;
 

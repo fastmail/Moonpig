@@ -21,6 +21,8 @@ with(
   'Moonpig::Role::Consumer::MakesReplacement',
 );
 
+requires 'costs_on';
+
 use Moonpig::Behavior::EventHandlers;
 
 use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
