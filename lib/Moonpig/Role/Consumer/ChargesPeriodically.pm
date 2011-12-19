@@ -1,4 +1,3 @@
-
 package Moonpig::Role::Consumer::ChargesPeriodically;
 # ABSTRACT: a consumer that issues charges when it gets a heartbeat event
 
@@ -92,7 +91,9 @@ sub charge_one_day {
     });
   }
 
-  $self->maybe_make_replacement;
+  if ($self->does('Moonpig::Role::Consumer::MakesReplacement')) {
+    $self->maybe_make_replacement;
+  }
 }
 
 sub set_up_last_charge_date {
