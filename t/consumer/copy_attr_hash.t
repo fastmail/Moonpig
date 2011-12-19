@@ -17,7 +17,6 @@ my @basic = qw(
   extra_invoice_charge_tags
 );
 my @makes_replacement = qw(replacement_lead_time);
-my @invoices = qw();
 
 test dummy => sub {
   my ($self) = @_;
@@ -46,7 +45,7 @@ test by_time => sub {
 
     my $h = $stuff->{consumer}->copy_attr_hash__();
     cmp_deeply([keys %$h],
-               bag(@basic, @makes_replacement, @invoices,
+               bag(@basic, @makes_replacement,
                    qw(charge_description charge_frequency
                       cost_amount cost_period grace_period_duration
                     ),
