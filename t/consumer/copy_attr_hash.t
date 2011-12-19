@@ -11,9 +11,13 @@ use t::lib::TestEnv;
 
 use Moonpig::Test::Factory qw(build);
 
-my @basic = qw(canceled expired replacement_plan xid extra_journal_charge_tags);
+my @basic = qw(
+  canceled expired replacement_plan xid
+  extra_journal_charge_tags
+  extra_invoice_charge_tags
+);
 my @makes_replacement = qw(replacement_lead_time);
-my @invoices = qw(extra_invoice_charge_tags);
+my @invoices = qw();
 
 test dummy => sub {
   my ($self) = @_;

@@ -334,6 +334,18 @@ sub build_charge {
   return class('InvoiceCharge')->new($args);
 }
 
+has extra_invoice_charge_tags => (
+  is  => 'ro',
+  isa => ArrayRef,
+  default => sub { [] },
+  traits => [ qw(Copy) ],
+);
+
+sub invoice_charge_tags {
+  my ($self) = @_;
+  return [ $self->xid, @{$self->extra_invoice_charge_tags} ]
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,

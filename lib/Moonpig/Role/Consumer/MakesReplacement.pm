@@ -41,5 +41,3 @@ sub needs_replacement {
 }
 
 1;
-
-
