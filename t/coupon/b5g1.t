@@ -46,12 +46,12 @@ sub pay_unpaid_invoices {
   my $total = 0;
 
   Moonpig->env->stop_clock();
-  until ($ledger->payable_invoices) {
-    Moonpig->env->elapse_time(days(1));
-    Moonpig->env->storage->do_rw(sub {
-                                   $ledger->handle_event( event('heartbeat') );
-                                 });
-  }
+  Moonpig->env->storage->do_rw(sub {
+    until ($ledger->payable_invoices) {
+      Moonpig->env->elapse_time(days(1));
+      $ledger->handle_event( event('heartbeat') );
+    }
+  });
 
   for my $invoice ($ledger->invoices) {
     $total += $invoice->total_amount unless $invoice->is_paid;
@@ -70,16 +70,16 @@ sub do_with_g1 {
     $self->pay_unpaid_invoices($ledger);
     Moonpig->env->stop_clock();
     print "# Time passes";
-    until ($b5->has_replacement) {
-      Moonpig->env->elapse_time(days(7));
-      Moonpig->env->storage->do_rw(sub {
-                                     $ledger->handle_event( event('heartbeat') );
-                                   });
-      print ".";
+    Moonpig->env->storage->do_rw(sub {
+      until ($b5->has_replacement) {
+        Moonpig->env->elapse_time(days(7));
+        $ledger->handle_event( event('heartbeat') );
+        print ".";
 
-      Moonpig->env->clock_offset > months(5.5)
-        and die "b5 never set up its replacement!!\n";
-    }
+        Moonpig->env->clock_offset > months(5.5)
+          and die "b5 never set up its replacement!!\n";
+      }
+    });
     print "\n";
     { my $days =  Moonpig->env->clock_offset / days(1);
       my $months = int($days / 30);
