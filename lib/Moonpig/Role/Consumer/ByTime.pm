@@ -63,18 +63,18 @@ after become_active => sub {
   $self->grace_until( Moonpig->env->now  +  $self->grace_period_duration );
 
   $Logger->log([
-    '%s: %s became active; grace until %s, last charge date %s',
+    '%s: %s became active; grace until %s, next charge date %s',
     q{} . Moonpig->env->now,
     $self->ident,
     q{} . $self->grace_until,
-    q{} . $self->last_charge_date,
+    q{} . $self->next_charge_date,
   ]);
 };
 
 publish expire_date => { } => sub {
   my ($self) = @_;
 
-  $self->has_last_charge_date ||
+  $self->is_active ||
     confess "Can't calculate remaining life for inactive consumer";
 
   my $remaining = $self->unapplied_amount;

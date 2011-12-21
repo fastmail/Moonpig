@@ -45,7 +45,7 @@ test by_time => sub {
 
     my $h = $stuff->{consumer}->copy_attr_hash__();
     cmp_deeply([keys %$h],
-               bag(@basic, @makes_replacement,
+               bag(grep { 'last_charge_date' ne $_ } @basic, @makes_replacement,
                    qw(charge_description charge_frequency
                       charge_amount cost_period grace_period_duration
                     ),

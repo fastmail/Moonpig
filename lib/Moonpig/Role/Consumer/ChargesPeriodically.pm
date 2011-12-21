@@ -22,11 +22,6 @@ implicit_event_handlers {
         method_name => 'charge',
       ),
     },
-    activated => {
-      set_up_last_charge_date => Moonpig::Events::Handler::Method->new(
-        method_name => 'set_up_last_charge_date',
-       ),
-    },
   };
 };
 
@@ -96,17 +91,10 @@ sub charge_one_day {
   }
 }
 
-sub set_up_last_charge_date {
-  my ($self) = @_;
-  unless ($self->has_last_charge_date) {
-    $self->last_charge_date( Moonpig->env->now - $self->charge_frequency );
-  }
-}
-
 sub next_charge_date {
   my ($self) = @_;
-  croak "Inactive consumer has no next_charge_date yet"
-    unless $self->has_last_charge_date;
+
+  return $self->created_at unless $self->has_last_charge_date;
   return $self->last_charge_date + $self->charge_frequency;
 }
 

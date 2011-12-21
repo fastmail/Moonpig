@@ -25,7 +25,7 @@ sub _class_subroute { return }
 
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
-use Moonpig::Types qw(Ledger Millicents TimeInterval XID ReplacementPlan);
+use Moonpig::Types qw(Ledger Millicents Time TimeInterval XID ReplacementPlan);
 use Moonpig::Util qw(class event);
 
 use Moonpig::Logger '$Logger';
@@ -56,6 +56,13 @@ implicit_event_handlers {
     },
   };
 };
+
+has created_at => (
+  is   => 'ro',
+  isa  => Time,
+  init_arg => undef,
+  default  => sub { Moonpig->env->now },
+);
 
 has replacement => (
   is   => 'rw',
