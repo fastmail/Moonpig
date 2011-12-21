@@ -16,17 +16,12 @@ has cost_amounts => (
   traits   => [ qw(Copy) ],
 );
 
-sub invoice_costs {
+# Does not vary with time
+sub costs_on {
   my ($self) = @_;
   my @charges = map {; ($self->charge_description, $_) }
                 @{ $self->cost_amounts };
-
   return @charges;
-}
-
-# Does not vary with time
-sub costs_on {
-  return $_[0]->invoice_costs;
 }
 
 # Description for charge.  You will probably want to override this method
