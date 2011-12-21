@@ -48,7 +48,7 @@ sub elapse_time {
   Moonpig::X->throw("tried to elapse negative time")
     if $duration->is_negative;
 
-  $self->_clock_stopped_time( $self->now->add_duration( $duration ) );
+  $self->_clock_stopped_time( $self->now->clone->add_duration( $duration ) );
 }
 
 sub stop_clock_at {
