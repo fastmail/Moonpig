@@ -40,7 +40,7 @@ sub cost_amount_on {
   return $amount;
 }
 
-sub invoice_costs {
+sub initial_invoice_costs {
   $_[0]->costs_on( Moonpig->env->now );
 }
 

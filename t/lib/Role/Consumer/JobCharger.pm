@@ -11,13 +11,13 @@ with(
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 
-sub invoice_costs {
+sub initial_invoice_costs {
   return ('basic payment' => dollars(1));
 }
 
 # Does not vary with time
 sub costs_on {
-  $_[0]->invoice_costs;
+  $_[0]->initial_invoice_costs;
 }
 
 sub _extra_invoice_charges {
