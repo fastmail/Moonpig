@@ -21,7 +21,7 @@ with(
   'Moonpig::Role::Consumer::MakesReplacement',
 );
 
-requires 'costs_on';
+requires 'charge_pairs_on';
 
 use Moonpig::Behavior::EventHandlers;
 
@@ -31,17 +31,17 @@ use namespace::autoclean;
 
 sub now { Moonpig->env->now() }
 
-sub cost_amount_on {
+sub charge_amount_on {
   my ($self, $date) = @_;
 
-  my %costs = $self->costs_on($date);
-  my $amount = sum(values %costs);
+  my %charge_pairs = $self->charge_pairs($date);
+  my $amount = sum(values %charge_pairs);
 
   return $amount;
 }
 
-sub initial_invoice_costs {
-  $_[0]->costs_on( Moonpig->env->now );
+sub initial_invoice_charge_pairs {
+  $_[0]->charge_pairs_on( Moonpig->env->now );
 }
 
 #  XXX this is period in days, which is not quite right, since a
@@ -51,9 +51,9 @@ sub initial_invoice_costs {
 #  in leap years.  -- 2010-10-26 mjd
 
 has cost_period => (
-   is => 'ro',
-   required => 1,
-   isa => TimeInterval,
+  is => 'ro',
+  required => 1,
+  isa => TimeInterval,
   traits => [ qw(Copy) ],
 );
 
@@ -85,7 +85,7 @@ publish expire_date => { } => sub {
   }
 
   my $n_charge_periods_left
-    = int($remaining / $self->calculate_charge_on( Moonpig->env->now ));
+    = int($remaining / $self->calculate_total_charge_amount_on( Moonpig->env->now ));
 
   return $self->next_charge_date() +
       $n_charge_periods_left * $self->charge_frequency;
@@ -154,29 +154,32 @@ around charge_one_day => sub {
 };
 
 # how much do we charge each time we issue a new charge?
-sub calculate_charges_on {
+sub calculate_charge_pairs_on {
   my ($self, $date) = @_;
 
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
-  my @costs = $self->costs_on( $date );
+  my @charge_pairs = $self->charge_pairs_on( $date );
 
-  $costs[$_] /= $n_periods for grep { $_ % 2 } keys @costs;
+  $charge_pairs[$_] /= $n_periods for grep { $_ % 2 } keys @charge_pairs;
 
-  return @costs;
+  return @charge_pairs;
 }
 
-sub calculate_charge_on {
+sub calculate_total_charge_amount_on {
   my ($self, $date) = @_;
-  my @costs = $self->calculate_charges_on( $date );
-  my $charge = sum(map { $costs[$_] } grep { $_ % 2 } keys @costs);
+  my @charge_pairs = $self->calculate_charge_pairs_on( $date );
+  my $total_charge_amount = sum map  { $charge_pairs[$_] }
+                                grep { $_ % 2 }
+                                keys @charge_pairs;
 
-  return $charge;
+  return $total_charge_amount;
 }
 
 sub can_make_payment_on {
   my ($self, $date) = @_;
-  return $self->unapplied_amount >= $self->calculate_charge_on($date);
+  return
+    $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
 1;

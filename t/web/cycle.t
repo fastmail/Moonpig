@@ -83,7 +83,7 @@ sub setup_account {
           template_args => {
             xid         => $a_xid,
             make_active => 1,
-            cost_amount => $price,
+            charge_amount => $price,
             replacement_lead_time     => days(2),
             charge_frequency => days(1),
           },

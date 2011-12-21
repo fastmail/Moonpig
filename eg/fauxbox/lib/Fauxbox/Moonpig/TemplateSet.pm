@@ -40,10 +40,10 @@ sub templates {
 
       return {
         roles => [
-          qw(Consumer::ByTime Consumer::ByTime::FixedCost)
+          qw(Consumer::ByTime Consumer::ByTime::FixedAmountCharge)
         ],
         arg   => {
-          cost_amount => dollars(20),
+          charge_amount => dollars(20),
           cost_period => days(5),
           replacement_lead_time     => days(2),
           extra_journal_charge_tags => [ 'fauxbox.speedy' ],

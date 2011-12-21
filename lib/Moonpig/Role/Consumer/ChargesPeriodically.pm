@@ -13,7 +13,7 @@ use Moonpig::Util qw(days);
 use Stick::Types qw(StickBool);
 
 with ('Moonpig::Role::HandlesEvents');
-requires 'calculate_charges_on';
+requires 'calculate_charge_pairs_on';
 
 implicit_event_handlers {
   return {
@@ -75,9 +75,9 @@ sub charge_one_day {
 
   my $next_charge_date = $self->next_charge_date;
 
-  my @costs = $self->calculate_charges_on( $next_charge_date );
+  my @charge_pairs = $self->calculate_charge_pairs_on( $next_charge_date );
 
-  my $iter = natatime 2, @costs;
+  my $iter = natatime 2, @charge_pairs;
 
   while (my ($desc, $amt) = $iter->()) {
     $self->ledger->current_journal->charge({

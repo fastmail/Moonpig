@@ -191,7 +191,7 @@ example:
           consumer => {
             class            => class('Consumer::ByUsage'),
             bank             => dollars(1),
-            cost_per_unit    => cents(5),
+            charge_amount_per_unit    => cents(5),
             replacement_lead_time          => days(30),
             replacement_plan => [ get => '/nothing' ],
             make_active      => 1,

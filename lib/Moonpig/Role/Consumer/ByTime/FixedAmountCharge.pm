@@ -1,4 +1,4 @@
-package Moonpig::Role::Consumer::ByTime::FixedCost;
+package Moonpig::Role::Consumer::ByTime::FixedAmountCharge;
 # ABSTRACT: a consumer that charges steadily as time passes
 use Moose::Role;
 
@@ -9,7 +9,7 @@ use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
 
-has cost_amount => (
+has charge_amount => (
   is => 'ro',
   required => 1,
   isa => PositiveMillicents,
@@ -17,8 +17,8 @@ has cost_amount => (
 );
 
 # Does not vary with time
-sub costs_on {
-  return ($_[0]->charge_description, $_[0]->cost_amount);
+sub charge_pairs_on {
+  return ($_[0]->charge_description, $_[0]->charge_amount);
 }
 
 # Description for charge.  You will probably want to override this method

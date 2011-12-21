@@ -8,16 +8,16 @@ use Moonpig::Util qw(dollars);
 
 use namespace::autoclean;
 
-sub costs_on {
+sub charge_pairs_on {
   my ($self, $date) = @_;
 
   my $account = $self->account;
 
-  my @costs = ('Fauxbox Basic Account' => dollars(20));
-  push @costs, ('Premium Services' => dollars(30))
+  my @charge_pairs = ('Fauxbox Basic Account' => dollars(20));
+  push @charge_pairs, ('Premium Services' => dollars(30))
     if $account->was_premium_at($date);
 
-  return @costs;
+  return @charge_pairs;
 }
 
 1;

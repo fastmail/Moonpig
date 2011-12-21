@@ -40,10 +40,10 @@ test "charge" => sub {
     Moonpig->env->storage->do_rw(sub {
       $stuff = build(
         consumer => {
-          class              => class('Consumer::ByTime::FixedCost'),
+          class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(10),
           replacement_lead_time            => years(1000),
-          cost_amount        => dollars(1),
+          charge_amount        => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
           charge_description => "test charge",
@@ -84,9 +84,9 @@ test "top up" => sub {
   Moonpig->env->storage->do_rw(sub {
     $stuff = build(
       consumer => {
-        class              => class('Consumer::ByTime::FixedCost'),
+        class              => class('Consumer::ByTime::FixedAmountCharge'),
         bank               => dollars(10),
-        cost_amount        => dollars(30),
+        charge_amount      => dollars(30),
         cost_period        => days(30),
         replacement_plan   => [ get => '/nothing' ],
         charge_description => "test charge",
@@ -152,12 +152,12 @@ test "top up" => sub {
 };
 
 {
-  package CostsTodaysDate;
+  package ChargeTodaysDate;
   use Moose::Role;
   use Moonpig::Util qw(dollars);
   use Moonpig::Types qw(PositiveMillicents);
 
-  sub costs_on {
+  sub charge_pairs_on {
     my ($self, $date) = @_;
 
     return ('service charge' => dollars( $date->day ));
@@ -186,7 +186,7 @@ test "variable charge" => sub {
     Moonpig->env->storage->do_rw(sub {
       $stuff = build(
         consumer => {
-          class => class('Consumer::ByTime', '=CostsTodaysDate'),
+          class => class('Consumer::ByTime', '=ChargeTodaysDate'),
           bank  => dollars(500),
           extra_journal_charge_tags => ["test"],
           replacement_lead_time                   => years(1000),
@@ -237,9 +237,9 @@ test grace_period => sub {
       Moonpig->env->storage->do_rw(sub {
         $stuff = build(
           consumer => {
-            class              => class('Consumer::ByTime::FixedCost'),
+            class              => class('Consumer::ByTime::FixedAmountCharge'),
             replacement_lead_time            => days(0),
-            cost_amount        => dollars(1),
+            charge_amount        => dollars(1),
             cost_period        => days(1),
             replacement_plan   => [ get => '/nothing' ],
             charge_description => "test charge",

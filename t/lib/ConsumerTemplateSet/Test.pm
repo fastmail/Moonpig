@@ -18,11 +18,11 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedCost' ],
+        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
         arg   => {
           xid         => 'urn:uuid:' . guid_string,
           replacement_lead_time     => days(30),
-          cost_amount => dollars(100),
+          charge_amount => dollars(100),
           cost_period => days(365),
           charge_description => 'boring test charge',
           extra_journal_charge_tags  => [ 'a.b.c' ],

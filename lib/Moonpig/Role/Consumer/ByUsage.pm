@@ -29,7 +29,7 @@ implicit_event_handlers {
   };
 };
 
-has cost_per_unit => (
+has charge_amount_per_unit => (
   is => 'ro',
   isa => PositiveMillicents,
   required => 1,
@@ -93,7 +93,7 @@ sub create_hold_for_units {
   }
 
   my $hold = $self->_create_hold_for_amount(
-    $self->cost_per_unit * $units_requested,
+    $self->charge_amount_per_unit * $units_requested,
     $subsidiary_hold,
   );
   $self->most_recent_request($units_requested);
@@ -119,7 +119,7 @@ sub remaining_life { $_[0]->estimated_lifetime }
 
 sub units_remaining {
   my ($self) = @_;
-  int($self->unapplied_amount / $self->cost_per_unit);
+  int($self->unapplied_amount / $self->charge_amount_per_unit);
 }
 
 sub create_charge_for_hold {

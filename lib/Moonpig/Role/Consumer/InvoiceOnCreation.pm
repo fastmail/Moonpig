@@ -16,7 +16,7 @@ with(
 
 use Moonpig::Behavior::EventHandlers;
 
-requires 'initial_invoice_costs';
+requires 'initial_invoice_charge_pairs';
 
 implicit_event_handlers {
   return {
@@ -33,9 +33,9 @@ sub _invoice {
 
   my $invoice = $self->ledger->current_invoice;
 
-  my @costs = $self->initial_invoice_costs();
+  my @charge_pairs = $self->initial_invoice_charge_pairs;
 
-  my $iter = natatime 2, @costs;
+  my $iter = natatime 2, @charge_pairs;
 
   while (my ($desc, $amt) = $iter->()) {
     $invoice->add_charge(

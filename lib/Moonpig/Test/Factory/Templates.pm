@@ -27,10 +27,10 @@ sub templates {
     quick => sub {
       my ($name) = @_;
       return {
-        roles => [ 'Consumer::ByTime::FixedCost' ],
+        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
         arg => {
           replacement_lead_time     => years(1000),
-          cost_amount => dollars(100),
+          charge_amount => dollars(100),
           cost_period => days(2),
           charge_description => 'quick consumer',
           replacement_plan   => [ get => '/nothing' ],
@@ -41,11 +41,11 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedCost', 't::Consumer::CouponCreator' ],
+        roles => [ 'Consumer::ByTime::FixedAmountCharge', 't::Consumer::CouponCreator' ],
         arg   => {
           xid         => $b5g1_xid,
           replacement_lead_time     => days(7),
-          cost_amount => dollars(500),
+          charge_amount => dollars(500),
           cost_period => days(30 * 5),
           charge_description => 'long-term consumer',
           replacement_plan   => [ get => "/consumer-template/free_sixthmonth" ],
@@ -63,11 +63,11 @@ sub templates {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedCost' ],
+        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
         arg   => {
           xid         => $b5g1_xid,
           replacement_lead_time     => days(7),
-          cost_amount => dollars(100),
+          charge_amount => dollars(100),
           cost_period => days(30),
           charge_description => 'free sixth-month consumer',
           replacement_plan   => [ get => "/consumer-template/$name" ],

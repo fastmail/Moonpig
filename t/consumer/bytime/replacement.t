@@ -51,21 +51,21 @@ test "with_successor" => sub {
     Moonpig->env->storage->do_rw(sub {
       $stuff = build(
         initial => {
-          class              => class('Consumer::ByTime::FixedCost'),
+          class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(31),
           replacement_lead_time            => years(1000),
           charge_description => "test charge",
-          cost_amount        => dollars(1),
+          charge_amount        => dollars(1),
           cost_period        => days(1),
           replacement        => 'replacement',
           replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
         },
         replacement => {
-          class              => class('Consumer::ByTime::FixedCost'),
+          class              => class('Consumer::ByTime::FixedAmountCharge'),
           replacement_lead_time            => years(1000),
           charge_description => "test charge",
-          cost_amount        => dollars(1),
+          charge_amount        => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
@@ -133,12 +133,12 @@ test "without_successor" => sub {
 
     my $xid = "consumer:test:" . guid_string();
     do_with_fresh_ledger({ consumer => {
-      class                 => class('Consumer::ByTime::FixedCost'),
+      class                 => class('Consumer::ByTime::FixedAmountCharge'),
       charge_description    => "test charge",
       replacement_lead_time => days(20),
       replacement_plan      => [ get => 'template-like-this' ],
-      cost_amount           => dollars(1),
-      cost_period           => days(1),
+      charge_amount         => dollars(1),
+      cost_period      => days(1),
       bank                  => dollars(31),
       xid                   => $xid,
     }}, sub {
@@ -191,9 +191,9 @@ test "irreplaceable" => sub {
     Moonpig->env->storage->do_rw(sub {
       $stuff = build(
         consumer => {
-          class              => class('Consumer::ByTime::FixedCost'),
+          class              => class('Consumer::ByTime::FixedAmountCharge'),
           replacement_lead_time            => days(20),
-          cost_amount        => dollars(1),
+          charge_amount        => dollars(1),
           cost_period        => days(1),
           charge_description => "test charge",
           bank               => dollars(10),

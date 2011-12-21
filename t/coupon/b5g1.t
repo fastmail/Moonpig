@@ -118,7 +118,7 @@ test setup_g1 => sub {
     ok(! $g1->is_active);
     is($b5->replacement, $g1, "replacement ok");
     ok(! $g1->has_replacement);
-    ok($g1->does("Moonpig::Role::Consumer::ByTime::FixedCost"));
+    ok($g1->does("Moonpig::Role::Consumer::ByTime::FixedAmountCharge"));
     is($g1->xid, $b5->xid, "xids match");
   });
 };

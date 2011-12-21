@@ -16,7 +16,7 @@ use t::lib::Class::EventHandler::Test;
 
 use Moonpig::Test::Factory qw(build);
 
-my $CLASS = class("Consumer::ByTime::FixedCost");
+my $CLASS = class("Consumer::ByTime::FixedAmountCharge");
 
 # todo: warning if no bank
 #       suicide
@@ -46,7 +46,7 @@ sub setup {
   return build(
     consumer => {
       class              => $CLASS,
-      cost_amount        => dollars(1),
+      charge_amount        => dollars(1),
       cost_period        => days(1),
       replacement_lead_time            => days(0),
       replacement_plan   => [ get => '/nothing' ],
@@ -79,7 +79,7 @@ test expire_date => sub {
 
   {
     my $stuff = $self->setup({
-      cost_amount      => dollars(3),
+      charge_amount      => dollars(3),
     });
     my $exp = $stuff->{consumer}->expire_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
@@ -126,7 +126,7 @@ test "basic_event" => sub {
   plan tests => 3;
 
   my $stuff = $self->setup({
-    cost_amount        => dollars(1),
+    charge_amount        => dollars(1),
   });
   my $c = $stuff->{consumer};
 

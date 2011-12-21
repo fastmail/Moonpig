@@ -62,9 +62,9 @@ test bytime => sub {
     Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
       my ($ledger_a, $ledger_b) = @_;
       my $consumer = $ledger_a->add_consumer(
-        class("Consumer::ByTime::FixedCost"),
+        class("Consumer::ByTime::FixedAmountCharge"),
         { charge_description => "monkey meat",
-        cost_amount => cents(1234),
+        charge_amount => cents(1234),
         cost_period => years(1),
         replacement_lead_time => days(3),
         replacement_plan    => [ get => '/nothing' ],
@@ -91,10 +91,10 @@ test with_bank => sub {
     my ($ledger_a, $ledger_b) = @_;
 
     my $cons_a = $ledger_a->add_consumer(
-      class("Consumer::ByTime::FixedCost"),
+      class("Consumer::ByTime::FixedAmountCharge"),
       {
         charge_description => "monkey meat",
-        cost_amount => cents(1234),
+        charge_amount => cents(1234),
         cost_period => years(1),
         replacement_lead_time => days(3),
         replacement_plan    => [ get => '/nothing' ],

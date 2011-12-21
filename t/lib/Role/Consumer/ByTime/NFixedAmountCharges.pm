@@ -1,4 +1,4 @@
-package t::lib::Role::Consumer::ByTime::NFixedCosts;
+package t::lib::Role::Consumer::ByTime::NFixedAmountCharges;
 use Moose::Role;
 
 use Moonpig;
@@ -9,7 +9,7 @@ use MooseX::Types::Moose qw(ArrayRef);
 
 use namespace::autoclean;
 
-has cost_amounts => (
+has charge_amounts => (
   is  => 'ro',
   isa => ArrayRef[ PositiveMillicents ],
   required => 1,
@@ -17,10 +17,10 @@ has cost_amounts => (
 );
 
 # Does not vary with time
-sub costs_on {
+sub charge_pairs_on {
   my ($self) = @_;
   my @charges = map {; ($self->charge_description, $_) }
-                @{ $self->cost_amounts };
+                @{ $self->charge_amounts };
   return @charges;
 }
 

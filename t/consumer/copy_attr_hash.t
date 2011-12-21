@@ -33,11 +33,11 @@ test by_time => sub {
 
     my $stuff = build(
       consumer =>
-        { class => class("Consumer::ByTime::FixedCost"),
+        { class => class("Consumer::ByTime::FixedAmountCharge"),
           xid             => 'urn:uuid:' . guid_string,
           replacement_plan => [ get => '/nothing' ],
           charge_description => "dummy",
-          cost_amount => dollars(1),
+          charge_amount => dollars(1),
           cost_period => years(1),
           replacement_lead_time => years(1),
           make_active => $make_active,
@@ -47,7 +47,7 @@ test by_time => sub {
     cmp_deeply([keys %$h],
                bag(@basic, @makes_replacement,
                    qw(charge_description charge_frequency
-                      cost_amount cost_period grace_period_duration
+                      charge_amount cost_period grace_period_duration
                     ),
                    $make_active ? qw(grace_until last_charge_date)
                      : (),
@@ -64,14 +64,14 @@ test byusage => sub {
       class            => class("Consumer::ByUsage"),
       xid              => 'urn:uuid:' . guid_string,
       replacement_plan => [ get => '/nothing' ],
-      cost_per_unit    => dollars(2),
+      charge_amount_per_unit    => dollars(2),
       low_water_mark   => 3,
       replacement_lead_time          => years(1),
     }
   );
   my $h = $stuff->{consumer}->copy_attr_hash__();
   cmp_deeply([keys %$h], bag(@basic, @makes_replacement,
-                             qw(cost_per_unit low_water_mark)));
+                             qw(charge_amount_per_unit low_water_mark)));
 };
 
 run_me;

@@ -40,16 +40,16 @@ sub pay_unpaid_invoices {
 sub try_coupon {
   my ($self, $non_profit, $total_discount) = @_;
 
-  my $base_cost_amount = dollars(100);
-  my $cost_amount = $base_cost_amount;
-  $cost_amount *= 0.9 if $non_profit;
-  my $coupon_discount = $total_discount - ($base_cost_amount - $cost_amount);
+  my $base_charge_amount = dollars(100);
+  my $charge_amount = $base_charge_amount;
+  $charge_amount *= 0.9 if $non_profit;
+  my $coupon_discount = $total_discount - ($base_charge_amount - $charge_amount);
 
   my @x_charge_tags = ();
   push @x_charge_tags, "nonprofit" if $non_profit;
 
   do_with_fresh_ledger({ c => { template => 'quick',
-			       cost_amount => $cost_amount,
+			       charge_amount => $charge_amount,
 			       extra_invoice_charge_tags => \@x_charge_tags }},
     sub {
       my ($L) = @_;

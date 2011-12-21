@@ -7,17 +7,11 @@ use namespace::autoclean;
 
 with(
   'Moonpig::Role::Consumer',
-  # 'Moonpig::Role::Consumer::FixedCost',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 
-sub initial_invoice_costs {
+sub initial_invoice_charge_pairs {
   return ('basic payment' => dollars(1));
-}
-
-# Does not vary with time
-sub costs_on {
-  $_[0]->initial_invoice_costs;
 }
 
 sub _extra_invoice_charges {
