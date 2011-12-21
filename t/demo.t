@@ -153,10 +153,10 @@ test "end to end demo" => sub {
     );
   });
 
-  for my $day (1 .. 760) {
-    Moonpig->env->process_email_queue;
+  Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
+    for my $day (1 .. 760) {
+      Moonpig->env->process_email_queue;
 
-    Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
       my ($Ledger) = @_;
 
       $self->process_daily_assertions($day, $Ledger);
@@ -171,8 +171,8 @@ test "end to end demo" => sub {
       $self->pay_any_open_invoice;
 
       Moonpig->env->elapse_time(86400);
-    });
-  }
+    }
+  });
 
   Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
     my ($Ledger) = @_;
