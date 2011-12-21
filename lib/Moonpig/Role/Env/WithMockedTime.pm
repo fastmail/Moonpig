@@ -83,7 +83,7 @@ sub now {
   my $state = $self->_clock_state;
 
   return Moonpig::DateTime->now if $state eq 'wallclock';
-  return $self->_clock_stopped_time if $state eq 'stopped';
+  return $self->_clock_stopped_time->clone if $state eq 'stopped';
 
   return $self->_clock_stopped_time + (time - $self->_clock_restarted_at)
     if $state eq 'offset';
