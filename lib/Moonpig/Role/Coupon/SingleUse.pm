@@ -1,29 +1,25 @@
 package Moonpig::Role::Coupon::SingleUse;
 # ABSTRACT: a coupon that can be used only once
 
-use MooseX::Types::Moose qw(Bool);
+use Stick::Types qw(StickBool);
 use Moose::Role;
 
 with (qw(Moonpig::Role::Coupon));
 
-has already_used => (
+has was_applied => (
   is => 'rw',
-  isa => Bool,
+  isa => StickBool,
   default => 0,
 );
 
-sub use_up {
-  $_[0]->already_used(1);
-}
-
-sub applied {
-  $_[0]->use_up;
+sub mark_applied {
+  $_[0]->was_applied(1);
 }
 
 around is_expired => sub {
   my $orig = shift;
   my $self = shift;
-  return $self->already_used || $self->$orig(@_);
+  return $self->was_applied || $self->$orig(@_);
 };
 
 1;

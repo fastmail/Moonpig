@@ -57,7 +57,7 @@ around applies_to => sub {
   return $self->is_expired ? () : $self->$orig(@args);
 };
 
-sub applied { } # No-op
+sub mark_applied { } # No-op
 
 sub applies_to_invoice {
   my ($self, $invoice) = @_;

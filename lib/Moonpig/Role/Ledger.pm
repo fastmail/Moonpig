@@ -379,7 +379,7 @@ sub process_credits {
       # We didn't fall off the end of the loop above; we have enough credit to
       # pay this invoice, and will now do so. -- rjbs, 2011-12-14
       $self->apply_credits_to_invoice__( \@to_apply, $invoice );
-      $_->{coupon}->applied for @coupon_apps;
+      $_->{coupon}->mark_applied for @coupon_apps;
     } else {
       # We can't successfully pay this invoice, so stop processing.
       $self->destroy_credits__(@coupon_credits);
