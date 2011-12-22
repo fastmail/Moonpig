@@ -15,7 +15,7 @@ with(
 use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 
-use Moonpig::Util qw(class event sum);
+use Moonpig::Util qw(class event sumof);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
@@ -79,7 +79,7 @@ sub _fund_consumers {
     my $consumer = $self->ledger->consumer_collection->find_by_guid({
       guid => $consumer_guid,
     });
-    my $total = sum(map $_->amount, @$charges);
+    my $total = sumof { $_->amount } @$charges;
 
     $self->ledger->create_transfer({
       type   => 'consumer_funding',

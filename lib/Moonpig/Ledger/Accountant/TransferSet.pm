@@ -3,6 +3,7 @@ use warnings;
 
 package Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::TransferUtil ();
+use Moonpig::Util qw(sumof);
 
 sub new {
   my ($class, $array) = @_;
@@ -52,9 +53,7 @@ sub all {
 
 sub total {
   my ($self) = @_;
-  my $sum = 0;
-  $sum += $_->amount for @$self;
-  return $sum;
+  sumof { $_->amount } @$self;
 }
 
 sub union {

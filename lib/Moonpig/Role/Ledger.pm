@@ -76,7 +76,7 @@ use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(class event sum);
+use Moonpig::Util qw(class event sumof);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
@@ -415,7 +415,7 @@ sub apply_credits_to_invoice__ {
   my ($self, $to_apply, $invoice) = @_;
 
   {
-    my $total = sum(map $_->{amount}, @$to_apply);
+    my $total = sumof { $_->{amount} } @$to_apply;
     croak "credit application of $total did not mach invoiced amount of " .
       $invoice->total_amount
         unless $invoice->total_amount == $total;
@@ -573,7 +573,7 @@ sub _collect_spare_change {
 
   delete $consider{ $_->guid } for @consumers;
 
-  my $total = sum(map { $_->[1] } values %consider);
+  my $total = sumof { $_->[1] } values %consider;
 
   return unless $total > 0;
 
