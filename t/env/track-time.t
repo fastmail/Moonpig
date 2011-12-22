@@ -70,9 +70,6 @@ test "stopped clock" => sub {
   Moonpig->env->elapse_time(30);
   cmp_ok(abs($epoch - Moonpig->env->now), '==', 60, "env->now is +60");
 
-  Moonpig->env->elapse_time( DateTime::Duration->new(minutes => 1) );
-  cmp_ok(abs($epoch - Moonpig->env->now), '==', 120, "env->now is +120");
-
   like(
     (exception { Moonpig->env->elapse_time(-30) })->ident,
     qr/negative time/,

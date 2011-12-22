@@ -52,6 +52,14 @@ sub minus {
   }
 }
 
+sub add_duration {
+  confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)";
+}
+
+sub subtract_duration {
+  confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)";
+}
+
 sub interval_factory { return $_[1] }
 
 sub _to_sec {

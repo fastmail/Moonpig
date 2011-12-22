@@ -6,6 +6,7 @@ with 'Moonpig::Role::Env';
 
 use Moonpig::Types qw(Time);
 use Moose::Util::TypeConstraints;
+use Scalar::Util qw(blessed);
 
 use namespace::autoclean;
 
@@ -42,13 +43,20 @@ sub elapse_time {
   Moonpig::X->throw("can't elapse time when clock is not stopped")
     if $self->_clock_state ne 'stopped';
 
-  $duration = DateTime::Duration->new(seconds => $duration)
-    unless ref $duration;
+  if ( blessed($duration) ) {
+    if ($duration->isa("DateTime::Duration")) {
+      confess("usage: elapse_time( number of seconds )");
+    } elsif ($duration->can('as_seconds')) {
+      $duration = $duration->as_seconds;
+    } else {
+      confess("Don't know how to convert duration object $duration to seconds");
+    }
+  }
 
   Moonpig::X->throw("tried to elapse negative time")
-    if $duration->is_negative;
+    if $duration < 0;
 
-  $self->_clock_stopped_time( $self->now->clone->add_duration( $duration ) );
+  $self->_clock_stopped_time( $self->now + $duration );
 }
 
 sub stop_clock_at {
