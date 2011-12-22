@@ -32,7 +32,7 @@ test "job-making invoice charge" => sub {
 
       ok(! $consumer->unapplied_amount, "still has no funds for now");
 
-      $ledger->handle_event( event('heartbeat') );
+      $ledger->heartbeat;
 
       {
         my $jobs = Moonpig->env->storage->undone_jobs_for_ledger($ledger);

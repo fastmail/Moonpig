@@ -5,8 +5,6 @@ with(
   'Moonpig::Test::Role::HasTempdir',
 );
 
-use Moonpig::Util qw(event);
-
 use namespace::clean;
 
 sub heartbeat_and_send_mail {
@@ -14,7 +12,7 @@ sub heartbeat_and_send_mail {
   my $ledger = shift;
 
   Moonpig->env->storage->do_rw(sub {
-    $ledger->handle_event( event('heartbeat', @_) );
+    $ledger->heartbeat;
   });
 
   Moonpig->env->process_email_queue;

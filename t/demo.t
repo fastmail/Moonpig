@@ -16,7 +16,7 @@ use t::lib::TestEnv;
 
 use Data::GUID qw(guid_string);
 use List::Util qw(sum);
-use Moonpig::Util qw(class days dollars event);
+use Moonpig::Util qw(class days dollars);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -163,7 +163,7 @@ test "end to end demo" => sub {
 
       $Logger->log([ 'TICK: %s', q{} . Moonpig->env->now ]) if $day % 30 == 0;
 
-      $Ledger->handle_event( event('heartbeat') );
+      $Ledger->heartbeat;
 
       # Just a little more noise, to see how things are going.
       $self->log_current_balance if $day % 30 == 0;

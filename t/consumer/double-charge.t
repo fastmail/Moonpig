@@ -13,7 +13,7 @@ with(
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class days event);
+use Moonpig::Util qw(class days);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -34,7 +34,7 @@ test "check amounts" => sub {
 
     my $inv;
     do {
-        $ledger->handle_event( event('heartbeat') );
+        $ledger->heartbeat;
         Moonpig->env->elapse_time(days(1));
     } until $inv = $self->payable_invoice($ledger);
 

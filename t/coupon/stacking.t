@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars event sum);
+use Moonpig::Util qw(class days dollars sum);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -25,9 +25,7 @@ sub pay_unpaid_invoices {
   Moonpig->env->stop_clock();
   until ($ledger->payable_invoices) {
     Moonpig->env->elapse_time(days(1));
-    Moonpig->env->storage->do_rw(sub {
-                                   $ledger->handle_event( event('heartbeat') );
-                                 });
+    Moonpig->env->storage->do_rw(sub { $ledger->heartbeat });
   }
 
   for my $invoice ($ledger->invoices) {

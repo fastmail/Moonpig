@@ -60,7 +60,7 @@ test "expiration" => sub {
     plan tests => 4 + 2;
     for my $day (1 .. 4) {
       Moonpig->env->stop_clock_at(jan($day));
-      $ledger->handle_event(event('heartbeat'));
+      $ledger->heartbeat;
       ok(($day < 3 xor $consumer->is_expired), "expired on day $day?")
     }
 

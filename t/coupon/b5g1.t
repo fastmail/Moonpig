@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars event months);
+use Moonpig::Util qw(class days dollars months);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -49,7 +49,7 @@ sub pay_unpaid_invoices {
   Moonpig->env->storage->do_rw(sub {
     until ($ledger->payable_invoices) {
       Moonpig->env->elapse_time(days(1));
-      $ledger->handle_event( event('heartbeat') );
+      $ledger->heartbeat;
     }
   });
 
@@ -73,7 +73,7 @@ sub do_with_g1 {
     Moonpig->env->storage->do_rw(sub {
       until ($b5->has_replacement) {
         Moonpig->env->elapse_time(days(7));
-        $ledger->handle_event( event('heartbeat') );
+        $ledger->heartbeat;
         print ".";
 
         Moonpig->env->clock_offset > months(5.5)

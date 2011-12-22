@@ -4,7 +4,6 @@ package Moonpig::Web::App;
 
 use JSON;
 use Moonpig;
-use Moonpig::Util qw(event);
 use Stick::Util 0.20110525 qw(json_pack);
 use Try::Tiny;
 
@@ -23,7 +22,7 @@ sub test_routes {
   if (@path == 1 and $path[0] eq 'heartbeat-all') {
     $storage->do_with_ledgers([ $storage->ledger_guids ], sub {
       for my $ledger (@_) {
-        $ledger->handle_event( event('heartbeat') );
+        $ledger->heartbeat;
       }
     });
 

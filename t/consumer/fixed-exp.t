@@ -33,17 +33,17 @@ test "fixed-expiration consumer" => sub {
     isa_ok($c, class('Consumer::FixedExpiration'));
     is($c->remaining_life, days(30), "initial remaining life");
 
-    $ledger->handle_event( event('heartbeat') );
+    $ledger->heartbeat;
     is($c->remaining_life, days(30), "remaining life after first heartbeat");
     is($c->expire_date, $expire_date, "expire date is as created");
 
     Moonpig->env->elapse_time( days(20) );
-    $ledger->handle_event( event('heartbeat') );
+    $ledger->heartbeat;
     is($c->remaining_life, days(10), "remaining life after 20 days");
     ok( ! $c->is_expired, "consumer has not expired after 20 days");
 
     Moonpig->env->elapse_time( days(20) );
-    $ledger->handle_event( event('heartbeat') );
+    $ledger->heartbeat;
     is($c->remaining_life, days(0), "remaining life after 40 days is zero");
     ok(   $c->is_expired, "consumer has expired after 40 days");
   });
