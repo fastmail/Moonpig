@@ -52,6 +52,13 @@ sub minus {
   }
 }
 
+sub number_of_days_in_month {
+  my ($self) = @_;
+  return (ref $self)
+          ->last_day_of_month(year => $self->year, month => $self->month)
+          ->day;
+}
+
 sub add_duration {
   confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)";
 }
