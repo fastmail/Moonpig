@@ -59,12 +59,18 @@ sub number_of_days_in_month {
           ->day;
 }
 
-sub add_duration {
-  confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)";
-}
-
-sub subtract_duration {
-  confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)";
+for my $mutator (qw(
+  add_duration subtract_duration
+  truncate
+  set
+    _year _month _day _hour _minute _second _nanosecond
+    _time_zone _locale _formatter
+)) {
+  (my $method = $mutator) =~ s/^_/set_/;
+  Sub::Install::install_sub({
+    code => sub { confess "Do not mutate DateTime objects! (http://rjbs.manxome.org/rubric/entry/1929)" },
+    as   => $mutator,
+  });
 }
 
 sub interval_factory { return $_[1] }
