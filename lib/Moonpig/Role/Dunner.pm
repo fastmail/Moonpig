@@ -57,6 +57,8 @@ sub perform_dunning {
           and $now - $self->last_dunning_time <= $self->dunning_frequency;
   }
 
+  $_->close for grep { $_->is_open } @invoices;
+
   $self->_send_invoice(\@invoices);
 }
 
@@ -64,8 +66,6 @@ sub _send_invoice {
   my ($self, $invoices) = @_;
 
   # invoices has arrived here pre-sorted by ->perform_dunning
-
-  $_->close for grep { $_->is_open } @$invoices;
 
   $Logger->log([
     "sending invoices %s to contacts of %s",
