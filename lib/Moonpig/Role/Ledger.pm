@@ -330,7 +330,7 @@ sub journal_array {
 
 sub payable_invoices {
   my ($self) = @_;
-  grep $_->is_unpaid && $_->is_closed, $self->invoices;
+  grep {; $_->is_unpaid && $_->is_closed } $self->invoices;
 }
 
 sub process_credits {

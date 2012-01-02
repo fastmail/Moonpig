@@ -46,6 +46,14 @@ sub is_unpaid {
   return ! $value->is_true
 }
 
+sub amount_due {
+  my ($self) = @_;
+  my $total = $self->total_amount;
+  my $paid  = $self->ledger->accountant->to_invoice($self)->total;
+
+  return $total - $paid;
+}
+
 implicit_event_handlers {
   return {
     'paid' => {

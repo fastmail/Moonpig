@@ -5,7 +5,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
-use Moonpig::Util qw(days);
+use Moonpig::Util qw(days sumof);
 
 use namespace::autoclean;
 
@@ -59,10 +59,44 @@ sub perform_dunning {
 
   $_->close for grep { $_->is_open } @invoices;
 
-  $self->_send_invoice(\@invoices);
+  # Now we have an array of closed, unpaid invoices.  Before we send anything
+  # to the poor guy who is on the hook for these, let's see if we can pay any
+  # with existing credits, or charge him whatever we need to, to pay this.
+  $self->_autopay_invoices(\@invoices);
+
+  $self->_send_invoice_email(\@invoices);
 }
 
-sub _send_invoice {
+sub _autopay_invoices {
+  my ($self, $invoices) = @_;
+
+  # First, just in case we have any credits on hand, let's see if we can pay
+  # them off with existing credits.
+  $self->process_credits;
+
+  # If that worked, we're done!
+  return unless $self->payable_invoices;
+
+  my @unpaid_invoices = grep { ! $_->is_paid } @$invoices;
+
+  # Oh no, there are invoices left to pay!  How much will it take to pay it all
+  # off?
+  my $credit_on_hand = sumof { $_->unapplied_amount } $self->credits;
+  my $invoice_total  = sumof { $_->amount_due } @unpaid_invoices;
+  my $balance_needed = $invoice_total - $credit_on_hand;
+
+  $self->_charge_for_autopay({ amount => $balance_needed });
+
+  return;
+}
+
+sub _charge_for_autopay {
+  my ($self, $arg) = @_;
+  # XXX: do stuff -- rjbs, 2012-01-02
+  return;
+}
+
+sub _send_invoice_email {
   my ($self, $invoices) = @_;
 
   # invoices has arrived here pre-sorted by ->perform_dunning
