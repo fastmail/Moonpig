@@ -23,15 +23,18 @@ sub pay_unpaid_invoices {
   my $total = 0;
 
   Moonpig->env->stop_clock();
-  until ($ledger->payable_invoices) {
+
+  my $first_invoice = $ledger->current_invoice;
+
+  until ($ledger->current_invoice->guid ne $first_invoice->guid) {
     Moonpig->env->elapse_time(days(1));
     Moonpig->env->storage->do_rw(sub { $ledger->heartbeat });
   }
 
-  for my $invoice ($ledger->invoices) {
-    $total += $invoice->total_amount unless $invoice->is_paid;
-  }
-  printf "# Total amount payable: %.2f\n", $total / 100000;
+  # for my $invoice ($ledger->invoices) {
+  #   $total += $invoice->total_amount unless $invoice->is_paid;
+  # }
+  # printf "# Total amount payable: %.2f\n", $total / 100000;
   $ledger->process_credits;
 }
 

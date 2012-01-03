@@ -63,12 +63,13 @@ test "order" => sub {
         consumer    => $L->get_component('consumer'),
       }));
 
-    until ($L->payable_invoices) {
+    until ($L->current_invoice->guid ne $inv->guid) {
       elapse($L, 1);
     }
 
-    is($L->credits, 0, "no credits yet");
-    $L->process_credits;
+    # is($L->credits, 0, "no credits yet");
+    # $L->process_credits;
+
     ok ($inv->is_paid, "invoice was paid");
     is($L->credits, 10, "each coupon made a credit");
     for my $c ($L->credits) {
