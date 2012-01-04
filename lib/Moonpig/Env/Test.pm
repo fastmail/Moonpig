@@ -22,7 +22,7 @@ use Moonpig::Util qw(class);
 
 use Moose::Util::TypeConstraints;
 
-sub share_roots { }
+sub extra_share_roots { }
 
 sub default_from_email_address {
   Email::Address->new(

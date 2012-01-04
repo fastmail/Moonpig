@@ -25,11 +25,11 @@ use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
 use namespace::autoclean;
 
-requires 'share_roots';
+requires 'extra_share_roots';
 
-around share_roots => sub {
-  my ($orig, $self) = @_;
-  my @roots = $self->$orig;
+sub share_roots {
+  my ($self) = @_;
+  my @roots = $self->extra_share_roots;
   return (
     @roots,
     File::ShareDir::dist_dir('Moonpig'),
