@@ -25,12 +25,25 @@ use Stick::WrappedMethod 0.303;  # allow non-Moose::Meta::Method methods
 
 use namespace::autoclean;
 
+has _global_share_from_env => (
+  isa => 'ArrayRef',
+  lazy => 1,
+  traits => [ 'Array' ],
+  handles  => { _global_share_from_env => 'elements' },
+  init_arg => undef,
+  default  => sub {
+    return [ ] unless defined $ENV{MOONPIG_SHARE_DIRS};
+    return [ split /:/, $ENV{MOONPIG_SHARE_DIRS} ];
+  },
+);
+
 requires 'extra_share_roots';
 
 sub share_roots {
   my ($self) = @_;
   my @roots = $self->extra_share_roots;
   return (
+    $self->_global_share_from_env,
     @roots,
     File::ShareDir::dist_dir('Moonpig'),
   );
