@@ -8,6 +8,8 @@ use lib 'eg/fauxbox/lib';
 use Log::Dispatch::Null;
 use Term::ANSIColor;
 
+use Test::File::ShareDir -share => { -dist   => { 'Moonpig' => 'share' } };
+
 use Moonpig::Logger '$Logger' => { init => {
   ident     => "fauxbox-moonpig($0)",
   log_pid   => 0,
