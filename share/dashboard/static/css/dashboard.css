@@ -10,6 +10,7 @@
   padding: 1em;
   margin: 0 0 .5em 0;
   background-color: #edc;
+  white-space: pre;
 }
 
 .contact table {
