@@ -19,8 +19,8 @@ use Try::Tiny;
 use namespace::autoclean;
 
 package HTML::Mason::Commands {
-  use Data::Dumper::HTML qw(dumper_html);
   use Data::GUID qw(guid_string);
+  use Moonpig::App::Ob::Dumper ();
 
   sub mc { sprintf '$%.02f', ((shift) / 100_000) }
 }

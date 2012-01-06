@@ -12,7 +12,7 @@ $label => undef
 %   my $data = JSON->new->decode($json);
 <pre><% JSON->new->pretty->encode($data) |h %></pre>
 % } else {
-<% dumper_html($m->mp_last_response->as_string) %></div>
+<% Moonpig::App::Ob::Dumper::Dump($m->mp_last_response->as_string) |h %></div>
 % }
 </div>
 </&>
