@@ -20,8 +20,6 @@ with(
 test "charge" => sub {
   my ($self) = @_;
 
-  my @eq;
-
   plan tests => (4 + 5 + 2);
 
   # Pretend today is 2000-01-01 for convenience
