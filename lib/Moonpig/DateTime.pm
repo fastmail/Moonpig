@@ -10,6 +10,7 @@ use overload
   '-' => \&minus,
 ;
 use Scalar::Util qw(blessed reftype);
+use Sub::Install ();
 
 # XXX: When I enable this, Moonpig::Env::Test dies.  WTH? -- rjbs, 2011-01-10
 # use namespace::autoclean;
