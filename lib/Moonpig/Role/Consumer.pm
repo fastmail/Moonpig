@@ -66,7 +66,24 @@ has created_at => (
   default  => sub { Moonpig->env->now },
 );
 
-has replacement_history => (
+has _superseded => (
+  is => 'rw',
+  isa => 'Bool',
+  reader => 'is_superseded',
+  default => 0,
+  init_arg => undef,
+);
+
+sub mark_superseded {
+  my ($self) = @_;
+  return if $self->is_superseded;
+  $self->_superseded(1);
+  for my $repl (@{$self->_replacement_history}) {
+    $repl->mark_superseded if $repl;
+  }
+}
+
+has _replacement_history => (
   is   => 'ro',
   isa => ArrayRef [ role_type('Moonpig::Role::Consumer') ],
   default => sub { [] },
@@ -78,26 +95,41 @@ around BUILDARGS => sub {
   my $class = shift;
   my $args = @_ == 1 ? $_[0] : { @_ };
   if (my $replacement = delete $args->{replacement}) {
-    $args->{replacement_history} = [ $replacement ];
+    $args->{_replacement_history} = [ $replacement ];
   }
   return $class->$orig($args);
 };
 
+# List of this consumer's replacement, replacement's replacement, etc.
 sub replacement_chain {
   my ($self) = @_;
   return $self->has_replacement
     ? ($self->replacement, $self->replacement->replacement_chain) : ();
 }
 
+# Does this consumer, or any consumer in its replacement chain,
+# have funds?  If so, the funds will be lost if the consumer is superseded
+sub is_funded {
+  my ($self) = @_;
+  return $self->unapplied_amount > 0
+    || ($self->has_replacement && $self->replacement->is_funded);
+}
+
 sub replacement {
   my ($self, $new_replacement) = @_;
 
   if (defined $new_replacement) {
-    croak "Can'Too late to set replacement of $self" if $self->is_expired;
-    push @{$self->replacement_history}, $new_replacement;
+    croak "Too late to set replacement of expired consumer $self" if $self->is_expired;
+    croak "Can't set replacement on superseded consumer $self" if $self->is_superseded;
+    if ($self->has_replacement) {
+      croak "Can't replace funded consumer chain" if $self->replacement->is_funded;
+      $self->replacement->mark_superseded;
+    }
+
+    push @{$self->_replacement_history}, $new_replacement;
     return $new_replacement;
   } else {
-    return $self->replacement_history->[-1];
+    return $self->_replacement_history->[-1];
   }
 }
 
