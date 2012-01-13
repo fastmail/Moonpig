@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer;
 # ABSTRACT: something that uses up money
 use Moose::Role;
 
+use Carp qw(confess croak);
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110324;
 use Stick::Util qw(true false);
@@ -23,6 +24,7 @@ with(
 
 sub _class_subroute { return }
 
+use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(Ledger Millicents Time TimeInterval XID ReplacementPlan);
@@ -64,12 +66,45 @@ has created_at => (
   default  => sub { Moonpig->env->now },
 );
 
-has replacement => (
-  is   => 'rw',
-  does => 'Moonpig::Role::Consumer',
-  traits    => [ qw(SetOnce) ],
-  predicate => 'has_replacement',
+has replacement_history => (
+  is   => 'ro',
+  isa => ArrayRef [ role_type('Moonpig::Role::Consumer') ],
+  default => sub { [] },
 );
+
+# Convert (replacement => $foo) to (replacement_history => [$foo])
+around BUILDARGS => sub {
+  my $orig  = shift;
+  my $class = shift;
+  my $args = @_ == 1 ? $_[0] : { @_ };
+  if (my $replacement = delete $args->{replacement}) {
+    $args->{replacement_history} = [ $replacement ];
+  }
+  return $class->$orig($args);
+};
+
+sub replacement_chain {
+  my ($self) = @_;
+  return $self->has_replacement
+    ? ($self->replacement, $self->replacement->replacement_chain) : ();
+}
+
+sub replacement {
+  my ($self, $new_replacement) = @_;
+
+  if (defined $new_replacement) {
+    croak "Can'Too late to set replacement of $self" if $self->is_expired;
+    push @{$self->replacement_history}, $new_replacement;
+    return $new_replacement;
+  } else {
+    return $self->replacement_history->[-1];
+  }
+}
+
+sub has_replacement {
+  my ($self) = @_;
+  defined($self->replacement);
+}
 
 has replacement_plan => (
   is  => 'rw',
