@@ -118,7 +118,7 @@ sub is_funded {
 sub replacement {
   my ($self, $new_replacement) = @_;
 
-  if (defined $new_replacement) {
+  if (@_ > 1) {
     croak "Too late to set replacement of expired consumer $self" if $self->is_expired;
     croak "Can't set replacement on superseded consumer $self" if $self->is_superseded;
     if ($self->has_replacement) {
