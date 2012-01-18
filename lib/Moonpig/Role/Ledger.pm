@@ -702,7 +702,7 @@ PARTIAL_PACK {
     credits => ppack($self->credit_collection),
     jobs    => ppack($self->job_collection),
 
-    open_invoices => {
+    unpaid_invoices => {
       items => [
         map { ppack($_) } grep { $_->is_unpaid } $self->invoices
       ],

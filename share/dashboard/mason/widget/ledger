@@ -96,9 +96,9 @@ $active_consumers
 $ledger
 </%args>
 <div class='invoices'>
-  <h2>Open Invoices</h2>
+  <h2>Unpaid Invoices</h2>
 % my $total = 0;
-% my $invoices = $ledger->{open_invoices}{items};
+% my $invoices = $ledger->{unpaid_invoices}{items};
 % $total += $_->{total_amount} for @$invoices;
   <table>
 % for my $invoice (sort { $b->{date} cmp $a->{date} } @$invoices) {
