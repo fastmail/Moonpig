@@ -103,6 +103,7 @@ PARTIAL_PACK {
 
   return ppack({
     total_amount => $self->total_amount,
+    amount_due   => $self->amount_due,
     is_paid      => $self->is_paid,
     is_closed    => $self->is_closed,
     date         => $self->date,
