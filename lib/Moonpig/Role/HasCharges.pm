@@ -10,8 +10,7 @@ use Moonpig::Types;
 use Moonpig::Util qw(class sumof);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
-use Stick::Types qw(StickBool);
-use Stick::Util qw(true false);
+use Moonpig::Types qw(Time);
 
 parameter charge_role => (
   isa      => enum([qw(InvoiceCharge JournalCharge)]),
@@ -59,15 +58,15 @@ role {
     return $charge;
   };
 
-  has closed => (
-    isa     => StickBool,
-    coerce  => 1,
-    default => 0,
-    reader  => 'is_closed',
-    writer  => '__set_closed',
+  has closed_at => (
+    isa => Time,
+    init_arg  => undef,
+    reader    => 'closed_at',
+    predicate => 'is_closed',
+    writer    => '__set_closed_at',
   );
 
-  method close   => sub { $_[0]->__set_closed( true ) };
+  method close   => sub { $_[0]->__set_closed_at( Moonpig->env->now ) };
   method is_open => sub { ! $_[0]->is_closed };
 
   # TODO: make sure that charges added to this container have dates that

@@ -107,7 +107,7 @@ sub setup_account {
             created_at => $date_re,
             guid => $guid_re,
             paid_at   => bool(0),
-            is_closed => bool(1),
+            closed_at => bool(1),
             total_amount => $price,
             charges   => ignore(),
           }),
@@ -122,7 +122,7 @@ sub setup_account {
         superhashof({
           created_at   => $date_re,
           guid         => $invoice_guid,
-          is_closed    => bool(1),
+          closed_at    => bool(1),
           paid_at      => bool(0),
           total_amount => $price,
           charges      => ignore(),
