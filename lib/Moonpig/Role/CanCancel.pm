@@ -5,8 +5,7 @@ use Moose::Role;
 use Moonpig::Trait::Copy;
 use Stick::Publisher;
 use Stick::Publisher::Publish;
-use Stick::Types qw(StickBool);
-use Stick::Util qw(true false);
+use Moonpig::Types qw(Time);
 use Moonpig::Util qw(event);
 
 use namespace::autoclean;
@@ -25,7 +24,7 @@ implicit_event_handlers {
 use Moonpig::Behavior::Packable;
 PARTIAL_PACK {
   my ($self) = @_;
-  return { is_canceled => $self->is_canceled }
+  return { $_[0]->canceled_at ? (canceled_at => $_[0]->canceled_at) : () };
 };
 
 requires 'handle_cancel';
@@ -36,16 +35,14 @@ publish cancel => { -http_method => 'post', -path => 'cancel' } => sub {
   return;
 };
 
-has canceled => (
-  is  => 'ro',
-  isa => StickBool,
-  coerce  => 1,
-  default => 0,
-  reader  => 'is_canceled',
-  writer  => '__set_canceled',
-  traits  => [ qw(Copy) ],
+has canceled_at => (
+  isa => Time,
+  reader    => 'canceled_at',
+  predicate => 'is_canceled',
+  writer    => '__set_canceled_at',
+  traits    => [ qw(Copy) ],
 );
 
-sub mark_canceled { $_[0]->__set_canceled( true ) }
+sub mark_canceled { $_[0]->__set_canceled_at( Moonpig->env->now ) }
 
 1;
