@@ -19,8 +19,7 @@ use Moonpig::Util qw(class event sumof);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
 
-use Stick::Types qw(StickBool);
-use Stick::Util qw(ppack true false);
+use Stick::Util qw(ppack);
 
 use namespace::autoclean;
 
@@ -30,20 +29,18 @@ has created_at => (
   default => sub { Moonpig->env->now },
 );
 
-has paid => (
-  isa => StickBool,
-  init_arg => undef,
-  coerce   => 1,
-  default  => 0,
-  reader   => 'is_paid',
-  writer   => '__set_paid',
+has paid_at => (
+  isa => Time,
+  init_arg  => undef,
+  reader    => 'paid_at',
+  predicate => 'is_paid',
+  writer    => '__set_paid_at',
 );
 
-sub mark_paid { $_[0]->__set_paid(true) }
+sub mark_paid { $_[0]->__set_paid_at( Moonpig->env->now ) }
 
 sub is_unpaid {
-  my $value = $_[0]->is_paid;
-  return ! $value->is_true
+  return ! $_[0]->is_paid
 }
 
 sub amount_due {
@@ -104,7 +101,7 @@ PARTIAL_PACK {
   return ppack({
     total_amount => $self->total_amount,
     amount_due   => $self->amount_due,
-    is_paid      => $self->is_paid,
+    paid_at      => $self->paid_at,
     is_closed    => $self->is_closed,
     date         => $self->date,
     charges      => [ map {; ppack($_) } $self->all_charges ],
