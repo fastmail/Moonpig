@@ -103,7 +103,7 @@ PARTIAL_PACK {
     amount_due   => $self->amount_due,
     paid_at      => $self->paid_at,
     is_closed    => $self->is_closed,
-    date         => $self->date,
+    created_at   => $self->date,
     charges      => [ map {; ppack($_) } $self->all_charges ],
   });
 };

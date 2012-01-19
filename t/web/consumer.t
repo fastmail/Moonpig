@@ -90,7 +90,7 @@ sub setup_account {
         $invoices,
         [
           superhashof({
-            date => $date_re,
+            created_at => $date_re,
             guid => $guid_re,
             paid_at   => bool(0),
             is_closed => bool(1),
@@ -106,7 +106,7 @@ sub setup_account {
       cmp_deeply(
         $invoice,
         superhashof({
-          date => $date_re,
+          created_at => $date_re,
           guid => $invoice_guid,
           is_closed => $JSON::XS::true,
           paid_at => bool(0),
