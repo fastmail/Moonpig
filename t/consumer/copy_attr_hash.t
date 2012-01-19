@@ -12,7 +12,7 @@ use t::lib::TestEnv;
 use Moonpig::Test::Factory qw(build);
 
 my @basic = qw(
-  canceled expired replacement_plan xid
+  canceled replacement_plan xid
   extra_journal_charge_tags
   extra_invoice_charge_tags
 );
@@ -21,8 +21,16 @@ my @makes_replacement = qw(replacement_lead_time);
 test dummy => sub {
   my ($self) = @_;
   my $stuff = build(consumer => { template => "dummy" });
-  my $h = $stuff->{consumer}->copy_attr_hash__();
-  cmp_deeply([keys %$h], bag(@basic));
+  {
+    my $h = $stuff->{consumer}->copy_attr_hash__();
+    cmp_deeply([keys %$h], bag(@basic));
+  }
+
+  {
+    $stuff->{consumer}->expire;
+    my $h = $stuff->{consumer}->copy_attr_hash__();
+    cmp_deeply([keys %$h], bag('expired_at', @basic));
+  }
 };
 
 test by_time => sub {
