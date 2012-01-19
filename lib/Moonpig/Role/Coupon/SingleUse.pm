@@ -1,19 +1,23 @@
 package Moonpig::Role::Coupon::SingleUse;
 # ABSTRACT: a coupon that can be used only once
 
-use Stick::Types qw(StickBool);
+use Moonpig::Types qw(Time);
 use Moose::Role;
+
+use namespace::autoclean;
 
 with (qw(Moonpig::Role::Coupon));
 
-has was_applied => (
-  is => 'rw',
-  isa => StickBool,
-  default => 0,
+has applied_at => (
+  is => 'ro',
+  isa => Time,
+  init_arg  => undef,
+  predicate => 'was_applied',
+  writer    => '_set_applied_at',
 );
 
 sub mark_applied {
-  $_[0]->was_applied(1);
+  $_[0]->_set_applied_at( Moonpig->env->now );
 }
 
 around is_expired => sub {
