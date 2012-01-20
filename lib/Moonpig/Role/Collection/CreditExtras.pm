@@ -6,10 +6,7 @@ use Moonpig::Util qw(cents class);
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110504;
 
-publish add_credit => { -http_method => 'post',
-                            attributes => HashRef,
-                            type => Str,
-                          } => sub {
+sub add {
   my ($self, $arg) = @_;
   my $type = $arg->{type};
 
@@ -25,8 +22,6 @@ publish add_credit => { -http_method => 'post',
     return $credit;
   });
 };
-
-*add = \&add_credit;
 
 1;
 
