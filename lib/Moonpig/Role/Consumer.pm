@@ -66,18 +66,17 @@ has created_at => (
   default  => sub { Moonpig->env->now },
 );
 
-has _superseded => (
+has _superseded_at => (
   is => 'rw',
-  isa => 'Bool',
-  reader => 'is_superseded',
-  default => 0,
+  isa => Time,
+  predicate => 'is_superseded',
   init_arg => undef,
 );
 
 sub mark_superseded {
   my ($self) = @_;
   return if $self->is_superseded;
-  $self->_superseded(1);
+  $self->_superseded_at(Moonpig->env->now);
   for my $repl (@{$self->_replacement_history}) {
     $repl->mark_superseded if $repl;
   }
