@@ -6,6 +6,7 @@ use Moonpig::Test::Factory::Templates; # default testing template set
 use Carp qw(confess croak);
 use Class::MOP ();
 use Data::GUID qw(guid_string);
+use Scalar::Util qw(blessed);
 
 use Moonpig::Util -all;
 
@@ -307,10 +308,13 @@ sub build_consumer {
   my $become_active = delete $c_args{make_active};
 
   # If this consumer will have a replacement, build that first
-  my $replacement_name = $c_args{replacement};
-  if (defined($replacement_name) && ! exists $stuff->{$replacement_name}) {
-    $stuff->{$replacement_name} = $c_args{replacement} =
-      build_consumer($replacement_name, $args, $stuff);
+  if (exists($c_args{replacement}) && ! blessed($c_args{replacement})) {
+    my $replacement_name = $c_args{replacement};
+    if (! exists $stuff->{$replacement_name}) {
+      # replacement not yet built; build it before proceeding
+      $stuff->{$replacement_name} = build_consumer($replacement_name, $args, $stuff);
+    }
+    $c_args{replacement} = $stuff->{$replacement_name};
   }
 
   my $class = delete $c_args{class};
