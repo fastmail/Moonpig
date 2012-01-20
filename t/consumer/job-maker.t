@@ -40,7 +40,7 @@ test "job-making invoice charge" => sub {
         ok(@jobs == 0, "no on-payment jobs (yet)");
       }
 
-      $ledger->credit_collection->add_credit({
+      $ledger->credit_collection->add({
         type       => 'Simulated',
         attributes => { amount => dollars(3) },
       });

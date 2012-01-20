@@ -131,7 +131,8 @@ test clobber_replacement => sub {
       attributes => {
         amount => $price,
       },
-    });
+    },
+  );
   $self->elapse(3);
 
   $ledger = Moonpig->env->storage
