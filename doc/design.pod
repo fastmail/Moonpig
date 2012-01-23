@@ -286,6 +286,28 @@ destroyed again.
 
 =back
 
+=head2 Consumer death
+
+As noted above, an active consumer periodically tries to charge for
+service it has provided, transferring money from itself to the
+ledger's current journal.  If it does not have enough money, it calls
+its C<expire> method.  If it has a replacement, this causes the
+consumer to be deactivated, and the replacement to be activated.
+Otherwise, this causes the service to be terminated.
+
+Service termination means that current and future service stop
+immediately.  It consists of service cancellation, plus the current
+consumer immediately deactivates itself.
+
+Service cancellation means that future service will not be provided
+beyond the life of the current consumer.  Service can be cancelled
+even if it is not terminated.  Cancellation causes the consumer's
+replacement plan to be set to nothing, if it has no replacement, and
+causes the replacement to be expired, if there is one.
+
+Expiring the replacement then recursively terminates any following
+replacements.
+
 =head2 External interface, XIDs
 
 Moonpig will support a web API for ICG's other systems to make
