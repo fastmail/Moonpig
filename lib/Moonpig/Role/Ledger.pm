@@ -65,7 +65,6 @@ with(
 );
 
 use Moose::Util::TypeConstraints;
-use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef HashRef Str);
 
 use Moonpig;

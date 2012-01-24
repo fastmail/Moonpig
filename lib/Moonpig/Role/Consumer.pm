@@ -64,6 +64,7 @@ has created_at => (
   isa  => Time,
   init_arg => undef,
   default  => sub { Moonpig->env->now },
+  traits => [ qw(SetOnce) ],
 );
 
 has _superseded_at => (
@@ -71,6 +72,7 @@ has _superseded_at => (
   isa => Time,
   predicate => 'is_superseded',
   init_arg => undef,
+  traits => [ qw(SetOnce) ],
 );
 
 sub mark_superseded {
@@ -210,6 +212,8 @@ sub handle_cancel {
   if ($self->has_replacement) {
     $self->replacement->expire
   } else {
+    # XXX Now that replacements can be superseded, shouldn't this occur
+    # even if there is a replacement already? 2012-01-23 mjd
     $self->replacement_plan([ get => '/nothing' ]);
   }
   return;

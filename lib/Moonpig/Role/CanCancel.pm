@@ -7,6 +7,7 @@ use Stick::Publisher;
 use Stick::Publisher::Publish;
 use Moonpig::Types qw(Time);
 use Moonpig::Util qw(event);
+use MooseX::SetOnce;
 
 use namespace::autoclean;
 
@@ -40,7 +41,7 @@ has canceled_at => (
   reader    => 'canceled_at',
   predicate => 'is_canceled',
   writer    => '__set_canceled_at',
-  traits    => [ qw(Copy) ],
+  traits    => [ qw(Copy SetOnce) ],
 );
 
 sub mark_canceled { $_[0]->__set_canceled_at( Moonpig->env->now ) }

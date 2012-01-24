@@ -18,6 +18,7 @@ use Moonpig::Behavior::Packable;
 use Moonpig::Util qw(class event sumof);
 use Moonpig::Types qw(Credit Time);
 use Moonpig::X;
+use MooseX::SetOnce;
 
 use Stick::Util qw(ppack);
 
@@ -27,6 +28,7 @@ has created_at => (
   is   => 'ro',
   isa  => Time,
   default => sub { Moonpig->env->now },
+  traits => [ qw(SetOnce) ],
 );
 
 has paid_at => (
@@ -35,6 +37,7 @@ has paid_at => (
   reader    => 'paid_at',
   predicate => 'is_paid',
   writer    => '__set_paid_at',
+  traits => [ qw(SetOnce) ],
 );
 
 sub mark_paid { $_[0]->__set_paid_at( Moonpig->env->now ) }

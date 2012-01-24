@@ -256,16 +256,16 @@ test grace_period => sub {
       }
 
       for my $day (1 .. $days) {
-        ok(
-          ! $c->is_expired,
-          sprintf("as of %s, consumer is not expired", q{} . Moonpig->env->now),
-        );
-
         my $tick_time = Moonpig::DateTime->new(
           year => 2000, month => 1, day => $day
         );
 
         Moonpig->env->stop_clock_at($tick_time);
+
+        ok(
+          ! $c->is_expired,
+          sprintf("as of %s, consumer is not expired", q{} . Moonpig->env->now),
+        );
 
         $self->heartbeat_and_send_mail($stuff->{ledger});
       }
