@@ -133,6 +133,24 @@ schema:
 
 my $SCHEMA_MD5 = md5_hex($schema_yaml);
 
+sub _sql_hunks_to_deploy_schema {
+  my ($self) = @_;
+
+  my $translator = SQL::Translator->new(
+    parser   => "YAML",
+    data     => \$schema_yaml,
+    producer      => $self->sql_translator_producer,
+    producer_args => {
+      no_transaction => 1,
+      $self->sql_translator_producer_args,
+    },
+  );
+
+  my $sql = $translator->translate;
+  my @hunks = split /\n{2,}/, $sql;
+  return @hunks;
+}
+
 sub _ensure_tables_exist {
   my ($self) = @_;
 
@@ -146,20 +164,15 @@ sub _ensure_tables_exist {
     };
 
     return if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
-    Carp::croak("database is of an incompatible schema") if defined $schema_md5;
+    if (defined $schema_md5) {
+      Carp::croak( <<END_ERR );
+database is of an incompatible schema
+want: $SCHEMA_MD5
+have: $schema_md5
+END_ERR
+    }
 
-    my $translator = SQL::Translator->new(
-      parser   => "YAML",
-      data     => \$schema_yaml,
-      producer      => $self->sql_translator_producer,
-      producer_args => {
-        no_transaction => 1,
-        $self->sql_translator_producer_args,
-      },
-    );
-
-    my $sql = $translator->translate;
-    my @hunks = split /\n{2,}/, $sql;
+    my @hunks = $self->_sql_hunks_to_deploy_schema;
 
     $dbh->do($_) for @hunks;
 
