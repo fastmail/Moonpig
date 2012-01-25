@@ -748,7 +748,7 @@ sub retrieve_ledger_for_guid {
   if ($self->_in_update_mode) {
     $self->save_ledger($ledger); # also put it in the cache
   } else {
-    $self->_cache_ledger($ledger);
+    $self->_cache_ledger($ledger) if $self->_in_transaction;;
   }
 
   return $ledger;
