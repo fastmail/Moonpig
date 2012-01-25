@@ -23,6 +23,7 @@ has amount => (
   is  => 'ro',
   isa => PositiveMillicents,
   coerce => 1,
+  required => 1,
 );
 
 sub unapplied_amount {
