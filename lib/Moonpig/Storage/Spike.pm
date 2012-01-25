@@ -114,6 +114,7 @@ schema:
           fields: [ job_id ]
           reference_table: jobs
           reference_fields: [ id ]
+          on_delete: cascade
 
     job_logs:
       name: job_logs
@@ -122,6 +123,12 @@ schema:
         job_id: { name: job_id, data_type: integer, is_nullable: 0 }
         logged_at: { name: logged_at, data_type: integer, is_nullable: 0 }
         message: { name: message, data_type: text, is_nullable: 0 }
+      constraints:
+        - type: FOREIGN KEY
+          fields: [ job_id ]
+          reference_table: jobs
+          reference_fields: [ id ]
+          on_delete: cascade
 ...
 
 my $SCHEMA_MD5 = md5_hex($schema_yaml);
