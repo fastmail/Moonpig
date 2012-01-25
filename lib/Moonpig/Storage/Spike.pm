@@ -774,6 +774,23 @@ sub retrieve_ledger_for_guid {
   return $ledger;
 }
 
+sub delete_ledger_by_guid {
+  my ($self, $guid) = @_;
+
+  $self->txn(sub {
+    my $dbh = $_;
+    # XXX: Assert that ledger cache is empty?  We don't want someone deleting a
+    # ledger mid-transaction, only to have it saved at the transaction's end.
+    # Then again, we might want to route to this with (DELETE /ledger/...)
+    # which means we'll have retrieved the ledger, first.
+    # This needs discussion once we're past the "this is here for use by rjbs
+    # when testing crap by hand" phase. -- rjbs, 2012-01-25
+    $dbh->do("DELETE FROM jobs WHERE ledger_guid = ?", undef, $guid);
+    $dbh->do("DELETE FROM xid_ledgers WHERE ledger_guid = ?", undef, $guid);
+    $dbh->do("DELETE FROM ledgers WHERE guid = ?", undef, $guid);
+  });
+}
+
 sub BUILD {
   my ($self) = @_;
   $self->_ensure_tables_exist;
