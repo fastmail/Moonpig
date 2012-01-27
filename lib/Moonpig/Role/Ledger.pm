@@ -332,6 +332,12 @@ sub payable_invoices {
   grep {; $_->is_unpaid && $_->is_closed } $self->invoices;
 }
 
+sub abandon_invoice {
+  my ($self, $invoice) = @_;
+
+  return $invoice->abandon_with_replacement($self->current_invoice);
+}
+
 sub process_credits {
   my ($self) = @_;
 

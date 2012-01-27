@@ -7,7 +7,8 @@ with(
 
 use namespace::autoclean;
 use Moonpig::Behavior::EventHandlers;
-use Moonpig::Types qw(GUID);
+use Moonpig::Types qw(GUID Time);
+use MooseX::SetOnce;
 
 # translate ->new({consumer => ... }) to
 # ->new({ ledger_guid => ..., owner_guid => ... })
@@ -43,6 +44,18 @@ has ledger_guid => (
   isa => GUID,
   required => 1,
 );
+
+has abandoned_date => (
+  is => 'rw',
+  isa => Time,
+  predicate => 'is_abandoned',
+  traits => [ qw(SetOnce) ],
+);
+
+sub mark_abandoned {
+  my ($self) = @_;
+  $self->abandoned_date( Moonpig->env->now );
+}
 
 sub ledger {
   my ($self) = @_;

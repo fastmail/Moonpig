@@ -46,6 +46,45 @@ sub is_unpaid {
   return ! $_[0]->is_paid
 }
 
+has _abandoned_at => (
+  is => 'rw',
+  isa => Time,
+  reader    => 'abandoned_at',
+  predicate => 'is_abandoned',
+  init_arg => undef,
+  traits => [ qw(SetOnce) ],
+);
+
+sub mark_abandoned {
+  my ($self) = @_;
+  return if $self->is_abandoned;
+  $self->_abandoned_at(Moonpig->env->now);
+}
+
+sub abandon_with_replacement {
+  my ($self, $new_invoice) = @_;
+  $new_invoice || croak("abandon_with_replacement missing new invoice argument");
+  confess "Can't replace abandoned invoice with closed invoice" . $new_invoice->guid
+    if $new_invoice->is_closed;
+
+  confess "Can't abandon open invoice " . $self->guid
+    unless $self->is_closed;
+
+  confess "Can't abandon already-paid invoice " . $self->guid
+    unless $self->is_unpaid;
+
+  confess "Can't abandon invoice " . $self->guid . " with no abandoned charges"
+    unless grep $_->is_abandoned, $self->all_charges;
+
+  for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
+    $new_invoice->_add_charge($charge);
+  }
+
+  $self->mark_abandoned;
+
+  return $new_invoice;
+}
+
 sub amount_due {
   my ($self) = @_;
   my $total = $self->total_amount;
