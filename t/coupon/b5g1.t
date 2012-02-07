@@ -56,7 +56,7 @@ sub pay_unpaid_invoices {
   for my $invoice ($ledger->invoices) {
     $total += $invoice->total_amount unless $invoice->is_paid;
   }
-  printf "# Total amount payable: %.2f\n", $total / 100000;
+  note sprintf("Total amount payable: %.2f\n", $total / 100000);
   $ledger->add_credit(class('Credit::Simulated'), { amount => $total });
   $ledger->process_credits;
 }
@@ -69,18 +69,18 @@ sub do_with_g1 {
 
     $self->pay_unpaid_invoices($ledger);
     Moonpig->env->stop_clock();
-    print "# Time passes";
+    # STDERR->print("# Time passes");
     Moonpig->env->storage->do_rw(sub {
       until ($b5->has_replacement) {
         Moonpig->env->elapse_time(days(7));
         $ledger->heartbeat;
-        print ".";
+        # STDERR->print(".");
 
         Moonpig->env->clock_offset > months(5.5)
           and die "b5 never set up its replacement!!\n";
       }
     });
-    print "\n";
+    # STDERR->print("\n");
     { my $days =  Moonpig->env->clock_offset / days(1);
       my $months = int($days / 30);
       $days -= $months * 30;
