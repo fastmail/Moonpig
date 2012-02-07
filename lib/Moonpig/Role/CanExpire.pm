@@ -15,7 +15,7 @@ has expired_at => (
   reader    => 'expired_at',
   predicate => 'is_expired',
   writer    => '__set_expired_at',
-  traits    => [ qw(Copy) ],
+  traits    => [ qw(Copy SetOnce) ],
   # XXX Should be SetOnce, but this exposes a bug in ChargesPeriodically 2012-01-24 mjd
 );
 
