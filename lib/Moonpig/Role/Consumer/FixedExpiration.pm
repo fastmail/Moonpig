@@ -32,6 +32,7 @@ has expire_date => (
 
 sub _check_expiry {
   my ($self) = @_;
+  return if $self->is_expired;
   $self->expire if $self->expire_date <= Moonpig->env->now;
 }
 
