@@ -60,8 +60,9 @@ sub charge {
   # Keep making charges until the next one is supposed to be charged at a time
   # later than now. -- rjbs, 2011-01-12
   CHARGE: until ($self->next_charge_date->follows($now)) {
-      $self->charge_one_day($now);
-      $self->last_charge_date($self->next_charge_date());
+      my $next = $self->next_charge_date;
+      $self->charge_one_day($next);
+      $self->last_charge_date($next);
       if ($self->is_expired) {
         $self->replacement->handle_event($event) if $self->replacement;
         last CHARGE;
