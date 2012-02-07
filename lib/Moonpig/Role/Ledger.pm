@@ -459,6 +459,7 @@ sub _reheartbeat {
     $self->invoices,
     $self->journals,
   ) {
+    next if $target->does('Moonpig::Role::CanExpire') and $target->is_expired;
     $target->handle_event($event);
   }
 
