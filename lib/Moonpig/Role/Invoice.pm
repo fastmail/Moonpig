@@ -61,6 +61,13 @@ sub mark_abandoned {
   $self->_abandoned_at(Moonpig->env->now);
 }
 
+# transfer non-abandoned charges to ledger's current open invoice
+sub abandon {
+  my ($self) = @_;
+  $self->ledger->abandon_invoice($self);
+}
+
+# transfer non-abandoned charges to specified open invoice
 sub abandon_with_replacement {
   my ($self, $new_invoice) = @_;
   $new_invoice || croak("abandon_with_replacement missing new invoice argument");

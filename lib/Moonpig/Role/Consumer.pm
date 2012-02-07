@@ -423,6 +423,21 @@ sub invoice_charge_tags {
   return [ $self->xid, @{$self->extra_invoice_charge_tags} ]
 }
 
+# and return a list (or count) of the abandoned charges
+sub abandon_charges_on_invoice {
+  my ($self, $invoice) = @_;
+  my @charges = grep $self->guid eq $_->owner->guid, $invoice->all_charges;
+  return unless @charges;
+  $_->mark_abandoned for @charges;
+  return @charges;
+}
+
+sub abandon_all_unpaid_charges {
+  my ($self) = @_;
+  grep $self->abandon_charges_on_invoice($_) > 0,
+    $self->ledger->payable_invoices;
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,

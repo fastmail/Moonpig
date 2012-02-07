@@ -4,7 +4,7 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class dollars event years);
+use Moonpig::Util qw(class days dollars event to_dollars years);
 
 with(
   't::lib::Factory::EventHandler',
@@ -40,7 +40,7 @@ test carry_forth => sub {
     }
     $i1->mark_closed;
 
-    $ledger->abandon_invoice($i1);
+    $i1->abandon;
     my $i2 = $ledger->current_invoice;
 
     ok($i1->is_abandoned, "original invoice was abandoned");
@@ -50,21 +50,62 @@ test carry_forth => sub {
   });
 };
 
-# Use case 1: Consumers charges for 1 year of service, but then we
-# want to abandon that charge and replace it with one for 3 years of
-# service.
+sub args {
+  my ($n) = @_;
+  { charge_amount => dollars(10 * $n),
+    replacement_plan => [ get => '/nothing' ],
+    xid => "account:fixedexp:$$",
+    charge_description => "protection services",
+    cost_period => days($n),
+  };
+}
 
-test service_extended => sub {
-  local $TODO = "Not implemented yet";
-  fail();
-};
+test service_cancelled_and_extended => sub {
+  do_with_fresh_ledger({},
+    sub {
+      my ($ledger) = @_;
+      my $c1 = $ledger->add_consumer(
+        class("Consumer::ByTime::FixedAmountCharge"),
+        args(10));
+      my $d = $ledger->add_consumer(
+        class("Consumer::Dummy"),
+        { replacement_plan => [ get => '/nothing' ],
+          xid => "dummy:$$",
+        } );
 
-# Use case 2. Consumer charges for service we don't want; reissue
-# invoice without it. Have charges from multiple consumers.
+      my $i1 = $ledger->current_invoice;
+      $i1->add_charge(
+        class(qw(InvoiceCharge))->new({
+          description => 'dummy charge',
+          amount      => dollars(5),
+          consumer    => $d,
+        }));
+      $i1->mark_closed;
+      is ($i1->total_amount, dollars(105), "initial invoice is correct");
 
-test service_cancelled => sub {
-  local $TODO = "Not implemented yet";
-  fail();
+      my @invoices = $c1->abandon_all_unpaid_charges or fail();
+      is_deeply(\@invoices, [$i1], "abandoned charges on expected invoice");
+
+      $c1->mark_superseded;
+      $i1->abandon;
+
+      # Use case 2. Consumer charges for service we don't want; reissue
+      # invoice without it. Have charges from multiple consumers.
+      my $i2 = $ledger->current_invoice;
+      is ($i2->total_amount, dollars(5), "new invoice is correct");
+
+      # Use case 1: Consumers charges for 1 year of service, but then we
+      # want to abandon that charge and replace it with one for 3 years of
+      # service.
+      my $c2 = $ledger->add_consumer(
+        class("Consumer::ByTime::FixedAmountCharge"),
+        args(30));
+      is ($i2->total_amount, dollars(305), "new invoice is still correct");
+      is_deeply([$ledger->payable_invoices], [], "No payable invoices yet");
+      $i2->mark_closed;
+      is_deeply([$ledger->payable_invoices], [$i2], "Just new invoice is payable");
+    }
+   );
 };
 
 test checks => sub {
