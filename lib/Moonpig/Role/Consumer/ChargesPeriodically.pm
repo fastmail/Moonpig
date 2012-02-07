@@ -62,6 +62,10 @@ sub charge {
   CHARGE: until ($self->next_charge_date->follows($now)) {
       $self->charge_one_day($now);
       $self->last_charge_date($self->next_charge_date());
+      if ($self->is_expired) {
+        $self->replacement->handle_event($event) if $self->replacement;
+        last CHARGE;
+      }
   }
 }
 
