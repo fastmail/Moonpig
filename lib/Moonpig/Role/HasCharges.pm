@@ -66,7 +66,7 @@ role {
     writer    => '__set_closed_at',
   );
 
-  method close   => sub { $_[0]->__set_closed_at( Moonpig->env->now ) };
+  method mark_closed => sub { $_[0]->__set_closed_at( Moonpig->env->now ) };
   method is_open => sub { ! $_[0]->is_closed };
 
   # TODO: make sure that charges added to this container have dates that

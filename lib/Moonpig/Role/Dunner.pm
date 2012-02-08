@@ -57,7 +57,7 @@ sub perform_dunning {
           and $now - $self->last_dunning_time <= $self->dunning_frequency;
   }
 
-  $_->close for grep { $_->is_open } @invoices;
+  $_->mark_closed for grep { $_->is_open } @invoices;
 
   # Now we have an array of closed, unpaid invoices.  Before we send anything
   # to the poor guy who is on the hook for these, let's see if we can pay any
