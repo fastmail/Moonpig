@@ -12,6 +12,7 @@ with(
   'Stick::Role::PublicResource::GetSelf',
 );
 
+use Carp qw(confess croak);
 use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 
@@ -40,7 +41,11 @@ has paid_at => (
   traits => [ qw(SetOnce) ],
 );
 
-sub mark_paid { $_[0]->__set_paid_at( Moonpig->env->now ) }
+sub mark_paid {
+  my ($self) = @_;
+  confess("Tried to pay open invoice " . $self->guid) if $self->is_open;
+  $self->__set_paid_at( Moonpig->env->now )
+}
 
 sub is_unpaid {
   return ! $_[0]->is_paid

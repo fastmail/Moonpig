@@ -352,6 +352,7 @@ sub copy_balance_to__ {
           tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
         }),
        );
+      $transient_invoice->mark_closed;
       $new_ledger->apply_credits_to_invoice__(
         [{ credit => $credit,
            amount => $amount }],
