@@ -9,6 +9,10 @@ use Moonpig::Types qw(PositiveMillicents);
 
 use namespace::autoclean;
 
+with(
+  'Moonpig::Role::Consumer::ByTime',
+);
+
 has charge_amount => (
   is => 'ro',
   required => 1,
@@ -27,10 +31,6 @@ has charge_description => (
   isa => 'Str',
   required => 1,
   traits => [ qw(Copy) ],
-);
-
-with(
-  'Moonpig::Role::Consumer::ByTime',
 );
 
 1;
