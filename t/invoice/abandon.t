@@ -1,10 +1,11 @@
-use Test::Routine;
+use Test::Fatal;
 use Test::More;
 use Test::Routine::Util;
+use Test::Routine;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class days dollars event to_dollars years);
+use Moonpig::Util qw(class days dollars event);
 
 with(
   't::lib::Factory::EventHandler',
@@ -109,13 +110,56 @@ test service_cancelled_and_extended => sub {
 };
 
 test checks => sub {
-  local $TODO = "Not implemented yet";
-  # Abandoning an open invoice is forbidden
-  # Replacing an abandoned invoice with a closed invoice is forbidden
-  # Abandoning a paid invoice is forbidden
-  # Abadnoning an invoice is only allowed if it contains abandoned charges
+  do_with_fresh_ledger({ c => { template => 'dummy' } },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component("c");
 
-  fail();
+      my $gen_invoice = sub {
+        my ($do_not_abandon_charge) = @_;
+        my $i = class("Invoice")->new({ ledger => $ledger });
+        my $ch = $c->build_charge({
+          description => "some charge",
+          amount => dollars(1),
+          tags => [],
+          consumer => $c,
+         });
+        $i->add_charge($ch);
+        $ch->mark_abandoned unless $do_not_abandon_charge;
+        return $i;
+      };
+
+      # Abandoning an open invoice is forbidden
+      like( exception { $gen_invoice->()->abandon },
+            qr/Can't abandon open invoice/,
+            "Can't abandon open invoice" );
+
+      # Replacing an abandoned invoice with a closed invoice is forbidden
+      like( exception {
+        my $a = $gen_invoice->();
+        my $b = $gen_invoice->();
+        $_->mark_closed for $a, $b;
+        $a->abandon_with_replacement($b);
+      }, qr/Can't replace.*with closed/,
+            "Can't replace abandoned invoice with one already closed");
+
+      # Abandoning a paid invoice is forbidden
+      like( exception {
+        my $a = $gen_invoice->();
+        my $b = $gen_invoice->();
+        $a->mark_closed; $a->mark_paid;
+        $a->abandon_with_replacement($b);
+      }, qr/Can't abandon already-paid/,
+            "Can't replace abandoned invoice with one already paid");
+
+      # Abandoning an invoice is only allowed if it contains abandoned charges
+      like( exception {
+        my $a = $gen_invoice->("don't abandon");
+        $a->mark_closed;
+        $a->abandon;
+      }, qr/Can't.*with no abandoned charges/,
+            "Can't replace invoice with no abandoned charges");
+    });
 };
 
 run_me;
