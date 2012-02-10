@@ -45,7 +45,8 @@ sub perform_dunning {
     sort { $b->created_at <=> $a->created_at
         || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
          }
-    grep { $_->is_unpaid } $self->invoices;
+    grep { ! $_->is_abandoned && $_->is_unpaid && $_->has_charges }
+    $self->invoices;
 
   return unless @invoices;
 

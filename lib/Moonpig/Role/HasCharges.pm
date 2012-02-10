@@ -28,6 +28,7 @@ role {
     traits   => [ 'Array' ],
     handles  => {
       all_charges => 'elements',
+      has_charges => 'count',
       _add_charge => 'push',
     },
   );
