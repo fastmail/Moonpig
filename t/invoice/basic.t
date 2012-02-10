@@ -18,6 +18,42 @@ before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
 
+test zero_charge_dunning => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+
+    my $invoice = $ledger->current_invoice;
+    $ledger->name_component("initial invoice", $invoice);
+    ok($invoice->is_open, "invoice is open!");
+
+    $self->heartbeat_and_send_mail($ledger);
+
+    ok($invoice->is_open, "we didn't close the chargeless invoice");
+  });
+
+
+  Moonpig->env->storage->do_with_ledger($guid, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->get_component("initial invoice");
+    $invoice->add_charge(
+      class(qw(InvoiceCharge))->new({
+        description => 'test charge (maintenance)',
+        amount      => dollars(5),
+        consumer    => $ledger->get_component('c'),
+      }),
+    );
+
+    $self->heartbeat_and_send_mail($ledger);
+
+    ok(! $invoice->is_open, "we do close it once there is a charge");
+  });
+};
+
 test charge_close_and_send => sub {
   my ($self) = @_;
   my $guid;
