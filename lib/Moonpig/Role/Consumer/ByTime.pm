@@ -44,12 +44,6 @@ sub initial_invoice_charge_pairs {
   $_[0]->charge_pairs_on( Moonpig->env->now );
 }
 
-#  XXX this is period in days, which is not quite right, since a
-#  charge of $10 per month or $20 per year is not any fixed number of
-#  days, For example a charge of $20 annually, charged every day,
-#  works out to 5479 mc per day in common years, but 5464 mc per day
-#  in leap years.  -- 2010-10-26 mjd
-
 has cost_period => (
   is => 'ro',
   required => 1,
