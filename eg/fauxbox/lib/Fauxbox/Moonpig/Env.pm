@@ -10,8 +10,6 @@ use Email::Sender::Transport::SMTP;
 sub send_email {
   my ($self, $email, $env) = @_;
 
-  # XXX: validate email -- rjbs, 2010-12-08
-
   # Too bad we don't have a muxing transport. -- rjbs, 2011-04-14
   my @senders = (
     $ENV{FAUXBOX_NO_SMTP} ? () : (
