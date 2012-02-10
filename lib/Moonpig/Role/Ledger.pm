@@ -708,7 +708,7 @@ PARTIAL_PACK {
 
     unpaid_invoices => {
       items => [
-        map { ppack($_) } grep { $_->is_unpaid } $self->invoices
+        map { ppack($_) } grep { $_->is_unpaid && ! $_->is_abandoned } $self->invoices
       ],
     },
     active_xids => {

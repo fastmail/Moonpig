@@ -6,7 +6,7 @@ use Stick::Publisher::Publish 0.20110504;
 
 publish unpaid => {} => sub {
   my ($self) = @_;
-  return [ grep {; $_->is_unpaid } @{ $self->items } ];
+  return [ grep {; $_->is_unpaid && ! $_->is_abandoned } @{ $self->items } ];
 };
 
 1;
