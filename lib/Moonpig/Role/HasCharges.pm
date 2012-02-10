@@ -70,12 +70,10 @@ role {
   method mark_closed => sub { $_[0]->__set_closed_at( Moonpig->env->now ) };
   method is_open => sub { ! $_[0]->is_closed };
 
-  # TODO: make sure that charges added to this container have dates that
-  # precede this date. 2010-10-17 mjd@icgroup.com
   has date => (
     is  => 'ro',
-    required => 1,
     default => sub { Moonpig->env->now() },
+    init_arg => undef,
     isa => 'DateTime',
   );
 };
