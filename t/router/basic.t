@@ -25,8 +25,6 @@ test "route to and get a simple resource" => sub {
     ($ledger) = @_;
     $guid = $ledger->guid;
 
-    # XXX: temporary first draft of a route to get the guid
-    # /ledger/by-guid/:GUID/gguid
     my ($resource) = Moonpig->env->route(
       [ 'ledger', 'by-guid', $guid ],
      );
@@ -51,8 +49,10 @@ test "route to and GET a method on a simple resource" => sub {
     ($ledger) = @_;
     $guid = $ledger->guid;
 
-    # XXX: temporary first draft of a route to get the guid
-    # /ledger/by-guid/:GUID/gguid
+    # XXX: We should not need to use this bogus "gguid" resource, because
+    # Ledger does HasGuid, which publishes its "guid" attribute -- but
+    # replacing "gguid" with "guid" and (get=>{}) with (get=>()) explodes. --
+    # rjbs, 2012-02-10
     my ($resource) = Moonpig->env->route(
       [ 'ledger', 'by-guid', $guid, 'gguid' ],
      );
