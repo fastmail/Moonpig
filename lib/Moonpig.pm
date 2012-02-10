@@ -6,7 +6,11 @@ package Moonpig;
 use Config ();
 use Carp ();
 
-# XXX: We need to disable this for now. -- rjbs, 2011-10-27
+# We used to say that you needed 64-bit perl to avoid roundoff errors, but we
+# couldn't get a 64-bit perl working correctly on Solaris, so rather than hem
+# and haw about roundoff errors at thousands and thousands of dollars, we're
+# just going to cope with it.  Nobody pays us that much, anyway.
+# -- rjbs, 2012-02-10
 # Carp::croak("Moonpig requires a perl compile with use64bitint")
 #   unless $Config::Config{use64bitint} || $ENV{Moonpig32BitsOK};
 
