@@ -124,16 +124,15 @@ publish _get_contact => {
   return $self->contact;
 };
 
-# XXX: This should be a submethod.  And not totally bogus.  -- rjbs, 2011-08-15
-sub BUILDARGS {
-  my ($self, $hashref) = @_;
-
-  if ($hashref->{contact} and not $hashref->{contact_history}) {
-    $hashref->{contact_history} = [ delete $hashref->{contact} ];
+around BUILDARGS => sub {
+  my $orig  = shift;
+  my $class = shift;
+  my $args = @_ == 1 ? $_[0] : { @_ };
+  if ($args->{contact} and not $args->{contact_history}) {
+    $args->{contact_history} = [ delete $args->{contact} ];
   }
-
-  return $hashref;
-}
+  return $class->$orig($args);
+};
 
 has accountant => (
   isa => 'Moonpig::Ledger::Accountant',
