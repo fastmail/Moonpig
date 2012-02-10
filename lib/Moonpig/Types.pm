@@ -106,8 +106,9 @@ subtype SimplePath, as Str, where { /\A$simple_str_dotchain\z/ };
 #
 # Tags
 
-# XXX: TagSet should be an actual Set, but MooseX::Types::Set::Object is a pain
-# and I don't feel like fixing it right this second. -- rjbs, 2011-05-23
+# XXX: TagSet should be an actual Set (but ordered), but
+# MooseX::Types::Set::Object is a pain and I don't feel like fixing it right
+# this second. -- rjbs, 2011-05-23
 subtype Tag, as Str; # XXX Fix this -- rjbs, 2011-06-17
 subtype TagSet, as ArrayRef[ Tag ];
 
