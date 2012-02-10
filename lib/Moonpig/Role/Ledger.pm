@@ -667,11 +667,12 @@ publish split_xid => { -http_method => 'post', -path => 'split',
     });
 };
 
-# XXX: Bogus, we should make this queue like everything else.
 sub queue_email {
   my ($self, $email, $env) = @_;
 
-  # XXX: validate email -- rjbs, 2010-12-08
+  Moonpig::X->throw("can't queue non-Email::Simple object")
+    unless $email->isa('Email::Simple');
+
   $self->queue_job('send-email', {
     email => $email->as_string,
     env   => JSON->new->ascii->encode($env),
