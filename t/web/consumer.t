@@ -193,7 +193,7 @@ test cancel_early => sub {
     ok(! $consumer->replacement, "account has no replacement yet");
 
     my @plan = $consumer->replacement_plan_parts;
-    isnt($plan[1], "/nothing", "replacement XXX uri is not 'nothing'");
+    isnt($plan[1], "/nothing", "replacement plan uri is not 'nothing'");
   }
 
   $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
@@ -204,7 +204,7 @@ test cancel_early => sub {
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
 
     my @plan = $consumer->replacement_plan_parts;
-    is($plan[1], "/nothing", "replacement XXX uri is now 'nothing'");
+    is($plan[1], "/nothing", "replacement plan uri is now 'nothing'");
   }
 };
 

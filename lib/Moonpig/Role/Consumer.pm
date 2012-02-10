@@ -199,7 +199,7 @@ sub _replacement_template {
     my $call = "resource_$method";
     $result = $wrapped_method->$call($arg);
   } else {
-    Moonpig::X->throw("illegal replacement XXX method");
+    Moonpig::X->throw("illegal replacement plan method");
   }
 
   return $result;
@@ -210,7 +210,7 @@ sub handle_cancel {
   return if $self->is_canceled;
   $self->mark_canceled;
   if ($self->has_replacement) {
-    $self->replacement->expire
+    $self->replacement->expire;
   } else {
     # XXX Now that replacements can be superseded, shouldn't this occur
     # even if there is a replacement already? 2012-01-23 mjd
