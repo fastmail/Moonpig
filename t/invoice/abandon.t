@@ -48,6 +48,8 @@ test carry_forth => sub {
     is($i2->amount_due, dollars(2), "correct amount on new ledger");
     ok(! $i1->is_paid, "old ledger unpaid");
     ok(! $i2->is_paid, "new ledger unpaid");
+    is($i1->abandoned_in_favor_of, $i2->guid,
+       "forward link set properly");
   });
 };
 
@@ -61,7 +63,7 @@ sub args {
   };
 }
 
-test service_cancelled_and_extended => sub {
+test service_extended => sub {
   do_with_fresh_ledger({},
     sub {
       my ($ledger) = @_;
@@ -107,6 +109,27 @@ test service_cancelled_and_extended => sub {
       is_deeply([$ledger->payable_invoices], [$i2], "Just new invoice is payable");
     }
    );
+};
+
+test service_canceled => sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' } },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component("c");
+      my $i1 = $ledger->current_invoice;
+      $i1->add_charge(
+        class(qw(InvoiceCharge))->new({
+          description => 'dummy charge',
+          amount      => dollars(5),
+          consumer    => $c,
+        }));
+      $i1->mark_closed;
+      my $i2 = $ledger->current_invoice;
+      $i1->cancel;
+      ok($i1->is_abandoned, "canceled invoice marked abandoned");
+      is($i2->total_amount, 0, "charge was not forward-ported");
+      is($i1->abandoned_in_favor_of, undef, "no forward-link");
+   });
 };
 
 test checks => sub {

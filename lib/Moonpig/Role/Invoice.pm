@@ -17,7 +17,7 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 
 use Moonpig::Util qw(class event sumof);
-use Moonpig::Types qw(Credit Time);
+use Moonpig::Types qw(Credit GUID Time);
 use Moonpig::X;
 use MooseX::SetOnce;
 
@@ -60,6 +60,12 @@ has _abandoned_at => (
   traits => [ qw(SetOnce) ],
 );
 
+has abandoned_in_favor_of => (
+  is => 'rw',
+  isa => GUID,
+  traits => [ qw(SetOnce) ],
+);
+
 sub mark_abandoned {
   my ($self) = @_;
   return if $self->is_abandoned;
@@ -72,13 +78,10 @@ sub abandon {
   $self->ledger->abandon_invoice($self);
 }
 
-# transfer non-abandoned charges to specified open invoice
+# transfer non-abandoned charges to specified open invoice,
+# or just discard them if $new_invoice is omitted
 sub abandon_with_replacement {
   my ($self, $new_invoice) = @_;
-  $new_invoice || croak("abandon_with_replacement missing new invoice argument");
-  confess "Can't replace abandoned invoice with closed invoice" . $new_invoice->guid
-    if $new_invoice->is_closed;
-
   confess "Can't abandon open invoice " . $self->guid
     unless $self->is_closed;
 
@@ -88,13 +91,31 @@ sub abandon_with_replacement {
   confess "Can't abandon invoice " . $self->guid . " with no abandoned charges"
     unless grep $_->is_abandoned, $self->all_charges;
 
-  for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
-    $new_invoice->_add_charge($charge);
+  if ($new_invoice) {
+    confess "Can't replace abandoned invoice with closed invoice"
+      . $new_invoice->guid
+        if $new_invoice->is_closed;
+
+    for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
+      $new_invoice->_add_charge($charge);
+    }
+
+    $self->abandoned_in_favor_of($new_invoice->guid)
   }
 
   $self->mark_abandoned;
 
   return $new_invoice;
+}
+
+sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
+
+# use this when we're sure we'll never be paid for this invoice
+# abandon all charges and then the invoice itself.
+sub cancel {
+  my ($self) = @_;
+  $_->mark_abandoned for $self->all_charges;
+  $self->abandon_without_replacement();
 }
 
 sub amount_due {
