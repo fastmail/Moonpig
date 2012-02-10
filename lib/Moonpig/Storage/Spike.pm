@@ -17,6 +17,7 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
 use Moonpig::Types qw(Ledger Factory);
 use Moonpig::Util qw(class class_roles);
+use MooseX::Types::Moose qw(Str);
 use Scalar::Util qw(blessed);
 use SQL::Translator;
 use Storable qw(nfreeze thaw);
@@ -340,7 +341,9 @@ sub queue_job__ {
       my $job_id = $dbh->last_insert_id(q{}, q{}, 'jobs', 'id');
 
       for my $ident (keys %{ $arg->{payloads} }) {
-        # XXX: barf on reference payloads? -- rjbs, 2011-04-13
+        my $payload = $arg->{payloads}->{ $ident };
+        Str->assert_valid($payload);
+
         $dbh->do(
           q{
             INSERT INTO job_documents (job_id, ident, payload)
@@ -349,7 +352,7 @@ sub queue_job__ {
           undef,
           $job_id,
           $ident,
-          $arg->{payloads}->{ $ident },
+          $payload,
         );
       }
     });
