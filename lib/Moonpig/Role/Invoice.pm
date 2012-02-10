@@ -133,8 +133,6 @@ sub _fund_consumers {
   my $by_consumer = $self->_bankable_charges_by_consumer;
 
   while (my ($consumer_guid, $charges) = each %$by_consumer) {
-    # XXX This method path is too long.  The consumer collection should handle
-    # ->find_consumer_by_guid.
     my $consumer = $self->ledger->consumer_collection->find_by_guid({
       guid => $consumer_guid,
     });
