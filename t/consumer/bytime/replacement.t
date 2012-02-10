@@ -76,7 +76,7 @@ test "with_successor" => sub {
 
     my ($name, $schedule, $n_warnings) = @$test;
 
-    # XXX THIS WILL CHANGE AS DUNNING / GRACE BEHAVIOR IS REFINED
+    # ATTENTION: THIS WILL CHANGE AS DUNNING / GRACE BEHAVIOR IS REFINED
     # Normally we get 8 requests for payment:
     #  * 1 when the consumer is first created
     #  * 1 every 4 days thereafter: the 4th, 8th, 12th, 16th, 20th, 24th, 28th
