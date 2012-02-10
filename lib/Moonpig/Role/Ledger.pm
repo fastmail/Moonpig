@@ -242,8 +242,6 @@ sub add_consumer_from_template {
   my ($self, $template, $arg) = @_;
   $arg ||= {};
 
-  # XXX: sloppy; we should make a template class and a coercion
-  # -- rjbs, 2011-02-09
   $template = Moonpig->env->consumer_template($template)
     unless ref $template;
 
