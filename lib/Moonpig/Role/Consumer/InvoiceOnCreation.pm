@@ -47,14 +47,6 @@ sub _invoice {
       }),
     );
   }
-
-  # XXX: magic charges go here, but this protocol needs to be clarified and
-  # un-underscored -- rjbs, 2011-08-18
-  if ($self->can('_extra_invoice_charges')) {
-    for my $charge ($self->_extra_invoice_charges) {
-      $invoice->add_charge( $charge );
-    }
-  }
 }
 
 1;

@@ -14,8 +14,12 @@ sub initial_invoice_charge_pairs {
   return ('basic payment' => dollars(1));
 }
 
-sub _extra_invoice_charges {
-  my ($self) = @_;
+around _invoice => sub {
+  my ($orig, $self) = @_;
+
+  $self->$orig;
+
+  my $invoice = $self->ledger->current_invoice;
 
   my $class = class( qw(
     InvoiceCharge
@@ -27,7 +31,9 @@ sub _extra_invoice_charges {
     amount      => dollars(2),
     tags        => [ ],
     consumer    => $self,
-  }),
-}
+  });
+
+  $invoice->add_charge( $charge );
+};
 
 1;
