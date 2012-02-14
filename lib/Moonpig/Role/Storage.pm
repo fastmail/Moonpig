@@ -66,6 +66,7 @@ requires 'save_ledger';
 requires 'ledger_guids';
 
 requires 'retrieve_ledger_for_guid';
+requires 'retrieve_ledger_for_ident';
 requires 'retrieve_ledger_for_xid';
 
 1;

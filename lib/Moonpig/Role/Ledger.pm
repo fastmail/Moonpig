@@ -629,6 +629,11 @@ sub _class_subroute {
     return Moonpig->env->storage->retrieve_ledger_for_guid($guid);
   }
 
+  if ($path->[0] eq 'by-ident') {
+    my (undef, $ident) = splice @$path, 0, 2;
+    return Moonpig->env->storage->retrieve_ledger_for_ident($ident);
+  }
+
   return;
 }
 

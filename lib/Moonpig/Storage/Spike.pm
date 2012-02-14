@@ -17,7 +17,7 @@ use File::Spec;
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
-use Moonpig::Types qw(Ledger Factory);
+use Moonpig::Types qw(Factory GUID Ledger);
 use Moonpig::Util qw(class class_roles);
 use MooseX::Types::Moose qw(Str);
 use Number::Nary -codec_pair => {
@@ -759,6 +759,26 @@ sub retrieve_ledger_for_xid {
   $Logger->log_debug([ 'retrieved guid %s for xid %s', $ledger_guid, $xid ]);
 
   return $self->retrieve_ledger_for_guid($ledger_guid);
+}
+
+sub retrieve_ledger_for_ident {
+  my ($self, $ident) = @_;
+
+  return $self->retrieve_ledger_for_guid($ident) if GUID->check($ident);
+
+  my $dbh = $self->_conn->dbh;
+
+  my ($guid) = $dbh->selectrow_array(
+    q{SELECT guid FROM ledgers WHERE ident = ?},
+    undef,
+    $ident,
+  );
+
+  return unless defined $guid;
+
+  $Logger->log_debug([ 'retrieved guid %s for ident %s', $guid, $ident ]);
+
+  return $self->retrieve_ledger_for_guid($guid);
 }
 
 sub retrieve_ledger_for_guid {
