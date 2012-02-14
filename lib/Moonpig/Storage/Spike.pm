@@ -18,13 +18,8 @@ use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
 use Moonpig::Types qw(Factory GUID Ledger);
-use Moonpig::Util qw(class class_roles);
+use Moonpig::Util qw(class class_roles random_short_ident);
 use MooseX::Types::Moose qw(Str);
-use Number::Nary -codec_pair => {
-  -prefix   => '_rec_loc_',
-  digits    => [  2 .. 9, 'A', 'C' .. 'R', 'T' .. 'Z' ],
-  predecode => sub { my $s = $_[0]; $s =~ tr/01SBsb/OIFPFP/; return $s },
-};
 use Scalar::Util qw(blessed);
 use SQL::Translator;
 use Storable qw(nfreeze thaw);
@@ -667,7 +662,8 @@ sub _store_ledger {
         $saved = try {
           $conn->svp(sub {
             my ($dbh) = @_;
-            my $ident = $existing_ident // _rec_loc_encode(int rand 1e9);
+            my $ident = $existing_ident // 'L-' . random_short_ident(1e9);
+
             $ledger->set_short_ident($ident) unless $existing_ident;
 
             $frozen_ledger = nfreeze( $ledger );
