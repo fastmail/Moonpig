@@ -624,6 +624,8 @@ sub _store_ledger {
     $ledger->guid,
   ]);
 
+  my $set_ident;
+
   my $conn = $self->_conn;
   $conn->txn(sub {
     my ($dbh) = @_;
@@ -653,12 +655,11 @@ sub _store_ledger {
 
       my $saved = 0;
 
-      my $ident;
       until ($saved) {
         $saved = try {
           $conn->svp(sub {
             my ($dbh) = @_;
-            $ident = _rec_loc_encode(int rand 1e9);
+            $set_ident = _rec_loc_encode(int rand 1e9);
 
             $dbh->do(
               q{
@@ -668,7 +669,7 @@ sub _store_ledger {
               },
               undef,
               $ledger->guid,
-              $ident,
+              $set_ident,
               $frozen_ledger,
               $frozen_classes,
             );
@@ -699,6 +700,7 @@ sub _store_ledger {
     }
   });
 
+  $ledger->set_short_ident( $set_ident ) if defined $set_ident;
   return $ledger;
 }
 

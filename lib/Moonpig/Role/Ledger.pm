@@ -3,6 +3,8 @@ package Moonpig::Role::Ledger;
 
 use Carp qw(confess croak);
 use Moose::Role;
+
+use MooseX::SetOnce;
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Moose::Util::TypeConstraints qw(role_type);
@@ -14,7 +16,7 @@ Stick::Role::HasCollection->VERSION(0.307);
 _generate_subcomponent_methods(qw(consumer refund credit coupon));
 
 with(
-  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
@@ -23,7 +25,8 @@ with(
   'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::HasCollection' => {
     item => 'refund',
-    # These are only here because we use the refund collection for collection tests
+    # These are only here because we use the refund collection for collection
+    # tests
     collection_roles => [ 'Stick::Role::Collection::Pageable',
                           'Moonpig::Role::Collection::RefundExtras',
                           'Stick::Role::Collection::Mutable',
@@ -71,7 +74,7 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID);
+use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID NonBlankLine);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
@@ -86,6 +89,19 @@ use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
 use namespace::autoclean;
+
+has short_ident => (
+  isa    => NonBlankLine,
+  reader => 'short_ident',
+  writer => 'set_short_ident',
+  predicate => 'has_short_ident',
+  traits    => [ qw(SetOnce) ],
+);
+
+sub ident {
+  return $_[0]->short_ident if $_[0]->has_short_ident;
+  return $_[0]->Moonpig::Role::HasGuid::ident;
+}
 
 # Should this be plural?  Or what?  Maybe it's a ContactManager subsystem...
 # https://trac.pobox.com/wiki/Billing/DB says that there is *one* contact which
