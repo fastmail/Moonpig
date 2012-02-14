@@ -77,7 +77,7 @@ use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID NonBlankLine);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(class event sumof);
+use Moonpig::Util qw(class event random_short_ident sumof);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
@@ -281,6 +281,7 @@ for my $thing (qw(journal invoice)) {
   my $class  = class(ucfirst $thing);
   my $things = "${thing}s";
   my $reader = "_$things";
+  my $push   = "_push_$thing";
 
   has $things => (
     reader  => $reader,
@@ -288,8 +289,8 @@ for my $thing (qw(journal invoice)) {
     default => sub { [] },
     traits  => [ qw(Array) ],
     handles => {
-      $things        => 'elements',
-      "_push_$thing" => 'push',
+      $things => 'elements',
+      $push   => 'push',
     },
   );
 
@@ -302,10 +303,10 @@ for my $thing (qw(journal invoice)) {
     Class::MOP::load_class($class);
 
     my $thing = $class->new({
-      ledger      => $self,
+      ledger => $self,
     });
 
-    push @$things, $thing;
+    $self->$push($thing);
     return;
   };
 
@@ -318,6 +319,28 @@ for my $thing (qw(journal invoice)) {
     }
   });
 }
+
+has _invoice_ident_registry => (
+  is       => 'ro',
+  isa      => HashRef,
+  default  => sub {  {}  },
+  init_arg => undef,
+);
+
+before _push_invoice => sub {
+  my ($self, $invoice) = @_;
+  my $guid = $invoice->guid;
+  my $reg  = $self->_invoice_ident_registry;
+
+  Moonpig::X->throw("invoice ident already registered")
+    if exists $self->_invoice_ident_registry->{ $guid };
+
+  my %in_use = map {; $_ => 1 } values %$reg;
+  my $ident  = 'I-' . random_short_ident(1e6);
+  $ident = 'I-' . random_short_ident(1e6) until ! $in_use{ $ident };
+
+  $reg->{ $guid } = $ident;
+};
 
 sub latest_invoice {
   my ($self) = @_;
