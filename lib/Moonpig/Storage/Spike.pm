@@ -3,6 +3,8 @@ package Moonpig::Storage::Spike;
 use Moose;
 with 'Moonpig::Role::Storage';
 
+use v5.12.0;
+
 use MooseX::StrictConstructor;
 
 use Carp qw(carp confess croak);
@@ -18,9 +20,15 @@ use Moonpig::Storage::UpdateModeStack;
 use Moonpig::Types qw(Ledger Factory);
 use Moonpig::Util qw(class class_roles);
 use MooseX::Types::Moose qw(Str);
+use Number::Nary -codec_pair => {
+  -prefix   => '_rec_loc_',
+  digits    => [  2 .. 9, 'A', 'C' .. 'R', 'T' .. 'Z' ],
+  predecode => sub { my $s = $_[0]; $s =~ tr/01SBsb/OIFPFP/; return $s },
+};
 use Scalar::Util qw(blessed);
 use SQL::Translator;
 use Storable qw(nfreeze thaw);
+use Try::Tiny;
 
 use namespace::autoclean;
 
@@ -65,8 +73,13 @@ schema:
       name: ledgers
       fields:
         guid: { name: guid, data_type: varchar, size: 36, is_primary_key: 1 }
+        ident: { name: ident, data_type: varchar, size: 10, is_nullable: 0 }
         frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
         frozen_classes: { name: frozen_classes, data_type: blob, is_nullable: 0 }
+      constraints:
+        - type: UNIQUE
+          fields: [ ident ]
+          name: ledger_ident_unique_constraint
 
     xid_ledgers:
       name: xid_ledgers
@@ -613,7 +626,7 @@ sub _store_ledger {
 
   my $conn = $self->_conn;
   $conn->txn(sub {
-    my ($dbh) = $_;
+    my ($dbh) = @_;
 
     my ($count) = $dbh->selectrow_array(
       q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
@@ -634,17 +647,36 @@ sub _store_ledger {
 
     if ($rv and $rv == 0) {
       # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
-      $dbh->do(
-        q{
-          INSERT INTO ledgers
-          (guid, frozen_ledger, frozen_classes)
-          VALUES (?, ?, ?)
-        },
-        undef,
-        $ledger->guid,
-        nfreeze( $ledger ),
-        nfreeze( class_roles ),
-      );
+
+      my $frozen_ledger  = nfreeze( $ledger );
+      my $frozen_classes = nfreeze( class_roles );
+
+      my $saved = 0;
+
+      my $ident;
+      until ($saved) {
+        $saved = try {
+          $conn->svp(sub {
+            my ($dbh) = @_;
+            $ident = _rec_loc_encode(int rand 1e9);
+
+            $dbh->do(
+              q{
+                INSERT INTO ledgers
+                (guid, ident, frozen_ledger, frozen_classes)
+                VALUES (?, ?, ?, ?)
+              },
+              undef,
+              $ledger->guid,
+              $ident,
+              $frozen_ledger,
+              $frozen_classes,
+            );
+
+            return 1;
+          });
+        };
+      }
     }
 
     $dbh->do(
