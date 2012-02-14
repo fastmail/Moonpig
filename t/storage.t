@@ -40,10 +40,13 @@ test "store and retrieve" => sub {
       die("error with child: " . Dumper(\%waitpid));
     }
   } else {
-    do_with_fresh_ledger({consumer => { template => 'demo-service', xid => $xid }}, sub {
-      my ($ledger) = @_;
-      $ledger->save;
-    });
+    do_with_fresh_ledger(
+      { consumer => { template => 'demo-service', xid => $xid } },
+      sub {
+        my ($ledger) = @_;
+        $ledger->save;
+      }
+    );
     exit(0);
   }
 
@@ -51,12 +54,21 @@ test "store and retrieve" => sub {
 
   is(@guids, 1, "we have stored one guid");
 
-  Moonpig->env->storage->
-    do_with_ledger({ ro => 1 }, $guids[0], sub {
-                     my $consumer = $_[0]->active_consumer_for_xid($xid);
-                   });
+  my $ident;
+  Moonpig->env->storage->do_with_ledger(
+    { ro => 1 },
+    $guids[0],
+    sub {
+      my $consumer = $_[0]->active_consumer_for_xid($xid);
+      $ident = $_[0]->short_ident;
+    }
+  );
 
-  # diag explain $retr_ledger;
+  Moonpig->env->storage->do_ro(sub {
+    my $ledger = Moonpig->env->storage->retrieve_ledger_for_ident($ident);
+    is($ledger->guid, $guids[0], "we can get the ledger by ident");
+  });
+
   pass('we lived');
 };
 

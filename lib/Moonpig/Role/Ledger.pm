@@ -4,7 +4,6 @@ package Moonpig::Role::Ledger;
 use Carp qw(confess croak);
 use Moose::Role;
 
-use MooseX::SetOnce;
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Moose::Util::TypeConstraints qw(role_type);
@@ -95,7 +94,6 @@ has short_ident => (
   reader => 'short_ident',
   writer => 'set_short_ident',
   predicate => 'has_short_ident',
-  traits    => [ qw(SetOnce) ],
 );
 
 sub ident {

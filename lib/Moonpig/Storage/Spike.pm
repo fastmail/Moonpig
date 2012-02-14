@@ -624,7 +624,7 @@ sub _store_ledger {
     $ledger->guid,
   ]);
 
-  my $set_ident;
+  my $ident;
 
   my $conn = $self->_conn;
   $conn->txn(sub {
@@ -636,22 +636,30 @@ sub _store_ledger {
       $ledger->guid,
     );
 
+    my $frozen_ledger  = nfreeze( $ledger );
+    my $frozen_classes = nfreeze( class_roles );
+
     my $rv = $dbh->do(
       q{
         UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?
         WHERE guid = ?
       },
       undef,
-      nfreeze( $ledger ),
-      nfreeze( class_roles ),
+      $frozen_ledger,
+      $frozen_classes,
       $ledger->guid,
     );
 
     if ($rv and $rv == 0) {
       # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
 
-      my $frozen_ledger  = nfreeze( $ledger );
-      my $frozen_classes = nfreeze( class_roles );
+      # This shouldn't really ever happen -- if it already has a short_ident,
+      # that means you have saved it once, so the UPDATE above should have been
+      # useful.  Still, there is no need to forbid this right now, so let's
+      # just carry on as usual.  We won't keep trying to insert over and over,
+      # though.  If we have an ident and can't insert, we give up. -- rjbs,
+      # 2012-02-14
+      my $existing_ident = $ledger->short_ident;
 
       my $saved = 0;
 
@@ -659,7 +667,10 @@ sub _store_ledger {
         $saved = try {
           $conn->svp(sub {
             my ($dbh) = @_;
-            $set_ident = _rec_loc_encode(int rand 1e9);
+            my $ident = $existing_ident // _rec_loc_encode(int rand 1e9);
+            $ledger->set_short_ident($ident) unless $existing_ident;
+
+            $frozen_ledger = nfreeze( $ledger );
 
             $dbh->do(
               q{
@@ -669,7 +680,7 @@ sub _store_ledger {
               },
               undef,
               $ledger->guid,
-              $set_ident,
+              $ident,
               $frozen_ledger,
               $frozen_classes,
             );
@@ -677,6 +688,10 @@ sub _store_ledger {
             return 1;
           });
         };
+
+        if ($existing_ident && ! $saved) {
+          Moonpig::X->throw("conflict inserting ledger with preset ident");
+        }
       }
     }
 
@@ -700,7 +715,6 @@ sub _store_ledger {
     }
   });
 
-  $ledger->set_short_ident( $set_ident ) if defined $set_ident;
   return $ledger;
 }
 
