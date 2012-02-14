@@ -13,6 +13,7 @@ use Carp qw(croak);
 use MooseX::ClassCompositor;
 use MooseX::StrictConstructor::Trait::Class;
 use Moose::Util::MetaRole ();
+use Number::Nary ();
 use Scalar::Util qw(refaddr);
 use String::RewritePrefix;
 
@@ -25,6 +26,8 @@ use Sub::Exporter -setup => [ qw(
 
   days weeks months years
   days_in_year
+
+  random_short_ident
 
   same_object
 
@@ -122,6 +125,12 @@ sub same_object {
   defined($rb) or croak("arg 2 to $me was not a reference");
 
   $ra == $rb;
+}
+
+my ($_ENC) = Number::Nary::n_codec([ 2 .. 9, 'A', 'C' .. 'R', 'T' .. 'Z' ]);
+sub random_short_ident {
+  my ($size) = shift // 1e9;
+  return $_ENC->( int rand $size );
 }
 
 sub sum {
