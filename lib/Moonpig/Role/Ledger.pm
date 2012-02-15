@@ -3,6 +3,7 @@ package Moonpig::Role::Ledger;
 
 use Carp qw(confess croak);
 use Moose::Role;
+
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Moose::Util::TypeConstraints qw(role_type);
@@ -14,7 +15,7 @@ Stick::Role::HasCollection->VERSION(0.307);
 _generate_subcomponent_methods(qw(consumer refund credit coupon));
 
 with(
-  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Dunner',
@@ -23,7 +24,8 @@ with(
   'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::HasCollection' => {
     item => 'refund',
-    # These are only here because we use the refund collection for collection tests
+    # These are only here because we use the refund collection for collection
+    # tests
     collection_roles => [ 'Stick::Role::Collection::Pageable',
                           'Moonpig::Role::Collection::RefundExtras',
                           'Stick::Role::Collection::Mutable',
@@ -71,11 +73,11 @@ use Moonpig;
 use Moonpig::Ledger::Accountant;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Events::Handler::Missing;
-use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID);
+use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID NonBlankLine);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(class event sumof);
+use Moonpig::Util qw(class event random_short_ident sumof);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
@@ -86,6 +88,18 @@ use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
 use namespace::autoclean;
+
+has short_ident => (
+  isa    => NonBlankLine,
+  reader => 'short_ident',
+  writer => 'set_short_ident',
+  predicate => 'has_short_ident',
+);
+
+sub ident {
+  return $_[0]->short_ident if $_[0]->has_short_ident;
+  return $_[0]->Moonpig::Role::HasGuid::ident;
+}
 
 # Should this be plural?  Or what?  Maybe it's a ContactManager subsystem...
 # https://trac.pobox.com/wiki/Billing/DB says that there is *one* contact which
@@ -267,6 +281,7 @@ for my $thing (qw(journal invoice)) {
   my $class  = class(ucfirst $thing);
   my $things = "${thing}s";
   my $reader = "_$things";
+  my $push   = "_push_$thing";
 
   has $things => (
     reader  => $reader,
@@ -274,8 +289,8 @@ for my $thing (qw(journal invoice)) {
     default => sub { [] },
     traits  => [ qw(Array) ],
     handles => {
-      $things        => 'elements',
-      "_push_$thing" => 'push',
+      $things => 'elements',
+      $push   => 'push',
     },
   );
 
@@ -288,10 +303,10 @@ for my $thing (qw(journal invoice)) {
     Class::MOP::load_class($class);
 
     my $thing = $class->new({
-      ledger      => $self,
+      ledger => $self,
     });
 
-    push @$things, $thing;
+    $self->$push($thing);
     return;
   };
 
@@ -304,6 +319,28 @@ for my $thing (qw(journal invoice)) {
     }
   });
 }
+
+has _invoice_ident_registry => (
+  is       => 'ro',
+  isa      => HashRef,
+  default  => sub {  {}  },
+  init_arg => undef,
+);
+
+before _push_invoice => sub {
+  my ($self, $invoice) = @_;
+  my $guid = $invoice->guid;
+  my $reg  = $self->_invoice_ident_registry;
+
+  Moonpig::X->throw("invoice ident already registered")
+    if exists $self->_invoice_ident_registry->{ $guid };
+
+  my %in_use = map {; $_ => 1 } values %$reg;
+  my $ident  = 'I-' . random_short_ident(1e6);
+  $ident = 'I-' . random_short_ident(1e6) until ! $in_use{ $ident };
+
+  $reg->{ $guid } = $ident;
+};
 
 sub latest_invoice {
   my ($self) = @_;
@@ -611,6 +648,11 @@ sub _class_subroute {
   if ($path->[0] eq 'by-guid') {
     my (undef, $guid) = splice @$path, 0, 2;
     return Moonpig->env->storage->retrieve_ledger_for_guid($guid);
+  }
+
+  if ($path->[0] eq 'by-ident') {
+    my (undef, $ident) = splice @$path, 0, 2;
+    return Moonpig->env->storage->retrieve_ledger_for_ident($ident);
   }
 
   return;

@@ -3,6 +3,8 @@ package Moonpig::Storage::Spike;
 use Moose;
 with 'Moonpig::Role::Storage';
 
+use v5.12.0;
+
 use MooseX::StrictConstructor;
 
 use Carp qw(carp confess croak);
@@ -15,12 +17,13 @@ use File::Spec;
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
-use Moonpig::Types qw(Ledger Factory);
-use Moonpig::Util qw(class class_roles);
+use Moonpig::Types qw(Factory GUID Ledger);
+use Moonpig::Util qw(class class_roles random_short_ident);
 use MooseX::Types::Moose qw(Str);
 use Scalar::Util qw(blessed);
 use SQL::Translator;
 use Storable qw(nfreeze thaw);
+use Try::Tiny;
 
 use namespace::autoclean;
 
@@ -65,8 +68,13 @@ schema:
       name: ledgers
       fields:
         guid: { name: guid, data_type: varchar, size: 36, is_primary_key: 1 }
+        ident: { name: ident, data_type: varchar, size: 10, is_nullable: 0 }
         frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
         frozen_classes: { name: frozen_classes, data_type: blob, is_nullable: 0 }
+      constraints:
+        - type: UNIQUE
+          fields: [ ident ]
+          name: ledger_ident_unique_constraint
 
     xid_ledgers:
       name: xid_ledgers
@@ -611,9 +619,11 @@ sub _store_ledger {
     $ledger->guid,
   ]);
 
+  my $ident;
+
   my $conn = $self->_conn;
   $conn->txn(sub {
-    my ($dbh) = $_;
+    my ($dbh) = @_;
 
     my ($count) = $dbh->selectrow_array(
       q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
@@ -621,30 +631,64 @@ sub _store_ledger {
       $ledger->guid,
     );
 
+    my $frozen_ledger  = nfreeze( $ledger );
+    my $frozen_classes = nfreeze( class_roles );
+
     my $rv = $dbh->do(
       q{
         UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?
         WHERE guid = ?
       },
       undef,
-      nfreeze( $ledger ),
-      nfreeze( class_roles ),
+      $frozen_ledger,
+      $frozen_classes,
       $ledger->guid,
     );
 
     if ($rv and $rv == 0) {
       # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
-      $dbh->do(
-        q{
-          INSERT INTO ledgers
-          (guid, frozen_ledger, frozen_classes)
-          VALUES (?, ?, ?)
-        },
-        undef,
-        $ledger->guid,
-        nfreeze( $ledger ),
-        nfreeze( class_roles ),
-      );
+
+      # This shouldn't really ever happen -- if it already has a short_ident,
+      # that means you have saved it once, so the UPDATE above should have been
+      # useful.  Still, there is no need to forbid this right now, so let's
+      # just carry on as usual.  We won't keep trying to insert over and over,
+      # though.  If we have an ident and can't insert, we give up. -- rjbs,
+      # 2012-02-14
+      my $existing_ident = $ledger->short_ident;
+
+      my $saved = 0;
+
+      until ($saved) {
+        $saved = try {
+          $conn->svp(sub {
+            my ($dbh) = @_;
+            my $ident = $existing_ident // 'L-' . random_short_ident(1e9);
+
+            $ledger->set_short_ident($ident) unless $existing_ident;
+
+            $frozen_ledger = nfreeze( $ledger );
+
+            $dbh->do(
+              q{
+                INSERT INTO ledgers
+                (guid, ident, frozen_ledger, frozen_classes)
+                VALUES (?, ?, ?, ?)
+              },
+              undef,
+              $ledger->guid,
+              $ident,
+              $frozen_ledger,
+              $frozen_classes,
+            );
+
+            return 1;
+          });
+        };
+
+        if ($existing_ident && ! $saved) {
+          Moonpig::X->throw("conflict inserting ledger with preset ident");
+        }
+      }
     }
 
     $dbh->do(
@@ -725,6 +769,26 @@ sub retrieve_ledger_for_xid {
   $Logger->log_debug([ 'retrieved guid %s for xid %s', $ledger_guid, $xid ]);
 
   return $self->retrieve_ledger_for_guid($ledger_guid);
+}
+
+sub retrieve_ledger_for_ident {
+  my ($self, $ident) = @_;
+
+  return $self->retrieve_ledger_for_guid($ident) if GUID->check($ident);
+
+  my $dbh = $self->_conn->dbh;
+
+  my ($guid) = $dbh->selectrow_array(
+    q{SELECT guid FROM ledgers WHERE ident = ?},
+    undef,
+    $ident,
+  );
+
+  return unless defined $guid;
+
+  $Logger->log_debug([ 'retrieved guid %s for ident %s', $guid, $ident ]);
+
+  return $self->retrieve_ledger_for_guid($guid);
 }
 
 sub retrieve_ledger_for_guid {

@@ -6,7 +6,7 @@ with(
   'Moonpig::Role::HasCharges' => { charge_role => 'InvoiceCharge' },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
-  'Moonpig::Role::HasGuid',
+  'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
   'Moonpig::Role::CanTransfer' => { transferer_type => "invoice" },
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
@@ -166,6 +166,10 @@ sub _fund_consumers {
       amount => $total,
     });
   }
+}
+
+sub ident {
+  $_[0]->ledger->_invoice_ident_registry->{ $_[0]->guid } // $_[0]->guid;
 }
 
 PARTIAL_PACK {
