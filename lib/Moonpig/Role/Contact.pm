@@ -32,6 +32,7 @@ has last_name => (
 has organization => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  predicate => 'has_organization',
 );
 
 # XXX: I hate phone number fields, but we'll need to do a conversion to
@@ -61,9 +62,16 @@ has [ qw(city country) ] => (
   required => 1,
 );
 
-has [ qw(state postal_code) ] => (
+has state => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  predicate => 'has_state',
+);
+
+has postal_code => (
+  is  => 'ro',
+  isa => TrimmedSingleLine,
+  predicate => 'has_postal_code',
 );
 
 has email_addresses => (
