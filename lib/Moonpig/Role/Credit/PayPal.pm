@@ -6,7 +6,7 @@ use Moonpig::Types qw(TrimmedSingleLine);
 
 use namespace::autoclean;
 
-with 'Moonpig::Role::Credit';
+with 'Moonpig::Role::Credit::Refundable';
 
 sub as_string {
   my ($self) = @_;
@@ -31,5 +31,9 @@ has from_address => (
   isa => TrimmedSingleLine,
   required => 1,
 );
+
+sub issue_refund {
+  Moonpig::X->throw("PayPal refund unimplemented");
+}
 
 1;

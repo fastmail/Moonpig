@@ -6,7 +6,7 @@ use Moonpig::Types qw(TrimmedSingleLine);
 
 use namespace::autoclean;
 
-with 'Moonpig::Role::Credit';
+with 'Moonpig::Role::Credit::Refundable';
 
 sub as_string {
   my ($self) = @_;
@@ -19,5 +19,9 @@ has transaction_id => (
   isa => TrimmedSingleLine,
   required => 1,
 );
+
+sub issue_refund {
+  Moonpig::X->throw("CreditCard refund unimplemented");
+}
 
 1;
