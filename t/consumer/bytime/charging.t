@@ -5,13 +5,14 @@ use Carp qw(confess croak);
 use Data::GUID qw(guid_string);
 use Moonpig;
 use t::lib::TestEnv;
+use t::lib::ConsumerTemplateSet::Test;
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
 use t::lib::Logger;
-use Moonpig::Test::Factory qw(build);
+use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 
 with(
   'Moonpig::Test::Role::UsesStorage',
@@ -214,6 +215,17 @@ test "variable charge" => sub {
     is($stuff->{consumer}->unapplied_amount, dollars(485),
        '$15 charged by charging the date');
   }
+};
+
+test cost_estimate => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    { c => { template => 'boring' } },
+    sub {
+      my ($ledger) = @_;
+      my ($c) = $ledger->get_component("c");
+      is($c->estimate_cost_for_interval(days(365)), dollars(100), "cost estimate for 1y");
+    });
 };
 
 test grace_period => sub {

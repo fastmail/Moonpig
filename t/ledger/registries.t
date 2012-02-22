@@ -14,8 +14,6 @@ with(
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-use t::lib::TestEnv;
-
 use Data::GUID qw(guid_string);
 use List::Util qw(sum);
 use Moonpig::Util qw(class days dollars event);

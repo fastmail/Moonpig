@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
+use List::MoreUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Util qw(class days event sum);
@@ -168,6 +169,14 @@ sub calculate_total_charge_amount_on {
                                 keys @charge_pairs;
 
   return $total_charge_amount;
+}
+
+sub estimate_cost_for_interval {
+  my ($self, $interval) = @_;
+  my $iter = natatime 2, $self->initial_invoice_charge_pairs;
+  my $total = 0;
+  while (my ($desc, $amt) = $iter->()) { $total += $amt }
+  return $total * ($interval / $self->cost_period);
 }
 
 sub can_make_payment_on {

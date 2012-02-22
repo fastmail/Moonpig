@@ -740,6 +740,12 @@ sub save {
   return $self;
 }
 
+sub estimate_cost_for_interval {
+  my ($self, $period) = @_;
+  return sumof {$_->estimate_cost_for_interval($period)}
+    (grep $_->is_active, $self->consumer_collection->all);
+}
+
 PARTIAL_PACK {
   my ($self) = @_;
 
