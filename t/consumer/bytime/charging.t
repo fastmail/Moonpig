@@ -150,6 +150,48 @@ test "top up" => sub {
   }
 };
 
+test "proration" => sub {
+  my ($self) = @_;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan = sub {
+    Moonpig::DateTime->new( year => 2000, month => 1, day => $_[0] );
+  };
+
+  Moonpig->env->stop_clock_at($jan->(1));
+
+  my $stuff;
+  Moonpig->env->storage->do_rw(sub {
+    $stuff = build(
+      consumer => {
+        class              => class('Consumer::ByTime::FixedAmountCharge'),
+        charge_amount      => dollars(30),
+        cost_period        => days(100),
+        proration_period   => days(10),
+        replacement_plan   => [ get => '/nothing' ],
+        charge_description => "test charge",
+        xid                => xid(),
+      }
+    );
+
+    Moonpig->env->save_ledger($stuff->{ledger});
+  });
+
+  $self->heartbeat_and_send_mail($stuff->{ledger});
+
+  my @invoices = $stuff->{ledger}->payable_invoices;
+  is(@invoices, 1, "we got a single invoice for our prorated consumer");
+
+  is($invoices[0]->total_amount, dollars(3), 'it was for 10 days: $3');
+
+  cmp_ok(
+    $stuff->{consumer}->expire_date,
+    '==',
+    $jan->(4),
+    "expiration predicted for Jan 4",
+  );
+};
+
 {
   package ChargeTodaysDate;
   use Moose::Role;
