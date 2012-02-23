@@ -77,7 +77,7 @@ use Moonpig::Types qw(Credit Consumer EmailAddresses GUID XID NonBlankLine);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::MKits;
-use Moonpig::Util qw(class event random_short_ident sumof);
+use Moonpig::Util qw(class event random_short_ident sumof years);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
@@ -742,8 +742,15 @@ sub save {
 
 sub estimate_cost_for_interval {
   my ($self, $period) = @_;
+
+  # XXX this function should fail when it sees a consumer without its
+  # own cost estimation method, rather than ignoring it.
+  # It's this way as a temporary fallback so that ledgers can give a
+  # cost estimate during the transition period from pybill to moonpig.
+  # 2012-02-21 mjd
   return sumof {$_->estimate_cost_for_interval($period)}
-    (grep $_->is_active, $self->consumer_collection->all);
+    grep $_->can("estimate_cost_for_interval"), # XXX
+      grep $_->is_active, $self->consumer_collection->all;
 }
 
 PARTIAL_PACK {
@@ -763,6 +770,7 @@ PARTIAL_PACK {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
         $self->xids_handled
     },
+    yearly_cost_estimate => $self->estimate_cost_for_interval(years(1)),
   };
 };
 
