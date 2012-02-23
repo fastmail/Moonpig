@@ -20,6 +20,7 @@ with(
   'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
+  'Moonpig::Role::StubBuild',
 );
 
 requires 'charge_pairs_on';
@@ -42,7 +43,13 @@ sub charge_amount_on {
 }
 
 sub initial_invoice_charge_pairs {
-  $_[0]->charge_pairs_on( Moonpig->env->now );
+  my ($self) = @_;
+  my @pairs = $self->charge_pairs_on( Moonpig->env->now );
+
+  my $ratio = $self->proration_period / $self->cost_period;
+  $pairs[$_] *= $ratio for grep { $_ % 2 } keys @pairs;
+
+  return @pairs;
 }
 
 has cost_period => (
@@ -51,6 +58,19 @@ has cost_period => (
   isa => TimeInterval,
   traits => [ qw(Copy) ],
 );
+
+has proration_period => (
+  is   => 'ro',
+  isa  => TimeInterval,
+  lazy => 1,
+  default => sub { $_[0]->cost_period },
+);
+
+after BUILD => sub {
+  my ($self) = @_;
+  Moonpig::X->throw({ ident => 'proration longer than cost period' })
+    if $self->proration_period > $self->cost_period;
+};
 
 after become_active => sub {
   my ($self) = @_;
