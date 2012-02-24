@@ -115,6 +115,8 @@ sub remaining_life {
 
 sub will_die_soon { 0 } # Provided by MakesReplacement
 
+sub estimated_lifetime { $_[0]->proration_period }
+
 ################################################################
 #
 #

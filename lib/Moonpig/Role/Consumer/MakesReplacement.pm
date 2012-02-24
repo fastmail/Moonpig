@@ -7,7 +7,7 @@ use Moonpig::Util qw(event);
 requires 'remaining_life';
 requires 'will_die_soon';
 
-# When the object thinks its remaining lift is less than or equal to this long,
+# When the object thinks its remaining life is less than or equal to this long,
 # it will create a replacement to invoice for the next service period
 #
 # A consumer's replacement should be created no more than this much

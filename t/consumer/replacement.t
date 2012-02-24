@@ -13,8 +13,6 @@ use t::lib::TestEnv;
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-use t::lib::TestEnv;
-
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
@@ -92,6 +90,29 @@ test funding => sub {
     "replace funded consumer" );
 };
 
+test "replacement chain" => sub {
+  my ($self) = @_;
+  for my $length (0 .. 5, 0.1) {
+    my $x_len = int($length/2) + ($length/2 > int($length/2));
+    do_with_fresh_ledger(
+      { c => { template => 'quick',
+               replacement_plan => [ get => "/consumer-template/quick" ],
+               xid => "test:consumer:$length",
+             }}, # lasts 2d
+      sub {
+        my ($ledger) = @_;
+        my ($c) = $ledger->get_component('c');
+        my $repl = $c->create_replacement_chain(days($length));
+        my @chain = $c->replacement_chain();
+        is(@chain, $x_len, "replacement chain for $length day(s) has $x_len item(s)");
+        my @invoices = $ledger->invoice_collection->all;
+        is(@invoices, 1, "still only one invoice");
+        my (@charges) = $invoices[0]->all_charges;
+        is(@charges, $x_len + 1, "each consumer charged the invoice");
+        is($invoices[0]->total_amount, dollars(100 * ($x_len + 1)), "total amount");
+      });
+  }
+};
 
 run_me;
 done_testing;

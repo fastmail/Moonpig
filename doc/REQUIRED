@@ -28,6 +28,7 @@ MooseX::SetOnce
 MooseX::Types
 MooseX::Types::Perl
 namespace::autoclean
+Number::Nary
 Path::Class
 Path::Resolver
 Role::HasMessage::Errf

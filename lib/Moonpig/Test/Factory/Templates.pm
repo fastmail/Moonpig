@@ -33,7 +33,7 @@ sub templates {
           charge_amount => dollars(100),
           cost_period => days(2),
           charge_description => 'quick consumer',
-          replacement_plan   => [ get => '/nothing' ],
+          replacement_plan   => [ get => '/consumer-template/quick' ],
         }};
     },
 

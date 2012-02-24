@@ -108,6 +108,25 @@ sub replacement_chain {
     ? ($self->replacement, $self->replacement->replacement_chain) : ();
 }
 
+# The chain length here is a TimeInterval that says how long the chain
+# should last for. The created chain will be at least that long.
+# It returns the head of the new chain.
+sub create_replacement_chain {
+  my ($self, $chain_length) = @_;
+  return if $chain_length <= 0;
+
+  $self->replacement->mark_superseded if $self->has_replacement;
+
+  my $new_replacement = $self->build_and_install_replacement()
+    # The consumer specifies no replacement, so we can't continue the chain
+    or confess(sprintf "replacement chain ended with %d days to go",
+               $chain_length / 86400);
+
+  $new_replacement->create_replacement_chain(
+    $chain_length - $new_replacement->estimated_lifetime);
+  return $new_replacement;
+}
+
 # Does this consumer, or any consumer in its replacement chain,
 # have funds?  If so, the funds will be lost if the consumer is superseded
 sub is_funded {
@@ -152,7 +171,7 @@ has replacement_plan => (
 sub build_and_install_replacement {
   my ($self) = @_;
 
-  # Shouldn't this be fatal? -- rjbs, 2011-08-22
+  # Shouldn't this be fatal? -- rjbs, 2011-08-22 XXX
   return if $self->has_replacement;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
