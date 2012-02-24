@@ -46,13 +46,16 @@ sub setup_account {
   my %rv;
 
   my $signup_info =
-    { first_name => "Fred",
-      last_name  => "Flooney",
-      phone_number    => '12345678',
-      email_addresses => [ 'textuser@example.com' ],
-      address_lines   => [ '1313 Mockingbird Ln.' ],
-      city            => 'Wagstaff',
-      country         => 'USA',
+    {
+      contact => {
+        first_name => "Fred",
+        last_name  => "Flooney",
+        phone_number    => '12345678',
+        email_addresses => [ 'textuser@example.com' ],
+        address_lines   => [ '1313 Mockingbird Ln.' ],
+        city            => 'Wagstaff',
+        country         => 'USA',
+      },
       consumers => {
         $u_xid => {
           template => 'username'

@@ -14,15 +14,17 @@ use List::AllUtils qw(part);
 use namespace::autoclean;
 
 sub resource_post {
-  my ($self, $arg) = @_;
+  my ($self, $received_arg) = @_;
 
   my $ledger;
 
   Moonpig->env->storage->txn(sub {
     my $class ||= class('Ledger');
+    my %arg = %$received_arg;
 
+    my $contact_arg = delete $arg{contact};
     my $contact = class('Contact')->new({
-      map {; defined $arg->{$_} ? ($_ => $arg->{$_}) : () } qw(
+      map {; defined $contact_arg->{$_} ? ($_ => $contact_arg->{$_}) : () } qw(
         first_name last_name organization
         phone_number address_lines city state postal_code country
         email_addresses 
@@ -33,8 +35,8 @@ sub resource_post {
       contact => $contact,
     });
 
-    if ($arg->{consumers}) {
-      my $consumers = $arg->{consumers};
+    if ($arg{consumers}) {
+      my $consumers = $arg{consumers};
 
       for my $xid (keys %$consumers) {
         my $template_args = $consumers->{$xid}{template_args} || {};
@@ -50,7 +52,7 @@ sub resource_post {
       }
     }
 
-    if ($arg->{pay_as_imported}) {
+    if ($arg{pay_as_imported}) {
       # Not worrying about closed/open.  The ledger is brand new.  We just find
       # invoices that need money, then provide it.
       my @charges =

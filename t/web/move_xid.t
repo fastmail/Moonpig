@@ -33,13 +33,16 @@ sub setup_account {
   my %rv;
 
   my $signup_info =
-    { first_name => "Fred",
-      last_name  => "Flooney",
-      phone_number    => '12345678',
-      email_addresses => [ 'testuser@example.com' ],
-      address_lines   => [ '1313 Mockingbird Ln.' ],
-      city            => 'Wagstaff',
-      country         => 'USA',
+    {
+      contact => {
+        first_name => "Fred",
+        last_name  => "Flooney",
+        phone_number    => '12345678',
+        email_addresses => [ 'testuser@example.com' ],
+        address_lines   => [ '1313 Mockingbird Ln.' ],
+        city            => 'Wagstaff',
+        country         => 'USA',
+      },
       consumers => {
         $u_xid => {
           template => 'username'
@@ -170,14 +173,17 @@ test handoff => sub {
   my $ledger_b_guid = do {
     my $result = $ua->mp_post(
       '/ledgers',
-      { first_name => "Ted (Theodore)",
-        last_name  => "Logan",
-        phone_number    => "69",
-        email_addresses => [ 'ttl@example.com' ],
-        address_lines   => [ '1 W. Eastside Cir.' ],
-        city            => 'San Dimas',
-        state           => 'CA',
-        country         => 'USA',
+      {
+        contact => {
+          first_name => "Ted (Theodore)",
+          last_name  => "Logan",
+          phone_number    => "69",
+          email_addresses => [ 'ttl@example.com' ],
+          address_lines   => [ '1 W. Eastside Cir.' ],
+          city            => 'San Dimas',
+          state           => 'CA',
+          country         => 'USA',
+        }
       });
     $result->{guid};
   };
