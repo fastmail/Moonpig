@@ -125,7 +125,7 @@ sub _create_replacement_chain {
   my ($self, $chain_length) = @_;
 
   if ($chain_length <= 0) {
-    $self->replacement->mark_superseded if $self->has_replacement;
+    $self->replacement(undef) if $self->has_replacement;
     return;
   }
 

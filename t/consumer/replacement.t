@@ -122,6 +122,22 @@ test "replacement chain" => sub {
       my @chain = $ledger->get_component('c')->replacement_chain;
       is(@chain, 3, "BUILD-time replacement_chain_duration works");
     });
+
+  do_with_fresh_ledger(
+    { c => { template => 'quick',
+             xid => "test:consumer:soup",
+             replacement_chain_duration => days(5),
+           }},
+    sub {
+      my ($ledger) = @_;
+      my ($c) = $ledger->get_component('c');
+      for my $length (1, 2, 4, 4, 3, 0, 2) {
+        my $consumers = $length == 1 ? "consumer" : "consumers";
+        $c->_create_replacement_chain(days(2 * $length));
+        my @chain = $c->replacement_chain;
+        is(@chain, $length, "adjusted length of replacement chain to $length $consumers");
+      }
+    });
 };
 
 run_me;
