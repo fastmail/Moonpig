@@ -102,7 +102,7 @@ test "replacement chain" => sub {
       sub {
         my ($ledger) = @_;
         my ($c) = $ledger->get_component('c');
-        my $repl = $c->create_replacement_chain(days($length));
+        my $repl = $c->_create_replacement_chain(days($length));
         my @chain = $c->replacement_chain();
         is(@chain, $x_len, "replacement chain for $length day(s) has $x_len item(s)");
         my @invoices = $ledger->invoice_collection->all;

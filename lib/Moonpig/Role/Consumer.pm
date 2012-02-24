@@ -111,7 +111,17 @@ sub replacement_chain {
 # The chain length here is a TimeInterval that says how long the chain
 # should last for. The created chain will be at least that long.
 # It returns the head of the new chain.
-sub create_replacement_chain {
+publish create_replacement_chain => {
+   '-http_method' => 'post',
+   '-path'        => 'create-replacements',
+   chain_length   => TimeInterval,
+} => sub {
+  my ($self, $arg) = @_;
+  my $chain_length = $arg->{chain_length};
+  return [ $self->_create_replacement_chain($chain_length)->replacement_chain ];
+};
+
+sub _create_replacement_chain {
   my ($self, $chain_length) = @_;
   return if $chain_length <= 0;
 
@@ -122,7 +132,7 @@ sub create_replacement_chain {
     or confess(sprintf "replacement chain ended with %d days to go",
                $chain_length / 86400);
 
-  $new_replacement->create_replacement_chain(
+  $new_replacement->_create_replacement_chain(
     $chain_length - $new_replacement->estimated_lifetime);
   return $new_replacement;
 }
