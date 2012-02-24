@@ -96,7 +96,6 @@ test "replacement chain" => sub {
     my $x_len = int($length/2) + ($length/2 > int($length/2));
     do_with_fresh_ledger(
       { c => { template => 'quick',
-               replacement_plan => [ get => "/consumer-template/quick" ],
                xid => "test:consumer:$length",
              }}, # lasts 2d
       sub {
@@ -112,6 +111,17 @@ test "replacement chain" => sub {
         is($invoices[0]->total_amount, dollars(100 * ($x_len + 1)), "total amount");
       });
   }
+
+  do_with_fresh_ledger(
+    { c => { template => 'quick',
+             xid => "test:consumer:poop",
+             replacement_chain_duration => days(5),
+           }},
+    sub {
+      my ($ledger) = @_;
+      my @chain = $ledger->get_component('c')->replacement_chain;
+      is(@chain, 3, "BUILD-time replacement_chain_duration works");
+    });
 };
 
 run_me;

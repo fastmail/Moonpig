@@ -269,6 +269,9 @@ after BUILD => sub {
   my ($self, $arg) = @_;
 
   $self->become_active if delete $arg->{make_active};
+  if (exists $arg->{replacement_chain_duration}) {
+    $self->_create_replacement_chain(delete $arg->{replacement_chain_duration});
+  }
 };
 
 sub is_active {
