@@ -123,18 +123,23 @@ publish create_replacement_chain => {
 
 sub _create_replacement_chain {
   my ($self, $chain_length) = @_;
-  return if $chain_length <= 0;
 
-  $self->replacement->mark_superseded if $self->has_replacement;
+  if ($chain_length <= 0) {
+    $self->replacement->mark_superseded if $self->has_replacement;
+    return;
+  }
 
-  my $new_replacement = $self->build_and_install_replacement()
-    # The consumer specifies no replacement, so we can't continue the chain
-    or confess(sprintf "replacement chain ended with %d days to go",
-               $chain_length / 86400);
+  my $replacement = $self->replacement;
+  unless ($replacement) {
+    $replacement = $self->build_and_install_replacement()
+      # The consumer specifies no replacement, so we can't continue the chain
+      or confess(sprintf "replacement chain ended with %d days to go",
+                 $chain_length / 86400);
+  }
 
-  $new_replacement->_create_replacement_chain(
-    $chain_length - $new_replacement->estimated_lifetime);
-  return $new_replacement;
+  $replacement->_create_replacement_chain(
+    $chain_length - $replacement->estimated_lifetime);
+  return $replacement;
 }
 
 # Does this consumer, or any consumer in its replacement chain,
