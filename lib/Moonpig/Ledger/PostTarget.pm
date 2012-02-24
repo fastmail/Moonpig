@@ -79,6 +79,8 @@ sub resource_post {
       );
     }
 
+    $ledger->heartbeat;
+
     Moonpig->env->save_ledger($ledger);
   });
 
