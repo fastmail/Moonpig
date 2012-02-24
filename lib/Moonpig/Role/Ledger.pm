@@ -534,7 +534,8 @@ has _active_xid_consumers => (
   default  => sub {  {}  },
   traits   => [ 'Hash' ],
   handles  => {
-    xids_handled => 'keys',
+    xids_handled     => 'keys',
+    active_consumers => 'values',
   },
 );
 

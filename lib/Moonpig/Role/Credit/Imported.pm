@@ -1,13 +1,9 @@
 package Moonpig::Role::Credit::Imported;
-# ABSTRACT: a credit imported from the old billing system
+# ABSTRACT: a (non-refundable) credit imported from the old billing system
 use Moose::Role;
 
-with('Moonpig::Role::Credit::Refundable');
+with('Moonpig::Role::Credit');
 
 use namespace::autoclean;
-
-sub issue_refund {
-  Moonpig::X->throw("Imported credit refund unimplemented");
-}
 
 1;

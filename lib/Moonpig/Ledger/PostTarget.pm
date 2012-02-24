@@ -8,7 +8,8 @@ with(
 use MooseX::StrictConstructor;
 
 use Moonpig;
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class sumof);
+use List::AllUtils qw(part);
 
 use namespace::autoclean;
 
@@ -47,6 +48,35 @@ sub resource_post {
           $template_args,
         );
       }
+    }
+
+    if ($arg->{pay_as_imported}) {
+      # Not worrying about closed/open.  The ledger is brand new.  We just find
+      # invoices that need money, then provide it.
+      my @charges =
+        map  { $_->all_charges }
+        grep { $_->is_unpaid   }
+        $ledger->invoices;
+
+      my %is_active = map { $_->guid => 1 } $ledger->active_consumers;
+
+      # We want to pay off the invoices generated in setting up this new
+      # consumer.  The active head (likely to be pro-rated) for each chain is
+      # not refundable, because it is active service.  The rest of the chain
+      # is refundable in some way. -- rjbs, 2012-02-24
+      my ($act_c, $inact_c) = part { $is_active{ $_->owner_guid } } @charges;
+      my $r_amount = sumof { $_->amount } @$inact_c;
+      my $n_amount = sumof { $_->amount } @$act_c;
+
+      $self->add_credit(
+        class('Credit::Imported'),
+        { amount => $n_amount },
+      );
+
+      $self->add_credit(
+        class('Credit::Imported::Refundable'),
+        { amount => $r_amount },
+      );
     }
 
     Moonpig->env->save_ledger($ledger);
