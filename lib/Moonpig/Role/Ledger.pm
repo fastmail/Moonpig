@@ -81,6 +81,7 @@ use Moonpig::Util qw(class event random_short_ident sumof years);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
+use List::AllUtils qw(part);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
@@ -381,8 +382,10 @@ sub process_credits {
 
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
   for my $invoice ( $self->payable_invoices ) {
-
-    @credits = grep { $_->unapplied_amount > 0 } @credits;
+    my ($nr_credits, $r_credits) =
+      part { $_->does('Moonpig::Role::Credit::Refundable') ? 0 : 1 }
+      grep { $_->unapplied_amount > 0 }
+      @credits;
 
     my @coupon_apps = $self->find_coupon_applications__($invoice);
     my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
@@ -393,7 +396,7 @@ sub process_credits {
     my @to_apply;
 
     # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@coupon_credits, @credits) {
+    CREDIT: for my $credit (@coupon_credits, @$nr_credits, @$r_credits) {
       my $credit_amount = $credit->unapplied_amount;
       my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
 
