@@ -6,4 +6,6 @@ with(
 
 use namespace::autoclean;
 
+sub counts_toward_total { 1 }
+
 1;

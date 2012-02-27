@@ -52,6 +52,8 @@ has abandoned_date => (
   traits => [ qw(SetOnce) ],
 );
 
+sub counts_toward_total { ! $_[0]->is_abandoned }
+
 sub mark_abandoned {
   my ($self) = @_;
   $self->abandoned_date( Moonpig->env->now );
