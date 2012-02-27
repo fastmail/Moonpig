@@ -34,7 +34,8 @@ role {
   );
 
   method total_amount => sub {
-    sumof { $_->amount } $_[0]->all_charges;
+    my @charges = grep $_->counts_toward_total, $_[0]->all_charges;
+    sumof { $_->amount } @charges;
   };
 
   method _objectify_charge => sub {

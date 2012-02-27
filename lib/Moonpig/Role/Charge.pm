@@ -10,6 +10,8 @@ use Moonpig::Behavior::Packable;
 
 use namespace::autoclean;
 
+requires 'counts_toward_total';
+
 with ('Moonpig::Role::HasTagset' => {});
 
 has description => (
