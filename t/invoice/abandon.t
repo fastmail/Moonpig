@@ -89,13 +89,14 @@ test service_extended => sub {
       my @invoices = $c1->abandon_all_unpaid_charges or fail();
       is_deeply(\@invoices, [$i1], "abandoned charges on expected invoice");
 
-      $c1->mark_superseded;
       $i1->abandon;
 
       # Use case 2. Consumer charges for service we don't want; reissue
       # invoice without it. Have charges from multiple consumers.
       my $i2 = $ledger->current_invoice;
       is ($i2->total_amount, dollars(5), "new invoice is correct");
+
+      $c1->mark_superseded;
 
       # Use case 1: Consumers charges for 1 year of service, but then we
       # want to abandon that charge and replace it with one for 3 years of

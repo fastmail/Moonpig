@@ -79,6 +79,7 @@ sub mark_superseded {
   my ($self) = @_;
   return if $self->is_superseded;
   $self->_superseded_at(Moonpig->env->now);
+  $self->abandon_all_unpaid_charges;
   for my $repl (@{$self->_replacement_history}) {
     $repl->mark_superseded if $repl;
   }
@@ -464,8 +465,9 @@ sub invoice_charge_tags {
 # and return a list (or count) of the abandoned charges
 sub abandon_charges_on_invoice {
   my ($self, $invoice) = @_;
-  my @charges = grep $self->guid eq $_->owner->guid, $invoice->all_charges;
-  return unless @charges;
+  my @charges = grep ! $_->is_abandoned,
+    grep $self->guid eq $_->owner_guid,
+      $invoice->all_charges;
   $_->mark_abandoned for @charges;
   return @charges;
 }
