@@ -140,5 +140,54 @@ test "replacement chain" => sub {
     });
 };
 
+sub make_charges {
+  my ($ledger, %args) = @_;
+  my @consumers = @{$args{consumers}};
+  my $amount = $args{amount} || dollars(1);
+  my $description = $args{description} || "some charge";
+
+  for my $c (@consumers) {
+    my $ch = $c->build_charge({
+      description => $description,
+      amount      => $amount,
+      tags        => $c->invoice_charge_tags,
+      consumer    => $c,
+    });
+    $ledger->current_invoice->add_charge($ch);
+  }
+  return $ledger->current_invoice;
+}
+
+test "superseded consumers abandon unpaid charges" => sub {
+  do_with_fresh_ledger(
+    { c => { template => 'dummy', replacement => 'd' },
+      d => { template => 'dummy', replacement => 'e', xid => "test:consumer:c" },
+      e => { template => 'dummy',                     xid => "test:consumer:c", make_active => 0 }
+    },
+    sub {
+      my ($ledger) = @_;
+      my ($c, $d, $e) = $ledger->get_component(qw(c d e));
+      my $i1 = make_charges($ledger, consumers => [ $c, $d, $e ], amount => dollars(5));
+      $i1->mark_closed;
+      $i1->mark_paid; # should I have created a credit and done this right?
+      is($i1->total_amount, dollars(15));
+
+      my $i2 = make_charges($ledger, consumers => [ $c, $d, $e ], amount => dollars(10));
+      $i2->mark_closed;
+      is($i2->total_amount, dollars(30));
+
+      my $dd = $ledger->add_consumer_from_template(
+        "dummy",
+        { xid => "test:consumer:c" });
+
+      $c->replacement($dd);
+
+      ok($d->is_superseded, "d is superseded by dd");
+      ok($e->is_superseded, "e is also superseded");
+      is($i1->total_amount, dollars(15), "i1 amount didn't change");
+      is($i2->total_amount, dollars(10), "i2 amount omits both abandoned charges");
+    });
+};
+
 run_me;
 done_testing;
