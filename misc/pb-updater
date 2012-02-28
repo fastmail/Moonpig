@@ -1,0 +1,22 @@
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+my @guids = qw(
+  A4E53364-5CAD-11E1-B71C-F913E7420ACE
+  E7892824-58C5-11E1-994D-EA3D2A1AB90E
+  3B1C9B00-58E0-11E1-994D-EA3D2A1AB90E
+  3BA06EEE-58E0-11E1-994D-EA3D2A1AB90E
+);
+
+for my $guid (@guids) {
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+      $ledger->contact->{phone_book}{home}
+        = delete $ledger->contact->{phone_number};
+    },
+  );
+};
