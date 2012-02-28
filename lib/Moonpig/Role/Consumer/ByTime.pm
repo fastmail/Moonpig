@@ -25,8 +25,6 @@ with(
 
 requires 'charge_pairs_on';
 
-use Moonpig::Behavior::EventHandlers;
-
 use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
 use namespace::autoclean;
