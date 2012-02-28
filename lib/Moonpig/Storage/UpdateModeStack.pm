@@ -42,9 +42,6 @@ sub push {
   return Moonpig::Storage::UpdateModeStack::StackPopper->new($_[0]);
 }
 
-sub push_false { $_[0]->push(0) }
-sub push_true { $_[0]->push(1) }
-
 package Moonpig::Storage::UpdateModeStack::StackPopper;
 
 sub new { my ($class, $stack) = @_; bless { pop_me => $stack } => $class }

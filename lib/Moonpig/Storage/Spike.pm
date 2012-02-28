@@ -205,8 +205,6 @@ has _update_mode_stack => (
     _has_update_mode => 'is_nonempty',
     _in_transaction => 'is_nonempty',
     _push_update_mode => 'push',
-    _set_noupdate_mode => 'push_false',
-    _set_update_mode => 'push_true',
   },
 );
 
@@ -222,29 +220,38 @@ sub _in_nested_transaction {
 
 sub do_rw {
   my ($self, $code) = @_;
-  my $rv;
-  {
-    my $popper = $self->_set_update_mode;
-    $rv = $self->txn(sub {
+  my $rv = $self->__with_update_mode(1, sub {
+    return $self->txn(sub {
       my $rv = $code->();
       $self->_execute_saves unless $self->_in_nested_transaction;
       return $rv;
     });
-  }
-  $self->_flush_ledger_cache unless $self->_in_transaction;
+  });
   return $rv;
 }
 
 sub do_ro {
   my ($self, $code) = @_;
-  my $rv;
-  {
-    my $popper = $self->_set_noupdate_mode;
-    $rv = $self->txn(sub {
+  my $rv = $self->__with_update_mode(0, sub {
+    return $self->txn(sub {
       $code->();
     });
-  }
+  });
+  return $rv;
+}
+
+sub __with_update_mode {
+  my ($self, $mode, $code) = @_;
+  my $popper = $self->_push_update_mode($mode);
+  my $rv = $code->();
+
+  # Properly, we should track which ledgers are used in each nested
+  # transaction, and whenver a transaction ends, flush the ones that
+  # were used by only that transaction, but eh, that's too much
+  # trouble. So instead, we just hold them all until the final
+  # transaction ends and flush them all then. mjd 2011-11-14
   $self->_flush_ledger_cache unless $self->_in_transaction;
+
   return $rv;
 }
 
@@ -263,9 +270,7 @@ sub do_with_ledgers {
   }
 
   my $rv;
-  {
-    my $popper = $self->_push_update_mode(! $ro);
-
+  $self->__with_update_mode( ! $ro, sub {
     my @ledgers = ();
     for my $i (0 .. $#$guids) {
       defined($guids->[$i])
@@ -283,15 +288,7 @@ sub do_with_ledgers {
       }
       return $rv;
     });
-  }
-
-  # Properly, we should track which ledgers are used in each nested
-  # transaction, and whenver a transaction ends, flush the ones that
-  # were used by only that transaction, but eh, that's too much
-  # trouble. So instead, we just hold them all until the final
-  # transaction ends and flush them all then. mjd 2011-11-14
-
-  $self->_flush_ledger_cache unless $self->_in_transaction;
+  });
 
   return $rv;
 }
