@@ -15,7 +15,7 @@ my $ledger = $m->mp_request(
       city => $params->{signup}{city},
       country => $params->{signup}{country},
       address_lines   => $params->{signup}{address_lines},
-      phone_number    => $params->{signup}{phone_number},
+      phone_book      => { home => $params->{signup}{phone_number} },
       email_addresses => $params->{signup}{email_addresses},
     },
     consumers => {

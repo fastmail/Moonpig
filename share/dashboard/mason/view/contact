@@ -18,7 +18,7 @@ $ledger_guid
   Organization: <input name='contact.organization' value='<% $ledger->{contact}{organization} |h %>' />
   <br />
 
-  Phone number: <input name='contact.phone_number' value='<% $ledger->{contact}{phone_number} |h %>' />
+  Phone number: <input name='contact.phone_book.home' value='<% $ledger->{contact}{phone_book}{home} |h %>' />
   <br />
 
   Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email}[0] |h %>' />
