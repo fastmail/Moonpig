@@ -38,13 +38,21 @@ sub pop_stack {
 }
 
 sub push {
-  push @{$_[0]->stack}, $_[1];
-  return Moonpig::Storage::UpdateModeStack::StackPopper->new($_[0]);
+  my ($self, $mode, $cb) = @_;
+  push @{$self->stack}, $mode;
+  return Moonpig::Storage::UpdateModeStack::StackPopper->new($self, $cb);
 }
 
 package Moonpig::Storage::UpdateModeStack::StackPopper;
 
-sub new { my ($class, $stack) = @_; bless { pop_me => $stack } => $class }
-sub DESTROY { $_[0]{pop_me}->pop_stack }
+sub new { my ($class, $stack, $cb) = @_; bless { stack => $stack, callback => $cb } => $class }
+
+sub DESTROY {
+  my ($popper) = @_;
+  my $stack = $popper->{stack};
+  $stack->pop_stack;
+  $popper->{callback}->() if $stack->is_empty && $popper->{callback};
+  return;
+}
 
 1;

@@ -242,17 +242,19 @@ sub do_ro {
 
 sub __with_update_mode {
   my ($self, $mode, $code) = @_;
-  my $popper = $self->_push_update_mode($mode);
-  my $rv = $code->();
 
+  # The 'popper' here is an object which pops the mode stack when it
+  # goes out of scope.  The sub argument is a callback that is invoked
+  # if the stack becomes empty as a result.
+  #
   # Properly, we should track which ledgers are used in each nested
   # transaction, and whenver a transaction ends, flush the ones that
   # were used by only that transaction, but eh, that's too much
   # trouble. So instead, we just hold them all until the final
   # transaction ends and flush them all then. mjd 2011-11-14
-  $self->_flush_ledger_cache unless $self->_in_transaction;
+  my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache });
 
-  return $rv;
+  return $code->();
 }
 
 sub do_with_ledgers {
