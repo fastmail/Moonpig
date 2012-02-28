@@ -807,47 +807,55 @@ sub retrieve_ledger_for_guid {
   my $ledger;
   $ledger = $self->_cached_ledger($guid) if $self->_has_cached_ledger($guid);
 
-  unless ($ledger) {
-    my $dbh = $self->_conn->dbh;
-    my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
-      q{SELECT frozen_ledger, frozen_classes FROM ledgers WHERE guid = ?},
-      undef,
-      $guid,
-    );
+  $ledger ||= $self->_retrieve_ledger_from_db($guid);
 
-    return unless defined $class_blob or defined $ledger_blob;
-
-    Carp::confess("incomplete storage data found for $guid")
-      unless defined $class_blob and defined $ledger_blob;
-
-    require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
-
-    my $class_map = thaw($class_blob);
-       $ledger    = thaw($ledger_blob);
-
-    my %class_for;
-    for my $old_class (keys %$class_map) {
-      my $new_class = class(@{ $class_map->{ $old_class } });
-      next if $new_class eq $old_class;
-
-      $class_for{ $old_class } = $new_class;
-    }
-
-    Class::Rebless->custom($ledger, '...', {
-      editor => sub {
-        my ($obj) = @_;
-        my $class = blessed $obj;
-        return unless exists $class_for{ $class };
-        bless $obj, $class_for{ $class };
-      },
-    });
-  }
+  return unless $ledger;
 
   if ($self->_in_update_mode) {
     $self->save_ledger($ledger); # also put it in the cache
   } else {
     $self->_cache_ledger($ledger) if $self->_in_transaction;
   }
+
+  return $ledger;
+}
+
+sub _retrieve_ledger_from_db {
+  my ($self, $guid) = @_;
+
+  my $dbh = $self->_conn->dbh;
+  my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
+    q{SELECT frozen_ledger, frozen_classes FROM ledgers WHERE guid = ?},
+    undef,
+    $guid,
+  );
+
+  return unless defined $class_blob or defined $ledger_blob;
+
+  Carp::confess("incomplete storage data found for $guid")
+    unless defined $class_blob and defined $ledger_blob;
+
+  require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
+
+  my $class_map = thaw($class_blob);
+  my $ledger    = thaw($ledger_blob);
+
+  my %class_for;
+  for my $old_class (keys %$class_map) {
+    my $new_class = class(@{ $class_map->{ $old_class } });
+    next if $new_class eq $old_class;
+
+    $class_for{ $old_class } = $new_class;
+  }
+
+  Class::Rebless->custom($ledger, '...', {
+    editor => sub {
+      my ($obj) = @_;
+      my $class = blessed $obj;
+      return unless exists $class_for{ $class };
+      bless $obj, $class_for{ $class };
+    },
+  });
 
   return $ledger;
 }
