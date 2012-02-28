@@ -262,18 +262,18 @@ sub do_with_ledgers {
     croak "Unknown options '%keys' to do_with_ledgers";
   }
 
-  my @ledgers = ();
-  for my $i (0 .. $#$guids) {
-    defined($guids->[$i])
-      or croak "Guid element $i was undefined";
-    my $ledger = $self->retrieve_ledger_for_guid($guids->[$i])
-      or croak "Couldn't find ledger for guid '$guids->[$i]'";
-    push @ledgers, $ledger;
-  }
-
   my $rv;
   {
     my $popper = $self->_push_update_mode(! $ro);
+
+    my @ledgers = ();
+    for my $i (0 .. $#$guids) {
+      defined($guids->[$i])
+        or croak "Guid element $i was undefined";
+      my $ledger = $self->retrieve_ledger_for_guid($guids->[$i])
+        or croak "Couldn't find ledger for guid '$guids->[$i]'";
+      push @ledgers, $ledger;
+    }
 
     $rv = $self->txn(sub {
       my $rv = $code->(@ledgers);
