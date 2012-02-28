@@ -222,21 +222,29 @@ sub _in_nested_transaction {
 
 sub do_rw {
   my ($self, $code) = @_;
-  my $popper = $self->_set_update_mode;
-  my $rv = $self->txn(sub {
-    my $rv = $code->();
-    $self->_execute_saves unless $self->_in_nested_transaction;
-    return $rv;
-  });
+  my $rv;
+  {
+    my $popper = $self->_set_update_mode;
+    $rv = $self->txn(sub {
+      my $rv = $code->();
+      $self->_execute_saves unless $self->_in_nested_transaction;
+      return $rv;
+    });
+  }
+  $self->_flush_ledger_cache unless $self->_in_transaction;
   return $rv;
 }
 
 sub do_ro {
   my ($self, $code) = @_;
-  my $popper = $self->_set_noupdate_mode;
-  my $rv = $self->txn(sub {
-    $code->();
-  });
+  my $rv;
+  {
+    my $popper = $self->_set_noupdate_mode;
+    $rv = $self->txn(sub {
+      $code->();
+    });
+  }
+  $self->_flush_ledger_cache unless $self->_in_transaction;
   return $rv;
 }
 
