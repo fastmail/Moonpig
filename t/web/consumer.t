@@ -39,7 +39,7 @@ sub setup_account {
       contact => {
         first_name => "Fred",
         last_name  => "Flooney",
-        phone_number    => '12345678',
+        phone_book => { home => '12345678' },
         email_addresses => [ 'textuser@example.com' ],
         address_lines   => [ '1313 Mockingbird Ln.' ],
         city            => 'Wagstaff',

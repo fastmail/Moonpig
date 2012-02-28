@@ -378,7 +378,7 @@ sub build_contact {
   return class('Contact')->new({
     first_name      => $names[0],
     last_name       => $names[2],
-    phone_number    => $phone,
+    phone_book      => { home => $phone },
     email_addresses => [ "\L$inits\E\@example.com" ],
     address_lines   => [ '123 Street Rd.' ],
     city            => 'Townville',

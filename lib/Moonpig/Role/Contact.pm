@@ -4,7 +4,7 @@ use Moose::Role;
 
 use Moonpig::Types qw(EmailAddresses TrimmedSingleLine);
 use Moose::Util::TypeConstraints;
-use MooseX::Types::Moose qw(ArrayRef);
+use MooseX::Types::Moose qw(ArrayRef HashRef);
 
 use Moonpig::Behavior::Packable;
 
@@ -38,9 +38,12 @@ has organization => (
 # XXX: I hate phone number fields, but we'll need to do a conversion to
 # structured phone data later, since we need to import all our unstructured
 # phone numbers first. -- rjbs, 2011-11-22
-has phone_number => (
+has phone_book => (
   is  => 'ro',
-  isa => TrimmedSingleLine,
+  isa => subtype(
+    as HashRef[ TrimmedSingleLine ],
+    where { keys %$_ > 0 }
+  ),
   required => 1,
 );
 
@@ -90,7 +93,7 @@ PARTIAL_PACK {
     first_name   => $self->first_name,
     last_name    => $self->last_name,
     organization => $self->organization,
-    phone_number => $self->phone_number,
+    phone_book   => $self->phone_book,
     address      => [ $self->address_lines ],
     city         => $self->city,
     state        => $self->state,

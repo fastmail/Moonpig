@@ -26,7 +26,7 @@ sub resource_post {
     my $contact = class('Contact')->new({
       map {; defined $contact_arg->{$_} ? ($_ => $contact_arg->{$_}) : () } qw(
         first_name last_name organization
-        phone_number address_lines city state postal_code country
+        phone_book address_lines city state postal_code country
         email_addresses 
       )
     });
