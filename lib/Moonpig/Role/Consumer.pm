@@ -387,15 +387,12 @@ sub copy_balance_to__ {
       my $transient_invoice = class("Invoice")->new({
          ledger      => $new_ledger,
       });
-      my $charge = $transient_invoice->add_charge(
-        class('InvoiceCharge')->new({
-          description => sprintf("Transfer management of '%s' from ledger %s",
+      my $charge = $new_consumer->charge_invoice($transient_invoice,
+        { description => sprintf("Transfer management of '%s' from ledger %s",
                                  $self->xid, $ledger->guid),
           amount      => $amount,
-          consumer    => $new_consumer,
-          tags        => [ @{$new_consumer->journal_charge_tags}, "transient" ],
-        }),
-       );
+          extra_tags  => [ "transient" ],
+         });
       $transient_invoice->mark_closed;
       $new_ledger->apply_credits_to_invoice__(
         [{ credit => $credit,
@@ -445,7 +442,7 @@ sub charge_current_journal {
   $args->{from}       ||= $self;
   $args->{to}         ||= $self->ledger->current_journal;
   $args->{extra_tags} ||= [];
-  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @{$args->{extra_tags}} ];
+  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @{delete $args->{extra_tags}} ];
   $args->{date}       ||= Moonpig->env->now;
 
   return $self->ledger->current_journal->charge($args);
@@ -466,6 +463,21 @@ sub journal_charge_tags {
 sub build_charge {
   my ($self, $args) = @_;
   return class('InvoiceCharge')->new($args);
+}
+
+sub charge_current_invoice {
+  my ($self, $args) = @_;
+  $self->charge_invoice($self->ledger->current_invoice, $args);
+}
+
+sub charge_invoice {
+  my ($self, $invoice, $args) = @_;
+
+  $args->{consumer}   ||= $self;
+  $args->{extra_tags} ||= [];
+  $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @{delete $args->{extra_tags}} ];
+
+  $invoice->add_charge($args);
 }
 
 has extra_invoice_charge_tags => (

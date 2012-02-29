@@ -38,14 +38,7 @@ sub _invoice {
   my $iter = natatime 2, @charge_pairs;
 
   while (my ($desc, $amt) = $iter->()) {
-    $invoice->add_charge(
-      $self->build_charge({
-        description => $desc,
-        amount      => $amt,
-        tags        => $self->invoice_charge_tags,
-        consumer    => $self,
-      }),
-    );
+    $self->charge_invoice($invoice, { description => $desc, amount => $amt });
   }
 }
 
