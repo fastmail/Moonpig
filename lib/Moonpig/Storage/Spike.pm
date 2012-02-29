@@ -313,6 +313,8 @@ sub do_ro_with_ledgers {
   $self->do_with_ledgers({ %$opts, ro => 1 }, $guids, $code);
 }
 
+# This cache is getting complicated. It should be turned into an object.
+# 20120229 mjd
 has _ledger_cache => (
   is => 'ro',
   isa => 'HashRef',
@@ -328,6 +330,14 @@ has _ledger_cache => (
 
 sub _cache_ledger {
   my ($self, $ledger) = @_;
+  my $cache = $self->_ledger_cache;
+  my $guid = $ledger->guid;
+
+  if (exists $cache->{$guid} && $ledger != $cache->{$guid}) {
+    confess sprintf "Tried to cache ledger %s = 0x%x, but ledger 0x%x was already cached there!",
+      $guid, $ledger, $cache->{$guid};
+  }
+
   $self->_ledger_cache->{$ledger->guid} = $ledger;
 }
 
@@ -812,8 +822,8 @@ sub retrieve_ledger_for_guid {
 
   if ($self->_in_update_mode) {
     $self->save_ledger($ledger); # also put it in the cache
-  } else {
-    $self->_cache_ledger($ledger) if $self->_in_transaction;
+  } elsif ($self->_in_transaction) {
+    $self->_cache_ledger($ledger);
   }
 
   return $ledger;
