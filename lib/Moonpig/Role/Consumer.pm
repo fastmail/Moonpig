@@ -78,6 +78,15 @@ has _superseded_at => (
 sub mark_superseded {
   my ($self) = @_;
   return if $self->is_superseded;
+
+  if ($self->is_active) {
+    confess sprintf "Can't supersede active consumer for %s (%s)\n",
+      $self->xid, $self->guid;
+  } elsif ($self->is_expired) {
+    confess sprintf "Can't supersede expired consumer for %s (%s)\n",
+      $self->xid, $self->guid;
+  }
+
   $self->_superseded_at(Moonpig->env->now);
   $self->abandon_all_unpaid_charges;
   for my $repl (@{$self->_replacement_history}) {
