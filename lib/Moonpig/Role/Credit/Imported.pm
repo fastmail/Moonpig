@@ -6,4 +6,12 @@ with('Moonpig::Role::Credit');
 
 use namespace::autoclean;
 
+sub as_string { 'credit imported from legacy billing system' }
+
+has old_payment_info => (
+  is  => 'ro',
+  isa => 'HashRef',
+  required => 1,
+);
+
 1;

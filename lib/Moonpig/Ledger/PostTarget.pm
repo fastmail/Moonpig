@@ -52,7 +52,7 @@ sub resource_post {
       }
     }
 
-    if ($arg{pay_as_imported}) {
+    if ($arg{old_payment_info}) {
       # Not worrying about closed/open.  The ledger is brand new.  We just find
       # invoices that need money, then provide it.
       my @charges =
