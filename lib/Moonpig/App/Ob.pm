@@ -179,7 +179,7 @@ sub run {
   my ($self) = @_;
   my $st = $self->storage;
   my @guids = $st->ledger_guids();
-  my @ledgers = map $st->retrieve_ledger_for_guid($_), @guids;
+  my @ledgers = map $st->_retrieve_ledger_from_db($_), @guids;
   $self->last_result( [ @ledgers ] );
 
   if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {

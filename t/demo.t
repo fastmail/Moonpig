@@ -54,11 +54,8 @@ sub pay_any_open_invoice {
 
   Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
     my ($Ledger) = @_;
-    if (
-      $self->invoices_to_pay
-        and
-          grep { ! $_->is_open and ! $_->is_paid } $self->Ledger->invoices
-    ) {
+
+    if ($self->invoices_to_pay and $self->Ledger->payable_invoices) {
       # There are unpaid invoices!
       my @invoices = $Ledger->last_dunned_invoices;
 
@@ -154,10 +151,10 @@ test "end to end demo" => sub {
   });
 
   Moonpig->env->storage->do_with_ledger($Ledger_GUID, sub {
+    my ($Ledger) = @_;
+
     for my $day (1 .. 760) {
       Moonpig->env->process_email_queue;
-
-      my ($Ledger) = @_;
 
       $self->process_daily_assertions($day, $Ledger);
 

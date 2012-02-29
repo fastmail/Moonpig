@@ -205,8 +205,6 @@ has _update_mode_stack => (
     _has_update_mode => 'is_nonempty',
     _in_transaction => 'is_nonempty',
     _push_update_mode => 'push',
-    _set_noupdate_mode => 'push_false',
-    _set_update_mode => 'push_true',
   },
 );
 
@@ -222,22 +220,41 @@ sub _in_nested_transaction {
 
 sub do_rw {
   my ($self, $code) = @_;
-  my $popper = $self->_set_update_mode;
-  my $rv = $self->txn(sub {
-    my $rv = $code->();
-    $self->_execute_saves unless $self->_in_nested_transaction;
-    return $rv;
+  my $rv = $self->__with_update_mode(1, sub {
+    return $self->txn(sub {
+      my $rv = $code->();
+      $self->_execute_saves unless $self->_in_nested_transaction;
+      return $rv;
+    });
   });
   return $rv;
 }
 
 sub do_ro {
   my ($self, $code) = @_;
-  my $popper = $self->_set_noupdate_mode;
-  my $rv = $self->txn(sub {
-    $code->();
+  my $rv = $self->__with_update_mode(0, sub {
+    return $self->txn(sub {
+      $code->();
+    });
   });
   return $rv;
+}
+
+sub __with_update_mode {
+  my ($self, $mode, $code) = @_;
+
+  # The 'popper' here is an object which pops the mode stack when it
+  # goes out of scope.  The sub argument is a callback that is invoked
+  # if the stack becomes empty as a result.
+  #
+  # Properly, we should track which ledgers are used in each nested
+  # transaction, and whenver a transaction ends, flush the ones that
+  # were used by only that transaction, but eh, that's too much
+  # trouble. So instead, we just hold them all until the final
+  # transaction ends and flush them all then. mjd 2011-11-14
+  my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache });
+
+  return $code->();
 }
 
 sub do_with_ledgers {
@@ -254,18 +271,16 @@ sub do_with_ledgers {
     croak "Unknown options '%keys' to do_with_ledgers";
   }
 
-  my @ledgers = ();
-  for my $i (0 .. $#$guids) {
-    defined($guids->[$i])
-      or croak "Guid element $i was undefined";
-    my $ledger = $self->retrieve_ledger_for_guid($guids->[$i])
-      or croak "Couldn't find ledger for guid '$guids->[$i]'";
-    push @ledgers, $ledger;
-  }
-
   my $rv;
-  {
-    my $popper = $self->_push_update_mode(! $ro);
+  $self->__with_update_mode( ! $ro, sub {
+    my @ledgers = ();
+    for my $i (0 .. $#$guids) {
+      defined($guids->[$i])
+        or croak "Guid element $i was undefined";
+      my $ledger = $self->retrieve_ledger_for_guid($guids->[$i])
+        or croak "Couldn't find ledger for guid '$guids->[$i]'";
+      push @ledgers, $ledger;
+    }
 
     $rv = $self->txn(sub {
       my $rv = $code->(@ledgers);
@@ -275,15 +290,7 @@ sub do_with_ledgers {
       }
       return $rv;
     });
-  }
-
-  # Properly, we should track which ledgers are used in each nested
-  # transaction, and whenver a transaction ends, flush the ones that
-  # were used by only that transaction, but eh, that's too much
-  # trouble. So instead, we just hold them all until the final
-  # transaction ends and flush them all then. mjd 2011-11-14
-
-  $self->_flush_ledger_cache unless $self->_in_transaction;
+  });
 
   return $rv;
 }
@@ -306,6 +313,8 @@ sub do_ro_with_ledgers {
   $self->do_with_ledgers({ %$opts, ro => 1 }, $guids, $code);
 }
 
+# This cache is getting complicated. It should be turned into an object.
+# 20120229 mjd
 has _ledger_cache => (
   is => 'ro',
   isa => 'HashRef',
@@ -321,6 +330,14 @@ has _ledger_cache => (
 
 sub _cache_ledger {
   my ($self, $ledger) = @_;
+  my $cache = $self->_ledger_cache;
+  my $guid = $ledger->guid;
+
+  if (exists $cache->{$guid} && $ledger != $cache->{$guid}) {
+    confess sprintf "Tried to cache ledger %s = 0x%x, but ledger 0x%x was already cached there!",
+      $guid, $ledger, $cache->{$guid};
+  }
+
   $self->_ledger_cache->{$ledger->guid} = $ledger;
 }
 
@@ -796,7 +813,24 @@ sub retrieve_ledger_for_guid {
 
   $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
 
-  return $self->_cached_ledger($guid) if $self->_has_cached_ledger($guid);
+  my $ledger;
+  $ledger = $self->_cached_ledger($guid) if $self->_has_cached_ledger($guid);
+
+  $ledger ||= $self->_retrieve_ledger_from_db($guid);
+
+  return unless $ledger;
+
+  if ($self->_in_update_mode) {
+    $self->save_ledger($ledger); # also put it in the cache
+  } elsif ($self->_in_transaction) {
+    $self->_cache_ledger($ledger);
+  }
+
+  return $ledger;
+}
+
+sub _retrieve_ledger_from_db {
+  my ($self, $guid) = @_;
 
   my $dbh = $self->_conn->dbh;
   my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
@@ -831,12 +865,6 @@ sub retrieve_ledger_for_guid {
       bless $obj, $class_for{ $class };
     },
   });
-
-  if ($self->_in_update_mode) {
-    $self->save_ledger($ledger); # also put it in the cache
-  } else {
-    $self->_cache_ledger($ledger) if $self->_in_transaction;;
-  }
 
   return $ledger;
 }
