@@ -132,13 +132,9 @@ sub create_charge_for_hold {
 
   my $now = Moonpig->env->now;
 
-  $self->ledger->current_journal->charge({
-    desc => $description,
-    from => $self,
-    to   => $self->ledger->current_journal,
-    date => $now,
-    tags => $self->journal_charge_tags,
-    amount    => $hold->amount,
+  $self->charge_current_journal({
+    desc   => $description,
+    amount => $hold->amount,
   });
   $hold->delete;
 }

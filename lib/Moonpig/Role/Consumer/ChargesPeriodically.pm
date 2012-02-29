@@ -80,12 +80,9 @@ sub charge_one_day {
   my $iter = natatime 2, @charge_pairs;
 
   while (my ($desc, $amt) = $iter->()) {
-    $self->ledger->current_journal->charge({
+    $self->charge_current_journal({
       desc => $desc,
-      from => $self,
-      to   => $self->ledger->current_journal,
       date => $next_charge_date,
-      tags => $self->journal_charge_tags,
       amount => $amt,
       skip_funds_check => $self->allows_overdrafts,
     });

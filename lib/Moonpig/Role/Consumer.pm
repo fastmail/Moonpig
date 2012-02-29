@@ -371,14 +371,11 @@ sub copy_balance_to__ {
   Moonpig->env->storage->do_rw(
     sub {
       my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
-      $ledger->current_journal->charge({
+      $self->charge_current_journal({
         desc        => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
-        from        => $self,
-        to          => $ledger->current_journal,
-        date        => Moonpig->env->now,
         amount      => $amount,
-        tags        => [ @{$self->journal_charge_tags}, "transient" ],
+        extra_tags  => [ "transient" ],
       });
       my $credit = $new_ledger->add_credit(
         class('Credit::Transient'),
@@ -441,6 +438,18 @@ publish template_like_this => {
     arg   => $self->copy_attr_hash__,
   };
 };
+
+sub charge_current_journal {
+  my ($self, $args) = @_;
+
+  $args->{from}       ||= $self;
+  $args->{to}         ||= $self->ledger->current_journal;
+  $args->{extra_tags} ||= [];
+  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @{$args->{extra_tags}} ];
+  $args->{date}       ||= Moonpig->env->now;
+
+  return $self->ledger->current_journal->charge($args);
+}
 
 has extra_journal_charge_tags => (
   is  => 'ro',
