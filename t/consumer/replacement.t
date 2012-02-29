@@ -147,13 +147,10 @@ sub make_charges {
   my $description = $args{description} || "some charge";
 
   for my $c (@consumers) {
-    my $ch = $c->build_charge({
+    $c->charge_current_invoice({
       description => $description,
       amount      => $amount,
-      tags        => $c->invoice_charge_tags,
-      consumer    => $c,
     });
-    $ledger->current_invoice->add_charge($ch);
   }
   return $ledger->current_invoice;
 }

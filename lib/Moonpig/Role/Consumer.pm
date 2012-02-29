@@ -460,11 +460,6 @@ sub journal_charge_tags {
   return [ $self->xid, @{$self->extra_journal_charge_tags} ]
 }
 
-sub build_charge {
-  my ($self, $args) = @_;
-  return class('InvoiceCharge')->new($args);
-}
-
 sub charge_current_invoice {
   my ($self, $args) = @_;
   $self->charge_invoice($self->ledger->current_invoice, $args);
