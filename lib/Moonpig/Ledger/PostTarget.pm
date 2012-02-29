@@ -77,19 +77,32 @@ sub resource_post {
       # consumer.  The active head (likely to be pro-rated) for each chain is
       # not refundable, because it is active service.  The rest of the chain
       # is refundable in some way. -- rjbs, 2012-02-24
-      my ($act_c, $inact_c) = part { $is_active{ $_->owner_guid } } @charges;
-      my $r_amount = sumof { $_->amount } @$inact_c;
+      my ($act_c, $inact_c) =
+        part { $is_active{ $_->owner_guid } ? 0 : 1 } @charges;
+
       my $n_amount = sumof { $_->amount } @$act_c;
+      my $r_amount = sumof { $_->amount } @$inact_c;
 
-      $self->add_credit(
+      my $struct_1 = $arg{old_payment_info};
+      my $struct_2 = Storable::dclone($arg{old_payment_info});
+
+      $ledger->add_credit(
         class('Credit::Imported'),
-        { amount => $n_amount },
+        {
+          amount => $n_amount,
+          old_payment_info => $struct_1,
+        },
       );
 
-      $self->add_credit(
-        class('Credit::Imported::Refundable'),
-        { amount => $r_amount },
-      );
+      if ($r_amount) {
+        $ledger->add_credit(
+          class('Credit::Imported::Refundable'),
+          {
+            amount => $r_amount,
+            old_payment_info => $struct_1,
+          },
+        );
+      }
     }
 
     $ledger->heartbeat;

@@ -535,9 +535,14 @@ has _active_xid_consumers => (
   traits   => [ 'Hash' ],
   handles  => {
     xids_handled     => 'keys',
-    active_consumers => 'values',
+    _active_consumer_guids => 'values',
   },
 );
+
+sub active_consumers {
+  my ($self) = @_;
+  return map { $self->_get_consumer($_) } $self->_active_consumer_guids;
+}
 
 sub active_consumer_for_xid {
   my ($self, $xid) = @_;
