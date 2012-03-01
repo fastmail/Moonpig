@@ -113,7 +113,12 @@ sub remaining_life {
 
 sub will_die_soon { 0 } # Provided by MakesReplacement
 
-sub estimated_lifetime { $_[0]->proration_period }
+sub estimated_lifetime {
+  my ($self) = @_;
+  Moonpig::X->throw("do not call estimated_lifetime on active consumers")
+    if $self->is_active;
+  $self->proration_period;
+}
 
 ################################################################
 #
