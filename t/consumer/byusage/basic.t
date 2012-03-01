@@ -164,7 +164,7 @@ test est_lifetime => sub {
   is($Consumer->units_remaining, 19, "now 19 units");
   is($Consumer->unapplied_amount, dollars(0.95), "now \$0.95");
   Moonpig->env->stop_clock_at(jan(30));
-  is($Consumer->estimated_lifetime, days(30 * 19),
+  is($Consumer->estimated_lifetime, days(30 * 19 + 29),
      "1 charge/30d -> lifetime 600d");
 
   Moonpig->env->stop_clock_at(jan(24));
@@ -172,15 +172,15 @@ test est_lifetime => sub {
   is($Consumer->units_remaining, 17, "now 17 units");
   is($Consumer->unapplied_amount, dollars(0.85), "now \$0.85");
   Moonpig->env->stop_clock_at(jan(30));
-  is($Consumer->estimated_lifetime, days(30 * 17/3),
+  is($Consumer->estimated_lifetime, days(30 * 17/3 + 29),
      "3 charges/30d -> lifetime 200d");
 
   Moonpig->env->stop_clock_at(jan(50));
-  is($Consumer->estimated_lifetime, days(30 * 17/2),
+  is($Consumer->estimated_lifetime, days(30 * 17/2 + 49),
      "old charges don't count");
 
   Moonpig->env->stop_clock_at(jan(58));
-  is($Consumer->estimated_lifetime, days(365),
+  is($Consumer->estimated_lifetime, days(365 + 57),
      "no recent charges -> guess 365d");
 };
 
@@ -204,9 +204,9 @@ test "test lifetime replacement" => sub {
       until ($Consumer->has_replacement) {
         $day += $t;
         Moonpig->env->stop_clock_at(jan($day));
-        $prev_est_life = $Consumer->estimated_lifetime;
+        $prev_est_life = $Consumer->remaining_life;
         $Consumer->create_hold_for_units($q) or last;
-        $cur_est_life = $Consumer->estimated_lifetime;
+        $cur_est_life = $Consumer->remaining_life;
       }
       ok($Consumer->has_replacement, "replacement consumer created");
       cmp_ok($cur_est_life, '<=', $replacement_lead_time,

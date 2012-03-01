@@ -16,6 +16,7 @@ with(
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
   'Moonpig::Role::Consumer::MakesReplacement',
+  'Moonpig::Role::Consumer::PredictsExpiration',
 );
 
 use Moonpig::Behavior::EventHandlers;
@@ -115,8 +116,6 @@ sub will_die_soon {
   $self->units_remaining <= $low_water_mark;
 }
 
-sub remaining_life { $_[0]->estimated_lifetime }
-
 sub units_remaining {
   my ($self) = @_;
   int($self->unapplied_amount / $self->charge_amount_per_unit);
@@ -150,12 +149,22 @@ sub recent_usage {
 # based on the last $days days of transfers, how long might we expect
 # the current funds to last, in seconds?
 # If no estimate is possible, return 365d
-sub estimated_lifetime {
+sub remaining_life {
   my ($self) = @_;
   my $days = 30;
   my $recent_daily_usage = $self->recent_usage($days * 86_400) / $days;
   return 86_400 * 365 if $recent_daily_usage == 0;
   return 86_400 * $self->unapplied_amount / $recent_daily_usage;
+}
+
+sub estimated_lifetime {
+  my ($self) = @_;
+  my $age = Moonpig->env->now - $self->created_at + $self->remaining_life;
+}
+
+sub expiration_date {
+  my ($self) = @_;
+  return Moonpig->env->now + $self->remaining_life;
 }
 
 1;
