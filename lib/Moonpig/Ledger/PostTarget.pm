@@ -35,6 +35,13 @@ sub resource_post {
       contact => $contact,
     });
 
+    # We probably *should* do this in (after Ledger::BUILD) but we can't
+    # because save is fatal outside a transaction and "in-a-transaction-p"
+    # doesn't have any sort of public predicate.  Until we address that, we'll
+    # do the save here.  It's vital so that during invoicing, InvoiceCharges
+    # can find their owner object. -- rjbs, 2012-02-29
+    $ledger->save;
+
     if ($arg{consumers}) {
       my $consumers = $arg{consumers};
 
