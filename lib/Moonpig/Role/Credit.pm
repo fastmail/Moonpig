@@ -56,4 +56,8 @@ sub type {
   return $type;
 }
 
+sub is_refundable {
+  $_[0]->does("Moonpig::Role::Credit::Refundable");
+}
+
 1;

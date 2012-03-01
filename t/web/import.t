@@ -80,8 +80,8 @@ test "get a ledger guid via web" => sub {
       my ($ledger) = @_;
       my @credits = $ledger->credits;
       is(@credits, 2, "we made two credits by importing");
-      my ($r_credit) = grep { $_->does('Moonpig::Role::Credit::Refundable') } @credits;
-      my ($n_credit) = grep {!$_->does('Moonpig::Role::Credit::Refundable') } @credits;
+      my ($r_credit) = grep { $_->is_refundable } @credits;
+      my ($n_credit) = grep {!$_->is_refundable } @credits;
 
       ok($r_credit, "one is refundable");
       ok($n_credit, "one is not refundable");

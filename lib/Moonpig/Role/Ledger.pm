@@ -383,7 +383,7 @@ sub process_credits {
   # XXX: These need to be processed in order. -- rjbs, 2010-12-02
   for my $invoice ( $self->payable_invoices ) {
     my ($nr_credits, $r_credits) =
-      part { $_->does('Moonpig::Role::Credit::Refundable') ? 0 : 1 }
+      part { ! $_->is_refundable }
       grep { $_->unapplied_amount > 0 }
       @credits;
 
