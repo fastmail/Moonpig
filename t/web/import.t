@@ -55,6 +55,7 @@ test "get a ledger guid via web" => sub {
     Moonpig::DateTime->new(year => 2000, month => 1, day => 1),
   );
 
+  my $replacement_date_str;
   test_psgi(Moonpig::Web::App->app, sub {
     my ($cb) = @_;
 
@@ -64,6 +65,13 @@ test "get a ledger guid via web" => sub {
 
     $guid = $result->{guid};
     ok($guid, "created ledger via post ($guid)");
+
+    my $consumer_guid = $result->{active_xids}{$xid}{guid};
+    my $url = sprintf '/ledger/by-guid/%s/consumers/guid/%s/%s',
+      $guid,
+      $consumer_guid,
+      'replacement_chain_expiration_date';
+    $replacement_date_str = $ua->mp_get($url);
   });
 
   Moonpig->env->storage->do_ro_with_ledger(
@@ -91,6 +99,8 @@ test "get a ledger guid via web" => sub {
         abs($exp_date - $expected), '<', 86_400,
         "our chain's estimated exp. date is within a day of expectations",
       );
+
+      is($replacement_date_str, "$exp_date" =~ s/T/ /r, "...same as via HTTP");
     },
   );
 };
