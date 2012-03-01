@@ -3,8 +3,8 @@ use Moose::Role;
 
 use namespace::autoclean;
 
-requires 'estimated_lifetime';
-requires 'expiration_date';
-requires 'remaining_life';
+requires 'estimated_lifetime'; # TimeInterval, from created to predicted exp
+requires 'expiration_date';    # Time, predicted exp date
+requires 'remaining_life';     # TimeInterval, from now to predicted exp
 
 1;
