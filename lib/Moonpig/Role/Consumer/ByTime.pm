@@ -20,6 +20,7 @@ with(
   'Moonpig::Role::Consumer::ChargesPeriodically',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
+  'Moonpig::Role::Consumer::PredictsExpiration',
   'Moonpig::Role::StubBuild',
 );
 
@@ -84,6 +85,7 @@ after become_active => sub {
   ]);
 };
 
+sub expiration_date;
 publish expiration_date => { } => sub {
   my ($self) = @_;
 
@@ -115,9 +117,12 @@ sub will_die_soon { 0 } # Provided by MakesReplacement
 
 sub estimated_lifetime {
   my ($self) = @_;
-  Moonpig::X->throw("do not call estimated_lifetime on active consumers")
-    if $self->is_active;
-  $self->proration_period;
+
+  if ($self->is_active) {
+    return $self->expiration_date - Moonpig->env->now;
+  } else {
+    return $self->proration_period;
+  }
 }
 
 ################################################################
