@@ -84,7 +84,7 @@ after become_active => sub {
   ]);
 };
 
-publish expire_date => { } => sub {
+publish expiration_date => { } => sub {
   my ($self) = @_;
 
   $self->is_active ||
@@ -108,7 +108,7 @@ publish expire_date => { } => sub {
 sub remaining_life {
   my ($self, $when) = @_;
   $when ||= $self->now();
-  $self->expire_date - $when;
+  $self->expiration_date - $when;
 }
 
 sub will_die_soon { 0 } # Provided by MakesReplacement

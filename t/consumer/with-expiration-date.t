@@ -28,7 +28,7 @@ sub ledger_and_consumer {
   my $stuff = build(
     consumer => {
       class            => class('Consumer::FixedExpiration'),
-      expire_date      => jan(3),
+      expiration_date  => jan(3),
       replacement_plan => [ get => '/nothing' ],
       xid              => $XID
     }

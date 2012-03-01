@@ -21,11 +21,11 @@ test "fixed-expiration consumer" => sub {
   do_with_fresh_ledger({}, sub {
     my ($ledger) = @_;
     Moonpig->env->stop_clock;
-    my $expire_date = Moonpig->env->now + days(30);
+    my $expiration_date = Moonpig->env->now + days(30);
 
     my $c = $ledger->add_consumer(
       class('Consumer::FixedExpiration'),
-      { expire_date => $expire_date,
+      { expiration_date => $expiration_date,
         replacement_plan => [ get => '/nothing' ],
         xid => "some:random:xid",
       });
@@ -35,7 +35,7 @@ test "fixed-expiration consumer" => sub {
 
     $ledger->heartbeat;
     is($c->remaining_life, days(30), "remaining life after first heartbeat");
-    is($c->expire_date, $expire_date, "expire date is as created");
+    is($c->expiration_date, $expiration_date, "expire date is as created");
 
     Moonpig->env->elapse_time( days(20) );
     $ledger->heartbeat;

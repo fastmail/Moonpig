@@ -23,8 +23,7 @@ implicit_event_handlers {
   };
 };
 
-# name taken from similar method in ByTime consumer
-has expire_date => (
+has expiration_date => (
   is  => 'ro',
   isa => Time,
   required => 1,
@@ -33,13 +32,13 @@ has expire_date => (
 sub _check_expiry {
   my ($self) = @_;
   return if $self->is_expired;
-  $self->expire if $self->expire_date <= Moonpig->env->now;
+  $self->expire if $self->expiration_date <= Moonpig->env->now;
 }
 
 sub remaining_life {
   my ($self, $when) = @_;
   $when ||= Moonpig->env->now;
-  my $diff = $self->expire_date - $when;
+  my $diff = $self->expiration_date - $when;
   return $diff < 0 ? 0 : $diff;
 }
 

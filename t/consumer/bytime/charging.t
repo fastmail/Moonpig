@@ -111,7 +111,7 @@ test "top up" => sub {
     is($stuff->{consumer}->unapplied_amount, dollars(10 - $day));
 
     cmp_ok(
-      $stuff->{consumer}->expire_date,
+      $stuff->{consumer}->expiration_date,
       '==',
       $jan->(11),
       "Jan $day, expiration predicted for Jan 11",
@@ -142,7 +142,7 @@ test "top up" => sub {
     is($stuff->{consumer}->unapplied_amount, dollars(30 - $day));
 
     cmp_ok(
-      $stuff->{consumer}->expire_date,
+      $stuff->{consumer}->expiration_date,
       '==',
       $jan->(31),
       "post top-up, Jan $day, expiration predicted for Jan 31",
@@ -185,7 +185,7 @@ test "proration" => sub {
   is($invoices[0]->total_amount, dollars(3), 'it was for 10 days: $3');
 
   cmp_ok(
-    $stuff->{consumer}->expire_date,
+    $stuff->{consumer}->expiration_date,
     '==',
     $jan->(4),
     "expiration predicted for Jan 4",

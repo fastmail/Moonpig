@@ -66,13 +66,13 @@ test "constructor_b" => sub {
 };
 
 # Need more expiration date tests
-test expire_date => sub {
+test expiration_date => sub {
   my ($self) = @_;
   plan tests => 4;
 
   {
     my $stuff = $self->setup;
-    my $exp = $stuff->{consumer}->expire_date;
+    my $exp = $stuff->{consumer}->expiration_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 3 * 86_400)->ymd,
        "stock consumer expires in three days");
   }
@@ -81,7 +81,7 @@ test expire_date => sub {
     my $stuff = $self->setup({
       charge_amount      => dollars(3),
     });
-    my $exp = $stuff->{consumer}->expire_date;
+    my $exp = $stuff->{consumer}->expiration_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 1 * 86_400)->ymd,
        "three dollars a day expires in one day");
   }
@@ -91,7 +91,7 @@ test expire_date => sub {
       cost_period        => days(7),
     });
 
-    my $exp = $stuff->{consumer}->expire_date;
+    my $exp = $stuff->{consumer}->expiration_date;
     is($exp->ymd, DateTime->from_epoch(epoch => time() + 21 * 86_400)->ymd,
        "a dollar a week expires in 21 days");
   }
@@ -109,7 +109,7 @@ test expire_date => sub {
 
     my $stuff = $self->setup();
 
-    my $exp = $stuff->{consumer}->expire_date;
+    my $exp = $stuff->{consumer}->expiration_date;
     is($exp->ymd, "1969-04-05",
        "hippie consumer expires in three days");
   }
