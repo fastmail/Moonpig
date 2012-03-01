@@ -192,7 +192,7 @@ END_ERR
       },
       undef,
       $SCHEMA_MD5,
-      (time) x 2,
+      (0) x 2,
     );
   });
 }
@@ -737,6 +737,9 @@ sub _reinstate_stored_time {
   my ($real, $moon) = $self->_conn->dbh->selectrow_array(
     "SELECT last_realtime, last_moontime FROM metadata",
   );
+
+  # clock never stored
+  return if $real == 0 && $moon == 0;
 
   my $diff = time - $real;
   confess("last realtime from storage is in the future") if $diff < 0;
