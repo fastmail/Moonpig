@@ -8,7 +8,7 @@ use Plack::Test;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(years);
+use Moonpig::Util qw(days years);
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use Moonpig::UserAgent;
 use t::lib::ConsumerTemplateSet::Demo;
@@ -51,6 +51,10 @@ test "get a ledger guid via web" => sub {
 
   my $guid;
 
+  Moonpig->env->stop_clock_at(
+    Moonpig::DateTime->new(year => 2000, month => 1, day => 1),
+  );
+
   test_psgi(Moonpig::Web::App->app, sub {
     my ($cb) = @_;
 
@@ -74,6 +78,19 @@ test "get a ledger guid via web" => sub {
       ok($r_credit, "one is refundable");
       ok($n_credit, "one is not refundable");
       cmp_ok($r_credit->amount, '>', $n_credit->amount, "mostly it's refundable");
+
+      my @consumers = $ledger->active_consumers;
+      is(@consumers, 1, "we have one active consumer");
+
+      # the "- days(1)" is because the heartbeat implicit to creation charges
+      # for the first day! -- rjbs, 2012-03-01
+      my $expected = Moonpig->env->now + years(6) - days(1);
+      my $exp_date = $consumers[0]->replacement_chain_expiration_date;
+
+      cmp_ok(
+        abs($exp_date - $expected), '<', 86_400,
+        "our chain's estimated exp. date is within a day of expectations",
+      );
     },
   );
 };
