@@ -61,7 +61,11 @@ sub mark_abandoned {
 
 sub ledger {
   my ($self) = @_;
-  Moonpig->env->storage->retrieve_ledger_for_guid($self->ledger_guid);
+  my $ledger = Moonpig->env->storage->retrieve_ledger_for_guid(
+    $self->ledger_guid
+  );
+
+  return($ledger || Moonpig::X->throw("couldn't find ledger for charge"));
 }
 
 implicit_event_handlers {
