@@ -7,6 +7,7 @@ use Moonpig::Types qw(PositiveMillicents Time);
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::Consumer::PredictsExpiration',
 );
 
 use namespace::autoclean;
@@ -23,6 +24,7 @@ implicit_event_handlers {
   };
 };
 
+sub expiration_date;
 has expiration_date => (
   is  => 'ro',
   isa => Time,
@@ -40,6 +42,11 @@ sub remaining_life {
   $when ||= Moonpig->env->now;
   my $diff = $self->expiration_date - $when;
   return $diff < 0 ? 0 : $diff;
+}
+
+sub estimated_lifetime {
+  my ($self) = @_;
+  return $self->expiration_date - $self->created_at;
 }
 
 1;
