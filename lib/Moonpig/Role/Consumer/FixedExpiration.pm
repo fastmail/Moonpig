@@ -25,7 +25,7 @@ implicit_event_handlers {
 
 # name taken from similar method in ByTime consumer
 has expire_date => (
-  is  => 'rw',
+  is  => 'ro',
   isa => Time,
   required => 1,
 );
