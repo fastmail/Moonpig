@@ -80,8 +80,8 @@ sub resource_post {
       my ($act_c, $inact_c) =
         part { $is_active{ $_->owner_guid } ? 0 : 1 } @charges;
 
-      my $n_amount = sumof { $_->amount } @$act_c;
-      my $r_amount = sumof { $_->amount } @$inact_c;
+      my $n_amount = $act_c   && sumof { $_->amount } @$act_c;
+      my $r_amount = $inact_c && sumof { $_->amount } @$inact_c;
 
       my $struct_1 = $arg{old_payment_info};
       my $struct_2 = Storable::dclone($arg{old_payment_info});
