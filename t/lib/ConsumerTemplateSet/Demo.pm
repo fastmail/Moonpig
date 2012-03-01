@@ -2,7 +2,7 @@ package t::lib::ConsumerTemplateSet::Demo;
 use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
-use Moonpig::Util qw(days dollars);
+use Moonpig::Util qw(days dollars years);
 
 use namespace::autoclean;
 
@@ -15,7 +15,7 @@ sub templates {
         roles => [ '=t::lib::Role::Consumer::ByTime::NFixedAmountCharges' ],
         arg   => {
           charge_amounts       => [ dollars(40), dollars(10) ],
-          cost_period        => days(365),
+          cost_period        => years(1),
           charge_frequency   => days(7), # less frequent to make logs simpler
           charge_description => 'yoyodyne service',
           replacement_lead_time            => days(30),
