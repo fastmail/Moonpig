@@ -176,6 +176,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return ppack({
+    ident        => $self->ident,
     total_amount => $self->total_amount,
     amount_due   => $self->amount_due,
     paid_at      => $self->paid_at,
