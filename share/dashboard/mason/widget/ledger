@@ -101,12 +101,19 @@ $ledger
 % my $invoices = $ledger->{unpaid_invoices}{items};
 % $total += $_->{total_amount} for @$invoices;
   <table>
+    <tr>
+      <th>Invoice No.</th>
+      <th>Date</th>
+      <th>Total</th>
+      <th>Due</th>
+    </tr>
 % for my $invoice (sort { $b->{date} cmp $a->{date} } @$invoices) {
     <tr>
       <th class='guid'>
-        <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a></th>
-      <td><% $invoice->{date} |h %></td>
+        <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{ident} |h %></a></th>
+      <td><% $invoice->{closed_at} |h %></td>
       <td><% mc($invoice->{total_amount}) |h %></td>
+      <td><% mc($invoice->{amount_due}) |h %></td>
     </tr>
 % }
     <tr class='total'>
