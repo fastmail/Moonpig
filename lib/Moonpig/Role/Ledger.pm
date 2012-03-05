@@ -766,6 +766,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return {
+    ident   => $self->ident,
     contact => ppack($self->contact),
     credits => ppack($self->credit_collection),
     jobs    => ppack($self->job_collection),

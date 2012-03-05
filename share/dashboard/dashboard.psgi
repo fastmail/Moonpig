@@ -21,8 +21,18 @@ use namespace::autoclean;
 package HTML::Mason::Commands {
   use Data::GUID qw(guid_string);
   use Moonpig::App::Ob::Dumper ();
+  use List::Util ();
 
   sub mc { sprintf '$%.02f', ((shift) / 100_000) }
+
+  sub sum {
+    return List::Util::reduce(sub { $a + $b }, 0, @_);
+  }
+
+  sub sumof (&@) {
+    my ($f, @list) = @_;
+    sum(map $f->($_), @list);
+  }
 }
 
 my $router = Router::Dumb->new;

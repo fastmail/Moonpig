@@ -4,7 +4,7 @@ $guid
 </%args>
 % my $ledger = $m->mp_request(GET => "/ledger/by-guid/$guid");
 % $m->redirect('/') unless $ledger;
-<&| /page/full, title => "Moonpig Ledger $guid" &>
+<&| /page/full, title => "Moonpig Ledger " . $ledger->{ident} &>
 
 <& /widget/ledger, ledger => $ledger &>
 </&>

@@ -97,9 +97,9 @@ $ledger
 </%args>
 <div class='invoices'>
   <h2>Unpaid Invoices</h2>
-% my $total = 0;
 % my $invoices = $ledger->{unpaid_invoices}{items};
-% $total += $_->{total_amount} for @$invoices;
+% my $total     = sumof(sub{ $_->{total_amount} }, @$invoices);
+% my $total_due = sumof(sub{ $_->{amount_due} }, @$invoices);
   <table>
     <tr>
       <th>Invoice No.</th>
@@ -120,6 +120,7 @@ $ledger
       <th>Total</th>
       <td></td>
       <td><% mc($total) |h %></td>
+      <td><% mc($total_due) |h %></td>
     </tr>
   </table>
 
