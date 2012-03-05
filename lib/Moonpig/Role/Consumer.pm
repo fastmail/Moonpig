@@ -439,10 +439,11 @@ publish template_like_this => {
 sub charge_current_journal {
   my ($self, $args) = @_;
 
+  my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{from}       ||= $self;
   $args->{to}         ||= $self->ledger->current_journal;
   $args->{extra_tags} ||= [];
-  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @{delete $args->{extra_tags}} ];
+  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
 
   return $self->ledger->current_journal->charge($args);
@@ -468,9 +469,9 @@ sub charge_current_invoice {
 sub charge_invoice {
   my ($self, $invoice, $args) = @_;
 
+  my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
-  $args->{extra_tags} ||= [];
-  $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @{delete $args->{extra_tags}} ];
+  $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
 
   $invoice->add_charge($args);
 }
