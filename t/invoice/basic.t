@@ -50,6 +50,10 @@ test zero_charge_dunning => sub {
 
     $self->heartbeat_and_send_mail($ledger);
 
+    my @charges = $ledger->get_component('c')->all_charges;
+    is(@charges, 1, "consumer c has one charge, anyway");
+    is($charges[0]->amount, dollars(5), "...for five bucks");
+
     ok(! $invoice->is_open, "we do close it once there is a charge");
   });
 };

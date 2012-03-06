@@ -508,6 +508,20 @@ sub abandon_all_unpaid_charges {
     $self->ledger->payable_invoices;
 }
 
+sub all_charges {
+  my ($self) = @_;
+
+  # If the invoice was closed before we were created, we can't be on it!
+  # -- rjbs, 2012-03-06
+  my $guid = $self->guid;
+  my @charges = grep { $_->owner_guid eq $guid }
+                map  { $_->all_charges }
+                grep { $_->closed_at >= $self->created_at }
+                $self->ledger->invoices;
+
+  return @charges;
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,

@@ -120,6 +120,16 @@ sub process_daily_assertions {
       $inactive->replacement->guid,
       "the active one is the replacement for the original one",
     );
+
+    my @active_charges   = $active->all_charges;
+    my @inactive_charges = $inactive->all_charges;
+
+    is(@active_charges,   2, "the active one has charged once");
+    is(@inactive_charges, 2, "the inactive one has charged once, too");
+    cmp_ok(
+      $active_charges[0]->date, '!=', $inactive_charges[0]->date,
+      "...inactive and active on different days",
+    );
   }
 
   if ($day == 740) {
