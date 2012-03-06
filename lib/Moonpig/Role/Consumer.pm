@@ -522,6 +522,51 @@ sub all_charges {
   return @charges;
 }
 
+sub cashout_unapplied_amount {
+  my ($self) = @_;
+  my $balance = $self->unapplied_amount;
+
+  my $transfer_set = $self->ledger->accountant->select({
+    target => $self,
+    type   => 'consumer_funding',
+  });
+
+  my %seen;
+  my @credits;
+  for my $xfer ($transfer_set->all) {
+    next if $seen{ $xfer->source->guid }++;
+    push @credits, $xfer->source;
+  }
+
+  # This is the order in which we will refund:  first, to non-refundable
+  # credits (because we use up "real money" first); within those, to the
+  # largest credit first, to minimize the number of credits to which we might
+  # have to cashout money. -- rjbs, 2012-03-06
+  @credits = sort { $a->is_refundable  <=> $b->is_refundable
+                 || $b->applied_amount <=> $a->applied_amount } @credits;
+
+  while ($balance and @credits) {
+    my $next_credit = shift @credits;
+
+    my $to_xfer = $balance <= $next_credit->applied_amount
+                ? $balance
+                : $next_credit->applied_amount;
+
+    $self->ledger->accountant->create_transfer({
+      type   => 'cashout',
+      to     => $next_credit,
+      from   => $self,
+      amount => $to_xfer,
+    });
+
+    $balance -= $to_xfer;
+  }
+
+  Moonpig::X->throw("could not refund all remaining balance") if $balance != 0;
+
+  return;
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,

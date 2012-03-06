@@ -623,27 +623,10 @@ sub _collect_spare_change {
 
   delete $consider{ $_->guid } for @consumers;
 
-  my $total = sumof { $_->[1] } values %consider;
-
-  return unless $total > 0;
-
-  my $credit = $self->add_credit(
-    class('Credit::SpareChange'),
-    {
-      amount => $total,
-    },
-  );
-
-  for my $consumer_pair (values %consider) {
-    my ($consumer, $amount) = @$consumer_pair;
-
-    $self->create_transfer({
-      type    => 'cashout',
-      from    => $consumer,
-      to      => $credit,
-      amount  => $amount,
-    });
-  }
+  return;
+  # XXX XXX XXX: we can't cashout until we have transfers going directly
+  # from credits to consumers! -- rjbs, 2012-03-06
+  $_->cashout_unapplied_amount for map { $_->[0] } values %consider;
 }
 
 sub _class_subroute {
