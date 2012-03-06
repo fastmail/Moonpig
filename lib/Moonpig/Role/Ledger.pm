@@ -396,7 +396,7 @@ sub process_credits {
     my @to_apply;
 
     # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@coupon_credits, @$nr_credits, @$r_credits) {
+    CREDIT: for my $credit (@coupon_credits, @$r_credits, @$nr_credits) {
       my $credit_amount = $credit->unapplied_amount;
       my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
 
