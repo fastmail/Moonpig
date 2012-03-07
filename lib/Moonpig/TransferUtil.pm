@@ -74,4 +74,4 @@ consumer   journal   hold
 consumer   journal   transfer
 credit     refund    refund
 consumer   credit    cashout
-credit     consumer  test_consumer_funding
+credit     consumer  consumer_funding

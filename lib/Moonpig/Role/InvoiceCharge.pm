@@ -102,7 +102,7 @@ sub __execute {
                 ? $still_need
                 : $credit->unapplied_amount;
     $ledger->accountant->create_transfer({
-      type => 'test_consumer_funding',
+      type => 'consumer_funding',
       from => $credit,
       to   => $owner,
       amount => $to_xfer,

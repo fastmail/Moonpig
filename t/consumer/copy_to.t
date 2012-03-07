@@ -109,7 +109,7 @@ test with_bank => sub {
     );
 
     $ledger_a->create_transfer({
-      type   => 'test_consumer_funding',
+      type   => 'consumer_funding',
       from   => $credit,
       to     => $cons_a,
       amount => dollars(100),
