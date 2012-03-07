@@ -52,6 +52,10 @@ sub is_unpaid {
   return ! $_[0]->is_paid
 }
 
+sub is_payable {
+  return($_[0]->is_closed && $_[0]->is_unpaid && ! $_[0]->is_abandoned);
+}
+
 has _abandoned_at => (
   is => 'rw',
   isa => Time,

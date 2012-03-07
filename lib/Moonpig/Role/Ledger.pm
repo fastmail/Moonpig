@@ -364,7 +364,7 @@ sub journal_array {
 
 sub payable_invoices {
   my ($self) = @_;
-  grep {; $_->is_unpaid && $_->is_closed && ! $_->is_abandoned} $self->invoices;
+  grep {; $_->is_payable } $self->invoices;
 }
 
 sub abandon_invoice {
