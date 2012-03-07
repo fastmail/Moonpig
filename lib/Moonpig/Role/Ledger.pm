@@ -81,7 +81,7 @@ use Moonpig::Util qw(class event random_short_ident sumof years);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
-use List::AllUtils qw(part);
+use List::AllUtils qw(part max);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
@@ -373,7 +373,7 @@ sub abandon_invoice {
   return $invoice->abandon_with_replacement($self->current_invoice);
 }
 
-sub _total_earmarked_amount {
+sub amount_earmarked {
   my ($self) = @_;
   my @invoices = grep { $_->is_paid } $self->invoices;
   my @charges  = grep { ! $_->is_executed }
@@ -382,12 +382,22 @@ sub _total_earmarked_amount {
   return sumof { $_->amount } @charges;
 }
 
-sub _total_available_credit_amount {
+sub amount_available {
   my ($self) = @_;
   my $total = sumof { $_->unapplied_amount } $self->credits;
-  my $earmarked_amount = $self->_total_earmarked_amount;
+  my $earmarked_amount = $self->amount_earmarked;
 
-  return $total - $earmarked_amount;
+  return max(0, $total - $earmarked_amount);
+}
+
+sub amount_due {
+  my ($self) = @_;
+
+  my $due   = sumof { $_->total_amount } $self->payable_invoices;
+  my $avail = $self->amount_available;
+
+  return 0 if $avail >= $due;
+  return abs($due - $avail);
 }
 
 sub process_credits {
@@ -397,7 +407,7 @@ sub process_credits {
 
   my @credits = $self->credits;
 
-  my $available = $self->_total_available_credit_amount;
+  my $available = $self->amount_available;
 
   for my $invoice (
     sort { $a->created_at <=> $b->created_at } $self->payable_invoices

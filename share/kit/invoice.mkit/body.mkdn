@@ -6,7 +6,7 @@ TOTAL DUE:  {{
     sub { $a + $b },
     0, map { $_->total_amount } @invoices
   );
-  my $on_hand = $invoices[0]->ledger->_total_available_credit_amount;
+  my $on_hand = $invoices[0]->ledger->amount_available;
 
   sprintf '$%0.2f', ($total - $on_hand) / 100_000;
 }}
