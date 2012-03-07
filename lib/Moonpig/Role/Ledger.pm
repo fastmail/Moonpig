@@ -373,6 +373,23 @@ sub abandon_invoice {
   return $invoice->abandon_with_replacement($self->current_invoice);
 }
 
+sub _total_earmarked_amount {
+  my ($self) = @_;
+  my @invoices = grep { $_->is_paid } $self->invoices;
+  my @charges  = grep { ! $_->is_executed }
+                 map  { $_->all_charges } @invoices;
+
+  return sumof { $_->amount } @charges;
+}
+
+sub _total_available_credit_amount {
+  my ($self) = @_;
+  my $total = sumof { $_->unapplied_amount } $self->credits;
+  my $earmarked_amount = $self->_total_earmarked_amount;
+
+  return $total - $earmarked_amount;
+}
+
 sub process_credits {
   my ($self) = @_;
 
@@ -380,53 +397,25 @@ sub process_credits {
 
   my @credits = $self->credits;
 
-  # XXX: These need to be processed in order. -- rjbs, 2010-12-02
-  for my $invoice ( $self->payable_invoices ) {
-    my ($nr_credits, $r_credits) =
-      part { ! $_->is_refundable }
-      grep { $_->unapplied_amount > 0 }
-      @credits;
+  my $available = $self->_total_available_credit_amount;
 
+  for my $invoice (
+    sort { $a->created_at <=> $b->created_at } $self->payable_invoices
+  ) {
+    $Logger->log(["considering paying %s", $invoice->ident ]);
+
+    # XXX: What the heck is going to happen with these under JIT payment!?
+    # -- rjbs, 2012-03-06
     my @coupon_apps = $self->find_coupon_applications__($invoice);
     my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
       @coupon_apps;
 
-    my $to_pay = $invoice->total_amount;
+    last if $invoice->total_amount > $available;
 
-    my @to_apply;
+    $Logger->log(["gonna try paying %s", $invoice->ident ]);
 
-    # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@coupon_credits, @$r_credits, @$nr_credits) {
-      my $credit_amount = $credit->unapplied_amount;
-      my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
-
-      push @to_apply, {
-        credit => $credit,
-        amount => $apply_amt,
-      };
-
-      $to_pay -= $apply_amt;
-
-      $Logger->log([
-        "will apply %s from %s; %s left to pay",
-        $apply_amt,
-        $credit->ident,
-        $to_pay,
-      ]);
-
-      last CREDIT if $to_pay == 0;
-    }
-
-    if ($to_pay == 0) {
-      # We didn't fall off the end of the loop above; we have enough credit to
-      # pay this invoice, and will now do so. -- rjbs, 2011-12-14
-      $self->apply_credits_to_invoice__( \@to_apply, $invoice );
-      $_->{coupon}->mark_applied for @coupon_apps;
-    } else {
-      # We can't successfully pay this invoice, so stop processing.
-      $self->destroy_credits__(@coupon_credits);
-      return;
-    }
+    $invoice->mark_paid;
+    $invoice->handle_event(event('paid'));
   }
 }
 
@@ -448,33 +437,6 @@ sub find_coupon_applications__ {
     push @res, map { coupon => $coupon, charge => $_ }, $coupon->applies_to_invoice($invoice);
   }
   return @res;
-}
-
-# Only call this if you are paying off the complete invoice!
-# $to_apply is an array of { credit => $credit_object, amount => $amount }
-# hashes.
-sub apply_credits_to_invoice__ {
-  my ($self, $to_apply, $invoice) = @_;
-
-  {
-    my $total = sumof { $_->{amount} } @$to_apply;
-    croak "credit application of $total did not mach invoiced amount of " .
-      $invoice->total_amount
-        unless $invoice->total_amount == $total;
-  }
-
-  for my $application (@$to_apply) {
-    $self->create_transfer({
-      type   => 'credit_application',
-      from   => $application->{credit},
-      to     => $invoice,
-      amount => $application->{amount},
-    });
-  }
-
-  $Logger->log([ "marking %s paid", $invoice->ident ]);
-  $invoice->handle_event(event('paid'));
-  $invoice->mark_paid;
 }
 
 implicit_event_handlers {

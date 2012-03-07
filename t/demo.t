@@ -15,8 +15,7 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use t::lib::TestEnv;
 
 use Data::GUID qw(guid_string);
-use List::Util qw(sum);
-use Moonpig::Util qw(class days dollars);
+use Moonpig::Util qw(class days dollars sum sumof);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -66,7 +65,7 @@ sub pay_any_open_invoice {
       $Ledger->add_credit(
         class(qw(Credit::Simulated)),
         { amount => $total },
-       );
+      );
 
       $Ledger->process_credits;
 

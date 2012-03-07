@@ -16,8 +16,10 @@ use Carp qw(confess croak);
 use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 
-use Moonpig::Util qw(class event sumof);
+use List::AllUtils qw(uniq);
+use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Credit GUID Time);
+use Moonpig::Util qw(class event sumof);
 use Moonpig::X;
 use MooseX::SetOnce;
 
@@ -130,14 +132,24 @@ implicit_event_handlers {
   return {
     'paid' => {
       redistribute   => Moonpig::Events::Handler::Method->new('_pay_charges'),
-      fund_consumers => Moonpig::Events::Handler::Method->new('_fund_consumers'),
     }
   };
 };
 
 sub _pay_charges {
   my ($self, $event) = @_;
-  $_->handle_event($event) for $self->all_charges;
+
+  my @charges = $self->all_charges;
+
+  my $collection = $self->ledger->consumer_collection;
+  my @guids     = uniq map { $_->owner_guid } @charges;
+  my @consumers = grep { $_->is_active }
+                  map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
+
+  $_->_try_to_get_funding for @consumers;
+
+  $_->handle_event($event) for @charges;
+
 }
 
 sub _bankable_charges_by_consumer {
@@ -147,25 +159,6 @@ sub _bankable_charges_by_consumer {
     push @{$res{$charge->owner_guid}}, $charge;
   }
   return \%res;
-}
-
-sub _fund_consumers {
-  my ($self, $event) = @_;
-  my $by_consumer = $self->_bankable_charges_by_consumer;
-
-  while (my ($consumer_guid, $charges) = each %$by_consumer) {
-    my $consumer = $self->ledger->consumer_collection->find_by_guid({
-      guid => $consumer_guid,
-    });
-    my $total = sumof { $_->amount } @$charges;
-
-    $self->ledger->create_transfer({
-      type   => 'consumer_funding',
-      from   => $self,
-      to     => $consumer,
-      amount => $total,
-    });
-  }
 }
 
 sub ident {

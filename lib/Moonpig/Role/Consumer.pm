@@ -39,7 +39,9 @@ use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
     'activated' => {
-      noop => Moonpig::Events::Handler::Noop->new,
+      get_funding => Moonpig::Events::Handler::Method->new(
+        method_name => '_try_to_get_funding',
+      ),
     },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
@@ -516,10 +518,18 @@ sub all_charges {
   my $guid = $self->guid;
   my @charges = grep { $_->owner_guid eq $guid }
                 map  { $_->all_charges }
-                grep { $_->closed_at >= $self->created_at }
+                grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
                 $self->ledger->invoices;
 
   return @charges;
+}
+
+sub _try_to_get_funding {
+  my ($self) = @_;
+  return unless $self->is_active;
+  my @avail_charges = grep { ! $_->is_executed } $self->all_charges;
+  $_->__execute($self->ledger) for @avail_charges;
+  return;
 }
 
 sub cashout_unapplied_amount {
