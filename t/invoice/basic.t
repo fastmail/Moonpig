@@ -18,7 +18,7 @@ before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
 
-test zero_charge_dunning => sub {
+test 'zero charge dunning' => sub {
   my ($self) = @_;
   my $guid;
 
@@ -58,7 +58,7 @@ test zero_charge_dunning => sub {
   });
 };
 
-test charge_close_and_send => sub {
+test 'charge close and send' => sub {
   my ($self) = @_;
   my $guid;
 
@@ -290,7 +290,7 @@ test overpayment  => sub {
   pass("everything ran to completion without dying");
 };
 
-test get_paid_on_payment => sub {
+test 'get paid on payment' => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
@@ -331,7 +331,7 @@ test get_paid_on_payment => sub {
   });
 };
 
-test payment_by_two_credits => sub {
+test 'payment by two credits' => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
