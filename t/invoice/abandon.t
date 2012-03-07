@@ -42,7 +42,7 @@ test carry_forth => sub {
     my $i2 = $ledger->current_invoice;
 
     ok($i1->is_abandoned, "original invoice was abandoned");
-    is($i2->amount_due, dollars(2), "correct amount on new ledger");
+    is($i2->total_amount, dollars(2), "correct amount on new ledger");
     ok(! $i1->is_paid, "old ledger unpaid");
     ok(! $i2->is_paid, "new ledger unpaid");
     is($i1->abandoned_in_favor_of, $i2->guid,

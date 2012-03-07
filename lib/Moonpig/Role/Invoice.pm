@@ -119,12 +119,6 @@ sub cancel {
   $self->abandon_without_replacement();
 }
 
-# XXX: delete this method -- rjbs, 2012-03-07
-sub amount_due {
-  my ($self) = @_;
-  my $total = $self->total_amount;
-}
-
 implicit_event_handlers {
   return {
     'paid' => {
