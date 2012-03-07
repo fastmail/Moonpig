@@ -542,7 +542,8 @@ sub relevant_invoices {
 sub _try_to_get_funding {
   my ($self) = @_;
   return unless $self->is_active;
-  $_->__execute_charges_for($self) for $self->relevant_invoices;
+  $_->__execute_charges_for($self)
+    for grep { $_->is_paid } $self->relevant_invoices;
   return;
 }
 

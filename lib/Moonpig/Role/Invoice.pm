@@ -148,6 +148,12 @@ sub __execute_charges_for {
 
   my $ledger = $self->ledger;
 
+  Moonpig::X->throw("can't execute charges on unpaid invoice")
+    unless $self->is_paid;
+
+  Moonpig::X->throw("can't execute charges on open invoice")
+    unless $self->is_closed;
+
   my @charges =
     grep { ! $_->is_executed }
     grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
