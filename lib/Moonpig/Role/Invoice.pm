@@ -120,12 +120,10 @@ sub cancel {
   $self->abandon_without_replacement();
 }
 
+# XXX: delete this method -- rjbs, 2012-03-07
 sub amount_due {
   my ($self) = @_;
   my $total = $self->total_amount;
-  my $paid  = $self->ledger->accountant->to_invoice($self)->total;
-
-  return $total - $paid;
 }
 
 implicit_event_handlers {
@@ -162,7 +160,6 @@ PARTIAL_PACK {
   return ppack({
     ident        => $self->ident,
     total_amount => $self->total_amount,
-    amount_due   => $self->amount_due,
     paid_at      => $self->paid_at,
     closed_at    => $self->closed_at,
     created_at   => $self->date,
