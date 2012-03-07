@@ -149,6 +149,42 @@ sub _pay_charges {
 
 }
 
+sub __execute_charges_for {
+  my ($self, $consumer) = @_;
+
+  my $ledger = $self->ledger;
+
+  my @charges =
+    grep { ! $_->is_executed }
+    grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
+
+  # Try to apply non-refundable credit first.  Within that, go for smaller
+  # credits first. -- rjbs, 2012-03-06
+  my @credits = sort { $b->is_refundable   <=> $a->is_refundable
+                   || $a->unapplied_amount <=> $b->unapplied_amount }
+                grep { $_->unapplied_amount }
+                $ledger->credits;
+
+  for my $charge (@charges) {
+    my $still_need = $charge->amount;
+    for my $credit (@credits) {
+      my $to_xfer = $credit->unapplied_amount >= $still_need
+                  ? $still_need
+                  : $credit->unapplied_amount;
+      $ledger->accountant->create_transfer({
+        type => 'consumer_funding',
+        from => $credit,
+        to   => $consumer,
+        amount => $to_xfer,
+      });
+      $still_need -= $to_xfer;
+      last if $still_need == 0;
+    }
+
+    $charge->__set_executed_at( Moonpig->env->now );
+  }
+}
+
 sub ident {
   $_[0]->ledger->_invoice_ident_registry->{ $_[0]->guid } // $_[0]->guid;
 }

@@ -24,6 +24,7 @@ with(
 
 sub _class_subroute { return }
 
+use List::AllUtils qw(any);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
@@ -525,11 +526,23 @@ sub all_charges {
   return @charges;
 }
 
+sub relevant_invoices {
+  my ($self) = @_;
+
+  # If the invoice was closed before we were created, we can't be on it!
+  # -- rjbs, 2012-03-06
+  my $guid = $self->guid;
+  my @invoices = grep { (! $_->is_closed || $_->closed_at >= $self->created_at)
+                        && any { $_->owner_guid eq $guid } $_->all_charges
+                      } $self->ledger->invoices;
+
+  return @invoices;
+}
+
 sub _try_to_get_funding {
   my ($self) = @_;
   return unless $self->is_active;
-  my @avail_charges = grep { ! $_->is_executed } $self->all_charges;
-  $_->__execute($self->ledger) for @avail_charges;
+  $_->__execute_charges_for($self) for $self->relevant_invoices;
   return;
 }
 

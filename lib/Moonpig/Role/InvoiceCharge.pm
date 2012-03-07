@@ -77,43 +77,6 @@ has executed_at => (
   traits    => [ qw(SetOnce) ],
 );
 
-sub __execute {
-  # XXX: We get $ledger as a parameter here because we can't get it cheaply
-  # otherwise.  This whole method should get moved somewhere else, probably.
-  # -- rjbs, 2012-03-06
-  my ($self, $ledger) = @_;
-
-  Moonpig::X->throw("can't execute already-executed InvoiceCharge")
-    if $self->is_executed;
-
-  # Try to apply non-refundable credit first.  Within that, go for smaller
-  # credits first. -- rjbs, 2012-03-06
-  my @credits = sort { $b->is_refundable   <=> $a->is_refundable
-                   || $a->unapplied_amount <=> $b->unapplied_amount }
-                grep { $_->unapplied_amount }
-                $ledger->credits;
-
-  my $owner = $ledger->consumer_collection
-              ->find_by_guid({ guid => $self->owner_guid });
-
-  my $still_need = $self->amount;
-  for my $credit (@credits) {
-    my $to_xfer = $credit->unapplied_amount >= $still_need
-                ? $still_need
-                : $credit->unapplied_amount;
-    $ledger->accountant->create_transfer({
-      type => 'consumer_funding',
-      from => $credit,
-      to   => $owner,
-      amount => $to_xfer,
-    });
-    $still_need -= $to_xfer;
-    last if $still_need == 0;
-  }
-
-  $self->__set_executed_at( Moonpig->env->now );
-}
-
 implicit_event_handlers {
   return {
     'paid' => {
