@@ -18,7 +18,7 @@ has email_sender => (
 );
 
 sub build_email_sender {
-  Email::Sender::Transport::Test->new;
+  ...
 }
 
 sub process_email_queue {

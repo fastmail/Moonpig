@@ -50,6 +50,10 @@ sub default_from_email_address {
   );
 }
 
+sub build_email_sender {
+  Email::Sender::Transport::Test->new;
+}
+
 has object_registry => (
   is   => 'ro',
   isa  => 'HashRef',
