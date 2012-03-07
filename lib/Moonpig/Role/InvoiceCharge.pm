@@ -46,9 +46,10 @@ has ledger_guid => (
 );
 
 has abandoned_date => (
-  is => 'rw',
+  is => 'ro',
   isa => Time,
   predicate => 'is_abandoned',
+  writer    => '__set_abandoned_date',
   traits => [ qw(SetOnce) ],
 );
 
@@ -56,7 +57,7 @@ sub counts_toward_total { ! $_[0]->is_abandoned }
 
 sub mark_abandoned {
   my ($self) = @_;
-  $self->abandoned_date( Moonpig->env->now );
+  $self->__set_abandoned_date( Moonpig->env->now );
 }
 
 sub ledger {
