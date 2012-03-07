@@ -55,5 +55,25 @@ test "job-making invoice charge" => sub {
     });
 };
 
+test "build_invoice_charge honored" => sub {
+  my ($self) = @_;
+  my $funky_role = "t::lib::Role::InvoiceCharge::JobCreator";
+
+  do_with_fresh_ledger({
+      consumer => {
+        class => class("=t::lib::Role::Consumer::FunkyCharge"),
+        charge_roles => [ "=$funky_role" ],
+        xid         => "test:thing:xid",
+        make_active => 1,
+        replacement_plan => [ get => '/nothing' ],
+      }}, sub {
+    my ($ledger) = @_;
+
+    my @charges = $ledger->current_invoice->all_charges;
+    is(@charges, 1, "exactly 1 charge");
+    ok($charges[0]->does($funky_role), "charge does role '$funky_role'");
+  });
+};
+
 run_me;
 done_testing;

@@ -473,6 +473,10 @@ sub charge_invoice {
   $args->{consumer}   ||= $self;
   $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
 
+  # If there's no ->build_invoice_charge method, let the Invoice
+  # object build the charge from the arguments.
+  $args = $self->build_invoice_charge($args) if $self->can("build_invoice_charge");
+
   $invoice->add_charge($args);
 }
 

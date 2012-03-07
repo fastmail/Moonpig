@@ -2,6 +2,7 @@ package t::lib::Role::InvoiceCharge::JobCreator;
 use Moose::Role;
 
 use Moonpig::Behavior::EventHandlers;
+with ("Moonpig::Role::InvoiceCharge");
 
 implicit_event_handlers {
   return {
