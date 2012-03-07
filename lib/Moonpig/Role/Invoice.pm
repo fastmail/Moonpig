@@ -152,15 +152,6 @@ sub _pay_charges {
 
 }
 
-sub _bankable_charges_by_consumer {
-  my ($self) = @_;
-  my %res;
-  for my $charge ( $self->all_charges ) {
-    push @{$res{$charge->owner_guid}}, $charge;
-  }
-  return \%res;
-}
-
 sub ident {
   $_[0]->ledger->_invoice_ident_registry->{ $_[0]->guid } // $_[0]->guid;
 }
