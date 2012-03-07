@@ -146,6 +146,8 @@ test with_bank => sub {
     is($cred_b->amount, dollars(100), "credit amount");
     my ($xfer_b, $d2) = $ledger_b->accountant->from_credit($cred_b)->all;
     ok($xfer_b && ! $d2, "found unique credit transfer in target ledger");
+
+    # XXX: The target is going to be the consumer, not the credit.
     my ($invoice_b) = $xfer_b->target;
     ok($invoice_b, "found transient invoice in target ledger");
     cmp_ok($invoice_b->is_paid, "==", 1, "invoice should be paid");
