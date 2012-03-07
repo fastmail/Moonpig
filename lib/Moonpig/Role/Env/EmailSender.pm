@@ -7,7 +7,7 @@ use MooseX::StrictConstructor;
 
 use namespace::autoclean;
 
-use Email::Simple;
+use Email::MIME;
 use JSON;
 use Email::Sender::Transport::Test;
 
@@ -28,7 +28,7 @@ sub process_email_queue {
 
   $self->storage->iterate_jobs('send-email', sub {
     my ($job) = @_;
-    my $email = Email::Simple->new($job->payload('email'));
+    my $email = Email::MIME->new($job->payload('email'));
 
     my $env = JSON->new->decode( $job->payload('env') );
     Moonpig->env->send_email($email, $env);
