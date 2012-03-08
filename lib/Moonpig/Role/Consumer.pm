@@ -549,6 +549,8 @@ sub cashout_unapplied_amount {
   my ($self) = @_;
   my $balance = $self->unapplied_amount;
 
+  return unless $balance > 0;
+
   my $transfer_set = $self->ledger->accountant->select({
     target => $self,
     type   => 'consumer_funding',
