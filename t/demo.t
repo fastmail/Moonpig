@@ -15,7 +15,7 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use t::lib::TestEnv;
 
 use Data::GUID qw(guid_string);
-use Moonpig::Util qw(class days dollars sum sumof);
+use Moonpig::Util qw(class days dollars sum sumof to_dollars);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -188,7 +188,20 @@ test "end to end demo" => sub {
     my $active_consumer = $Ledger->active_consumer_for_xid( $self->xid );
     is($active_consumer, undef, "...but they're all inactive now");
 
+    # Every consumer wants $40 + $10, spent over the course of a year, charged
+    # every 7 days.  That means each charge is...
+    my $each_charge = dollars(50) / 365.25 * 7;
+
+    # ...and that means we must not have any more credit left than that.
     $Ledger->_collect_spare_change;
+    my $avail = $Ledger->amount_available;
+    cmp_ok(
+      $Ledger->amount_available, '<', $each_charge,
+      sprintf("ledger has less avail. credit (\$%.2f) than a charge (\$%.2f)",
+        to_dollars($avail),
+        to_dollars($each_charge),
+      ),
+    );
   });
 };
 
