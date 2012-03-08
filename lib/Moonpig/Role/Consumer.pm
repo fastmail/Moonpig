@@ -397,6 +397,8 @@ sub copy_balance_to__ {
         amount => $amount,
       });
 
+      $new_consumer->abandon_all_unpaid_charges;
+
       $new_ledger->save;
     }
   );
