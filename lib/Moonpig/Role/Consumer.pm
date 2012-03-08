@@ -380,24 +380,23 @@ sub copy_balance_to__ {
         amount      => $amount,
         extra_tags  => [ "transient" ],
       });
+
       my $credit = $new_ledger->add_credit(
         class('Credit::Transient'),
         {
           amount               => $amount,
           source_guid          => $self->guid,
           source_ledger_guid   => $ledger->guid,
-        });
-      my $transient_invoice = class("Invoice")->new({
-         ledger      => $new_ledger,
+        },
+      );
+
+      $new_ledger->accountant->create_transfer({
+        type => 'consumer_funding',
+        from => $credit,
+        to   => $new_consumer,
+        amount => $amount,
       });
-      my $charge = $new_consumer->charge_invoice($transient_invoice,
-        { description => sprintf("Transfer management of '%s' from ledger %s",
-                                 $self->xid, $ledger->guid),
-          amount      => $amount,
-          extra_tags  => [ "transient" ],
-         });
-      $transient_invoice->mark_closed;
-      $new_ledger->process_credits;
+
       $new_ledger->save;
     }
   );
