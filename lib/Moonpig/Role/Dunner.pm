@@ -2,6 +2,7 @@ package Moonpig::Role::Dunner;
 # ABSTRACT: something that performs dunning of invoices
 use Moose::Role;
 
+use List::AllUtils 'any';
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
@@ -45,6 +46,7 @@ sub perform_dunning {
     sort { $b->created_at <=> $a->created_at
         || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
          }
+    grep { any { ! $_->is_abandoned } $_->all_charges }
     grep { ! $_->is_abandoned && $_->is_unpaid && $_->has_charges }
     $self->invoices;
 
