@@ -397,13 +397,10 @@ sub copy_balance_to__ {
           extra_tags  => [ "transient" ],
          });
       $transient_invoice->mark_closed;
-      # XXX: We don't apply credits to invoices.  So... is this okay?
-      #$new_ledger->apply_credits_to_invoice__(
-      #  [{ credit => $credit,
-      #     amount => $amount }],
-      #  $transient_invoice);
+      $new_ledger->process_credits;
       $new_ledger->save;
-    });
+    }
+  );
 }
 
 

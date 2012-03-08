@@ -1,6 +1,7 @@
 use Test::Routine;
 
 use t::lib::TestEnv;
+use List::AllUtils qw(part);
 use Moonpig::Util qw(class days dollars cents years event);
 use Test::More;
 use Test::Routine::Util;
@@ -100,8 +101,8 @@ test with_bank => sub {
       class("Consumer::ByTime::FixedAmountCharge"),
       {
         charge_description => "monkey meat",
-        charge_amount => cents(1234),
-        cost_period => years(1),
+        charge_amount => cents(100),
+        cost_period => days(100),
         replacement_lead_time => days(3),
         replacement_plan    => [ get => '/nothing' ],
         xid => $xid,
@@ -114,36 +115,63 @@ test with_bank => sub {
       { amount => dollars(100) },
     );
 
-    $ledger_a->create_transfer({
-      type   => 'consumer_funding',
-      from   => $credit,
-      to     => $cons_a,
-      amount => dollars(100),
-    });
+    $ledger_a->heartbeat;
+    $ledger_a->process_credits;
+
+    is($cons_a->unapplied_amount, cents(100), "cons A initially rich");
 
     $exp_date_a = $cons_a->expiration_date->clone;
 
-    is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
+    cmp_ok(
+      $cons_a->expiration_date, '==',
+        Moonpig::DateTime->new( year => 2000, month => 4, day => 10 ),
+      "expiration date is 100d post creation"
+    );
+
+    Moonpig->env->elapse_time( days(9) );
+    $ledger_a->heartbeat;
+
+    cmp_ok(
+      $cons_a->expiration_date, '==', $exp_date_a,
+      "expiration date is still 100d post creation"
+    );
+
+    is($cons_a->unapplied_amount, cents(90), "cons A used up 10% of value");
     my $cons_b = $cons_a->copy_to($ledger_b);
     $ledger_b->name_component("copy consumer", $cons_b);
   });
 
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
+
+    # We do this so that if any invoice is there, open, with charges, it will
+    # get closed.  That way we can find it later in the test. -- rjbs,
+    # 2012-03-08
+    $ledger_b->heartbeat;
+
     my $cons_a = $ledger_a->get_component("original consumer");
     my $cons_b = $ledger_b->get_component("copy consumer");
 
     isnt($cons_a->guid, $cons_b->guid, "consumer was copied");
 
     is($cons_a->unapplied_amount, 0, "all monies transferred out of cons A");
-    is($cons_b->unapplied_amount, dollars(100),
+    is($cons_b->unapplied_amount, cents(90),
        "cons B fully funded");
 
-    my ($xfer_a, $d3) = $ledger_a->accountant->from_consumer($cons_a)->all;
-    ok($xfer_a && ! $d3, "found unique bank transfer in source ledger");
-    is($xfer_a->target, $ledger_a->current_journal, "... checked its target");
-    my ($charge_a, $d4) = $ledger_a->current_journal->all_charges;
-    ok($charge_a && ! $d4, "found unique charge on source ledger");
+    my @xfers_a = $ledger_a->accountant->from_consumer($cons_a)->all;
+    my ($t_xfers, $j_xfers) = part { $_->amount == cents(1) } @xfers_a;
+    is(@$j_xfers, 10, "we did 10 normal daily charges");
+    is(@$t_xfers,  1, "... and one management transfer xfer");
+
+    is(
+      $t_xfers->[0]->target,
+      $ledger_a->current_journal,
+      "... to the current journal",
+    );
+
+    my ($charge_a) = grep { $_->amount != cents(1) }
+                     $ledger_a->current_journal->all_charges;
+
     like($charge_a->description,
          qr/Transfer management of '\Q$xid\E' to ledger \Q$B\E/,
          "...checked its description");
@@ -151,19 +179,10 @@ test with_bank => sub {
     my ($cred_b, $d1) = $ledger_b->credits;
     ok($cred_b && ! $d1, "found unique credit in target ledger");
     is($cred_b->as_string, "transient credit", "...checked its credit type");
-    is($cred_b->amount, dollars(100), "credit amount");
+    is($cred_b->amount, cents(90), "credit amount");
     my ($xfer_b, $d2) = $ledger_b->accountant->from_credit($cred_b)->all;
     ok($xfer_b && ! $d2, "found unique credit transfer in target ledger");
 
-    # XXX: The target is going to be the consumer, not the credit.
-    my ($invoice_b) = $xfer_b->target;
-    ok($invoice_b, "found transient invoice in target ledger");
-    cmp_ok($invoice_b->is_paid, "==", 1, "invoice should be paid");
-    my ($charge_b, $d5) = $invoice_b->all_charges;
-    ok($charge_b && ! $d5, "found unique charge on target invoice from consumer");
-    like($charge_b->description,
-      qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,
-      "...checked its description");
     cmp_ok(
       $cons_b->expiration_date, '==', $exp_date_a,
       "expiration date is still 100d post original",
