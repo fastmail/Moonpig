@@ -187,6 +187,9 @@ test with_bank => sub {
       $cons_b->expiration_date, '==', $exp_date_a,
       "expiration date is still 100d post original",
     );
+
+    my @invoices = $ledger_b->payable_invoices;
+    is(@invoices, 0, "and there are no invoices on the new ledger to pay");
   });
 };
 
