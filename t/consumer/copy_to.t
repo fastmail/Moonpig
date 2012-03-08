@@ -83,9 +83,15 @@ test bytime => sub {
 
 test with_bank => sub {
   my ($self) = @_;
+
+  Moonpig->env->stop_clock_at (
+    Moonpig::DateTime->new( year => 2000, month => 1, day => 1 ));
+
   my $xid = "eat:more:possum";
 
   my ($ledger_a, $ledger_b);
+
+  my $exp_date_a;
 
   Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
     my ($ledger_a, $ledger_b) = @_;
@@ -114,6 +120,8 @@ test with_bank => sub {
       to     => $cons_a,
       amount => dollars(100),
     });
+
+    $exp_date_a = $cons_a->expiration_date->clone;
 
     is($cons_a->unapplied_amount, dollars(100), "cons A initially rich");
     my $cons_b = $cons_a->copy_to($ledger_b);
@@ -156,6 +164,10 @@ test with_bank => sub {
     like($charge_b->description,
       qr/Transfer management of '\Q$xid\E' from ledger \Q$A\E/,
       "...checked its description");
+    cmp_ok(
+      $cons_b->expiration_date, '==', $exp_date_a,
+      "expiration date is still 100d post original",
+    );
   });
 };
 
