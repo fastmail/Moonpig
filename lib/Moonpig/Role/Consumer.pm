@@ -199,8 +199,8 @@ has replacement_plan => (
 sub build_and_install_replacement {
   my ($self) = @_;
 
-  # Shouldn't this be fatal? -- rjbs, 2011-08-22 XXX
-  return if $self->has_replacement;
+  Moonpig::X->throw("can't build replacement: one exists")
+    if $self->has_replacement;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
