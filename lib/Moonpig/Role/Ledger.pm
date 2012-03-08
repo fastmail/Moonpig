@@ -412,8 +412,6 @@ sub process_credits {
   for my $invoice (
     sort { $a->created_at <=> $b->created_at } $self->payable_invoices
   ) {
-    $Logger->log(["considering paying %s", $invoice->ident ]);
-
     # XXX: What the heck is going to happen with these under JIT payment!?
     # -- rjbs, 2012-03-06
     my @coupon_apps = $self->find_coupon_applications__($invoice);
@@ -421,8 +419,6 @@ sub process_credits {
       @coupon_apps;
 
     last if $invoice->total_amount > $available;
-
-    $Logger->log(["gonna try paying %s", $invoice->ident ]);
 
     $invoice->mark_paid;
     $invoice->handle_event(event('paid'));
