@@ -138,7 +138,7 @@ sub _pay_charges {
 
   my $collection = $self->ledger->consumer_collection;
   my @guids     = uniq map { $_->owner_guid } @charges;
-  my @consumers = grep { $_->is_active }
+  my @consumers = grep { $_->is_active || $_->is_expired }
                   map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
 
   $_->_try_to_get_funding for @consumers;
