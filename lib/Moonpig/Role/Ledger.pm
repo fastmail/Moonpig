@@ -591,9 +591,6 @@ sub _collect_spare_change {
 
   delete $consider{ $_->guid } for @consumers;
 
-  return;
-  # XXX XXX XXX: we can't cashout until we have transfers going directly
-  # from credits to consumers! -- rjbs, 2012-03-06
   $_->cashout_unapplied_amount for map { $_->[0] } values %consider;
 }
 
