@@ -53,12 +53,13 @@ has _conn => (
   lazy => 1,
   init_arg => undef,
   handles  => [ qw(txn) ],
-  default  => sub {
-    my ($self) = @_;
-
-    return DBIx::Connector->new( $self->dbi_connect_args );
-  },
+  builder  => '_new_connection',
 );
+
+sub _new_connection {
+  my ($self) = @_;
+  return DBIx::Connector->new( $self->dbi_connect_args );
+}
 
 my $schema_yaml = <<'...';
 ---
@@ -350,40 +351,51 @@ has _ledger_queue => (
 
 sub queue_job {
   my ($self, $arg) = @_;
-  $arg->{payloads} ||= {};
 
   if ($self->_has_update_mode and $self->_in_update_mode) {
-    $self->txn(sub {
-      my $dbh = $_;
-      $dbh->do(
-        q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
-        undef,
-        $arg->{type},
-        $arg->{ledger_guid},
-        Moonpig->env->now->epoch,
-      );
-
-      my $job_id = $dbh->last_insert_id(q{}, q{}, 'jobs', 'id');
-
-      for my $ident (keys %{ $arg->{payloads} }) {
-        my $payload = $arg->{payloads}->{ $ident };
-        Str->assert_valid($payload);
-
-        $dbh->do(
-          q{
-            INSERT INTO job_documents (job_id, ident, payload)
-            VALUES (?, ?, ?)
-          },
-          undef,
-          $job_id,
-          $ident,
-          $payload,
-        );
-      }
-    });
+    $self->__queue_job($self, $arg);
   } else {
     Moonpig::X->throw("queue_job outside of read-write transaction");
   }
+}
+
+sub queue_job_immediately {
+  my ($self, $arg) = @_;
+  $self->__queue_job($self->_new_connection, $arg);
+}
+
+sub __queue_job {
+  my ($self, $txn_handler, $arg) = @_;
+  $arg->{payloads} //= {};
+
+  $txn_handler->txn(sub {
+    my $dbh = $_;
+    $dbh->do(
+      q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
+      undef,
+      $arg->{type},
+      $arg->{ledger_guid},
+      Moonpig->env->now->epoch,
+    );
+
+    my $job_id = $dbh->last_insert_id(q{}, q{}, 'jobs', 'id');
+
+    for my $ident (keys %{ $arg->{payloads} }) {
+      my $payload = $arg->{payloads}->{ $ident };
+      Str->assert_valid($payload);
+
+      $dbh->do(
+        q{
+          INSERT INTO job_documents (job_id, ident, payload)
+          VALUES (?, ?, ?)
+        },
+        undef,
+        $job_id,
+        $ident,
+        $payload,
+      );
+    }
+  });
 }
 
 sub __job_callbacks {

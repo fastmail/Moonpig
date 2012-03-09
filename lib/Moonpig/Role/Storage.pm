@@ -59,6 +59,7 @@ sub do_with_this_ledger {
 }
 
 requires 'queue_job';
+requires 'queue_job_immediately';
 requires 'iterate_jobs';
 requires 'undone_jobs_for_ledger';
 
