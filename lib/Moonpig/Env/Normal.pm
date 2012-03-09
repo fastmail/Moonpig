@@ -25,6 +25,10 @@ sub send_email {
   confess "unimplemented";
 }
 
+sub file_customer_service_request {
+  confess "unimplemented";
+}
+
 sub storage_class {
   require Moonpig::Storage::Spike;
   'Moonpig::Storage::Spike';

@@ -92,6 +92,8 @@ has storage => (
 requires 'storage_class';
 requires 'storage_init_args';
 
+requires 'file_customer_service_request';
+
 has consumer_template_registry => (
   is  => 'ro',
   isa => 'Moonpig::Consumer::TemplateRegistry',

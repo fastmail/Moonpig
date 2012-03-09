@@ -5,6 +5,7 @@ use Moose;
 with(
   'Moonpig::Role::Env::WithMockedTime',
   'Moonpig::Role::Env::EmailSender',
+  'Moonpig::Role::Env::CustSrvEmail',
 );
 
 use MooseX::StrictConstructor;
