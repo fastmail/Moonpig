@@ -433,8 +433,8 @@ sub destroy_credits__ {
 }
 
 # Given an invoice, find all outstanding coupons that apply to its charges
-# return a list of { coupon => $coupon, charge => $charge } items indicating which coupons
-# apply to which charges
+# return a list of { coupon => $coupon, charge => $charge } items indicating
+# which coupons apply to which charges
 sub find_coupon_applications__ {
   my ($self, $invoice) = @_;
   my @coupons = $self->coupons;
