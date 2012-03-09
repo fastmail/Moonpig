@@ -348,7 +348,7 @@ has _ledger_queue => (
   default  => sub {  []  },
 );
 
-sub queue_job__ {
+sub queue_job {
   my ($self, $arg) = @_;
   $arg->{payloads} ||= {};
 
@@ -359,7 +359,7 @@ sub queue_job__ {
         q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
         undef,
         $arg->{type},
-        $arg->{ledger}->guid,
+        $arg->{ledger_guid},
         Moonpig->env->now->epoch,
       );
 
