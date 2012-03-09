@@ -25,6 +25,20 @@ use Moose::Util::TypeConstraints;
 
 sub extra_share_roots { }
 
+sub customer_service_from_email_address {
+  Email::Address->new(
+    'Moonpig Robot',
+    'moonpig+cs+robot@example.com',
+  );
+}
+
+sub customer_service_to_email_address {
+  Email::Address->new(
+    'Moonpig Humans',
+    'moonpig+cs+human@example.com',
+  );
+}
+
 sub default_from_email_address {
   Email::Address->new(
     'Moonpig',
