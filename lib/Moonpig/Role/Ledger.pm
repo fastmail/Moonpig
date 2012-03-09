@@ -732,11 +732,13 @@ sub queue_email {
 sub queue_job {
   my ($self, $type, $payloads) = @_;
 
-  Moonpig->env->storage->queue_job({
-    ledger_guid => $self->guid,
-    type        => $type,
-    payloads    => $payloads,
-  });
+  Moonpig->env->storage->queue_job(
+    $self,
+    {
+      type        => $type,
+      payloads    => $payloads,
+    },
+  );
 }
 
 sub job_array {

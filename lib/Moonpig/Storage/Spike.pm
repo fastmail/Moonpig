@@ -350,17 +350,17 @@ has _ledger_queue => (
 );
 
 sub queue_job {
-  my ($self, $arg) = @_;
+  my ($self, $ledger, $arg) = @_;
 
   if ($self->_has_update_mode and $self->_in_update_mode) {
-    $self->__queue_job($self, $arg);
+    $self->__queue_job($self, $ledger, $arg);
   } else {
     Moonpig::X->throw("queue_job outside of read-write transaction");
   }
 }
 
 sub __queue_job {
-  my ($self, $txn_handler, $arg) = @_;
+  my ($self, $txn_handler, $ledger, $arg) = @_;
   $arg->{payloads} //= {};
 
   $txn_handler->txn(sub {
@@ -369,7 +369,7 @@ sub __queue_job {
       q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
       undef,
       $arg->{type},
-      $arg->{ledger_guid},
+      $ledger->guid,
       Moonpig->env->now->epoch,
     );
 
