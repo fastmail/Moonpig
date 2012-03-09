@@ -359,11 +359,6 @@ sub queue_job {
   }
 }
 
-sub queue_job_immediately {
-  my ($self, $arg) = @_;
-  $self->__queue_job($self->_new_connection, $arg);
-}
-
 sub __queue_job {
   my ($self, $txn_handler, $arg) = @_;
   $arg->{payloads} //= {};
