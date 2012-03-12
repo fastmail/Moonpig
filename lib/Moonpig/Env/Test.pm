@@ -39,6 +39,10 @@ sub customer_service_to_email_address {
   );
 }
 
+sub customer_service_mkit_name {
+  'custsrv'
+}
+
 sub default_from_email_address {
   Email::Address->new(
     'Moonpig',

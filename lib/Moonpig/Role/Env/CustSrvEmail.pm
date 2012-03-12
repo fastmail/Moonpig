@@ -10,16 +10,17 @@ use namespace::autoclean;
 
 requires 'customer_service_from_email_address';
 requires 'customer_service_to_email_address';
+requires 'customer_service_mkit_name';
 
 sub file_customer_service_request {
   my ($self, $ledger, $arg) = @_;
 
   my $email = Moonpig->env->mkits->assemble_kit(
-    'generic',
+    $self->customer_service_mkit_name,
     {
       to_addresses => [ $self->customer_service_to_email_address->address ],
       subject => 'Customer Service Request',
-      body    => JSON->new->ascii->encode( ppack($arg) ),
+      arg     =>  $arg,
     },
   );
 
