@@ -6,13 +6,10 @@
       "template_args": { "DELIMITERS": [ "{{", "}}" ] }
     }
   ],
-  "assembler" : [
-    "Markdown",
-    {
-      "html_wrapper": "/Moonpig/kit/wrapper/wrapper.html",
-      "text_wrapper": "/Moonpig/kit/wrapper/wrapper.txt"
-    }
-  ],
+  "attributes": {
+    "encoding": "quoted-printable",
+    "charset": "utf-8"
+  },
   "header": [
     { "Subject": "{{ $subject }}" },
     { "To":      "{{ join q{,}, @to_addresses }}" },
@@ -25,7 +22,7 @@
         "type": "//rec",
         "required": {
           "subject"     : "//str",
-          "arg"         : "//rec",
+          "arg"         : { "type": "//rec", "rest": "//any" },
           "to_addresses": { "type": "//arr", "contents": "//str" }
         }
       }

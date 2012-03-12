@@ -18,7 +18,7 @@ sub file_customer_service_request {
   my $email = Moonpig->env->mkits->assemble_kit(
     $self->customer_service_mkit_name,
     {
-      to_addresses => [ $self->customer_service_to_email_address->address ],
+      to_addresses => [ $self->customer_service_to_email_address->as_string ],
       subject => 'Customer Service Request',
       arg     =>  $arg,
     },
@@ -27,8 +27,8 @@ sub file_customer_service_request {
   $ledger->queue_email(
     $email,
     {
-      to   => $self->customer_service_to_email_address,
-      from => $self->customer_service_from_email_address,
+      to   => [ $self->customer_service_to_email_address->address ],
+      from => $self->customer_service_from_email_address->address,
     },
   );
 }
