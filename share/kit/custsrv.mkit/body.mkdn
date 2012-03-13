@@ -1,1 +1,6 @@
-{{ JSON->new->ascii->encode( Stick::Util->ppack(\%payload) ) }}
+{{
+  JSON->new->ascii->pretty->canonical->encode({
+    ledger  => ($ledger ? $ledger->guid : undef),
+    payload => Stick::Util->ppack(\%payload),
+  });
+}}

@@ -36,7 +36,11 @@ test 'customer service request' => sub {
   is(@deliveries, 1, "we sent one email");
 
   my $data = JSON->new->decode( $deliveries[0]->{email}->body_str );
-  is_deeply($data, $payload, "mail contains the body we expect");
+  is_deeply(
+    $data,
+    { ledger => $guid, payload => $payload },
+    "mail contains the body we expect",
+  );
 };
 
 test 'immediate cust srv req' => sub {
