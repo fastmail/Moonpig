@@ -59,7 +59,7 @@ sub _extra_instance_subroute {
   return;
 }
 
-use Moonpig::Types qw(Ledger SimplePath Time);
+use Moonpig::Types qw(GUID SimplePath Time);
 
 use Moonpig::Behavior::Packable;
 
@@ -84,13 +84,10 @@ has job_type => (
   required => 1,
 );
 
-has ledger => (
+has ledger_guid => (
   is  => 'ro',
-  isa => Ledger,
+  isa => GUID,
   required => 1,
-  handles  => {
-    ledger_guid => 'guid',
-  },
 );
 
 has payloads => (
@@ -122,7 +119,7 @@ PARTIAL_PACK {
     type => $self->job_type,
     created_at  => $self->created_at,
     payloads    => $self->payloads,
-    ledger_guid => $self->ledger->guid,
+    ledger_guid => $self->ledger_guid,
     status      => $self->status,
   };
 };

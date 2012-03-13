@@ -490,16 +490,31 @@ sub iterate_jobs {
   $conn->run(sub {
     my $dbh = $_;
 
-    my $job_sth = $dbh->prepare(
-      q{
-        SELECT *
-        FROM jobs
-        WHERE type = ? AND termination_state IS NULL AND locked_at IS NULL
-        ORDER BY created_at
-      },
-    );
+    my $job_sth;
 
-    $job_sth->execute($type);
+    if (defined $type) {
+      $job_sth = $dbh->prepare(
+        q{
+          SELECT *
+          FROM jobs
+          WHERE type = ? AND termination_state IS NULL AND locked_at IS NULL
+          ORDER BY created_at
+        },
+      );
+
+      $job_sth->execute($type);
+    } else {
+      $job_sth = $dbh->prepare(
+        q{
+          SELECT *
+          FROM jobs
+          WHERE termination_state IS NULL AND locked_at IS NULL
+          ORDER BY created_at
+        },
+      );
+
+      $job_sth->execute;
+    }
 
     while (my $job_row = $job_sth->fetchrow_hashref) {
       my $payloads = $self->__payloads_for_job_row($job_row, $dbh);
@@ -511,21 +526,13 @@ sub iterate_jobs {
       # need to do much work inside larger transaction -- that's the point!
       # They will do outside work and mark the job done. -- rjbs, 2011-04-14
 
-      my $ledger = $self->retrieve_ledger_for_guid($job_row->{ledger_guid});
-      unless ($ledger) {
-        Moonpig::X->throw({
-          ident   => "no ledger found for job",
-          payload => { ledger_guid => $job_row->{ledger_guid} },
-        });
-      }
-
       my $job = Moonpig::Job->new({
-        ledger     => $ledger,
-        job_id     => $job_row->{id},
-        job_type   => $job_row->{type},
-        created_at => $job_row->{created_at},
-        payloads   => $payloads,
-        status     => $job_row->{termination_state} || 'incomplete',
+        job_id      => $job_row->{id},
+        job_type    => $job_row->{type},
+        created_at  => $job_row->{created_at},
+        payloads    => $payloads,
+        status      => $job_row->{termination_state} || 'incomplete',
+        ledger_guid => $job_row->{ledger_guid},
 
         $self->__job_callbacks($conn, $job_row),
       });
@@ -560,12 +567,12 @@ sub undone_jobs_for_ledger {
 
     @jobs = map {
       Moonpig::Job->new({
-        ledger     => $ledger,
-        job_id     => $_->{id},
-        job_type   => $_->{type},
-        created_at => $_->{created_at},
-        payloads   => $self->__payloads_for_job_row($_, $dbh),
-        status     => $_->{termination_state} || 'incomplete',
+        job_id      => $_->{id},
+        job_type    => $_->{type},
+        created_at  => $_->{created_at},
+        payloads    => $self->__payloads_for_job_row($_, $dbh),
+        status      => $_->{termination_state} || 'incomplete',
+        ledger_guid => $ledger->guid,
 
         $self->__job_callbacks($conn, $_),
       });
