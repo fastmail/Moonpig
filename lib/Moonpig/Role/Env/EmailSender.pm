@@ -17,9 +17,7 @@ has email_sender => (
   builder => 'build_email_sender',
 );
 
-sub build_email_sender {
-  ...
-}
+requires 'build_email_sender';
 
 sub process_email_queue {
   my ($self) = @_;
