@@ -93,6 +93,7 @@ requires 'storage_class';
 requires 'storage_init_args';
 
 requires 'file_customer_service_request';
+requires 'file_customer_service_error_report';
 
 has consumer_template_registry => (
   is  => 'ro',

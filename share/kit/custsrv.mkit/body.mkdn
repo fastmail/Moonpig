@@ -1,1 +1,1 @@
-{{ JSON->new->ascii->encode( Stick::Util->ppack(\%arg) ) }}
+{{ JSON->new->ascii->encode( Stick::Util->ppack(\%payload) ) }}

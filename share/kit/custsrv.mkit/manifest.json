@@ -22,8 +22,11 @@
         "type": "//rec",
         "required": {
           "subject"     : "//str",
-          "arg"         : { "type": "//rec", "rest": "//any" },
+          "payload"     : { "type": "//rec", "rest": "//any" },
           "to_addresses": { "type": "//arr", "contents": "//str" }
+        },
+        "optional": {
+          "ledger"      : "//any"
         }
       }
     }
