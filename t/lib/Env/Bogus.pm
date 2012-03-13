@@ -29,6 +29,10 @@ sub file_customer_service_request {
   confess "unimplemented";
 }
 
+sub file_customer_service_error_report {
+  confess "unimplemented";
+}
+
 sub storage_class {
   require Moonpig::Storage::Spike;
   'Moonpig::Storage::Spike';

@@ -101,15 +101,9 @@ test "job queue" => sub {
         foo => $^T,
         bar => 'serious business',
       },
-      "payloads as expected",
+      "payloads as expected (test.job.a)",
     );
     push @jobs_done, $job->job_id;
-
-    Moonpig->env->storage->iterate_jobs('test.job.a' => sub {
-      my ($job) = @_;
-      push @jobs_done, $job->job_id;
-      $job->mark_complete;
-    });
 
     $job->mark_complete;
   });
@@ -124,15 +118,9 @@ test "job queue" => sub {
         proc => $$,
         bar  => '..!',
       },
-      "payloads as expected",
+      "payloads as expected (test.job.b)",
     );
     push @jobs_done, $job->job_id;
-
-    Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
-      my ($job) = @_;
-      push @jobs_done, $job->job_id;
-      $job->mark_complete;
-    });
 
     $job->mark_complete;
   });
@@ -140,6 +128,7 @@ test "job queue" => sub {
   Moonpig->env->storage->iterate_jobs('test.job.b' => sub {
     my ($job) = @_;
     push @jobs_done, $job->job_id;
+    fail("should never reach this!");
     $job->mark_complete;
   });
 
@@ -187,7 +176,7 @@ test "jobs and xacts" => sub {
   );
 };
 
-test "job lock and unlock" => sub {
+test "jobs left unfinished" => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger({}, sub {

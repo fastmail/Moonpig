@@ -11,8 +11,6 @@ use Moose::Util::TypeConstraints qw(enum);
 use namespace::autoclean;
 
 my %callback = (
-  lock     => [ qw(lock extend_lock) ],
-  unlock   => [ qw(unlock)           ],
   log      => [ qw(log)              ],
   get_logs => [ qw(get_logs)         ],
   done     => [ qw(mark_complete)    ],

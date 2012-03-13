@@ -104,12 +104,24 @@ schema:
         type: { name: type, data_type: text, is_nullable: 0 }
         created_at: { name: created_at, data_type: integer, is_nullable: 0 }
         locked_at: { name: locked_at, data_type: integer, is_nullable: 1 }
-        termination_state: { name: termination_state, data_type: varchar, size: 32, is_nullable: 1 }
       constraints:
         - type: FOREIGN KEY
           fields: [ ledger_guid ]
           reference_table: ledgers
           reference_fields: [ guid ]
+
+    job_receipts:
+      name: job_receipts
+      fields:
+        job_id: { name: job_id, data_type: integer, is_primary_key: 1 }
+        terminated_at: { name: terminated_at, data_type: integer, is_nullable: 0 }
+        termination_state: { name: termination_state, data_type: varchar, size: 32, is_nullable: 1 }
+      constraints:
+        - type: FOREIGN KEY
+          fields: [ job_id ]
+          reference_table: jobs
+          reference_fields: [ id ]
+          on_delete: cascade
 
     job_documents:
       name: job_documents
@@ -156,7 +168,7 @@ sub _sql_hunks_to_deploy_schema {
     },
   );
 
-  my $sql = $translator->translate;
+  my $sql = $translator->translate or die $translator->error;
   my @hunks = split /\n{2,}/, $sql;
   return @hunks;
 }
@@ -394,12 +406,12 @@ sub __queue_job {
 }
 
 sub __job_callbacks {
-  my ($self, $conn, $job_row) = @_;
+  my ($spike, $conn, $job_row) = @_;
 
   return (
     log_callback  => sub {
       my ($self, $message) = @_;
-      $conn->run(sub { $_->do(
+      $spike->_conn->run(sub { $_->do(
         "INSERT INTO job_logs (job_id, logged_at, message)
         VALUES (?, ?, ?)",
         undef, $job_row->{id}, Moonpig->env->now->epoch, $message,
@@ -408,7 +420,7 @@ sub __job_callbacks {
     get_logs_callback => sub {
       my ($self) = @_;
 
-      my $logs = $conn->run(sub { $_->selectall_arrayref(
+      my $logs = $spike->_conn->run(sub { $_->selectall_arrayref(
         "SELECT * FROM job_logs WHERE job_id = ? ORDER BY logged_at",
         { Slice => {} },
         $job_row->{id},
@@ -419,38 +431,27 @@ sub __job_callbacks {
 
       return $logs;
     },
-    unlock_callback => sub {
-      my ($self) = @_;
-      $conn->run(sub { $_->do(
-        "UPDATE jobs SET locked_at = NULL WHERE id = ?",
-        undef, $job_row->{id},
-      )});
-    },
-    lock_callback => sub {
-      my ($self) = @_;
-      $conn->run(sub { $_->do(
-        "UPDATE jobs SET locked_at = ? WHERE id = ?",
-        undef, Moonpig->env->now->epoch, $job_row->{id},
-      )});
-    },
+
+
     cancel_callback => sub {
       my ($self) = @_;
-      $conn->run(sub {
+      $spike->_conn->run(sub {
         my $dbh = $_;
         $_->do(
           "INSERT INTO job_logs (job_id, logged_at, message)
           VALUES (?, ?, ?)",
-          undef, $job_row->{id}, Moonpig->env->now->epoch, 'job complete',
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'job canceled',
         );
         $_->do(
-          "UPDATE jobs SET termination_state = 'cancel' WHERE id = ?",
-          undef, $job_row->{id},
+          "INSERT INTO job_receipts (job_id, terminated_at, termination_state)
+          VALUES (?, ?, ?)",
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'canceled',
         );
       });
     },
     done_callback => sub {
       my ($self) = @_;
-      $conn->run(sub {
+      $spike->_conn->run(sub {
         my $dbh = $_;
         $_->do(
           "INSERT INTO job_logs (job_id, logged_at, message)
@@ -458,8 +459,9 @@ sub __job_callbacks {
           undef, $job_row->{id}, Moonpig->env->now->epoch, 'job complete',
         );
         $_->do(
-          "UPDATE jobs SET termination_state = 'done' WHERE id = ?",
-          undef, $job_row->{id},
+          "INSERT INTO job_receipts (job_id, terminated_at, termination_state)
+          VALUES (?, ?, ?)",
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'complete',
         );
       });
     },
@@ -497,7 +499,8 @@ sub iterate_jobs {
         q{
           SELECT *
           FROM jobs
-          WHERE type = ? AND termination_state IS NULL AND locked_at IS NULL
+          LEFT JOIN job_receipts ON jobs.id = job_receipts.job_id
+          WHERE type = ? AND termination_state IS NULL
           ORDER BY created_at
         },
       );
@@ -508,7 +511,8 @@ sub iterate_jobs {
         q{
           SELECT *
           FROM jobs
-          WHERE termination_state IS NULL AND locked_at IS NULL
+          LEFT JOIN job_receipts ON jobs.id = job_receipts.job_id
+          WHERE termination_state IS NULL
           ORDER BY created_at
         },
       );
@@ -536,9 +540,8 @@ sub iterate_jobs {
 
         $self->__job_callbacks($conn, $job_row),
       });
-      $job->lock;
+
       $code->($job);
-      $job->unlock;
     }
   });
 }
@@ -557,6 +560,7 @@ sub undone_jobs_for_ledger {
       q{
         SELECT *
         FROM jobs
+        LEFT JOIN job_receipts ON jobs.id = job_receipts.job_id
         WHERE ledger_guid = ? AND termination_state IS NULL
         ORDER BY created_at
       },
