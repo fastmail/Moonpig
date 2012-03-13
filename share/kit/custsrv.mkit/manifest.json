@@ -1,0 +1,32 @@
+{
+  "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
+  "renderer"  : [
+    "Text::Template",
+    {
+      "template_args": { "DELIMITERS": [ "{{", "}}" ] }
+    }
+  ],
+  "attributes": {
+    "encoding": "quoted-printable",
+    "charset": "utf-8"
+  },
+  "header": [
+    { "Subject": "{{ $subject }}" },
+    { "To":      "{{ join q{,}, @to_addresses }}" },
+    { "From":    "{{ Moonpig->env->default_from_email_address->as_string }}" }
+  ],
+  "validator": [
+    "Rx",
+    {
+      "schema": {
+        "type": "//rec",
+        "required": {
+          "subject"     : "//str",
+          "arg"         : { "type": "//rec", "rest": "//any" },
+          "to_addresses": { "type": "//arr", "contents": "//str" }
+        }
+      }
+    }
+  ],
+  "path": "body.mkdn"
+}

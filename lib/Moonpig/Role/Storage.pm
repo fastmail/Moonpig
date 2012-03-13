@@ -58,7 +58,7 @@ sub do_with_this_ledger {
   });
 }
 
-requires 'queue_job__';
+requires 'queue_job';
 requires 'iterate_jobs';
 requires 'undone_jobs_for_ledger';
 

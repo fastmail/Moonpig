@@ -1,5 +1,5 @@
-package Moonpig::Env::Normal;
-# ABSTRACT: a standard, production environment for Moonpig
+package t::lib::Env::Bogus;
+# ABSTRACT: bogus env; composes, doesn't work
 use Moose;
 use MooseX::StrictConstructor;
 
@@ -22,6 +22,10 @@ sub handle_queue_email {
 }
 
 sub send_email {
+  confess "unimplemented";
+}
+
+sub file_customer_service_request {
   confess "unimplemented";
 }
 

@@ -15,6 +15,7 @@ use t::lib::Logger '$Logger';
 use Data::Dumper qw(Dumper);
 use Data::GUID qw(guid_string);
 use Path::Class;
+use Try::Tiny;
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -143,6 +144,47 @@ test "job queue" => sub {
   });
 
   is_deeply(\@jobs_done, [ 1, 2 ], "completed jobs are completed");
+};
+
+test "jobs and xacts" => sub {
+  plan tests => 2;
+  my ($self) = @_;
+
+  my $guid;
+
+  # Make the ledger exist.
+  do_with_fresh_ledger({}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+  });
+
+  try {
+    Moonpig->env->storage->do_with_ledger(
+      $guid,
+      sub {
+        my ($ledger) = @_;
+
+        $ledger->queue_job('test.job.a' => { foo => 1, bar => 'not saved' });
+
+        $ledger->queue_job('test.job.a' => { foo => 3, bar => 'not saved' });
+
+        die "failsauce\n";
+      },
+    );
+  } catch {
+    if (@_) { is($_[0], "failsauce\n", "fated-to-die block died"); }
+    else    { fail("fated-to-die block died"); }
+  };
+
+  Moonpig->env->storage->do_with_ledger(
+    { ro => 1 },
+    $guid,
+    sub {
+      my ($ledger) = @_;
+
+      is_deeply($ledger->job_array, [], "no jobs actually queued");
+    },
+  );
 };
 
 test "job lock and unlock" => sub {

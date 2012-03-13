@@ -22,8 +22,8 @@ use Test::Fatal;
   my $err = exception {
     require Moonpig::Env::Test;
     Moonpig::Env::Test->import;
-    require Moonpig::Env::Normal;
-    Moonpig::Env::Normal->import;
+    require t::lib::Env::Bogus;
+    t::lib::Env::Bogus->import;
   };
 
   like(
