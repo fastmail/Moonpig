@@ -432,7 +432,6 @@ sub __job_callbacks {
       return $logs;
     },
 
-
     cancel_callback => sub {
       my ($self) = @_;
       $spike->_conn->run(sub {
