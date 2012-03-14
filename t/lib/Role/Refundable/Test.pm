@@ -3,6 +3,7 @@ use Moose::Role;
 
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
+use Stick::Util qw(ppack);
 
 with(
   'Moonpig::Role::Credit::Refundable',
@@ -12,22 +13,13 @@ sub issue_refund {
   my ($self) = @_;
 
   $Logger->log("REFUND ISSUED");
-
-  my $refund = $self->ledger->add_refund(
-    class(qw(Refund)),
+  Moonpig->env->file_customer_service_request(
+    $self->ledger,
     {
-      ledger => $self->ledger,
+      request => "issue refund",
+      credit  => ppack($self),
     },
   );
-
-  $self->ledger->create_transfer({
-    type  => 'refund',
-    from  => $self,
-    to    => $refund,
-    amount  => $self->amount,
-  });
-
-  return $refund;
 }
 
 1;

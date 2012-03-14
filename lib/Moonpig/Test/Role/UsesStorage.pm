@@ -11,9 +11,14 @@ sub heartbeat_and_send_mail {
   my $self   = shift;
   my $ledger = shift;
 
-  Moonpig->env->storage->do_rw(sub {
-    $ledger->heartbeat;
-  });
+  if (blessed($ledger)) {
+    Moonpig->env->storage->do_rw(sub { $ledger->heartbeat; });
+  } else {
+    # It's a guid!
+    Moonpig->env->storage->do_rw_with_ledger($ledger,
+      sub { shift()->heartbeat; }
+    );
+  }
 
   Moonpig->env->process_email_queue;
 }
