@@ -20,7 +20,7 @@ test pay_and_get_refund => sub {
     $ledger_guid = $ledger->guid;
 
     my $credit = $ledger->add_credit(
-      class(qw( Credit::Simulated Credit::FromPayment t::Refundable::Test )),
+      class(qw( Credit::Simulated t::Refundable::Test )),
       { amount => dollars(10) }
     );
 
