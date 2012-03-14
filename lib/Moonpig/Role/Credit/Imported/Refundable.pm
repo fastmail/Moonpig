@@ -4,13 +4,9 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::Credit::Imported',
-  'Moonpig::Role::Credit::Refundable',
+  'Moonpig::Role::Credit::Refundable::ViaCustSrv',
 );
 
 use namespace::autoclean;
-
-sub issue_refund {
-  Moonpig::X->throw("Imported credit refund unimplemented");
-}
 
 1;

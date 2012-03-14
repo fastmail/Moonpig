@@ -4,7 +4,7 @@ use Moose::Role;
 
 use namespace::autoclean;
 
-with 'Moonpig::Role::Credit::Refundable';
+with 'Moonpig::Role::Credit::Refundable::ViaCustSrv';
 
 sub as_string {
   my ($self) = @_;
@@ -24,9 +24,5 @@ has bank_name => (
   isa => 'Str',
   required => 1,
 );
-
-sub issue_refund {
-  Moonpig::X->throw("Check refund unimplemented");
-}
 
 1;
