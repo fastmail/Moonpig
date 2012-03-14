@@ -13,7 +13,7 @@
   "header": [
     { "Subject": "{{ $subject }}" },
     { "To":      "{{ join q{,}, @to_addresses }}" },
-    { "From":    "{{ Moonpig->env->customer_service_from_email_address->as_string }}" }
+    { "From":    "{{ Moonpig->env->exception_report_from_email_address->as_string }}" }
   ],
   "validator": [
     "Rx",
@@ -22,11 +22,9 @@
         "type": "//rec",
         "required": {
           "subject"     : "//str",
-          "payload"     : { "type": "//rec", "rest": "//any" },
-          "to_addresses": { "type": "//arr", "contents": "//str" }
-        },
-        "optional": {
-          "ledger"      : "//any"
+          "to_addresses": { "type": "//arr", "contents": "//str" },
+          "exception"   : "//def",
+          "dumpable"    : { "type": "//rec", "rest": "//any" }
         }
       }
     }

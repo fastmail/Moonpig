@@ -10,29 +10,19 @@ with 'Moonpig::Role::Env';
 use namespace::autoclean;
 
 sub extra_share_roots {}
+sub register_object   {}
 
-sub default_from_email_address {
-  confess "unimplemented";
-}
+# EmailSender
 
-sub handle_queue_email {
-  my ($self, $event, $arg) = @_;
+sub default_from_email_address { confess "unimplemented" }
+sub handle_queue_email         { confess "unimplemented" }
+sub send_email                 { confess "unimplemented" }
 
-  confess "unimplemented";
-}
+# reports and requests
+sub file_customer_service_request { confess "unimplemented" }
+sub report_exception              { confess "unimplemented" }
 
-sub send_email {
-  confess "unimplemented";
-}
-
-sub file_customer_service_request {
-  confess "unimplemented";
-}
-
-sub file_customer_service_error_report {
-  confess "unimplemented";
-}
-
+# storage
 sub storage_class {
   require Moonpig::Storage::Spike;
   'Moonpig::Storage::Spike';
@@ -40,12 +30,7 @@ sub storage_class {
 
 sub storage_init_args { return }
 
-sub now {
-  return Moonpig::DateTime->now();
-}
-
-sub register_object {
-  # do nothing
-}
+# time / clock
+sub now { return Moonpig::DateTime->now() }
 
 1;

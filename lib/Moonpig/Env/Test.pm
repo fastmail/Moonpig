@@ -6,6 +6,7 @@ with(
   'Moonpig::Role::Env::WithMockedTime',
   'Moonpig::Role::Env::EmailSender',
   'Moonpig::Role::Env::CustSrvEmail',
+  'Moonpig::Role::Env::ExceptionReportEmail',
 );
 
 use MooseX::StrictConstructor;
@@ -26,29 +27,27 @@ use Moose::Util::TypeConstraints;
 sub extra_share_roots { }
 
 sub customer_service_from_email_address {
-  Email::Address->new(
-    'Moonpig Robot',
-    'moonpig+cs+robot@example.com',
-  );
+  Email::Address->new('Moonpig Robot', 'moonpig+cs+robot@example.com');
 }
 
 sub customer_service_to_email_address {
-  Email::Address->new(
-    'Moonpig Humans',
-    'moonpig+cs+human@example.com',
-  );
+  Email::Address->new('Moonpig CSR', 'moonpig+cs+human@example.com');
 }
 
-sub customer_service_mkit_name {
-  'custsrv'
+sub exception_report_from_email_address {
+  Email::Address->new('Moonpig Error Bot', 'moonpig+error+robot@example.com');
+}
+
+sub exception_report_to_email_address {
+  Email::Address->new('Moonpig Admin', 'moonpig+error+human@example.com');
 }
 
 sub default_from_email_address {
-  Email::Address->new(
-    'Moonpig',
-    'moonpig@example.com',
-  );
+  Email::Address->new('Moonpig', 'moonpig@example.com');
 }
+
+sub customer_service_mkit_name { 'custsrv' }
+sub exception_report_mkit_name { 'exception-report' }
 
 sub build_email_sender {
   Email::Sender::Transport::Test->new;
