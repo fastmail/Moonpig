@@ -159,7 +159,7 @@ sub remaining_life {
 
 sub estimated_lifetime {
   my ($self) = @_;
-  my $age = Moonpig->env->now - $self->created_at + $self->remaining_life;
+  my $age = Moonpig->env->now - $self->activated_at + $self->remaining_life;
 }
 
 sub expiration_date {

@@ -119,7 +119,7 @@ sub estimated_lifetime {
   my ($self) = @_;
 
   if ($self->is_active) {
-    return $self->expiration_date - $self->created_at;
+    return $self->expiration_date - $self->activated_at;
   } else {
     return $self->proration_period;
   }
