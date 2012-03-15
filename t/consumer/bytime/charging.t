@@ -117,6 +117,12 @@ test "top up" => sub {
       $jan->(11),
       "Jan $day, expiration predicted for Jan 11",
     );
+
+    my $shortfall = $stuff->{consumer}->_predicted_shortfall;
+    cmp_ok(
+      abs($shortfall - days(20)), '<', $stuff->{consumer}->charge_frequency,
+      "gonna expire 20 days early, +/- less than one charge cycle!"
+    );
   }
 
   my $credit = $stuff->{ledger}->add_credit(
@@ -130,6 +136,12 @@ test "top up" => sub {
     to     => $stuff->{consumer},
     amount => dollars(20),
   });
+
+  is(
+    $stuff->{consumer}->_predicted_shortfall,
+    0,
+    "no longer predicting shortfall",
+  );
 
   for my $day (5 .. 10) {
     my $tick_time = Moonpig::DateTime->new(
