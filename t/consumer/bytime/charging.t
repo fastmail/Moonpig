@@ -41,12 +41,12 @@ test "charge" => sub {
         consumer => {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(10),
-          replacement_lead_time            => years(1000),
-          charge_amount        => dollars(1),
+          charge_amount      => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
           charge_description => "test charge",
           xid                => xid(),
+          replacement_lead_time => years(1000),
         }
       );
 
