@@ -67,7 +67,6 @@ has created_at => (
   isa  => Time,
   init_arg => undef,
   default  => sub { Moonpig->env->now },
-  traits => [ qw(SetOnce) ],
 );
 
 has _superseded_at => (
