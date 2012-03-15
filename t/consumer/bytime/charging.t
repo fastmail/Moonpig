@@ -97,6 +97,7 @@ test "top up" => sub {
     Moonpig->env->save_ledger($stuff->{ledger});
   });
 
+  $stuff->{consumer}->abandon_all_unpaid_charges;
   $stuff->{consumer}->clear_grace_until;
 
   for my $day (2 .. 5) {
