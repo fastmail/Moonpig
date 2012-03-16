@@ -242,6 +242,11 @@ sub _predicted_shortfall {
 
   return 0 if $to_live >= $want_to_live;
 
+  # If you're going to run out of funds your final charge period, we don't
+  # care.  In general, we plan to have charge_frequency stick with its default
+  # value always: days(1).  If you were to use a days(30) charge frequency,
+  # this could mean that someone could easily miss 29 days of service, which is
+  # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
   my $shortfall = $want_to_live - $to_live;
   return 0 if $shortfall < $self->charge_frequency;
 
