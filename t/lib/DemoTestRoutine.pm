@@ -26,11 +26,11 @@ has xid => (
 );
 
 has invoices_to_pay => (
-  is      => 'ro',
-  isa     => 'Int',
-  default => 2,
-  traits  => [ 'Number' ],
-  handles => {
+  is  => 'ro',
+  isa => 'Int',
+  required => 1,
+  traits   => [ 'Number' ],
+  handles  => {
     'dec_invoices_to_pay' => [ sub => 1 ],
   },
 );
