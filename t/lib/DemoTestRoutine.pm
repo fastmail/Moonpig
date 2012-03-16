@@ -72,7 +72,7 @@ sub pay_any_open_invoice {
 
       $ledger->process_credits;
 
-      $self->dec_invoices_to_pay;
+      $self->dec_invoices_to_pay for @invoices;
       $Logger->('...');
     }
   });
