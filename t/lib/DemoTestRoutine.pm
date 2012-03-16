@@ -96,6 +96,14 @@ sub log_current_balance {
   }
 }
 
+sub process_daily_assertions {
+  my ($self, $day, $ledger) = @_;
+}
+
+sub setup_before_big_loop {
+  my ($self, $ledger) = @_;
+}
+
 # The goal of our end to end test is to prove out the following:
 #
 # 1. create ledger
@@ -110,14 +118,6 @@ sub log_current_balance {
 # 10. funds expire
 # 11a. fail over (if replacement funded)
 # 11b. cancel account (if replacement unfunded)
-
-sub process_daily_assertions {
-  my ($self, $day, $ledger) = @_;
-}
-
-sub setup_before_big_loop {
-  my ($self, $ledger) = @_;
-}
 
 test "end to end demo" => sub {
   my ($self) = @_;
