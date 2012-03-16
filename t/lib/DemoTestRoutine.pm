@@ -73,7 +73,11 @@ sub pay_any_open_invoice {
       $ledger->process_credits;
 
       $self->dec_invoices_to_pay for @invoices;
-      $Logger->('...');
+      $Logger->log([
+        'DemoTestRoutine just paid %s invoice(s) totalling $%0.2f',
+        0+@invoices,
+        to_dollars($total),
+      ]);
     }
   });
 }
