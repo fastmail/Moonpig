@@ -10,6 +10,7 @@ use Moonpig::Events::Event;
 use Moose::Util::TypeConstraints ();
 
 use Carp qw(croak);
+use JSON 2;
 use MooseX::ClassCompositor;
 use MooseX::StrictConstructor::Trait::Class;
 use Moose::Util::MetaRole ();
@@ -26,6 +27,8 @@ use Sub::Exporter -setup => [ qw(
 
   days weeks months years
   days_in_year
+
+  json
 
   random_short_ident
 
@@ -144,5 +147,9 @@ sub sumof (&@) {
 }
 
 sub percent { $_[0] / 100 }
+
+sub json {
+  JSON->new->ascii(1)->convert_blessed(1)->allow_blessed;
+}
 
 1;
