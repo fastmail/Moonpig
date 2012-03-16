@@ -74,7 +74,7 @@ has _superseded_at => (
   isa => Time,
   predicate => 'is_superseded',
   init_arg => undef,
-  traits => [ qw(SetOnce) ],
+  traits => [ qw(Copy SetOnce) ],
 );
 
 sub mark_superseded {
