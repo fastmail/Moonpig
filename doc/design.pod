@@ -147,11 +147,10 @@ can be transferred from a credit to a refund.
 
 =head3 Coupon
 
-A coupon object lives in the ledger.  When it's time for the ledger to
-try to apply credits to a charge, it first consults each of its
-coupons about whether the coupon thinks it applies to the charge.  A
-coupon that does apply will manufacture a credit to help pay the
-charge.
+Coupons are attached to consumers.  When the consumer is activated, it tells
+its coupon how much money it wants and the coupon will create and return a
+credit.  That credit's value to fund the consumer is used before any other
+funds.
 
 =head2 Payment cycle
 
