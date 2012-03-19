@@ -22,7 +22,7 @@ sub template {
 
   my $template_sub = $self->_get_template($name);
 
-  Moonpig::X->throw("unknown template") unless $template_sub;
+  Moonpig::X->throw("unknown template", name => $name) unless $template_sub;
 
   my $template = $template_sub->($name);
 }

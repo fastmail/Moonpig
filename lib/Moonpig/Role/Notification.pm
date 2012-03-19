@@ -21,4 +21,12 @@ with(
   },
 );
 
+around BUILDARGS => sub {
+  my ($orig, $self, @args) = @_;
+  return $self->$orig(@args) if @args < 2 || ref $args[0];
+  my $ident = shift @args;
+  my $payload = @args == 1 ? $args[0] : { @args };
+  return { ident => $ident, payload => $payload };
+};
+
 1;
