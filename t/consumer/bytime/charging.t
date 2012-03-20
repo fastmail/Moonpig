@@ -41,12 +41,12 @@ test "charge" => sub {
         consumer => {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(10),
-          replacement_lead_time            => years(1000),
-          charge_amount        => dollars(1),
+          charge_amount      => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
           charge_description => "test charge",
           xid                => xid(),
+          replacement_lead_time => years(1000),
         }
       );
 
@@ -97,6 +97,7 @@ test "top up" => sub {
     Moonpig->env->save_ledger($stuff->{ledger});
   });
 
+  $stuff->{consumer}->abandon_all_unpaid_charges;
   $stuff->{consumer}->clear_grace_until;
 
   for my $day (2 .. 5) {
@@ -116,6 +117,12 @@ test "top up" => sub {
       $jan->(11),
       "Jan $day, expiration predicted for Jan 11",
     );
+
+    my $shortfall = $stuff->{consumer}->_predicted_shortfall;
+    cmp_ok(
+      abs($shortfall - days(20)), '<', $stuff->{consumer}->charge_frequency,
+      "gonna expire 20 days early, +/- less than one charge cycle!"
+    );
   }
 
   my $credit = $stuff->{ledger}->add_credit(
@@ -129,6 +136,12 @@ test "top up" => sub {
     to     => $stuff->{consumer},
     amount => dollars(20),
   });
+
+  is(
+    $stuff->{consumer}->_predicted_shortfall,
+    0,
+    "no longer predicting shortfall",
+  );
 
   for my $day (5 .. 10) {
     my $tick_time = Moonpig::DateTime->new(

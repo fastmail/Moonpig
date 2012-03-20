@@ -292,8 +292,9 @@ sub _build_consumers {
     # iterate over non-replacements, activating each
     for my $consumer (values %consumer) {
       my $name = $name_by_guid{$consumer->guid};
-      # activate by default, or if the arg value is true
-      if (! exists $args->{$name}{make_active} || $args->{$name}{make_active}) {
+
+      # activate by default; if given-and-true, Consumer::BUILD did it already
+      if (! exists $args->{$name}{make_active}) {
         $consumer->become_active;
       }
     }

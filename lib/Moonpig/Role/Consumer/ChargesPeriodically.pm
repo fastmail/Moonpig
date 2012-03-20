@@ -96,7 +96,7 @@ sub charge_one_day {
 sub next_charge_date {
   my ($self) = @_;
 
-  return $self->created_at unless $self->has_last_charge_date;
+  return $self->activated_at unless $self->has_last_charge_date;
   return $self->last_charge_date + $self->charge_frequency;
 }
 

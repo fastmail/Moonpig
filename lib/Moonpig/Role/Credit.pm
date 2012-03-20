@@ -34,25 +34,38 @@ sub _amt_xferred_in {
   return $_[0]->accountant->to_credit($_[0])->total;
 }
 
+sub _get_amts {
+  my ($self) = @_;
+
+  my $in  = $self->_amt_xferred_in;
+  my $out = $self->_amt_xferred_out;
+  my $amt = $self->amount;
+
+  # sanity check
+  my $have = $amt - $out + $in;
+  Moonpig::X->throw("more credit applied than initially provided")
+    if $have > $amt;
+
+  Moonpig::X->throw("credit's applied amount is negative")
+    if $have < 0;
+
+  return ($in, $out);
+}
+
 sub applied_amount {
   my ($self) = @_;
-  my $amt = $self->_amt_xferred_out - $self->_amt_xferred_in;
 
-  Moonpig::X->throw("more credit applied than initially provided")
-    if $amt > $self->amount;
+  my ($in, $out) = $self->_get_amts;
 
-  return $amt;
+  return($out - $in);
 }
 
 sub unapplied_amount {
   my ($self) = @_;
-  my $amt = $self->amount - $self->_amt_xferred_out + $self->_amt_xferred_in;
 
-  if ($amt > $self->amount) {
-    Moonpig::X->throw("more credit unapplied than initially provided");
-  }
+  my ($in, $out) = $self->_get_amts;
 
-  return $amt;
+  return($self->amount - $out + $in)
 }
 
 has created_at => (

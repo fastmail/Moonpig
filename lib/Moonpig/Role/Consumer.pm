@@ -67,7 +67,6 @@ has created_at => (
   isa  => Time,
   init_arg => undef,
   default  => sub { Moonpig->env->now },
-  traits => [ qw(SetOnce) ],
 );
 
 has _superseded_at => (
@@ -75,7 +74,7 @@ has _superseded_at => (
   isa => Time,
   predicate => 'is_superseded',
   init_arg => undef,
-  traits => [ qw(SetOnce) ],
+  traits => [ qw(Copy SetOnce) ],
 );
 
 sub mark_superseded {
@@ -320,6 +319,14 @@ sub is_active {
   $self->ledger->_is_consumer_active($self) ? true : false;
 }
 
+has activated_at => (
+  is   => 'ro',
+  isa  => Time,
+  init_arg => undef,
+  traits => [ qw(SetOnce) ],
+  writer => '__set_activated_at'
+);
+
 # note that this might be called before the consumer is added to the ledger.
 # So don't expect that $self->ledger->active_consumer_for_xid($self->xid)
 # will return $self here. 20110610 MJD
@@ -327,7 +334,7 @@ sub become_active {
   my ($self) = @_;
 
   $self->ledger->mark_consumer_active__($self);
-
+  $self->__set_activated_at( Moonpig->env->now );
   $self->handle_event( event('activated') );
 }
 

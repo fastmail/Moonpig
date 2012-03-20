@@ -2,10 +2,10 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
-use List::MoreUtils qw(natatime);
+use List::AllUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
-use Moonpig::Util qw(class days event sum);
+use Moonpig::Util qw(class days event sum sumof);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
@@ -119,7 +119,7 @@ sub estimated_lifetime {
   my ($self) = @_;
 
   if ($self->is_active) {
-    return $self->expiration_date - $self->created_at;
+    return $self->expiration_date - $self->activated_at;
   } else {
     return $self->proration_period;
   }
@@ -213,6 +213,44 @@ sub can_make_payment_on {
   my ($self, $date) = @_;
   return
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
+}
+
+sub _predicted_shortfall {
+  my ($self) = @_;
+
+  # First, figure out how much money we have and are due, and assume we're
+  # going to get it all. -- rjbs, 2012-03-15
+  my $guid = $self->guid;
+  my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
+                map  { $_->all_charges }
+                $self->ledger->payable_invoices;
+  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+
+  # Next, figure out how long that money will last us.
+  my $each_chg = $self->calculate_total_charge_amount_on( Moonpig->env->now );
+  my $periods  = $funds / $each_chg;
+  my $to_live  = $periods * $self->charge_frequency;
+
+  # Next, figure out long we think it *should* last us.
+  my $want_to_live;
+  if ($self->is_active) {
+    $want_to_live = $self->proration_period
+                  - ($self->next_charge_date - $self->activated_at);
+  } else {
+    $want_to_live = $self->proration_period;
+  }
+
+  return 0 if $to_live >= $want_to_live;
+
+  # If you're going to run out of funds your final charge period, we don't
+  # care.  In general, we plan to have charge_frequency stick with its default
+  # value always: days(1).  If you were to use a days(30) charge frequency,
+  # this could mean that someone could easily miss 29 days of service, which is
+  # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
+  my $shortfall = $want_to_live - $to_live;
+  return 0 if $shortfall < $self->charge_frequency;
+
+  return $shortfall;
 }
 
 1;
