@@ -41,7 +41,7 @@ implicit_event_handlers {
   return {
     'activated' => {
       get_funding => Moonpig::Events::Handler::Method->new(
-        method_name => '_try_to_get_funding',
+        method_name => 'acquire_funds',
       ),
     },
     'consumer-create-replacement' => {
@@ -537,11 +537,13 @@ sub relevant_invoices {
   return @invoices;
 }
 
-sub _try_to_get_funding {
+sub acquire_funds {
   my ($self) = @_;
   return unless $self->is_active or $self->is_expired;
+
   $_->__execute_charges_for($self)
     for grep { $_->is_paid } $self->relevant_invoices;
+
   return;
 }
 

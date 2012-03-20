@@ -141,7 +141,7 @@ sub _pay_charges {
   my @consumers = grep { $_->is_active || $_->is_expired }
                   map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
 
-  $_->_try_to_get_funding for @consumers;
+  $_->acquire_funds for @consumers;
 
   $_->handle_event($event) for @charges;
 
