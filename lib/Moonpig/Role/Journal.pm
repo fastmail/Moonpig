@@ -54,9 +54,9 @@ sub charge {
   $self->add_charge($charge);
 
   $Logger->log([
-    "adding charge at %s tagged %s",
-    join(q{ }, @{ $args->{tags} }),
+    "adding charge for %s tagged %s",
     $charge->amount,
+    join(q{ }, @{ $args->{tags} }),
   ]);
 
   return $charge;
