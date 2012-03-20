@@ -114,7 +114,7 @@ test "replacement chain" => sub {
 
   do_with_fresh_ledger(
     { c => { template => 'quick',
-             xid => "test:consumer:poop",
+             xid => "test:consumer:ick",
              replacement_chain_duration => days(5),
            }},
     sub {
@@ -125,8 +125,35 @@ test "replacement chain" => sub {
 
   do_with_fresh_ledger(
     { c => { template => 'quick',
-             xid => "test:consumer:soup",
+             xid => "test:consumer:poop",
+             minimum_chain_duration => days(7),
+           }},
+    sub {
+      my ($ledger) = @_;
+      my @chain = $ledger->get_component('c')->replacement_chain;
+      is(@chain, 3, "BUILD-time replacement_chain_duration works");
+    });
+
+  do_with_fresh_ledger(
+    { c => { template => 'quick',
+             xid => "test:consumer:stew",
              replacement_chain_duration => days(5),
+           }},
+    sub {
+      my ($ledger) = @_;
+      my ($c) = $ledger->get_component('c');
+      for my $length (1, 2, 4, 4, 3, 0, 2) {
+        my $consumers = $length == 1 ? "consumer" : "consumers";
+        $c->_adjust_replacement_chain(days(2 * $length));
+        my @chain = $c->replacement_chain;
+        is(@chain, $length, "adjusted length of replacement chain to $length $consumers");
+      }
+    });
+
+  do_with_fresh_ledger(
+    { c => { template => 'quick',
+             xid => "test:consumer:soup",
+             minimum_chain_duration => days(7),
            }},
     sub {
       my ($ledger) = @_;
