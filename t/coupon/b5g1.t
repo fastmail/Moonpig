@@ -1,8 +1,8 @@
-use strict;
+use 5.12.0;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars months);
+use Moonpig::Util qw(class days dollars months to_dollars years);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -13,137 +13,224 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
-my $xid = "consumer:5y:test";
+has xid => (
+  isa => 'Str',
+  is  => 'ro',
+  default => sub { state $i = 0; $i++; "consumer:b5g1:$i"; },
+);
+
+package B5G1::Summary {
+  sub new { bless $_[1] => $_[0] }
+  sub consumers { @{ $_[0] } }
+
+  sub head { $_[0]->[0] }
+
+  sub free_consumers {
+    grep { $_->does('Moonpig::Role::Consumer::SelfFunding') } @{ $_[0] };
+  }
+
+  sub paid_consumers {
+    grep { ! $_->does('Moonpig::Role::Consumer::SelfFunding') } @{ $_[0] };
+  }
+
+  sub free_indexes {
+    my ($self) = @_;
+    grep { $self->[$_]->does('Moonpig::Role::Consumer::SelfFunding') }
+      0 .. $#$self;
+  }
+
+  sub paid_indexes {
+    my ($self) = @_;
+    grep { ! $self->[$_]->does('Moonpig::Role::Consumer::SelfFunding') }
+      0 .. $#$self;
+  }
+}
+
+sub b5_summary {
+  my ($self, $ledger) = @_;
+
+  my $head = $ledger->active_consumer_for_xid( $self->xid );
+  my @consumers = ($head, $head->replacement_chain);
+  B5G1::Summary->new(\@consumers);
+}
 
 before run_test => sub {
   Moonpig->env->reset_clock;
 };
 
-sub do_with_b5 {
-  my ($self, $code) = @_;
-  do_with_fresh_ledger({ b5 => { template => 'fivemonth', xid => $xid } }, sub {
-    my ($ledger) = @_;
-    my $b5 = $ledger->get_component('b5');
-    $code->($ledger, $b5);
-  });
-}
-
-test setup_b5 => sub {
-  my ($self) = @_;
-  $self->do_with_b5(sub {
-    my ($ledger, $b5) = @_;
-
-    ok($ledger);
-    ok($b5);
-    is($ledger->active_consumer_for_xid($xid), $b5);
-    ok(  $b5->is_active);
-    ok($ledger->latest_invoice);
-  });
-};
-
 sub pay_unpaid_invoices {
-  my ($self, $ledger) = @_;
+  my ($self, $ledger, $expect) = @_;
   my $total = 0;
-
-  Moonpig->env->stop_clock();
-  Moonpig->env->storage->do_rw(sub {
-    until ($ledger->payable_invoices) {
-      Moonpig->env->elapse_time(days(1));
-      $ledger->heartbeat;
-    }
-  });
 
   for my $invoice ($ledger->invoices) {
     $total += $invoice->total_amount unless $invoice->is_paid;
   }
-  note sprintf("Total amount payable: %.2f\n", $total / 100000);
+  if (defined $expect) {
+    is(
+      $total,
+      $expect,
+      sprintf("invoices should total \$%.2f", to_dollars($expect)),
+    )
+  } else {
+    note sprintf("Total amount payable: \$%.2f", to_dollars($total));
+  }
   $ledger->add_credit(class('Credit::Simulated'), { amount => $total });
   $ledger->process_credits;
 }
 
-sub do_with_g1 {
-  my ($self, $code) = @_;
-
-  $self->do_with_b5(sub {
-    my ($ledger, $b5) = @_;
-
-    $self->pay_unpaid_invoices($ledger);
-    Moonpig->env->stop_clock();
-    # STDERR->print("# Time passes");
-    Moonpig->env->storage->do_rw(sub {
-      until ($b5->has_replacement) {
-        Moonpig->env->elapse_time(days(7));
-        $ledger->heartbeat;
-        # STDERR->print(".");
-
-        Moonpig->env->clock_offset > months(5.5)
-          and die "b5 never set up its replacement!!\n";
-      }
-    });
-    # STDERR->print("\n");
-    { my $days =  Moonpig->env->clock_offset / days(1);
-      my $months = int($days / 30);
-      $days -= $months * 30;
-      note sprintf "Replacement set up after %d mo %.2f dy", $months, $days
-    }
-    my $g1 = $b5->replacement;
-    $code->($ledger, $b5, $g1);
-  });
-}
-
-# test to make sure that coupon is properly inserted
-test coupon_insertion => sub {
+test 'signup for five, get one free' => sub {
   my ($self) = @_;
-  $self->do_with_b5(sub {
-    my ($ledger, $b5) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+        minimum_chain_duration => years(5),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
 
-    $self->pay_unpaid_invoices($ledger);
-    ok(  $ledger->latest_invoice->is_paid);
-    ok(! $ledger->latest_invoice->is_open);
-    my $coupons = $ledger->coupon_array;
-    is(@$coupons, 1, "exactly one coupon");
-    my $coupon = $coupons->[0];
-    ok($coupon->does("Moonpig::Role::Coupon::RequiredTags"));
-    #  note "Coupon target tags: ", join ", ", $coupon->taglist;
-    for my $tag ($b5->xid, "coupon.b5g1") {
-      ok($coupon->has_target_tag($tag), "coupon has target tag '$tag'");
-    }
-  });
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(500));
+
+      my $summ = $self->b5_summary($ledger);
+
+      is($summ->consumers, 6, "there are six consumers");
+
+      is($summ->paid_consumers, 5, "five are paid");
+      is($summ->free_consumers, 1, "one is free");
+      is_deeply([$summ->free_indexes], [5], "...and the free one is last");
+    },
+  );
 };
 
-test setup_g1 => sub {
+test 'signup for one, buy five more, have one' => sub {
   my ($self) = @_;
-  $self->do_with_g1(sub {
-    my ($ledger, $b5, $g1) = @_;
-    ok(! $g1->is_active);
-    is($b5->replacement, $g1, "replacement ok");
-    ok(! $g1->has_replacement);
-    ok($g1->does("Moonpig::Role::Consumer::ByTime::FixedAmountCharge"));
-    is($g1->xid, $b5->xid, "xids match");
-  });
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(100));
+
+      $ledger->active_consumer_for_xid($self->xid)
+             ->adjust_replacement_chain({ chain_length => years(5) });
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(500));
+
+      my $summ = $self->b5_summary($ledger);
+
+      is($summ->consumers, 7, "there are seven consumers");
+
+      is($summ->paid_consumers, 6, "six are paid");
+      is($summ->free_consumers, 1, "one is free");
+      is_deeply([$summ->free_indexes], [6], "...and the free one is last");
+    },
+  );
 };
 
-# test to make sure that if the coupon is there, the correct amount is invoiced
-# test to make sure that when the invoice is paid, the coupon is properly applied
-# and the self-funding consumer is created
-test coupon_payment => sub {
-   my ($self) = @_;
-   $self->do_with_g1(sub {
-     my ($ledger, $b5, $g1) = @_;
+test 'signup for one, buy six, get one free' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+      },
+    },
+    sub {
+      my ($ledger) = @_;
 
-     is($ledger->latest_invoice->total_amount, dollars(100), "new invoice for correct amount");
-     $ledger->process_credits;
-     is($g1->unapplied_amount, dollars(100), 'consumer has $100');
-     my ($coupon) = $ledger->coupon_array;
-   });
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(100));
+
+      $ledger->active_consumer_for_xid($self->xid)
+             ->adjust_replacement_chain({ chain_length => years(6) });
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(600));
+
+      my $summary = $self->b5_summary($ledger);
+      is($summary->consumers, 8, "there are eight consumers");
+
+      is($summary->paid_consumers, 7, "seven are paid");
+      is($summary->free_consumers, 1, "one is free");
+      is_deeply([$summary->free_indexes], [6], "...and the free one is 7th");
+    },
+  );
 };
 
-# test to make sure everything is cancelled on account cancellation
-test cancellation => sub {
- TODO: {
-    local $TODO = 'x';
-    fail("not implemented");
-  }
+test 'signup for one, buy eleven, get two free' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(100));
+
+      $ledger->active_consumer_for_xid($self->xid)
+             ->adjust_replacement_chain({ chain_length => years(11) });
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(1100));
+
+      my $summary = $self->b5_summary($ledger);
+      is($summary->consumers, 14, "there are fourteen consumers");
+
+      is($summary->paid_consumers, 12, "twelve are paid");
+      is($summary->free_consumers, 2, "two are free");
+      is_deeply(
+        [$summary->free_indexes],
+        [6, 12],
+        "...and the free ones are 7th and 13th"
+      );
+    },
+  );
+};
+
+test 'signup for eleven, get two free' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+        minimum_chain_duration => years(11),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(1100));
+
+      my $summary = $self->b5_summary($ledger);
+      is($summary->consumers, 13, "there are fourteen consumers");
+
+      is($summary->paid_consumers, 11, "twelve are paid");
+      is($summary->free_consumers, 2, "two are free");
+      is_deeply(
+        [$summary->free_indexes],
+        [5, 11],
+        "...and the free ones are 6th and 12th"
+      );
+    },
+  );
 };
 
 run_me;
