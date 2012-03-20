@@ -2,6 +2,7 @@ package Moonpig::Role::Dunner;
 # ABSTRACT: something that performs dunning of invoices
 use Moose::Role;
 
+use List::AllUtils 'any';
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
@@ -45,6 +46,7 @@ sub perform_dunning {
     sort { $b->created_at <=> $a->created_at
         || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
          }
+    grep { any { ! $_->is_abandoned } $_->all_charges }
     grep { ! $_->is_abandoned && $_->is_unpaid && $_->has_charges }
     $self->invoices;
 
@@ -83,7 +85,7 @@ sub _autopay_invoices {
   # Oh no, there are invoices left to pay!  How much will it take to pay it all
   # off?
   my $credit_on_hand = sumof { $_->unapplied_amount } $self->credits;
-  my $invoice_total  = sumof { $_->amount_due } @unpaid_invoices;
+  my $invoice_total  = sumof { $_->total_amount } @unpaid_invoices;
   my $balance_needed = $invoice_total - $credit_on_hand;
 
   $self->_charge_for_autopay({ amount => $balance_needed });

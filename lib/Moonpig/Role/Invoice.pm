@@ -7,7 +7,6 @@ with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
-  'Moonpig::Role::CanTransfer' => { transferer_type => "invoice" },
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
 );
@@ -16,8 +15,10 @@ use Carp qw(confess croak);
 use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 
-use Moonpig::Util qw(class event sumof);
+use List::AllUtils qw(uniq);
+use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(Credit GUID Time);
+use Moonpig::Util qw(class event sumof);
 use Moonpig::X;
 use MooseX::SetOnce;
 
@@ -49,6 +50,10 @@ sub mark_paid {
 
 sub is_unpaid {
   return ! $_[0]->is_paid
+}
+
+sub is_payable {
+  return($_[0]->is_closed && $_[0]->is_unpaid && ! $_[0]->is_abandoned);
 }
 
 has _abandoned_at => (
@@ -118,53 +123,69 @@ sub cancel {
   $self->abandon_without_replacement();
 }
 
-sub amount_due {
-  my ($self) = @_;
-  my $total = $self->total_amount;
-  my $paid  = $self->ledger->accountant->to_invoice($self)->total;
-
-  return $total - $paid;
-}
-
 implicit_event_handlers {
   return {
     'paid' => {
       redistribute   => Moonpig::Events::Handler::Method->new('_pay_charges'),
-      fund_consumers => Moonpig::Events::Handler::Method->new('_fund_consumers'),
     }
   };
 };
 
 sub _pay_charges {
   my ($self, $event) = @_;
-  $_->handle_event($event) for $self->all_charges;
+
+  my @charges = $self->all_charges;
+
+  my $collection = $self->ledger->consumer_collection;
+  my @guids     = uniq map { $_->owner_guid } @charges;
+  my @consumers = grep { $_->is_active || $_->is_expired }
+                  map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
+
+  $_->acquire_funds for @consumers;
+
+  $_->handle_event($event) for @charges;
+
 }
 
-sub _bankable_charges_by_consumer {
-  my ($self) = @_;
-  my %res;
-  for my $charge ( $self->all_charges ) {
-    push @{$res{$charge->owner_guid}}, $charge;
-  }
-  return \%res;
-}
+sub __execute_charges_for {
+  my ($self, $consumer) = @_;
 
-sub _fund_consumers {
-  my ($self, $event) = @_;
-  my $by_consumer = $self->_bankable_charges_by_consumer;
+  my $ledger = $self->ledger;
 
-  while (my ($consumer_guid, $charges) = each %$by_consumer) {
-    my $consumer = $self->ledger->consumer_collection->find_by_guid({
-      guid => $consumer_guid,
-    });
-    my $total = sumof { $_->amount } @$charges;
+  Moonpig::X->throw("can't execute charges on unpaid invoice")
+    unless $self->is_paid;
 
-    $self->ledger->create_transfer({
-      type   => 'consumer_funding',
-      from   => $self,
-      to     => $consumer,
-      amount => $total,
-    });
+  Moonpig::X->throw("can't execute charges on open invoice")
+    unless $self->is_closed;
+
+  my @charges =
+    grep { ! $_->is_executed }
+    grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
+
+  # Try to apply non-refundable credit first.  Within that, go for smaller
+  # credits first. -- rjbs, 2012-03-06
+  my @credits = sort { $b->is_refundable   <=> $a->is_refundable
+                   || $a->unapplied_amount <=> $b->unapplied_amount }
+                grep { $_->unapplied_amount }
+                $ledger->credits;
+
+  for my $charge (@charges) {
+    my $still_need = $charge->amount;
+    for my $credit (@credits) {
+      my $to_xfer = $credit->unapplied_amount >= $still_need
+                  ? $still_need
+                  : $credit->unapplied_amount;
+      $ledger->accountant->create_transfer({
+        type => 'consumer_funding',
+        from => $credit,
+        to   => $consumer,
+        amount => $to_xfer,
+      });
+      $still_need -= $to_xfer;
+      last if $still_need == 0;
+    }
+
+    $charge->__set_executed_at( Moonpig->env->now );
   }
 }
 
@@ -178,7 +199,6 @@ PARTIAL_PACK {
   return ppack({
     ident        => $self->ident,
     total_amount => $self->total_amount,
-    amount_due   => $self->amount_due,
     paid_at      => $self->paid_at,
     closed_at    => $self->closed_at,
     created_at   => $self->date,

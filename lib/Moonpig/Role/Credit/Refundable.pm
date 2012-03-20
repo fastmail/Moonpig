@@ -13,6 +13,9 @@ requires 'issue_refund';
 sub refund_unapplied_amount {
   my ($self) = @_;
 
+  Moonpig::X->throw("can't refund more than ledger's amount available")
+    unless $self->unapplied_amount <= $self->ledger->amount_available;
+
   $self->issue_refund;
 
   my $refund = $self->ledger->add_refund(

@@ -351,7 +351,7 @@ sub build_consumer {
     );
 
     $stuff->{ledger}->create_transfer({
-      type   => 'test_consumer_funding',
+      type   => 'consumer_funding',
       from   => $credit,
       to     => $consumer,
       amount => $amount,

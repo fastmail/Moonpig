@@ -18,7 +18,7 @@ before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
 };
 
-test zero_charge_dunning => sub {
+test 'zero charge dunning' => sub {
   my ($self) = @_;
   my $guid;
 
@@ -50,11 +50,15 @@ test zero_charge_dunning => sub {
 
     $self->heartbeat_and_send_mail($ledger);
 
+    my @charges = $ledger->get_component('c')->all_charges;
+    is(@charges, 1, "consumer c has one charge, anyway");
+    is($charges[0]->amount, dollars(5), "...for five bucks");
+
     ok(! $invoice->is_open, "we do close it once there is a charge");
   });
 };
 
-test charge_close_and_send => sub {
+test 'charge close and send' => sub {
   my ($self) = @_;
   my $guid;
 
@@ -98,6 +102,13 @@ test charge_close_and_send => sub {
     "the email we went is an invoice email",
    );
 
+  {
+    my ($part) = grep { $_->content_type =~ m{text/plain} } $email->subparts;
+    my $text = $part->body_str;
+    my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
+    is($due, '$15.00', "it shows the right total due");
+  }
+
   Moonpig->env->storage->do_with_ledger($guid, sub {
     my ($ledger) = @_;
 
@@ -109,6 +120,77 @@ test charge_close_and_send => sub {
         amount => $invoice->total_amount,
       },
      );
+
+    $ledger->process_credits;
+
+    ok($invoice->is_paid, "the invoice was marked paid");
+
+    is($credit->unapplied_amount, 0, "the credit has been entirely spent");
+  });
+
+  pass("everything ran to completion without dying");
+};
+
+test 'send with balance on hand' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+
+    my $invoice = $ledger->current_invoice;
+    $ledger->name_component("initial invoice", $invoice);
+
+    for (qw(5 10)) {
+      $invoice->add_charge(
+        class(qw(InvoiceCharge))->new({
+          description => 'test charge (setup)',
+          amount      => dollars($_),
+          consumer    => $ledger->get_component('c'),
+        }),
+       );
+     }
+
+    $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      {
+        amount => dollars(7)
+      },
+    );
+
+    is($invoice->total_amount, dollars(15), "invoice line items tally up");
+
+    $self->heartbeat_and_send_mail($ledger);
+  });
+
+  my @deliveries = Moonpig->env->email_sender->deliveries;
+  is(@deliveries, 1, "we sent the invoice to the customer");
+  my $email = $deliveries[0]->{email};
+  like(
+    $email->header('subject'),
+    qr{payment is due}i,
+    "the email we went is an invoice email",
+   );
+
+  {
+    my ($part) = grep { $_->content_type =~ m{text/plain} } $email->subparts;
+    my $text = $part->body_str;
+    my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
+    is($due, '$8.00', "it shows the right total due (15 - 7 avail = 8)");
+  }
+
+  Moonpig->env->storage->do_with_ledger($guid, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->get_component("initial invoice");
+
+    my $credit = $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      {
+        amount => dollars(8),
+      },
+    );
 
     $ledger->process_credits;
 
@@ -208,7 +290,7 @@ test overpayment  => sub {
   pass("everything ran to completion without dying");
 };
 
-test get_paid_on_payment => sub {
+test 'get paid on payment' => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
@@ -249,7 +331,7 @@ test get_paid_on_payment => sub {
   });
 };
 
-test payment_by_two_credits => sub {
+test 'payment by two credits' => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {

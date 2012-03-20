@@ -39,7 +39,7 @@ test "get a ledger guid via web" => sub {
         template      => 'demo-service',
         template_args => {
           make_active => 1,
-          replacement_chain_duration => years(5),
+          minimum_chain_duration => years(6),
         },
       },
     },

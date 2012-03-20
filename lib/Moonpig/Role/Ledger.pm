@@ -81,7 +81,7 @@ use Moonpig::Util qw(class event random_short_ident sumof years);
 use Stick::Util qw(ppack);
 
 use Data::GUID qw(guid_string);
-use List::AllUtils qw(part);
+use List::AllUtils qw(part max);
 use Scalar::Util qw(weaken);
 
 use Moonpig::Behavior::EventHandlers;
@@ -364,13 +364,40 @@ sub journal_array {
 
 sub payable_invoices {
   my ($self) = @_;
-  grep {; $_->is_unpaid && $_->is_closed && ! $_->is_abandoned} $self->invoices;
+  grep {; $_->is_payable } $self->invoices;
 }
 
 sub abandon_invoice {
   my ($self, $invoice) = @_;
 
   return $invoice->abandon_with_replacement($self->current_invoice);
+}
+
+sub amount_earmarked {
+  my ($self) = @_;
+  my @invoices = grep { $_->is_paid } $self->invoices;
+  my @charges  = grep { ! $_->is_executed }
+                 map  { $_->all_charges } @invoices;
+
+  return sumof { $_->amount } @charges;
+}
+
+sub amount_available {
+  my ($self) = @_;
+  my $total = sumof { $_->unapplied_amount } $self->credits;
+  my $earmarked_amount = $self->amount_earmarked;
+
+  return max(0, $total - $earmarked_amount);
+}
+
+sub amount_due {
+  my ($self) = @_;
+
+  my $due   = sumof { $_->total_amount } $self->payable_invoices;
+  my $avail = $self->amount_available;
+
+  return 0 if $avail >= $due;
+  return abs($due - $avail);
 }
 
 sub process_credits {
@@ -380,53 +407,23 @@ sub process_credits {
 
   my @credits = $self->credits;
 
-  # XXX: These need to be processed in order. -- rjbs, 2010-12-02
-  for my $invoice ( $self->payable_invoices ) {
-    my ($nr_credits, $r_credits) =
-      part { ! $_->is_refundable }
-      grep { $_->unapplied_amount > 0 }
-      @credits;
+  my $available = $self->amount_available;
 
-    my @coupon_apps = $self->find_coupon_applications__($invoice);
-    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
-      @coupon_apps;
-
-    my $to_pay = $invoice->total_amount;
-
-    my @to_apply;
-
-    # XXX: These need to be processed in order, too. -- rjbs, 2010-12-02
-    CREDIT: for my $credit (@coupon_credits, @$nr_credits, @$r_credits) {
-      my $credit_amount = $credit->unapplied_amount;
-      my $apply_amt = $credit_amount >= $to_pay ? $to_pay : $credit_amount;
-
-      push @to_apply, {
-        credit => $credit,
-        amount => $apply_amt,
-      };
-
-      $to_pay -= $apply_amt;
-
-      $Logger->log([
-        "will apply %s from %s; %s left to pay",
-        $apply_amt,
-        $credit->ident,
-        $to_pay,
-      ]);
-
-      last CREDIT if $to_pay == 0;
+  for my $invoice (
+    sort { $a->created_at <=> $b->created_at } $self->payable_invoices
+  ) {
+    {
+      # XXX: We broke coupons and have yet to repair them.
+      my @coupon_apps = $self->find_coupon_applications__($invoice);
+      my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
+        @coupon_apps;
+      Moonpig::X->throw("coupon support is broken") if @coupon_apps;
     }
 
-    if ($to_pay == 0) {
-      # We didn't fall off the end of the loop above; we have enough credit to
-      # pay this invoice, and will now do so. -- rjbs, 2011-12-14
-      $self->apply_credits_to_invoice__( \@to_apply, $invoice );
-      $_->{coupon}->mark_applied for @coupon_apps;
-    } else {
-      # We can't successfully pay this invoice, so stop processing.
-      $self->destroy_credits__(@coupon_credits);
-      return;
-    }
+    last if $invoice->total_amount > $available;
+
+    $invoice->mark_paid;
+    $invoice->handle_event(event('paid'));
   }
 }
 
@@ -438,8 +435,8 @@ sub destroy_credits__ {
 }
 
 # Given an invoice, find all outstanding coupons that apply to its charges
-# return a list of { coupon => $coupon, charge => $charge } items indicating which coupons
-# apply to which charges
+# return a list of { coupon => $coupon, charge => $charge } items indicating
+# which coupons apply to which charges
 sub find_coupon_applications__ {
   my ($self, $invoice) = @_;
   my @coupons = $self->coupons;
@@ -448,33 +445,6 @@ sub find_coupon_applications__ {
     push @res, map { coupon => $coupon, charge => $_ }, $coupon->applies_to_invoice($invoice);
   }
   return @res;
-}
-
-# Only call this if you are paying off the complete invoice!
-# $to_apply is an array of { credit => $credit_object, amount => $amount }
-# hashes.
-sub apply_credits_to_invoice__ {
-  my ($self, $to_apply, $invoice) = @_;
-
-  {
-    my $total = sumof { $_->{amount} } @$to_apply;
-    croak "credit application of $total did not mach invoiced amount of " .
-      $invoice->total_amount
-        unless $invoice->total_amount == $total;
-  }
-
-  for my $application (@$to_apply) {
-    $self->create_transfer({
-      type   => 'credit_application',
-      from   => $application->{credit},
-      to     => $invoice,
-      amount => $application->{amount},
-    });
-  }
-
-  $Logger->log([ "marking %s paid", $invoice->ident ]);
-  $invoice->handle_event(event('paid'));
-  $invoice->mark_paid;
 }
 
 implicit_event_handlers {
@@ -623,27 +593,7 @@ sub _collect_spare_change {
 
   delete $consider{ $_->guid } for @consumers;
 
-  my $total = sumof { $_->[1] } values %consider;
-
-  return unless $total > 0;
-
-  my $credit = $self->add_credit(
-    class('Credit::SpareChange'),
-    {
-      amount => $total,
-    },
-  );
-
-  for my $consumer_pair (values %consider) {
-    my ($consumer, $amount) = @$consumer_pair;
-
-    $self->create_transfer({
-      type    => 'cashout',
-      from    => $consumer,
-      to      => $credit,
-      amount  => $amount,
-    });
-  }
+  $_->cashout_unapplied_amount for map { $_->[0] } values %consider;
 }
 
 sub _class_subroute {

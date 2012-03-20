@@ -69,6 +69,14 @@ sub ledger {
   return($ledger || Moonpig::X->throw("couldn't find ledger for charge"));
 }
 
+has executed_at => (
+  is  => 'ro',
+  isa => Time,
+  predicate => 'is_executed',
+  writer    => '__set_executed_at',
+  traits    => [ qw(SetOnce) ],
+);
+
 implicit_event_handlers {
   return {
     'paid' => {

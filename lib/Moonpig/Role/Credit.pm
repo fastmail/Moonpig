@@ -26,9 +26,33 @@ has amount => (
   required => 1,
 );
 
+sub _amt_xferred_out {
+  return $_[0]->accountant->from_credit($_[0])->total;
+}
+
+sub _amt_xferred_in {
+  return $_[0]->accountant->to_credit($_[0])->total;
+}
+
+sub applied_amount {
+  my ($self) = @_;
+  my $amt = $self->_amt_xferred_out - $self->_amt_xferred_in;
+
+  Moonpig::X->throw("more credit applied than initially provided")
+    if $amt > $self->amount;
+
+  return $amt;
+}
+
 sub unapplied_amount {
   my ($self) = @_;
-  return $self->amount - $self->accountant->from_credit($self)->total;
+  my $amt = $self->amount - $self->_amt_xferred_out + $self->_amt_xferred_in;
+
+  if ($amt > $self->amount) {
+    Moonpig::X->throw("more credit unapplied than initially provided");
+  }
+
+  return $amt;
 }
 
 has created_at => (
@@ -57,7 +81,7 @@ sub type {
 }
 
 sub is_refundable {
-  $_[0]->does("Moonpig::Role::Credit::Refundable");
+  $_[0]->does("Moonpig::Role::Credit::Refundable") ? 1 : 0;
 }
 
 1;

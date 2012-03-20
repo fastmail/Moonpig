@@ -124,7 +124,7 @@ test "top up" => sub {
   );
 
   $stuff->{ledger}->create_transfer({
-    type   => 'test_consumer_funding',
+    type   => 'consumer_funding',
     from   => $credit,
     to     => $stuff->{consumer},
     amount => dollars(20),

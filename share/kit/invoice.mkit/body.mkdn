@@ -2,12 +2,9 @@ REQUEST ID: ...
 
 TOTAL DUE:  {{
   require List::Util;
-  my $total = List::Util::reduce(
-    sub { $a + $b },
-    0, map { $_->total_amount } @invoices
-  );
+  my $due = $invoices[0]->ledger->amount_due;
 
-  sprintf '$%0.2f', $total / 100_000;
+  sprintf '$%0.2f', ($due) / 100_000;
 }}
 
 {{

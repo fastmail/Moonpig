@@ -15,8 +15,7 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use t::lib::TestEnv;
 
 use Data::GUID qw(guid_string);
-use List::Util qw(sum);
-use Moonpig::Util qw(class days dollars);
+use Moonpig::Util qw(class days dollars sum sumof to_dollars);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -66,7 +65,7 @@ sub pay_any_open_invoice {
       $Ledger->add_credit(
         class(qw(Credit::Simulated)),
         { amount => $total },
-       );
+      );
 
       $Ledger->process_credits;
 
@@ -119,6 +118,16 @@ sub process_daily_assertions {
       $active->guid,
       $inactive->replacement->guid,
       "the active one is the replacement for the original one",
+    );
+
+    my @active_charges   = $active->all_charges;
+    my @inactive_charges = $inactive->all_charges;
+
+    is(@active_charges,   2, "the active one has charged once");
+    is(@inactive_charges, 2, "the inactive one has charged once, too");
+    cmp_ok(
+      $active_charges[0]->date, '!=', $inactive_charges[0]->date,
+      "...inactive and active on different days",
     );
   }
 
@@ -179,7 +188,20 @@ test "end to end demo" => sub {
     my $active_consumer = $Ledger->active_consumer_for_xid( $self->xid );
     is($active_consumer, undef, "...but they're all inactive now");
 
+    # Every consumer wants $40 + $10, spent over the course of a year, charged
+    # every 7 days.  That means each charge is...
+    my $each_charge = dollars(50) / 365.25 * 7;
+
+    # ...and that means we must not have any more credit left than that.
     $Ledger->_collect_spare_change;
+    my $avail = $Ledger->amount_available;
+    cmp_ok(
+      $Ledger->amount_available, '<', $each_charge,
+      sprintf("ledger has less avail. credit (\$%.2f) than a charge (\$%.2f)",
+        to_dollars($avail),
+        to_dollars($each_charge),
+      ),
+    );
   });
 };
 

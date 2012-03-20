@@ -37,41 +37,37 @@ sub templates {
         }};
     },
 
-    fivemonth => sub {
+    b5g1_paid => sub {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedAmountCharge', 't::Consumer::CouponCreator' ],
+        roles => [
+          'Consumer::ByTime::FixedAmountCharge',
+          't::Consumer::FreeEveryFive',
+        ],
         arg   => {
-          xid         => $b5g1_xid,
-          replacement_lead_time     => days(7),
-          charge_amount => dollars(500),
-          cost_period => days(30 * 5),
-          charge_description => 'long-term consumer',
-          replacement_plan   => [ get => "/consumer-template/free_sixthmonth" ],
-
-          coupon_class => class(qw(Coupon::FixedPercentage Coupon::RequiredTags)),
-          coupon_args => {
-            discount_rate => 1.00,
-            target_tags   => [ $b5g1_xid, "coupon.b5g1" ],
-            description   => "Buy five, get one free",
-          },
+          xid           => $b5g1_xid,
+          charge_amount => dollars(100),
+          cost_period   => years(1),
+          charge_description => 'b5g1 (paid)',
+          replacement_plan   => [ get => "/consumer-template/b5g1_paid" ],
         },
       }
     },
-    free_sixthmonth => sub {
+    b5g1_free => sub {
       my ($name) = @_;
 
       return {
-        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
+        roles => [
+          'Consumer::ByTime::FixedAmountCharge',
+          'Consumer::SelfFunding',
+        ],
         arg   => {
           xid         => $b5g1_xid,
-          replacement_lead_time     => days(7),
           charge_amount => dollars(100),
-          cost_period => days(30),
-          charge_description => 'free sixth-month consumer',
-          replacement_plan   => [ get => "/consumer-template/$name" ],
-          extra_invoice_charge_tags  => [ "coupon.b5g1" ],
+          cost_period   => years(1),
+          charge_description => 'b5g1 (free)',
+          replacement_plan   => [ get => "/consumer-template/b5g1_paid" ],
         },
       },
     },

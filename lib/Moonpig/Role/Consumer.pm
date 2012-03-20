@@ -24,6 +24,7 @@ with(
 
 sub _class_subroute { return }
 
+use List::AllUtils qw(any max);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
@@ -39,7 +40,9 @@ use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
     'activated' => {
-      noop => Moonpig::Events::Handler::Noop->new,
+      get_funding => Moonpig::Events::Handler::Method->new(
+        method_name => 'acquire_funds',
+      ),
     },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
@@ -132,7 +135,8 @@ publish adjust_replacement_chain => {
 };
 
 sub _adjust_replacement_chain {
-  my ($self, $chain_length) = @_;
+  my ($self, $chain_length, $depth) = @_;
+  $depth //= 0;
 
   if ($chain_length <= 0) {
     $self->replacement(undef) if $self->has_replacement;
@@ -147,8 +151,14 @@ sub _adjust_replacement_chain {
                  $chain_length / 86400);
   }
 
+  $replacement = $replacement->_joined_chain_at_depth($depth+1)
+    if $replacement->can('_joined_chain_at_depth');
+
   $replacement->_adjust_replacement_chain(
-    $chain_length - $replacement->estimated_lifetime);
+    $chain_length - $replacement->estimated_lifetime,
+    $depth + 1,
+  );
+
   return $replacement;
 }
 
@@ -196,8 +206,8 @@ has replacement_plan => (
 sub build_and_install_replacement {
   my ($self) = @_;
 
-  # Shouldn't this be fatal? -- rjbs, 2011-08-22 XXX
-  return if $self->has_replacement;
+  Moonpig::X->throw("can't build replacement: one exists")
+    if $self->has_replacement;
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
@@ -283,10 +293,25 @@ before expire => sub {
 after BUILD => sub {
   my ($self, $arg) = @_;
 
-  $self->become_active if delete $arg->{make_active};
+  if ( exists $arg->{minimum_chain_duration}
+    && exists $arg->{replacement_chain_duration}
+  ) {
+    Moonpig::X->throw(
+      "supply only one of minimum_chain_duration and replacement_chain_duration"
+    );
+  }
+
   if (exists $arg->{replacement_chain_duration}) {
     $self->_adjust_replacement_chain(delete $arg->{replacement_chain_duration});
   }
+
+  if (exists $arg->{minimum_chain_duration}) {
+    my $wanted    = delete $arg->{minimum_chain_duration};
+    my $extend_by = max(0, $wanted - $self->estimated_lifetime);
+    $self->_adjust_replacement_chain($extend_by, 1);
+  }
+
+  $self->become_active if delete $arg->{make_active};
 };
 
 sub is_active {
@@ -377,29 +402,28 @@ sub copy_balance_to__ {
         amount      => $amount,
         extra_tags  => [ "transient" ],
       });
+
       my $credit = $new_ledger->add_credit(
         class('Credit::Transient'),
         {
           amount               => $amount,
           source_guid          => $self->guid,
           source_ledger_guid   => $ledger->guid,
-        });
-      my $transient_invoice = class("Invoice")->new({
-         ledger      => $new_ledger,
+        },
+      );
+
+      $new_ledger->accountant->create_transfer({
+        type => 'consumer_funding',
+        from => $credit,
+        to   => $new_consumer,
+        amount => $amount,
       });
-      my $charge = $new_consumer->charge_invoice($transient_invoice,
-        { description => sprintf("Transfer management of '%s' from ledger %s",
-                                 $self->xid, $ledger->guid),
-          amount      => $amount,
-          extra_tags  => [ "transient" ],
-         });
-      $transient_invoice->mark_closed;
-      $new_ledger->apply_credits_to_invoice__(
-        [{ credit => $credit,
-           amount => $amount }],
-        $transient_invoice);
+
+      $new_consumer->abandon_all_unpaid_charges;
+
       $new_ledger->save;
-    });
+    }
+  );
 }
 
 
@@ -505,7 +529,91 @@ sub abandon_charges_on_invoice {
 sub abandon_all_unpaid_charges {
   my ($self) = @_;
   grep $self->abandon_charges_on_invoice($_) > 0,
-    $self->ledger->payable_invoices;
+    grep { ! $_->is_paid && ! $_->is_abandoned } $self->ledger->invoices;
+}
+
+sub all_charges {
+  my ($self) = @_;
+
+  # If the invoice was closed before we were created, we can't be on it!
+  # -- rjbs, 2012-03-06
+  my $guid = $self->guid;
+  my @charges = grep { $_->owner_guid eq $guid }
+                map  { $_->all_charges }
+                grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
+                $self->ledger->invoices;
+
+  return @charges;
+}
+
+sub relevant_invoices {
+  my ($self) = @_;
+
+  # If the invoice was closed before we were created, we can't be on it!
+  # -- rjbs, 2012-03-06
+  my $guid = $self->guid;
+  my @invoices = grep { (! $_->is_closed || $_->closed_at >= $self->created_at)
+                        && any { $_->owner_guid eq $guid } $_->all_charges
+                      } $self->ledger->invoices;
+
+  return @invoices;
+}
+
+sub acquire_funds {
+  my ($self) = @_;
+  return unless $self->is_active or $self->is_expired;
+
+  $_->__execute_charges_for($self)
+    for grep { $_->is_paid } $self->relevant_invoices;
+
+  return;
+}
+
+sub cashout_unapplied_amount {
+  my ($self) = @_;
+  my $balance = $self->unapplied_amount;
+
+  return unless $balance > 0;
+
+  my $transfer_set = $self->ledger->accountant->select({
+    target => $self,
+    type   => 'consumer_funding',
+  });
+
+  my %seen;
+  my @credits;
+  for my $xfer ($transfer_set->all) {
+    next if $seen{ $xfer->source->guid }++;
+    push @credits, $xfer->source;
+  }
+
+  # This is the order in which we will refund:  first, to non-refundable
+  # credits (because we use up "real money" first); within those, to the
+  # largest credit first, to minimize the number of credits to which we might
+  # have to cashout money. -- rjbs, 2012-03-06
+  @credits = sort { $a->is_refundable  <=> $b->is_refundable
+                 || $b->applied_amount <=> $a->applied_amount } @credits;
+
+  while ($balance and @credits) {
+    my $next_credit = shift @credits;
+
+    my $to_xfer = $balance <= $next_credit->applied_amount
+                ? $balance
+                : $next_credit->applied_amount;
+
+    $self->ledger->accountant->create_transfer({
+      type   => 'cashout',
+      to     => $next_credit,
+      from   => $self,
+      amount => $to_xfer,
+    });
+
+    $balance -= $to_xfer;
+  }
+
+  Moonpig::X->throw("could not refund all remaining balance") if $balance != 0;
+
+  return;
 }
 
 PARTIAL_PACK {
