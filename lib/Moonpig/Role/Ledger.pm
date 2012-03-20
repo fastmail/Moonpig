@@ -412,11 +412,13 @@ sub process_credits {
   for my $invoice (
     sort { $a->created_at <=> $b->created_at } $self->payable_invoices
   ) {
-    # XXX: What the heck is going to happen with these under JIT payment!?
-    # -- rjbs, 2012-03-06
-    my @coupon_apps = $self->find_coupon_applications__($invoice);
-    my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
-      @coupon_apps;
+    {
+      # XXX: We broke coupons and have yet to repair them.
+      my @coupon_apps = $self->find_coupon_applications__($invoice);
+      my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
+        @coupon_apps;
+      Moonpig::X->throw("coupon support is broken") if @coupon_apps;
+    }
 
     last if $invoice->total_amount > $available;
 
