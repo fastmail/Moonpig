@@ -135,7 +135,8 @@ publish adjust_replacement_chain => {
 };
 
 sub _adjust_replacement_chain {
-  my ($self, $chain_length) = @_;
+  my ($self, $chain_length, $depth) = @_;
+  $depth //= 0;
 
   if ($chain_length <= 0) {
     $self->replacement(undef) if $self->has_replacement;
@@ -150,8 +151,14 @@ sub _adjust_replacement_chain {
                  $chain_length / 86400);
   }
 
+  $replacement = $replacement->_joined_chain_at_depth($depth+1)
+    if $replacement->can('_joined_chain_at_depth');
+
   $replacement->_adjust_replacement_chain(
-    $chain_length - $replacement->estimated_lifetime);
+    $chain_length - $replacement->estimated_lifetime,
+    $depth + 1,
+  );
+
   return $replacement;
 }
 
