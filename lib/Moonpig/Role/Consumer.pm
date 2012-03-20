@@ -24,7 +24,7 @@ with(
 
 sub _class_subroute { return }
 
-use List::AllUtils qw(any);
+use List::AllUtils qw(any max);
 use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
@@ -293,10 +293,25 @@ before expire => sub {
 after BUILD => sub {
   my ($self, $arg) = @_;
 
-  $self->become_active if delete $arg->{make_active};
+  if ( exists $arg->{minimum_chain_duration}
+    && exists $arg->{replacement_chain_duration}
+  ) {
+    Moonpig::X->throw(
+      "supply only one of minimum_chain_duration and replacement_chain_duration"
+    );
+  }
+
   if (exists $arg->{replacement_chain_duration}) {
     $self->_adjust_replacement_chain(delete $arg->{replacement_chain_duration});
   }
+
+  if (exists $arg->{minimum_chain_duration}) {
+    my $wanted    = delete $arg->{minimum_chain_duration};
+    my $extend_by = max(0, $wanted - $self->estimated_lifetime);
+    $self->_adjust_replacement_chain($extend_by, 1);
+  }
+
+  $self->become_active if delete $arg->{make_active};
 };
 
 sub is_active {
