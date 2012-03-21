@@ -3,6 +3,6 @@ use Moose::Role;
 
 use namespace::autoclean;
 
-with 'Moonpig::Role::Refund';
+with 'Moonpig::Role::Debit';
 
 1;

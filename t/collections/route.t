@@ -32,7 +32,7 @@ test "route to get a collection" => sub {
   my $guid = do_with_fresh_ledger({}, sub { return $_[0]->guid });
 
   my ($collection) = Moonpig->env->route(
-    [ 'ledger', 'by-guid', $guid, 'refunds' ],
+    [ 'ledger', 'by-guid', $guid, 'debits' ],
   );
   ok($collection);
 

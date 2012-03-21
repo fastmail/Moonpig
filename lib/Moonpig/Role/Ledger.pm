@@ -12,7 +12,7 @@ Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.307);
 
-_generate_subcomponent_methods(qw(consumer refund credit coupon));
+_generate_subcomponent_methods(qw(consumer debit credit coupon));
 
 with(
   'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
@@ -23,11 +23,11 @@ with(
   'Stick::Role::Routable::AutoInstance',
   'Stick::Role::PublicResource::GetSelf',
   'Stick::Role::HasCollection' => {
-    item => 'refund',
-    # These are only here because we use the refund collection for collection
+    item => 'debit',
+    # These are only here because we use the debit collection for collection
     # tests
     collection_roles => [ 'Stick::Role::Collection::Pageable',
-                          'Moonpig::Role::Collection::RefundExtras',
+                          'Moonpig::Role::Collection::DebitExtras',
                           'Stick::Role::Collection::Mutable',
                          ],
   },
@@ -175,7 +175,7 @@ sub _extra_instance_subroute {
     invoices  => $self->invoice_collection,
     jobs      => $self->job_collection,
     journals  => $self->journal_collection,
-    refunds   => $self->refund_collection,
+    debits    => $self->debit_collection,
   );
   if (exists $x_rt{$first}) {
     shift @$path;
@@ -184,7 +184,7 @@ sub _extra_instance_subroute {
   return;
 }
 
-# Compile-time generation of accessors for subcomponents such as refunds
+# Compile-time generation of accessors for subcomponents such as debits
 sub _generate_subcomponent_methods {
   for my $thing (@_) {
     my $predicate = "_has_$thing";
