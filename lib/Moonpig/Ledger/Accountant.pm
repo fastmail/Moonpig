@@ -58,6 +58,15 @@ has transfer_factory => (
   default => sub { 'Moonpig::Ledger::Accountant::Transfer' },
 );
 
+has last_serial_number => (
+  is  => 'ro',
+  isa => 'Int',
+  init_arg => undef,
+  default  => 0,
+  traits   => [ 'Counter' ],
+  handles  => { next_serial_number => 'inc' },
+);
+
 sub create_transfer {
   my ($self, $arg) = @_;
   $arg or croak "Missing arguments to create_transfer";
@@ -86,6 +95,7 @@ sub create_transfer {
     amount => $arg->{amount},
     exists $arg->{date} ? (date => $arg->{date}) : (),
     ledger => $self->ledger,
+    serial_number => $self->next_serial_number,
   });
   return unless $t;
 
