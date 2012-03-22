@@ -36,7 +36,7 @@ test pay_and_get_refund => sub {
 
     is($credit->unapplied_amount, 0, "the credit has been entirely spent");
 
-    my @refunds = $ledger->refunds;
+    my @refunds = $ledger->debits;
     is(@refunds, 1, "there is now 1 refund");
     is($refunds[0]->amount, $credit->amount, "...for the right amount");
 

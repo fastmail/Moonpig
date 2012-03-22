@@ -17,7 +17,7 @@ before run_test => sub {
 
 sub refund {
   my ($self, $amount) = @_;
-  class("Refund")->new({
+  class("Debit::Refund")->new({
     ledger => $Ledger,
     amount => $amount || dollars(1),
   });
@@ -36,28 +36,28 @@ test "page" => sub {
   );
 
   my @r;
-  is($Ledger->refund_collection->pages, 0);
+  is($Ledger->debit_collection->pages, 0);
 
   note "About to check page counts";
   for (1..30) {
-    push @r, my $next_refund = $Ledger->add_refund(class('Refund'));
+    push @r, my $next_refund = $Ledger->add_debit(class('Debit::Refund'));
     $Ledger->create_transfer({
-      type => 'refund',
+      type => 'debit',
       from => $credit,
       to   => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
     });
-    is($Ledger->refund_collection->pages,     int($_ / 20))
+    is($Ledger->debit_collection->pages,     int($_ / 20))
       if $_ % 20 == 0;
-    is($Ledger->refund_collection->pages, 1 + int($_ / 20))
+    is($Ledger->debit_collection->pages, 1 + int($_ / 20))
       if $_ % 20 != 0;
   };
 
   note "About to check page sizes";
   {
-    my $page1 = $Ledger->refund_collection->page({ page => 1 });
-    my $page2 = $Ledger->refund_collection->page({ page => 2 });
-    my $page3 = $Ledger->refund_collection->page({ page => 3 });
+    my $page1 = $Ledger->debit_collection->page({ page => 1 });
+    my $page2 = $Ledger->debit_collection->page({ page => 2 });
+    my $page3 = $Ledger->debit_collection->page({ page => 3 });
 
     is(@$page1, 20, "page 1 has 20/30 items");
     is(@$page2, 10, "page 2 has 10/30 items");
@@ -69,16 +69,16 @@ test "page" => sub {
   note "About to check pages with alternative size";
   {
     for (1..4) {
-      my $page = $Ledger->refund_collection->page({ page => $_, pagesize => 7 });
+      my $page = $Ledger->debit_collection->page({ page => $_, pagesize => 7 });
       is(@$page, 7, "page $_ has 7/7 items");
     }
-    my $page = $Ledger->refund_collection->page({ page => 5, pagesize => 7 });
+    my $page = $Ledger->debit_collection->page({ page => 5, pagesize => 7 });
     is(@$page, 2, "page 5 has 2/7 items");
   }
 
   note "About to check pages with alternative default size";
   {
-    my $c = $Ledger->refund_collection;
+    my $c = $Ledger->debit_collection;
     $c->default_page_size(7);
     for (1..4) {
       my $page = $c->page({ page => $_ });

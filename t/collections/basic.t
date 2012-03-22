@@ -18,7 +18,7 @@ before run_test => sub {
 
 sub refund {
   my ($self) = @_;
-  class("Refund")->new({
+  class("Debit::Refund")->new({
     ledger => $Ledger,
   });
 }
@@ -28,18 +28,18 @@ test "accessor" => sub {
 
   my $r = $self->refund();
 
-  my @refunds = $Ledger->refunds();
+  my @refunds = $Ledger->debits();
   is(@refunds, 0, "before list");
-  is_deeply(\@refunds, $Ledger->refund_array, "before array");
-  $Ledger->add_refund($r);
-  @refunds = $Ledger->refunds();
+  is_deeply(\@refunds, $Ledger->debit_array, "before array");
+  $Ledger->add_debit($r);
+  @refunds = $Ledger->debits();
   is(@refunds, 1, "after list");
-  is_deeply(\@refunds, $Ledger->refund_array, "after array");
+  is_deeply(\@refunds, $Ledger->debit_array, "after array");
 };
 
 test "constructor" => sub {
   my ($self) = @_;
-  my $c = $Ledger->refund_collection;
+  my $c = $Ledger->debit_collection;
   ok($c->does("Stick::Role::Collection"));
 };
 
@@ -54,38 +54,22 @@ test "collection object" => sub {
     { amount => dollars(5_000) },
   );
 
-  my $c = $Ledger->refund_collection();
+  my $c = $Ledger->debit_collection();
   ok($c);
   ok($c->does("Stick::Role::Collection"));
 
   my @r;
 
   for (0..2) {
-    $c = $Ledger->refund_collection();
+    $c = $Ledger->debit_collection();
     is($c->count, @r, "collection contains $_ refund(s)" );
     is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
     last if $_ == 2;
-    push @r, my $next_refund = $Ledger->add_refund(class('Refund'));
+    push @r, my $next_refund = $Ledger->add_debit(class('Debit::Refund'));
     $Ledger->create_transfer({
-      type => 'refund',
+      type => 'debit',
       from => $credit,
-      to => $next_refund,
-      amount => dollars(10) + $_ * dollars(1.01),
-    });
-  }
-
-  note "0..2 done, starting 3..5\n";
-
-  for (3..5) {
-    $c = $Ledger->refund_collection();
-    is($c->count, @r, "collection contains $_ refund(s)" );
-    is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
-    last if $_ == 5;
-    push @r, my $next_refund = $c->add();
-    $Ledger->create_transfer({
-      type => 'refund',
-      from => $credit,
-      to => $next_refund,
+      to   => $next_refund,
       amount => dollars(10) + $_ * dollars(1.01),
     });
   }
@@ -93,7 +77,7 @@ test "collection object" => sub {
 
 test "ledger gc" => sub {
   my ($self) = @_;
-  my $rc = $Ledger->refund_collection();
+  my $rc = $Ledger->debit_collection();
   undef $Ledger;
   ok($rc->owner, "was ledger prematurely garbage-collected?");
 };

@@ -72,6 +72,6 @@ __DATA__
 # FROM     TO        TYPE
 consumer   journal   hold
 consumer   journal   transfer
-credit     refund    refund
+credit     debit     debit
 consumer   credit    cashout
 credit     consumer  consumer_funding

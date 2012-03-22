@@ -3,6 +3,7 @@ package Moonpig::Role::Credit;
 use Moose::Role;
 
 with(
+  'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::CanTransfer' => {
@@ -13,7 +14,9 @@ with(
 
 use Moonpig::Behavior::Packable;
 
+use List::AllUtils qw(natatime);
 use Moonpig::Types qw(PositiveMillicents);
+use Moonpig::Util qw(class);
 
 use namespace::autoclean;
 
@@ -60,6 +63,18 @@ sub applied_amount {
   return($out - $in);
 }
 
+sub current_allocation_pairs {
+  my ($self) = @_;
+
+  return $self->ledger->accountant->__compute_effective_transferrer_pairs({
+    thing => $self,
+    to_thing   => [ qw(cashout) ],
+    from_thing => [ qw(consumer_funding debit) ],
+    negative   => [ qw(cashout) ],
+    upper_bound => $self->amount,
+  });
+}
+
 sub unapplied_amount {
   my ($self) = @_;
 
@@ -67,24 +82,6 @@ sub unapplied_amount {
 
   return($self->amount - $out + $in)
 }
-
-has created_at => (
-  is   => 'ro',
-  isa  => 'Moonpig::DateTime',
-  default  => sub { Moonpig->env->now },
-  required => 1,
-);
-
-PARTIAL_PACK {
-  my ($self) = @_;
-
-  return {
-    type   => $self->type,
-    created_at => $self->created_at,
-    amount => $self->amount,
-    unapplied_amount => $self->unapplied_amount,
-  };
-};
 
 sub type {
   my ($self) = @_;
@@ -96,5 +93,59 @@ sub type {
 sub is_refundable {
   $_[0]->does("Moonpig::Role::Credit::Refundable") ? 1 : 0;
 }
+
+sub dissolve {
+  my ($self) = @_;
+  my @pairs = $self->current_allocation_pairs;
+
+  my $cpa = $self->ledger->accountant;
+
+  my $iter = natatime 2, @pairs;
+  while (my ($object, $amount) = $iter->()) {
+    Moonpig::X->throw("can't dissolve refunded credit")
+      if $object->does("Moonpig::Role::Debit");
+
+    $cpa->create_transfer({
+      type => 'cashout',
+      from => $object,
+      to   => $self,
+      amount => $amount,
+    });
+
+    $object->charge_invoice(
+      $self->ledger->current_invoice,
+      {
+        extra_tags  => [ qw(reinvoice) ],
+        amount      => $amount,
+        description => "replace funds from " . $self->as_string,
+      },
+    );
+  }
+
+  Moonpig::X->throw("cashed out all allocations, but some balance is missing")
+    unless $self->unapplied_amount == $self->amount;
+
+  my $writeoff = $self->ledger->add_debit(class(qw(Debit::WriteOff)));
+
+  $self->ledger->create_transfer({
+    type  => 'debit',
+    from  => $self,
+    to    => $writeoff,
+    amount  => $self->amount,
+  });
+
+  $self->ledger->perform_dunning;
+}
+
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    type   => $self->type,
+    created_at => $self->created_at,
+    amount => $self->amount,
+    unapplied_amount => $self->unapplied_amount,
+  };
+};
 
 1;

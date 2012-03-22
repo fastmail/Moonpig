@@ -36,7 +36,7 @@ use Sub::Exporter -setup => [ qw(
 
   percent
 
-  sum sumof
+  sum sumof sum_pair_values
 ) ];
 
 my $COMPOSITOR = MooseX::ClassCompositor->new({
@@ -144,6 +144,11 @@ sub sum {
 sub sumof (&@) {
   my ($f, @list) = @_;
   sum(map $f->($_), @list);
+}
+
+sub sum_pair_values {
+  my (@pairs) = @_;
+  sum map { $pairs[$_] } grep { $_ % 2 } keys @pairs;
 }
 
 sub percent { $_[0] / 100 }

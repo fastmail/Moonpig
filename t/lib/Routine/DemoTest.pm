@@ -1,4 +1,4 @@
-package t::lib::DemoTestRoutine;
+package t::lib::Routine::DemoTest;
 use Test::Routine;
 use Test::More;
 
@@ -8,8 +8,6 @@ with('Moonpig::Test::Role::UsesStorage');
 
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
-
-use t::lib::TestEnv;
 
 use Data::GUID qw(guid_string);
 use Moonpig::Util qw(class days dollars sum sumof to_dollars);

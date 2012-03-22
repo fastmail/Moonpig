@@ -4,6 +4,7 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::HasCharges' => { charge_role => 'InvoiceCharge' },
+  'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
@@ -25,13 +26,6 @@ use MooseX::SetOnce;
 use Stick::Util qw(ppack);
 
 use namespace::autoclean;
-
-has created_at => (
-  is   => 'ro',
-  isa  => Time,
-  default => sub { Moonpig->env->now },
-  traits => [ qw(SetOnce) ],
-);
 
 has paid_at => (
   isa => Time,

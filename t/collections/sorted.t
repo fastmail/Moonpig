@@ -24,12 +24,12 @@ before run_test => sub {
 
 sub refund {
   my ($self, $amount) = @_;
-  my $refund = $Ledger->add_refund(class('Refund'));
+  my $refund = $Ledger->add_debit(class('Debit::Refund'));
   $amount ||= dollars(1);
   $Ledger->create_transfer({
-    type => 'refund',
+    type => 'debit',
     from => $Credit,
-    to => $refund,
+    to   => $refund,
     amount => $amount,
   });
   return $refund;
@@ -43,9 +43,9 @@ test "refund collections" => sub {
     $self->refund(cents($_ * 101));
   }
 
-  my @refunds = $Ledger->refunds();
+  my @refunds = $Ledger->debits();
   is(@refunds, 6, "ledger loaded with five refunds");
-  my $rc = $Ledger->refund_collection;
+  my $rc = $Ledger->debit_collection;
 
   is( exception { $rc->sort_key("amount") },
       undef,

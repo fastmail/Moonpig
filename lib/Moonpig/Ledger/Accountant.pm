@@ -6,6 +6,9 @@ use Moonpig::Ledger::Accountant::Transfer;
 use Moose;
 use MooseX::StrictConstructor;
 use Scalar::Util qw(blessed);
+use Moonpig::Util qw(sum_pair_values);
+
+use namespace::autoclean;
 
 with 'Role::Subsystem' => {
   ident  => 'ledger-accountant',
@@ -58,6 +61,15 @@ has transfer_factory => (
   default => sub { 'Moonpig::Ledger::Accountant::Transfer' },
 );
 
+has last_serial_number => (
+  is  => 'ro',
+  isa => 'Int',
+  init_arg => undef,
+  default  => 0,
+  traits   => [ 'Counter' ],
+  handles  => { next_serial_number => 'inc' },
+);
+
 sub create_transfer {
   my ($self, $arg) = @_;
   $arg or croak "Missing arguments to create_transfer";
@@ -86,6 +98,7 @@ sub create_transfer {
     amount => $arg->{amount},
     exists $arg->{date} ? (date => $arg->{date}) : (),
     ledger => $self->ledger,
+    serial_number => $self->next_serial_number,
   });
   return unless $t;
 
@@ -208,7 +221,52 @@ sub commit_hold {
   return $self->_convert_transfer_type($hold, 'hold' => 'transfer');
 }
 
+sub __compute_effective_transferrer_pairs {
+  my ($self, $arg) = @_;
+  my $thing = $arg->{thing};
+  my $to    = $arg->{to_thing};
+  my $from  = $arg->{from_thing};
+  my $neg   = $arg->{negative};
+  my $cap   = $arg->{upper_bound};
+
+  # positive_types
+  # negative_types
+
+  # return (xfer_source => $amount, ... );
+
+  my @transfers = sort { $a->serial_number <=> $b->serial_number } (
+    (map {; $self->select({ target => $thing, type => $_ })->all } @$to),
+    (map {; $self->select({ source => $thing, type => $_ })->all } @$from),
+  );
+
+  my %is_neg  = map {; $_ => 1 } @$neg;
+  my %is_from = map {; $_ => 1 } @$from;
+
+  my %credit_for;
+  my %funds_from;
+  for my $transfer (@transfers) {
+    my ($amount, $credit) = $is_from{ $transfer->type }
+                          ? ($transfer->amount, $transfer->target)
+                          : ($transfer->amount, $transfer->source);
+
+    $amount *= -1 if $is_neg{ $transfer->type };
+
+    my $guid = $credit->guid;
+    $credit_for{ $guid } //= $credit;
+    $funds_from{ $guid } += $amount;
+
+    Moonpig::X->throw("drawn below zero") if $funds_from{ $guid } < 0;
+
+    Moonpig::X->throw("funded above maximum")
+      if defined $cap and sum_pair_values(%funds_from) > $cap;
+  }
+
+  return(
+    map  {; $credit_for{$_}, $funds_from{$_} }
+    grep {; $funds_from{$_} }
+    keys %funds_from
+  );
+}
 
 no Moose;
 1;
-

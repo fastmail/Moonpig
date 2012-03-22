@@ -6,6 +6,7 @@ use Moonpig::Util qw(class);
 use Moose::Role;
 
 with(
+  'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
 );
@@ -22,13 +23,6 @@ has lifetime => (
   is => 'ro',
   isa => TimeInterval,
   predicate => 'has_expiration_date',
-);
-
-has created_at => (
-  is => 'ro',
-  isa => Time,
-  default => sub { Moonpig->env->now },
-  init_arg => undef,
 );
 
 sub expiration_date {
