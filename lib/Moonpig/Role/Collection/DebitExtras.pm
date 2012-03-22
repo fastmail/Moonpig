@@ -1,8 +1,7 @@
 package Moonpig::Role::Collection::DebitExtras;
-use Class::MOP;
 use Moose::Role;
-use MooseX::Types::Moose qw(Num);
-use Moonpig::Util qw(cents class);
+# ABSTRACT: extra behavior for a ledger's Debit collection
+
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110504;
 

@@ -1,7 +1,8 @@
 use strict;
 use warnings;
-
 package Moonpig::Ledger::Accountant::TransferSet;
+# ABSTRACT: a set of transfers between Moonpig objects
+
 use Moonpig::TransferUtil ();
 use Moonpig::Util qw(sumof);
 

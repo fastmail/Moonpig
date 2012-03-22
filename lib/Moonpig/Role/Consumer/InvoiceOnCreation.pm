@@ -1,6 +1,6 @@
 package Moonpig::Role::Consumer::InvoiceOnCreation;
-
 use Moose::Role;
+# ABSTRACT: a consumer that charges the invoice when it's created
 
 use List::MoreUtils qw(natatime);
 

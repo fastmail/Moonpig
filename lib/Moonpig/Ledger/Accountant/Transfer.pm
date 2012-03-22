@@ -1,6 +1,8 @@
 package Moonpig::Ledger::Accountant::Transfer;
-use Carp qw(confess croak);
 use Moose;
+# ABSTRACT: a single transfer between Moonpig objects
+
+use Carp qw(confess croak);
 use MooseX::StrictConstructor;
 use Moonpig;
 use Moonpig::Types qw(PositiveInt PositiveMillicents Time TransferType);

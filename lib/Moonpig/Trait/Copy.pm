@@ -1,5 +1,6 @@
 package Moose::Meta::Attribute::Custom::Trait::Copy;
-# Note surprising package name above
+# note the surprising package name!
+# ABSTRACT: an attribute trait for attributes we copy
 
 use Moose::Role;
 # Yeah, I'm empty

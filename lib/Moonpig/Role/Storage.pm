@@ -1,5 +1,6 @@
 package Moonpig::Role::Storage;
 use Moose::Role;
+# ABSTRACT: a backend storage engine for Moonpig
 
 use Carp 'croak';
 

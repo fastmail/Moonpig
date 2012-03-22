@@ -1,5 +1,6 @@
 package Moonpig::Role::ConsumerTemplateSet;
 use Moose::Role;
+# ABSTRACT: a loadable set of consumer templates
 
 use Moonpig;
 

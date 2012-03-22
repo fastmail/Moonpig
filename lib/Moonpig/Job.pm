@@ -1,5 +1,7 @@
 package Moonpig::Job;
 use Moose;
+# ABSTRACT: a job to be carried out by a worker
+
 use MooseX::StrictConstructor;
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.20110802);

@@ -1,4 +1,6 @@
 package Moonpig::App::Ob::CommandArgs;
+use Moose;
+# ABSTRACT: guts of object browser's individual command execution
 
 {
   package Ob;
@@ -7,7 +9,6 @@ package Moonpig::App::Ob::CommandArgs;
   # Special package for eval expression context
 }
 
-use Moose;
 use Carp qw(confess croak);
 
 has code => (

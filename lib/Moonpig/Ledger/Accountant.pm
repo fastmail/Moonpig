@@ -1,9 +1,11 @@
 package Moonpig::Ledger::Accountant;
+use Moose;
+# ABSTRACT: a ledger's transfer-tracking subsystem
+
 use Carp qw(confess croak);
 use Moonpig::TransferUtil ();
 use Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::Ledger::Accountant::Transfer;
-use Moose;
 use MooseX::StrictConstructor;
 use Scalar::Util qw(blessed);
 use Moonpig::Util qw(sum_pair_values);

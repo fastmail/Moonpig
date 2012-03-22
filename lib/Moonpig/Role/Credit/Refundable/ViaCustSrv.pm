@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::Refundable::ViaCustSrv;
 use Moose::Role;
+# ABSTRACT: a refund that gets back to the payer via customer service
 
 use Stick::Util qw(ppack);
 

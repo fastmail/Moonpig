@@ -1,9 +1,11 @@
+use strict;
+use warnings;
+package Moonpig::App::Ob::Functions;
+# ABSTRACT: helper to set up the package in which ob commands run
 
 package Ob;  # note weird package declaration
 # This is the package in which unrecognized commands are evaluated as Perl
 # expressions.
-use strict;
-use warnings;
 use Moonpig::Util '-all';
 use Carp 'croak';
 

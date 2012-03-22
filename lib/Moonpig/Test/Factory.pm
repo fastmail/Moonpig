@@ -1,5 +1,7 @@
-package Moonpig::Test::Factory;
 use strict;
+use warnings;
+package Moonpig::Test::Factory;
+# ABSTRACT: utilities to construct ledgers for testing
 
 use Moonpig::Test::Factory::Templates; # default testing template set
 
@@ -13,10 +15,6 @@ use Moonpig::Util -all;
 use Sub::Exporter -setup => {
   exports => [ qw(build build_consumers build_ledger do_with_fresh_ledger do_ro_with_fresh_ledger) ],
 };
-
-=head1 NAME
-
-C<Moonpig::Test::Factory> - construct test examples
 
 =head1 SYNOPSIS
 

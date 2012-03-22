@@ -1,8 +1,8 @@
 package Moonpig::Role::Collection::CreditExtras;
-use Class::MOP;
 use Moose::Role;
-use MooseX::Types::Moose qw(Int Str HashRef);
-use Moonpig::Util qw(cents class);
+# ABSTRACT: extra behavior for a ledger's Credit collection
+
+use Moonpig::Util qw(class);
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110504;
 

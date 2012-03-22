@@ -1,6 +1,8 @@
-package Moonpig::App::Ob::Dumper;
 use strict;
 use warnings;
+package Moonpig::App::Ob::Dumper;
+# ABSTRACT: an object pretty-printed used by the object browser
+
 use Scalar::Util qw(blessed reftype);
 use Try::Tiny;
 use overload ();

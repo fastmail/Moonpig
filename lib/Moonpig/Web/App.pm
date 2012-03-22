@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::Web::App;
+# ABSTRACT: Moonpig's PSGI web app package
 
 use JSON;
 use Moonpig;

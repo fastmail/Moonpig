@@ -1,5 +1,6 @@
 package Moonpig::Role::InvoiceCharge::Active;
 use Moose::Role;
+# ABSTRACT: an invoice charge that does something extra when paid
 with(
   'Moonpig::Role::InvoiceCharge',
 );

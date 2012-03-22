@@ -1,5 +1,6 @@
 package Moonpig::Test::Role::Ledger;
 use Moose::Role;
+# ABSTRACT: a role to add component-naming to ledgers for testing
 
 has _component_name_map => (
   is => 'ro',

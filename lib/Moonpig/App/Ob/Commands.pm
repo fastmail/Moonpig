@@ -1,6 +1,8 @@
-package Moonpig::App::Ob::Commands;
 use strict;
 use warnings;
+package Moonpig::App::Ob::Commands;
+# ABSTRACT: the Moonpig object browser commands
+
 use Moonpig::Util qw(class);
 use Moonpig::App::Ob::Dumper;
 use Scalar::Util qw(blessed);

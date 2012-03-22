@@ -1,6 +1,6 @@
 package Moonpig::Storage::UpdateModeStack;
-
 use Moose;
+# ABSTRACT: a stack of update modes for the storage engine
 
 has stack => (
   is  => 'ro',

@@ -1,7 +1,7 @@
-
-package Moonpig::TransferUtil;
 use strict;
 use warnings;
+package Moonpig::TransferUtil;
+# ABSTRACT: helper routines for dealing with transfers
 
 use base 'Exporter';
 our @EXPORT_OK = qw(

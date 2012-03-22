@@ -1,5 +1,7 @@
 package Moonpig::App::Ob::Config;
 use Moose;
+# ABSTRACT: the Moonpig object browser configuration
+
 use Moonpig;
 use Moose::Util::TypeConstraints qw(role_type);
 

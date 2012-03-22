@@ -1,4 +1,7 @@
 package Moonpig::App::Ob;
+use Moose;
+# ABSTRACT: the Moonpig object browser
+
 use Moonpig::App::Ob::Config;
 use Moonpig::App::Ob::Commands;
 use Moonpig::App::Ob::CommandArgs;
@@ -6,7 +9,6 @@ use Moonpig::App::Ob::Functions;
 use Moonpig::Types qw(Factory);
 
 use Class::Load ();
-use Moose;
 use Moose::Util::TypeConstraints qw(duck_type class_type);
 use Term::ReadLine;
 
