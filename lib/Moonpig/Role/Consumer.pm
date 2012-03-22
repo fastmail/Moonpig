@@ -12,6 +12,7 @@ with(
   'Moonpig::Role::CanCancel',
   'Moonpig::Role::CanExpire',
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::StubBuild',
@@ -61,13 +62,6 @@ implicit_event_handlers {
     },
   };
 };
-
-has created_at => (
-  is   => 'ro',
-  isa  => Time,
-  init_arg => undef,
-  default  => sub { Moonpig->env->now },
-);
 
 has _superseded_at => (
   is => 'rw',

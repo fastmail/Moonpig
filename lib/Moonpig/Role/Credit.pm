@@ -3,6 +3,7 @@ package Moonpig::Role::Credit;
 use Moose::Role;
 
 with(
+  'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::CanTransfer' => {
@@ -79,13 +80,6 @@ sub unapplied_amount {
 
   return($self->amount - $out + $in)
 }
-
-has created_at => (
-  is   => 'ro',
-  isa  => 'Moonpig::DateTime',
-  default  => sub { Moonpig->env->now },
-  required => 1,
-);
 
 PARTIAL_PACK {
   my ($self) = @_;
