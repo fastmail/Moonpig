@@ -18,12 +18,7 @@ sub refund_unapplied_amount {
 
   $self->issue_refund;
 
-  my $refund = $self->ledger->add_debit(
-    class(qw(Debit::Refund)),
-    {
-      ledger => $self->ledger,
-    },
-  );
+  my $refund = $self->ledger->add_debit(class(qw(Debit::Refund)));
 
   $self->ledger->create_transfer({
     type  => 'debit',

@@ -576,23 +576,25 @@ sub acquire_funds {
   return;
 }
 
+sub effective_funding_pairs {
+  my ($self) = @_;
+
+  return $self->ledger->accountant->__compute_effective_transferrer_pairs({
+    thing => $self,
+    to_thing   => [ qw(consumer_funding) ],
+    from_thing => [ qw(cashout) ],
+    negative   => [ qw(cashout) ],
+  });
+}
+
 sub cashout_unapplied_amount {
   my ($self) = @_;
   my $balance = $self->unapplied_amount;
 
   return unless $balance > 0;
 
-  my $transfer_set = $self->ledger->accountant->select({
-    target => $self,
-    type   => 'consumer_funding',
-  });
-
-  my %seen;
-  my @credits;
-  for my $xfer ($transfer_set->all) {
-    next if $seen{ $xfer->source->guid }++;
-    push @credits, $xfer->source;
-  }
+  my @source_pairs = $self->effective_funding_pairs;
+  my @credits = map { $source_pairs[$_] } grep { ! $_ % 2 } keys @source_pairs;
 
   # This is the order in which we will refund:  first, to non-refundable
   # credits (because we use up "real money" first); within those, to the

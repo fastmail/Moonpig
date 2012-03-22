@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use List::AllUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
-use Moonpig::Util qw(class days event sum sumof);
+use Moonpig::Util qw(class days event sum sumof sum_pair_values);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
@@ -194,18 +194,15 @@ sub calculate_charge_pairs_on {
 sub calculate_total_charge_amount_on {
   my ($self, $date) = @_;
   my @charge_pairs = $self->calculate_charge_pairs_on( $date );
-  my $total_charge_amount = sum map  { $charge_pairs[$_] }
-                                grep { $_ % 2 }
-                                keys @charge_pairs;
+  my $total_charge_amount = sum_pair_values @charge_pairs;
 
   return $total_charge_amount;
 }
 
 sub estimate_cost_for_interval {
   my ($self, $interval) = @_;
-  my $iter = natatime 2, $self->initial_invoice_charge_pairs;
-  my $total = 0;
-  while (my ($desc, $amt) = $iter->()) { $total += $amt }
+  my @pairs = $self->initial_invoice_charge_pairs;
+  my $total = sum_pair_values @pairs;
   return $total * ($interval / $self->cost_period);
 }
 

@@ -60,6 +60,18 @@ sub applied_amount {
   return($out - $in);
 }
 
+sub current_allocation_pairs {
+  my ($self) = @_;
+
+  return $self->ledger->accountant->__compute_effective_transferrer_pairs({
+    thing => $self,
+    to_thing   => [ qw(cashout) ],
+    from_thing => [ qw(consumer_funding debit) ],
+    negative   => [ qw(cashout) ],
+    upper_bound => $self->amount,
+  });
+}
+
 sub unapplied_amount {
   my ($self) = @_;
 
