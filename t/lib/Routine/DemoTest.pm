@@ -9,8 +9,6 @@ with('Moonpig::Test::Role::UsesStorage');
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-use t::lib::TestEnv;
-
 use Data::GUID qw(guid_string);
 use Moonpig::Util qw(class days dollars sum sumof to_dollars);
 use Moonpig::Types qw(GUID);

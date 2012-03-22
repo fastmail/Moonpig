@@ -6,133 +6,76 @@ use t::lib::TestEnv;
 
 use Moonpig::Util qw(class dollars event years);
 
-with('Moonpig::Test::Role::UsesStorage');
+with(
+  'Moonpig::Test::Role::UsesStorage',
+  't::lib::Routine::XferChain',
+);
 
-use t::lib::Logger;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
-
-sub fund {
-  my ($self, $credit, $consumer, $amount) = @_;
-  $credit->ledger->accountant->create_transfer({
-    type => 'consumer_funding',
-    from => $credit,
-    to   => $consumer,
-    amount => $amount,
-  });
-}
-
-sub cashout {
-  my ($self, $consumer, $credit, $amount) = @_;
-  $credit->ledger->accountant->create_transfer({
-    type => 'cashout',
-    from => $consumer,
-    to   => $credit,
-    amount => $amount,
-  });
-}
-
-sub refund {
-  my ($self, $credit, $amount) = @_;
-
-  my $ledger = $credit->ledger;
-  my $refund = $ledger->add_debit(class(qw(Debit::Refund)));
-
-  $ledger->accountant->create_transfer({
-    type  => 'debit',
-    from  => $credit,
-    to    => $refund,
-    amount  => $amount,
-  });
-
-  return $refund;
-}
 
 test 'follow the money' => sub {
   my ($self) = @_;
 
   do_with_fresh_ledger(
-    {
-      x => { template => 'dummy' },
-      y => { template => 'dummy' },
-    },
+    { },
     sub {
       my ($ledger) = @_;
+      $self->setup_xfers_abcxy($ledger);
+
       my $x = $ledger->get_component('x');
       my $y = $ledger->get_component('y');
+      my $credit_a = $ledger->get_component('credit_a');
+      my $credit_b = $ledger->get_component('credit_b');
+      my $credit_c = $ledger->get_component('credit_c');
+      my $refund_1 = $ledger->get_component('refund_1');
+      my $refund_2 = $ledger->get_component('refund_2');
 
-      $x->abandon_all_unpaid_charges;
-      $y->abandon_all_unpaid_charges;
+      my $a_alloc = $self->guidify_pairs($credit_a->current_allocation_pairs);
+      my $b_alloc = $self->guidify_pairs($credit_b->current_allocation_pairs);
+      my $c_alloc = $self->guidify_pairs($credit_c->current_allocation_pairs);
+      my $x_funds = $self->guidify_pairs($x->effective_funding_pairs);
+      my $y_funds = $self->guidify_pairs($y->effective_funding_pairs);
 
-      my $credit_a = $ledger->add_credit(
-        class('Credit::Simulated'),
-        { amount => dollars(10) }
-      );
-
-      my $credit_b = $ledger->add_credit(
-        class('Credit::Simulated'),
-        { amount => dollars(10) }
-      );
-
-      my $credit_c = $ledger->add_credit(
-        class('Credit::Simulated'),
-        { amount => dollars(10) }
-      );
-
-      $self->fund   ($credit_a, $x, dollars( 5));
-      $self->fund   ($credit_b, $x, dollars( 5));
-      $self->fund   ($credit_a, $y, dollars( 5));
-      $self->cashout($x, $credit_b, dollars( 5));
-      my $r1 = $self->refund ($credit_b, dollars( 5));
-      $self->fund   ($credit_b, $y, dollars( 5));
-      $self->fund   ($credit_c, $x, dollars(10));
-      $self->cashout($x, $credit_c, dollars(10));
-      my $r2 = $self->refund ($credit_c, dollars( 5));
-      $self->fund   ($credit_c, $x, dollars( 5));
-
-      my $a_allocations = $self->_guidify($credit_a->current_allocation_pairs);
-      my $b_allocations = $self->_guidify($credit_b->current_allocation_pairs);
-      my $c_allocations = $self->_guidify($credit_c->current_allocation_pairs);
-      my $x_fundings    = $self->_guidify($x->effective_funding_pairs);
-      my $y_fundings    = $self->_guidify($y->effective_funding_pairs);
+      for my $credit (qw(credit_a credit_b credit_c)) {
+        is(
+          $ledger->get_component($credit)->unapplied_amount,
+          dollars(2),
+          "two dollars left in $credit",
+        );
+      }
 
       is_deeply(
-        $a_allocations,
+        $a_alloc,
         { $x->guid => dollars(5), $y->guid => dollars(5) },
         "allocations from Credit A",
       );
 
       is_deeply(
-        $b_allocations,
-        { $r1->guid => dollars(5), $y->guid => dollars(5) },
+        $b_alloc,
+        { $refund_1->guid => dollars(5), $y->guid => dollars(5) },
         "allocations from Credit B",
       );
 
       is_deeply(
-        $c_allocations,
-        { $x->guid => dollars(5), $r2->guid => dollars(5) },
+        $c_alloc,
+        { $x->guid => dollars(5), $refund_2->guid => dollars(5) },
         "allocations from Credit C",
       );
 
       is_deeply(
-        $x_fundings,
+        $x_funds,
         { $credit_a->guid => dollars(5), $credit_c->guid => dollars(5) },
         "fundings for Consumer X",
       );
 
       is_deeply(
-        $y_fundings,
+        $y_funds,
         { $credit_a->guid => dollars(5), $credit_b->guid => dollars(5) },
         "fundings for Consumer Y",
       );
     },
   );
 };
-
-sub _guidify {
-  my ($self, @pairs) = @_;
-  blessed($_) && ($_ = $_->guid) for @pairs;
-  return { @pairs };
-}
 
 run_me;
 done_testing;

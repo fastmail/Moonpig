@@ -14,8 +14,9 @@ with(
 
 use Moonpig::Behavior::Packable;
 
-use Moonpig::Types qw(PositiveMillicents);
 use List::AllUtils qw(natatime);
+use Moonpig::Types qw(PositiveMillicents);
+use Moonpig::Util qw(class);
 
 use namespace::autoclean;
 
@@ -111,12 +112,27 @@ sub dissolve {
       amount => $amount,
     });
 
-    $object->charge_invoice({
-      extra_tags  => [ qw(reinvoice) ],
-      amount      => $amount,
-      description => "replace funds from " . $self->as_string,
-    });
+    $object->charge_invoice(
+      $self->ledger->current_invoice,
+      {
+        extra_tags  => [ qw(reinvoice) ],
+        amount      => $amount,
+        description => "replace funds from " . $self->as_string,
+      },
+    );
   }
+
+  Moonpig::X->throw("cashed out all allocations, but some balance is missing")
+    unless $self->unapplied_amount == $self->amount;
+
+  my $writeoff = $self->ledger->add_debit(class(qw(Debit::WriteOff)));
+
+  $self->ledger->create_transfer({
+    type  => 'debit',
+    from  => $self,
+    to    => $writeoff,
+    amount  => $self->amount,
+  });
 
   $self->ledger->perform_dunning;
 }
