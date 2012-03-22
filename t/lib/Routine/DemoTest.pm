@@ -1,4 +1,4 @@
-package t::lib::DemoTestRoutine;
+package t::lib::Routine::DemoTest;
 use Test::Routine;
 use Test::More;
 
