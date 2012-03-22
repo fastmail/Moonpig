@@ -15,6 +15,7 @@ with(
 use Moonpig::Behavior::Packable;
 
 use Moonpig::Types qw(PositiveMillicents);
+use List::AllUtils qw(natatime);
 
 use namespace::autoclean;
 
@@ -90,6 +91,34 @@ sub type {
 
 sub is_refundable {
   $_[0]->does("Moonpig::Role::Credit::Refundable") ? 1 : 0;
+}
+
+sub dissolve {
+  my ($self) = @_;
+  my @pairs = $self->current_allocation_pairs;
+
+  my $cpa = $self->ledger->accountant;
+
+  my $iter = natatime 2, @pairs;
+  while (my ($object, $amount) = $iter->()) {
+    Moonpig::X->throw("can't dissolve refunded credit")
+      if $object->does("Moonpig::Role::Debit");
+
+    $cpa->create_transfer({
+      type => 'cashout',
+      from => $object,
+      to   => $self,
+      amount => $amount,
+    });
+
+    $object->charge_invoice({
+      extra_tags  => [ qw(reinvoice) ],
+      amount      => $amount,
+      description => "replace funds from " . $self->as_string,
+    });
+  }
+
+  $self->ledger->perform_dunning;
 }
 
 PARTIAL_PACK {
