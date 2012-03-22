@@ -60,6 +60,9 @@ test 'follow the money' => sub {
       my $x = $ledger->get_component('x');
       my $y = $ledger->get_component('y');
 
+      $x->abandon_all_unpaid_charges;
+      $y->abandon_all_unpaid_charges;
+
       my $credit_a = $ledger->add_credit(
         class('Credit::Simulated'),
         { amount => dollars(10) }
