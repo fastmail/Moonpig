@@ -427,7 +427,6 @@ sub copy_balance_to__ {
   );
 }
 
-
 # roles will decorate this method with code to move subcomponents to the copy
 sub copy_subcomponents_to__ {
   my ($self, $target, $copy) = @_;
