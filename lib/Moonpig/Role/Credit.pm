@@ -81,17 +81,6 @@ sub unapplied_amount {
   return($self->amount - $out + $in)
 }
 
-PARTIAL_PACK {
-  my ($self) = @_;
-
-  return {
-    type   => $self->type,
-    created_at => $self->created_at,
-    amount => $self->amount,
-    unapplied_amount => $self->unapplied_amount,
-  };
-};
-
 sub type {
   my ($self) = @_;
   my $type = ref($self) || $self;
@@ -102,5 +91,16 @@ sub type {
 sub is_refundable {
   $_[0]->does("Moonpig::Role::Credit::Refundable") ? 1 : 0;
 }
+
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    type   => $self->type,
+    created_at => $self->created_at,
+    amount => $self->amount,
+    unapplied_amount => $self->unapplied_amount,
+  };
+};
 
 1;
