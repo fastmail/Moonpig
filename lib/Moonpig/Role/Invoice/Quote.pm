@@ -1,4 +1,4 @@
-package Moonpig::Role::Quote;
+package Moonpig::Role::Invoice::Quote;
 # ABSTRACT: like an invoice, but doesn't expect to be paid
 
 use Moonpig;
@@ -10,7 +10,7 @@ with(
   'Moonpig::Role::Invoice'
 );
 
-requires qw(is_quote is_invoice);
+# requires qw(is_quote is_invoice);
 
 # XXX better name here
 has promoted_at => (
@@ -26,7 +26,7 @@ has expiration_time => (
   predicate => 'has_expiration_time',
 );
 
-sub is_expired {
+sub quote_has_expired {
   Moonpig->env->now->precedes($_[0]->expiration_time);
 }
 
