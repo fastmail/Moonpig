@@ -1,6 +1,7 @@
 package Moonpig::Role::Quote;
 # ABSTRACT: like an invoice, but doesn't expect to be paid
 
+use Moonpig;
 use Moonpig::Types qw(Time);
 use Moose::Role;
 use MooseX::SetOnce;
@@ -24,6 +25,10 @@ has expiration_time => (
   isa => Time,
   predicate => 'has_expiration_time',
 );
+
+sub is_expired {
+  Moonpig->env->now->precedes($_[0]->expiration_time);
+}
 
 1;
 
