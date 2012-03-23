@@ -39,6 +39,19 @@ sub templates {
         }};
     },
 
+    yearly => sub {
+      my ($name) = @_;
+      return {
+        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
+        arg => {
+          charge_amount => dollars(100),
+          cost_period   => years(1),
+          charge_description => 'yearly consumer',
+          replacement_plan   => [ get => '/consumer-template/yearly' ],
+        }
+      };
+    },
+
     b5g1_paid => sub {
       my ($name) = @_;
 
