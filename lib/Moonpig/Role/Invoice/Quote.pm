@@ -20,14 +20,14 @@ has promoted_at => (
   predicate => 'is_promoted',
 );
 
-has expiration_time => (
+has quote_expiration_time => (
   is => 'rw',
   isa => Time,
-  predicate => 'has_expiration_time',
+  predicate => 'has_quote_expiration_time',
 );
 
 sub quote_has_expired {
-  Moonpig->env->now->precedes($_[0]->expiration_time);
+  Moonpig->env->now->precedes($_[0]->quote_expiration_time);
 }
 
 1;

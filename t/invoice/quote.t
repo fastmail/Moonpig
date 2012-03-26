@@ -25,8 +25,10 @@ test 'basic' => sub {
       my ($ledger) = @_;
       my $q = class("Invoice::Quote")->new({
 	 ledger => $ledger,
-					   });
-      ok($q);
+      });
+      ok($q, "made quote");
+      ok(  $q->is_quote, "it is a quote");
+      ok(! $q->is_invoice, "it is a regular invoice");
   });
 };
 

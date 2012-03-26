@@ -375,5 +375,16 @@ test 'payment by two credits' => sub {
   pass("everything ran to completion without dying");
 };
 
+test 'quote-related' => sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->current_invoice;
+
+    ok(  $invoice->is_invoice, "current invoice is a regular invoice, not a quote");
+    ok(! $invoice->is_quote, "current invoice is not a quote");
+  });
+};
+
 run_me;
 done_testing;
