@@ -34,9 +34,11 @@ use Sub::Exporter -setup => [ qw(
 
   same_object
 
+  pair_lefts pair_rights
+
   percent
 
-  sum sumof sum_pair_values
+  sum sumof
 ) ];
 
 my $COMPOSITOR = MooseX::ClassCompositor->new({
@@ -136,6 +138,16 @@ sub random_short_ident {
   return $_ENC->( int rand $size );
 }
 
+sub pair_lefts {
+  my (@pairs) = @_;
+  map { $pairs[$_] } grep { $_ % 2 == 0 } keys @pairs;
+}
+
+sub pair_rights {
+  my (@pairs) = @_;
+  map { $pairs[$_] } grep { $_ % 2 == 1 } keys @pairs;
+}
+
 sub sum {
   require List::Util;
   return List::Util::reduce(sub { $a + $b }, 0, @_);
@@ -144,11 +156,6 @@ sub sum {
 sub sumof (&@) {
   my ($f, @list) = @_;
   sum(map $f->($_), @list);
-}
-
-sub sum_pair_values {
-  my (@pairs) = @_;
-  sum map { $pairs[$_] } grep { $_ % 2 } keys @pairs;
 }
 
 sub percent { $_[0] / 100 }
