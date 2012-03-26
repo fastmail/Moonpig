@@ -1,6 +1,7 @@
 package Moonpig::Role::Invoice::Quote;
 # ABSTRACT: like an invoice, but doesn't expect to be paid
 
+use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::Types qw(Time);
 use Moose::Role;
@@ -22,6 +23,8 @@ has promoted_at => (
 
 sub mark_promoted {
   my ($self) = @_;
+  confess sprintf "Can't promote open quote %s", $self->guid
+    unless $self->is_closed;
   $self->promoted_at(Moonpig->env->now);
 }
 
@@ -34,6 +37,12 @@ has quote_expiration_time => (
 sub quote_has_expired {
   Moonpig->env->now->precedes($_[0]->quote_expiration_time);
 }
+
+before _pay_charges => sub {
+  my ($self, @args) = @_;
+  confess sprintf "Can't pay charges on unpromoted quote %s", $self->guid
+    unless $self->is_promoted;
+};
 
 1;
 

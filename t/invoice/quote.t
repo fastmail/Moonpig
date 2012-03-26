@@ -31,7 +31,16 @@ test 'basic' => sub {
       ok(  $q->is_quote, "it is a quote");
       ok(! $q->is_invoice, "it is a regular invoice");
 
+      like(exception { $q->_pay_charges },
+           qr/unpromoted quote/,
+           "can't pay unpromoted quote");
+
+      like(exception { $q->mark_promoted },
+           qr/open quote/,
+           "can't promote open quote");
+      $q->mark_closed;
       $q->mark_promoted;
+
       ok(! $q->is_quote, "it is no longer a quote");
       ok(  $q->is_invoice, "it is now a regular invoice");
 
