@@ -376,7 +376,7 @@ sub abandon_invoice {
 sub amount_earmarked {
   my ($self) = @_;
   my @invoices = grep { $_->is_paid } $self->invoices;
-  my @charges  = grep { ! $_->is_executed }
+  my @charges  = grep { ! $_->is_executed && ! $_->is_abandoned }
                  map  { $_->all_charges } @invoices;
 
   return sumof { $_->amount } @charges;
