@@ -14,9 +14,9 @@ with(
 
 use Moonpig::Behavior::Packable;
 
-use List::AllUtils qw(natatime);
+use List::AllUtils qw(min natatime);
 use Moonpig::Types qw(PositiveMillicents);
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class days pair_lefts);
 
 use namespace::autoclean;
 
@@ -96,9 +96,13 @@ sub is_refundable {
 
 sub dissolve {
   my ($self) = @_;
+
+  my $ledger = $self->ledger;
+
+
   my @pairs = $self->current_allocation_pairs;
 
-  my $cpa = $self->ledger->accountant;
+  my $cpa = $ledger->accountant;
 
   my $iter = natatime 2, @pairs;
   while (my ($object, $amount) = $iter->()) {
@@ -113,28 +117,34 @@ sub dissolve {
     });
 
     $object->charge_invoice(
-      $self->ledger->current_invoice,
+      $ledger->current_invoice,
       {
         extra_tags  => [ qw(reinvoice) ],
         amount      => $amount,
         description => "replace funds from " . $self->as_string,
       },
     );
+
+    if ($object->does('Moonpig::Role::Consumer::ByTime')) {
+      my $two_weeks = Moonpig->env->now + days(14);
+      $object->grace_until( $two_weeks )
+        unless $object->grace_until && $object->grace_until > $two_weeks;
+    }
   }
 
   Moonpig::X->throw("cashed out all allocations, but some balance is missing")
     unless $self->unapplied_amount == $self->amount;
 
-  my $writeoff = $self->ledger->add_debit(class(qw(Debit::WriteOff)));
+  my $writeoff = $ledger->add_debit(class(qw(Debit::WriteOff)));
 
-  $self->ledger->create_transfer({
+  $ledger->create_transfer({
     type  => 'debit',
     from  => $self,
     to    => $writeoff,
     amount  => $self->amount,
   });
 
-  $self->ledger->perform_dunning;
+  $ledger->perform_dunning; # this implies ->process_credits
 }
 
 PARTIAL_PACK {
