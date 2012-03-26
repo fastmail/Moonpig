@@ -376,7 +376,7 @@ sub abandon_invoice {
 sub amount_earmarked {
   my ($self) = @_;
   my @invoices = grep { $_->is_paid } $self->invoices;
-  my @charges  = grep { ! $_->is_executed }
+  my @charges  = grep { ! $_->is_executed && ! $_->is_abandoned }
                  map  { $_->all_charges } @invoices;
 
   return sumof { $_->amount } @charges;
@@ -384,7 +384,7 @@ sub amount_earmarked {
 
 sub amount_available {
   my ($self) = @_;
-  my $total = sumof { $_->unapplied_amount } $self->credits;
+  my $total = $self->amount_unapplied;
   my $earmarked_amount = $self->amount_earmarked;
 
   return max(0, $total - $earmarked_amount);
@@ -393,11 +393,17 @@ sub amount_available {
 sub amount_due {
   my ($self) = @_;
 
-  my $due   = sumof { $_->total_amount } $self->payable_invoices;
+  my $due   = (sumof { $_->total_amount } $self->payable_invoices)
+            + $self->amount_overearmarked;
   my $avail = $self->amount_available;
 
   return 0 if $avail >= $due;
   return abs($due - $avail);
+}
+
+sub amount_unapplied {
+  my ($self) = @_;
+  return sumof { $_->unapplied_amount } $self->credits;
 }
 
 sub process_credits {
@@ -477,6 +483,14 @@ sub _reheartbeat {
   }
 
   $self->perform_dunning;
+}
+
+sub amount_overearmarked {
+  my ($self) = @_;
+  my $earmarked = $self->amount_earmarked;
+  my $unapplied = $self->amount_unapplied;
+  return 0 if $unapplied >= $earmarked;
+  return $earmarked - $unapplied;
 }
 
 sub _send_mkit {

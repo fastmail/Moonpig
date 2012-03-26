@@ -25,6 +25,7 @@
         "type": "//rec",
         "required": {
           "subject"     : "//str",
+          "ledger"      : "/perl/obj",
           "invoices"    : { "type": "//arr", "contents": "/perl/obj" },
           "to_addresses": { "type": "//arr", "contents": "//str" }
         }

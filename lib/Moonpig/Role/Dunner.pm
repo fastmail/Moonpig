@@ -12,25 +12,25 @@ use namespace::autoclean;
 
 has _last_dunning => (
   is  => 'rw',
-  isa => 'ArrayRef',
+  isa => 'HashRef',
   init_arg => undef,
-  traits => [ 'Array' ],
+  traits => [ 'Hash' ],
   predicate => 'has_ever_dunned',
   handles   => {
-    last_dunning_time    => [ get => 1 ],
+    last_dunning_time    => [ get => 'time' ],
   },
 );
 
 sub last_dunned_invoices {
   my ($self) = @_;
   return unless $self->has_ever_dunned;
-  return @{ $self->_last_dunning->[0] };
+  return @{ $self->_last_dunning->{invoices} };
 }
 
 sub last_dunned_invoice {
   my ($self) = @_;
   return unless $self->has_ever_dunned;
-  return $self->_last_dunning->[0][0];
+  return $self->_last_dunning->{invoices}->[0];
 }
 
 has dunning_frequency => (
@@ -38,6 +38,36 @@ has dunning_frequency => (
   isa => TimeInterval,
   default => days(3),
 );
+
+sub _should_dunn_again {
+  my ($self, $invoices) = @_;
+
+  my $overearmarked = $self->amount_overearmarked;
+
+  # If there's nothing to pay, why would we dunn?? -- rjbs, 2012-03-26
+  return unless @$invoices or $overearmarked;
+
+  # If we never dunned before, let's! -- rjbs, 2012-03-26
+  return 1 unless $self->has_ever_dunned;
+
+  # Now things get more complicated.  We dunned once.  Do we want to dunn
+  # again?  Only if (a) it's been a while or (b) the situation has changed.
+  # -- rjbs, 2012-03-26
+  my $since = Moonpig->env->now - $self->last_dunning_time;
+
+  # (a) it's been a while!
+  return 1 if $since > $self->dunning_frequency;
+
+  # (b) something changed!
+  return 1 if $self->_last_dunning->{overearmarked} != $overearmarked;
+
+  my @last_invoices = $self->last_dunned_invoices;
+  return 1 unless @$invoices &&  @last_invoices == @$invoices;
+  return 1 if $invoices->[0]->guid ne $last_invoices[0]->guid;
+
+  # Nope, nothing new.
+  return;
+}
 
 sub perform_dunning {
   my ($self) = @_;
@@ -50,15 +80,7 @@ sub perform_dunning {
     grep { ! $_->is_abandoned && $_->is_unpaid && $_->has_charges }
     $self->invoices;
 
-  return unless @invoices;
-
-  # Don't send a request for payment if we sent the last request recently and
-  # there has been no invoicing since then. -- rjbs, 2011-06-22
-  if ($self->has_ever_dunned) {
-    my $now = Moonpig->env->now;
-    return if $self->last_dunned_invoice->guid eq $invoices[0]->guid
-          and $now - $self->last_dunning_time <= $self->dunning_frequency;
-  }
+  return unless $self->_should_dunn_again(\@invoices);
 
   $_->mark_closed for grep { $_->is_open } @invoices;
 
@@ -110,7 +132,11 @@ sub _send_invoice_email {
     $self->ident,
   ]);
 
-  $self->_last_dunning( [ $invoices, Moonpig->env->now ] );
+  $self->_last_dunning({
+    time     => Moonpig->env->now,
+    invoices => $invoices,
+    overearmarked => $self->amount_overearmarked,
+  });
 
   $self->handle_event(event('send-mkit', {
     kit => 'invoice',
@@ -121,6 +147,7 @@ sub _send_invoice_email {
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
       invoices     => $invoices,
+      ledger       => $self,
     },
   }));
 }

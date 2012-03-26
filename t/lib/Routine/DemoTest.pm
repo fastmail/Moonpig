@@ -4,7 +4,7 @@ use Test::More;
 
 use t::lib::TestEnv;
 
-with('Moonpig::Test::Role::UsesStorage');
+with('Moonpig::Test::Role::LedgerTester');
 
 use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
@@ -49,36 +49,17 @@ sub active_consumer {
   $self->ledger->active_consumer_for_xid( $self->xid );
 }
 
-sub pay_any_open_invoice {
-  my ($self) = @_;
+around pay_payable_invoices => sub {
+  my ($orig, $self, $ledger, @rest) = @_;
 
-  Moonpig->env->storage->do_with_ledger($self->ledger_guid, sub {
-    my ($ledger) = @_;
+  return unless $self->invoices_to_pay;
+  return $self->$orig($ledger, @rest);
+};
 
-    if ($self->invoices_to_pay and $self->ledger->payable_invoices) {
-      # There are unpaid invoices!
-      my @invoices = $ledger->last_dunned_invoices;
-
-      # 4. pay and apply payment to invoice
-
-      my $total = sum map { $_->total_amount } @invoices;
-
-      $ledger->add_credit(
-        class(qw(Credit::Simulated)),
-        { amount => $total },
-      );
-
-      $ledger->process_credits;
-
-      $self->dec_invoices_to_pay for @invoices;
-      $Logger->log([
-        'DemoTestRoutine just paid %s invoice(s) totalling $%0.2f',
-        0+@invoices,
-        to_dollars($total),
-      ]);
-    }
-  });
-}
+after pay_invoices => sub {
+  my ($self, $invoices) = @_;
+  $self->dec_invoices_to_pay for @$invoices;
+};
 
 sub log_current_balance {
   my ($self) = @_;
@@ -153,7 +134,7 @@ test "end to end demo" => sub {
       # Just a little more noise, to see how things are going.
       $self->log_current_balance if $day % 30 == 0;
 
-      $self->pay_any_open_invoice;
+      $self->pay_payable_invoices($ledger);
 
       Moonpig->env->elapse_time(86400);
     }

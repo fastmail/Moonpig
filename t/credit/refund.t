@@ -9,7 +9,7 @@ use Moonpig::Util qw(class dollars);
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-with('Moonpig::Test::Role::UsesStorage');
+with('Moonpig::Test::Role::LedgerTester');
 
 test pay_and_get_refund => sub {
   my ($self) = @_;

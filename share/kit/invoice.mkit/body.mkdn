@@ -2,9 +2,9 @@ REQUEST ID: ...
 
 TOTAL DUE:  {{
   require List::Util;
-  my $due = $invoices[0]->ledger->amount_due;
+  my $due = $ledger->amount_due;
 
-  sprintf '$%0.2f', ($due) / 100_000;
+  sprintf '$%0.2f', Moonpig::Util::to_dollars($due);
 }}
 
 {{
@@ -19,7 +19,16 @@ TOTAL DUE:  {{
 
     for my $charge ($invoice->all_charges) {
       $OUT .= sprintf "      %s ... %-60s ... \$%0.2f\n",
-        $charge->date, $charge->description, $charge->amount / 100_000;
+        $charge->date,
+        $charge->description,
+        Moonpig::Util::to_dollars($charge->amount);
+    }
+
+    if ($ledger->amount_overearmarked) {
+      $OUT .= sprintf "      %s ... %-60s ... \$%0.2f\n",
+        Moonpig->env->now,
+        'other reversed charges',
+        Moonpig::Util::to_dollars($ledger->amount_overearmarked);
     }
   }
   return '';

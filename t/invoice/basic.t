@@ -8,7 +8,7 @@ use Moonpig::Util qw(class dollars event years);
 
 with(
   't::lib::Factory::EventHandler',
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::Logger;

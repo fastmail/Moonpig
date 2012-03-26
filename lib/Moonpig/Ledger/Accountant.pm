@@ -8,7 +8,7 @@ use Moonpig::Ledger::Accountant::TransferSet;
 use Moonpig::Ledger::Accountant::Transfer;
 use MooseX::StrictConstructor;
 use Scalar::Util qw(blessed);
-use Moonpig::Util qw(sum_pair_values);
+use Moonpig::Util qw(pair_rights sum);
 
 use namespace::autoclean;
 
@@ -260,7 +260,7 @@ sub __compute_effective_transferrer_pairs {
     Moonpig::X->throw("drawn below zero") if $funds_from{ $guid } < 0;
 
     Moonpig::X->throw("funded above maximum")
-      if defined $cap and sum_pair_values(%funds_from) > $cap;
+      if defined $cap and sum pair_rights(%funds_from) > $cap;
   }
 
   return(
