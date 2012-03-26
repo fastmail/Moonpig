@@ -1,6 +1,7 @@
 use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
+use Test::Fatal;
 
 use t::lib::TestEnv;
 
@@ -29,6 +30,14 @@ test 'basic' => sub {
       ok($q, "made quote");
       ok(  $q->is_quote, "it is a quote");
       ok(! $q->is_invoice, "it is a regular invoice");
+
+      $q->mark_promoted;
+      ok(! $q->is_quote, "it is no longer a quote");
+      ok(  $q->is_invoice, "it is now a regular invoice");
+
+      like(exception { $q->mark_promoted },
+           qr/cannot change value/,
+           "second promotion failed");
   });
 };
 

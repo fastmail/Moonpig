@@ -14,11 +14,16 @@ with(
 
 # XXX better name here
 has promoted_at => (
-  is   => 'ro',
+  is   => 'rw',
   isa  => Time,
   traits => [ qw(SetOnce) ],
   predicate => 'is_promoted',
 );
+
+sub mark_promoted {
+  my ($self) = @_;
+  $self->promoted_at(Moonpig->env->now);
+}
 
 has quote_expiration_time => (
   is => 'rw',
