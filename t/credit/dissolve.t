@@ -4,10 +4,10 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class dollars event years);
+use Moonpig::Util qw(class dollars event sumof to_dollars years);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
   't::lib::Routine::XferChain',
 );
 

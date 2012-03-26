@@ -15,7 +15,7 @@ use t::lib::Logger;
 use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 test "charge" => sub {

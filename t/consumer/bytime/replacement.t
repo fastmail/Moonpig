@@ -18,7 +18,7 @@ use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 use t::lib::TestEnv;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 before run_test => sub {
