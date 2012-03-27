@@ -15,9 +15,9 @@ with(
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-#before run_test => sub {
-#  Moonpig->env->email_sender->clear_deliveries;
-#};
+before run_test => sub {
+  Moonpig->env->email_sender->clear_deliveries;
+};
 
 test 'basic' => sub {
   my ($self) = @_;
@@ -67,6 +67,21 @@ test promote_and_pay => sub {
       ok($q->first_consumer->is_active, "chain was activated");
 
       $self->heartbeat_and_send_mail($ledger);
+      my @deliveries = Moonpig->env->email_sender->deliveries;
+      is(@deliveries, 1, "we sent the invoice to the customer");
+      my $email = $deliveries[0]->{email};
+      like(
+        $email->header('subject'),
+        qr{payment is due}i,
+        "the email we went is an invoice email",
+       );
+
+      {
+        my ($part) = grep { $_->content_type =~ m{text/plain} } $email->subparts;
+        my $text = $part->body_str;
+        my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
+        is($due, '$600.00', "it shows the right total due");
+      }
     });
 };
 
