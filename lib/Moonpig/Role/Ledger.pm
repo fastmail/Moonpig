@@ -309,12 +309,24 @@ for my $thing (qw(journal invoice)) {
     },
   );
 
+  my $_has_current_thing = sub {
+    my ($self) = @_;
+    my $things = $self->$reader;
+    @$things and $things->[-1]->is_open;
+  };
+
+  my $has_current_thing = "has_current_$thing";
+  Sub::Install::install_sub({
+    as   => $has_current_thing,
+    code => $_has_current_thing,
+  });
+
   my $_ensure_one_thing = sub {
     my ($self, $class) = @_;
 
     $class ||= $default_class;
     my $things = $self->$reader;
-    return if @$things and $things->[-1]->is_open;
+    return if $self->$has_current_thing;
 
     Class::MOP::load_class($class);
 
