@@ -277,18 +277,44 @@ sub add_consumer_from_template {
   );
 }
 
-sub add_consumer_chain {
+# normally used only as part of ->generate_quote
+sub _add_consumer_chain {
   my ($self, $class, $arg, $chain_length) = @_;
   my $consumer = $self->add_consumer($class, $arg);
   $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
   return ($consumer, $consumer->replacement_chain);
 }
 
-sub add_consumer_chain_from_template {
+# normally used only as part of ->generate_quote
+sub _add_consumer_chain_from_template {
   my ($self, $template, $arg, $chain_length) = @_;
   my $consumer = $self->add_consumer_from_template($template, $arg);
   $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
   return ($consumer, $consumer->replacement_chain);
+}
+
+sub generate_quote_for {
+  my ($self, $class, $arg, $chain_length) = @_;
+  $self->start_quote;
+  my @chain = $self->_add_consumer_chain($class, $arg, $chain_length);
+  my $quote = $self->end_quote;
+  return wantarray() ? ($quote, @chain) : $quote;
+}
+
+sub start_quote {
+  my ($self) = @_;
+  if ($self->has_current_invoice) {
+    my $invoice = $self->current_invoice;
+    $invoice->mark_closed; # XXX someone should garbage-collect chargeless invoices
+  }
+  return $self->current_invoice(class("Invoice::Quote"));
+}
+
+sub end_quote {
+  my ($self) = @_;
+  my $quote = $self->current_invoice; # XXX someone should garbage-collect chargeless quotes
+  $quote->mark_closed;
+  return $quote;
 }
 
 for my $thing (qw(journal invoice)) {

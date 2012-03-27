@@ -58,12 +58,12 @@ test 'inactive chain' => sub {
       my ($ledger) = @_;
       for my $generator (
         sub {
-          $ledger->add_consumer_chain_from_template(
+          $ledger->_add_consumer_chain_from_template(
             "quick",
             { xid => "consumer:test:a" },
             days(10)) },
         sub {
-          $ledger->add_consumer_chain(
+          $ledger->_add_consumer_chain(
             class('Consumer::ByTime::FixedAmountCharge'),
             { xid => "consumer:test:a",
               replacement_plan => [ get => '/consumer-template/quick' ],
@@ -83,15 +83,49 @@ test 'inactive chain' => sub {
     });
 };
 
+sub make_and_check_quote {
+  my ($self, $ledger) = @_;
+  my ($q, @chain) = $ledger->generate_quote_for(
+    class('Consumer::ByTime::FixedAmountCharge'),
+    { xid => "consumer:test:a",
+      replacement_plan => [ get => '/consumer-template/quick' ],
+      charge_amount => dollars(200),
+      charge_description => 'dummy',
+      cost_period => days(7),
+    },
+    days(15),  # 7 + 2 + 2 + 2 + 2 = 15
+   );
+  ok ($q->is_quote, "returned a quote");
+  ok ($q->is_closed, "quote is closed");
+  my @charges = $q->all_charges;
+  is (@charges, 5, "five charges");
+  is ($q->total_amount, dollars(600), "six hundred dollars");
+  is (@chain, 5, "chain has five consumers");
+  return $q;
+}
+
 test 'invoice handling' => sub {
   my ($self) = @_;
   do_with_fresh_ledger({},
     sub {
-      # push extraneous charges on invoice
-      # make sure they are not on the quote afterward
+      my ($ledger) = @_;
+      $self->make_and_check_quote($ledger);
+    });
+  do_with_fresh_ledger({ xx => { template => "quick", xid => "consumer:test:c" }},
+    sub {
+      my ($ledger) = @_;
+      die unless $ledger->has_current_invoice and $ledger->current_invoice->has_charges;
 
-      # The quote should not appear as a payable invoice
-      pass("TODO");
+      # make sure extraneous charges are not on the quote afterward
+      my $q1 = $self->make_and_check_quote($ledger);
+      my $q2 = $self->make_and_check_quote($ledger);
+      ok($q1->guid ne $q2->guid, "two quotes have different guids");
+
+      my $invoice = $ledger->current_invoice;
+      ok(! $invoice->is_quote, "new current invoice is not a quote");
+      ok(! $invoice->has_charges, "new current invoice is empty");
+
+      $self->make_and_check_quote($ledger);
   });
 };
 
