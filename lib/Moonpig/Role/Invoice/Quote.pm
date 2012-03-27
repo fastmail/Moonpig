@@ -44,5 +44,18 @@ before _pay_charges => sub {
     unless $self->is_promoted;
 };
 
+sub first_consumer {
+  my ($self) = @_;
+  my @consumers = map $_->owner, $self->all_charges;
+  my %consumers = map { $_->guid => $_ } @consumers;
+  for my $consumer (@consumers) {
+    $consumer->has_replacement && delete $consumers{$consumer->replacement->guid};
+  }
+  confess sprintf "Can't figure out the first consumer of quote %s", $self->guid
+    unless keys %consumers == 1;
+  my ($c) = values(%consumers);
+  return $c
+}
+
 1;
 

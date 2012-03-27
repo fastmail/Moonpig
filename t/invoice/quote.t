@@ -90,7 +90,7 @@ sub make_and_check_quote {
     { xid => "consumer:test:a",
       replacement_plan => [ get => '/consumer-template/quick' ],
       charge_amount => dollars(200),
-      charge_description => 'dummy',
+      charge_description => 'mashed potatoes',
       cost_period => days(7),
     },
     days(15),  # 7 + 2 + 2 + 2 + 2 = 15
@@ -101,6 +101,17 @@ sub make_and_check_quote {
   is (@charges, 5, "five charges");
   is ($q->total_amount, dollars(600), "six hundred dollars");
   is (@chain, 5, "chain has five consumers");
+
+  my $fc = $q->first_consumer;
+  is($fc->charge_description, "mashed potatoes", "->first_consumer returns the first consumer");
+  {
+    ok($fc->guid eq $chain[0]->guid, "first chain value OK");
+    my $i = 0;
+    while ($fc->has_replacement) {
+      $fc = $fc->replacement;
+      ok($fc->guid eq $chain[++$i]->guid, "chain value OK");
+    }
+  }
   return $q;
 }
 
