@@ -277,6 +277,20 @@ sub add_consumer_from_template {
   );
 }
 
+sub add_consumer_chain {
+  my ($self, $class, $arg, $chain_length) = @_;
+  my $consumer = $self->add_consumer($class, $arg);
+  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
+  return ($consumer, $consumer->replacement_chain);
+}
+
+sub add_consumer_chain_from_template {
+  my ($self, $template, $arg, $chain_length) = @_;
+  my $consumer = $self->add_consumer_from_template($template, $arg);
+  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
+  return ($consumer, $consumer->replacement_chain);
+}
+
 for my $thing (qw(journal invoice)) {
   my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
   my $class  = class(ucfirst $thing);

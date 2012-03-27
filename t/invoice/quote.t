@@ -5,7 +5,7 @@ use Test::Fatal;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class days dollars);
 
 with(
   't::lib::Factory::EventHandler',
@@ -47,7 +47,40 @@ test 'basic' => sub {
       like(exception { $q->mark_promoted },
            qr/cannot change value/,
            "second promotion failed");
+
   });
+};
+
+test 'inactive chain' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger({},
+    sub {
+      my ($ledger) = @_;
+      for my $generator (
+        sub {
+          $ledger->add_consumer_chain_from_template(
+            "quick",
+            { xid => "consumer:test:a" },
+            days(10)) },
+        sub {
+          $ledger->add_consumer_chain(
+            class('Consumer::ByTime::FixedAmountCharge'),
+            { xid => "consumer:test:a",
+              replacement_plan => [ get => '/consumer-template/quick' ],
+              charge_amount => dollars(100),
+              charge_description => 'dummy',
+              cost_period => days(7),
+            },
+            days(15)); # 7 + 2 + 2 + 2 + 2 = 15
+        }) {
+        my @chain = $generator->();
+        is(@chain, 5, "5-consumer chain from template");
+        { my $OK = 1;
+          for (@chain) { $OK &&= ! $_->is_active }
+          ok($OK, "all chain members are inactive");
+        }
+      }
+    });
 };
 
 test 'invoice handling' => sub {
