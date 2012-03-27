@@ -292,11 +292,11 @@ sub add_consumer_chain_from_template {
 }
 
 for my $thing (qw(journal invoice)) {
-  my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
-  my $class  = class(ucfirst $thing);
-  my $things = "${thing}s";
-  my $reader = "_$things";
-  my $push   = "_push_$thing";
+  my $role          = sprintf "Moonpig::Role::%s", ucfirst $thing;
+  my $default_class = class(ucfirst $thing);
+  my $things        = "${thing}s";
+  my $reader        = "_$things";
+  my $push          = "_push_$thing";
 
   has $things => (
     reader  => $reader,
@@ -310,8 +310,9 @@ for my $thing (qw(journal invoice)) {
   );
 
   my $_ensure_one_thing = sub {
-    my ($self) = @_;
+    my ($self, $class) = @_;
 
+    $class ||= $default_class;
     my $things = $self->$reader;
     return if @$things and $things->[-1]->is_open;
 
@@ -328,8 +329,8 @@ for my $thing (qw(journal invoice)) {
   Sub::Install::install_sub({
     as   => "current_$thing",
     code => sub {
-      my ($self) = @_;
-      $self->$_ensure_one_thing;
+      my ($self, $class) = @_;
+      $self->$_ensure_one_thing($class);
       $self->$reader->[-1];
     }
   });
