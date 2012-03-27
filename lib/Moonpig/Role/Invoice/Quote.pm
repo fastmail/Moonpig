@@ -57,5 +57,11 @@ sub first_consumer {
   return $c
 }
 
+sub execute {
+  my ($self) = @_;
+  $self->mark_promoted;
+  $self->first_consumer->become_active;
+}
+
 1;
 

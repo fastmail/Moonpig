@@ -51,6 +51,25 @@ test 'basic' => sub {
   });
 };
 
+test promote_and_pay => sub {
+  # put a charge on a quote, close and promote it,
+  # pay it.
+  my ($self) = @_;
+  do_with_fresh_ledger({},
+    sub {
+      my ($ledger) = @_;
+      my $q = $self->make_and_check_quote($ledger);
+      $q->execute;
+      ok($q->is_promoted, "q was promoted");
+      ok($q->is_payable, "q is payable");
+      ok(! $q->is_quote, "q is no longer a quote");
+      ok(  $q->is_invoice, "q is now an invoice");
+      ok($q->first_consumer->is_active, "chain was activated");
+
+      $self->heartbeat_and_send_mail($ledger);
+    });
+};
+
 test 'inactive chain' => sub {
   my ($self) = @_;
   do_with_fresh_ledger({},
