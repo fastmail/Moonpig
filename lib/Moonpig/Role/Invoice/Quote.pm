@@ -60,7 +60,10 @@ sub first_consumer {
 sub execute {
   my ($self) = @_;
   $self->mark_promoted;
-  $self->first_consumer->become_active;
+  my $first_consumer = $self->first_consumer;
+  unless ($self->ledger->active_consumer_for_xid( $first_consumer->xid )) {
+    $first_consumer->become_active;
+  }
 }
 
 1;

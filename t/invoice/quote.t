@@ -83,6 +83,25 @@ test promote_and_pay => sub {
         is($due, '$600.00', "it shows the right total due");
       }
     });
+
+  my $xid = "consumer:test:q";
+  # extend existing service
+  do_with_fresh_ledger({ c => { template => "quick", xid => $xid } },
+    sub {
+      my ($ledger) = @_;
+      my $q = $ledger->quote_for_extended_service($ledger->get_component("c"),
+                                                  days(8));
+      is($q->total_amount, dollars(400), "quote amount for extended service");
+      ok(! $q->first_consumer->is_active, "new consumer not yet active");
+      { my $i = 0;
+        my $c = $q->first_consumer;
+        ++$i, $c = $c->replacement while $c;
+        is($i, 4, "chain extension is 4 consumers long");
+      }
+      $q->execute;
+      ok(  $q->is_invoice, "q is now an invoice");
+      ok(! $q->first_consumer->is_active, "but new consumer still not yet active");
+    });
 };
 
 test 'inactive chain' => sub {
