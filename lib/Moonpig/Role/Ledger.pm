@@ -277,7 +277,10 @@ sub add_consumer_from_template {
   );
 }
 
-# normally used only as part of ->generate_quote
+### XXX too much duplicated logic in these next few methods.  Clean up.
+### 2012-03-27 mjd
+
+# normally used only as part of ->quote_for_.*_service
 sub _add_consumer_chain {
   my ($self, $class, $arg, $chain_length) = @_;
   my $consumer = $self->add_consumer($class, $arg);
@@ -285,7 +288,7 @@ sub _add_consumer_chain {
   return ($consumer, $consumer->replacement_chain);
 }
 
-# normally used only as part of ->generate_quote
+# normally used only as part of ->quote_for_.*_service
 sub _add_consumer_chain_from_template {
   my ($self, $template, $arg, $chain_length) = @_;
   my $consumer = $self->add_consumer_from_template($template, $arg);
@@ -293,10 +296,18 @@ sub _add_consumer_chain_from_template {
   return ($consumer, $consumer->replacement_chain);
 }
 
-sub generate_quote_for {
+sub quote_for_new_service {
   my ($self, $class, $arg, $chain_length) = @_;
   $self->start_quote;
   my @chain = $self->_add_consumer_chain($class, $arg, $chain_length);
+  my $quote = $self->end_quote;
+  return wantarray() ? ($quote, @chain) : $quote;
+}
+
+sub quote_for_extended_service {
+  my ($self, $consumer, $chain_length) = @_;
+  $self->start_quote;
+  my @chain = $consumer->_adjust_replacement_chain($chain_length);
   my $quote = $self->end_quote;
   return wantarray() ? ($quote, @chain) : $quote;
 }

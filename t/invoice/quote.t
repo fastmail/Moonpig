@@ -119,7 +119,7 @@ test 'inactive chain' => sub {
 
 sub make_and_check_quote {
   my ($self, $ledger) = @_;
-  my ($q, @chain) = $ledger->generate_quote_for(
+  my ($q, @chain) = $ledger->quote_for_new_service(
     class('Consumer::ByTime::FixedAmountCharge'),
     { xid => "consumer:test:a",
       replacement_plan => [ get => '/consumer-template/quick' ],
