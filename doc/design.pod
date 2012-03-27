@@ -152,6 +152,25 @@ its coupon how much money it wants and the coupon will create and return a
 credit.  That credit's value to fund the consumer is used before any other
 funds.
 
+=head3 Quotes
+
+A quote is like an invoice, but it is expected to be associated with
+an inactive consumer instead of an active consumer, and it is not
+dunned.  It can be "executed", which converts it into a regular
+invoice (which *is* dunned) and also activates its associated
+consumer.
+
+It is used when the user asks how much it would cost to buy a certain
+amount of new service (or a certain extension of the old service) and
+we want to show them the amount.  To calculate the amount, it's
+necessary to actually build the consumers, because only the consumers
+know how much they should bill.  So we create them and let them put
+their charges onto a quote instead of onto a real invoice.
+
+We can show the quote to the user, and later, if the user decides to
+accept the service offered, we can execute the quote, which turns it
+into a payable invoice.
+
 =head2 Payment cycle
 
 Suppose a user requests a service.  The following sequence of events
