@@ -61,7 +61,12 @@ sub execute {
   my ($self) = @_;
   $self->mark_promoted;
   my $first_consumer = $self->first_consumer;
-  unless ($self->ledger->active_consumer_for_xid( $first_consumer->xid )) {
+  my $active_consumer =
+    $self->ledger->active_consumer_for_xid( $first_consumer->xid );
+
+  if ($active_consumer) {
+    $active_consumer->replacement($first_consumer);
+  } else {
     $first_consumer->become_active;
   }
 }

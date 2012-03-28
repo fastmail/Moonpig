@@ -305,11 +305,15 @@ sub quote_for_new_service {
 }
 
 sub quote_for_extended_service {
-  my ($self, $consumer, $chain_length) = @_;
+  my ($self, $xid, $chain_length) = @_;
+  my $active_consumer = $self->active_consumer_for_xid($xid)
+    or confess "No active service for '$xid' to extend";
   $self->start_quote;
-  my @chain = $consumer->_adjust_replacement_chain($chain_length);
+  my $chain_head = $active_consumer->build_replacement();
+  $chain_length -= $chain_head->estimated_lifetime;
+  my @chain = $chain_head->_adjust_replacement_chain($chain_length);
   my $quote = $self->end_quote;
-  return wantarray() ? ($quote, @chain) : $quote;
+  return wantarray() ? ($quote, $chain_head, @chain) : $quote;
 }
 
 sub start_quote {

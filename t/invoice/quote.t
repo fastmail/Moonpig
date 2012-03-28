@@ -89,8 +89,7 @@ test promote_and_pay => sub {
   do_with_fresh_ledger({ c => { template => "quick", xid => $xid } },
     sub {
       my ($ledger) = @_;
-      my $q = $ledger->quote_for_extended_service($ledger->get_component("c"),
-                                                  days(8));
+      my $q = $ledger->quote_for_extended_service($xid, days(8));
       is($q->total_amount, dollars(400), "quote amount for extended service");
       ok(! $q->first_consumer->is_active, "new consumer not yet active");
       { my $i = 0;
@@ -101,6 +100,9 @@ test promote_and_pay => sub {
       $q->execute;
       ok(  $q->is_invoice, "q is now an invoice");
       ok(! $q->first_consumer->is_active, "but new consumer still not yet active");
+      is($ledger->get_component("c")->replacement,
+	 $q->first_consumer,
+	 "when active service fails over, it fails over to new extension");
     });
 };
 
