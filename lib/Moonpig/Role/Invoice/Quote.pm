@@ -35,7 +35,9 @@ has quote_expiration_time => (
 );
 
 sub quote_has_expired {
-  Moonpig->env->now->precedes($_[0]->quote_expiration_time);
+  my ($self) = @_;
+  $self->has_quote_expiration_time &&
+    Moonpig->env->now->precedes($self->quote_expiration_time);
 }
 
 before _pay_charges => sub {
@@ -59,6 +61,10 @@ sub first_consumer {
 
 sub execute {
   my ($self) = @_;
+  if ($self->quote_has_expired) {
+    confess sprintf "Can't execute quote '%s'; it expired at %s\n",
+      $self->guid, $self->quote_expiration_time->iso;
+  }
   $self->mark_promoted;
   my $first_consumer = $self->first_consumer;
   my $active_consumer =
