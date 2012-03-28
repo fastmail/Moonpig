@@ -11,6 +11,7 @@ Email::MIME::Kit::KitReader::SWAK
 Email::MIME::Kit::Renderer::Text::Template
 Email::MIME::Kit::Validator::Rx
 Email::Sender::Transport::Test
+Email::Valid
 File::ShareDir
 Global::Context
 HTML::Mason::Request
@@ -37,7 +38,7 @@ Role::Identifiable::HasIdent
 Role::Subsystem
 String::Formatter
 Sub::Exporter
-Test::File::Sharedir
+Test::File::ShareDir
 Test::Routine
 Test::Routine::Util
 Text::Markdown
