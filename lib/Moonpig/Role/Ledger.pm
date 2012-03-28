@@ -277,12 +277,67 @@ sub add_consumer_from_template {
   );
 }
 
+### XXX too much duplicated logic in these next few methods.  Clean up.
+### 2012-03-27 mjd
+
+# normally used only as part of ->quote_for_.*_service
+sub _add_consumer_chain {
+  my ($self, $class, $arg, $chain_length) = @_;
+  my $consumer = $self->add_consumer($class, $arg);
+  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
+  return ($consumer, $consumer->replacement_chain);
+}
+
+# normally used only as part of ->quote_for_.*_service
+sub _add_consumer_chain_from_template {
+  my ($self, $template, $arg, $chain_length) = @_;
+  my $consumer = $self->add_consumer_from_template($template, $arg);
+  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
+  return ($consumer, $consumer->replacement_chain);
+}
+
+sub quote_for_new_service {
+  my ($self, $class, $arg, $chain_length) = @_;
+  $self->start_quote;
+  my @chain = $self->_add_consumer_chain($class, $arg, $chain_length);
+  my $quote = $self->end_quote;
+  return wantarray() ? ($quote, @chain) : $quote;
+}
+
+sub quote_for_extended_service {
+  my ($self, $xid, $chain_length) = @_;
+  my $active_consumer = $self->active_consumer_for_xid($xid)
+    or confess "No active service for '$xid' to extend";
+  $self->start_quote;
+  my $chain_head = $active_consumer->build_replacement();
+  $chain_length -= $chain_head->estimated_lifetime;
+  my @chain = $chain_head->_adjust_replacement_chain($chain_length);
+  my $quote = $self->end_quote;
+  return wantarray() ? ($quote, $chain_head, @chain) : $quote;
+}
+
+sub start_quote {
+  my ($self) = @_;
+  if ($self->has_current_invoice) {
+    my $invoice = $self->current_invoice;
+    $invoice->mark_closed; # XXX someone should garbage-collect chargeless invoices
+  }
+  return $self->current_invoice(class("Invoice::Quote"));
+}
+
+sub end_quote {
+  my ($self) = @_;
+  my $quote = $self->current_invoice; # XXX someone should garbage-collect chargeless quotes
+  $quote->mark_closed;
+  return $quote;
+}
+
 for my $thing (qw(journal invoice)) {
-  my $role   = sprintf "Moonpig::Role::%s", ucfirst $thing;
-  my $class  = class(ucfirst $thing);
-  my $things = "${thing}s";
-  my $reader = "_$things";
-  my $push   = "_push_$thing";
+  my $role          = sprintf "Moonpig::Role::%s", ucfirst $thing;
+  my $default_class = class(ucfirst $thing);
+  my $things        = "${thing}s";
+  my $reader        = "_$things";
+  my $push          = "_push_$thing";
 
   has $things => (
     reader  => $reader,
@@ -295,11 +350,24 @@ for my $thing (qw(journal invoice)) {
     },
   );
 
-  my $_ensure_one_thing = sub {
+  my $_has_current_thing = sub {
     my ($self) = @_;
-
     my $things = $self->$reader;
-    return if @$things and $things->[-1]->is_open;
+    @$things and $things->[-1]->is_open;
+  };
+
+  my $has_current_thing = "has_current_$thing";
+  Sub::Install::install_sub({
+    as   => $has_current_thing,
+    code => $_has_current_thing,
+  });
+
+  my $_ensure_one_thing = sub {
+    my ($self, $class) = @_;
+
+    $class ||= $default_class;
+    my $things = $self->$reader;
+    return if $self->$has_current_thing;
 
     Class::MOP::load_class($class);
 
@@ -314,8 +382,8 @@ for my $thing (qw(journal invoice)) {
   Sub::Install::install_sub({
     as   => "current_$thing",
     code => sub {
-      my ($self) = @_;
-      $self->$_ensure_one_thing;
+      my ($self, $class) = @_;
+      $self->$_ensure_one_thing($class);
       $self->$reader->[-1];
     }
   });

@@ -117,6 +117,7 @@ sub cancel {
   $self->abandon_without_replacement();
 }
 
+
 implicit_event_handlers {
   return {
     'paid' => {
@@ -186,6 +187,12 @@ sub __execute_charges_for {
 sub ident {
   $_[0]->ledger->_invoice_ident_registry->{ $_[0]->guid } // $_[0]->guid;
 }
+
+sub is_quote {
+  my ($self) = @_;
+  $self->can("quote_expiration_time") && ! $self->is_promoted;
+}
+sub is_invoice { ! $_[0]->is_quote }
 
 PARTIAL_PACK {
   my ($self) = @_;

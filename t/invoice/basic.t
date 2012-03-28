@@ -1,6 +1,7 @@
 use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
+use Test::Fatal;
 
 use t::lib::TestEnv;
 
@@ -373,6 +374,19 @@ test 'payment by two credits' => sub {
   });
 
   pass("everything ran to completion without dying");
+};
+
+test 'quote-related' => sub {
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->current_invoice;
+
+    ok(  $invoice->is_invoice, "current invoice is a regular invoice, not a quote");
+    ok(! $invoice->is_quote, "current invoice is not a quote");
+    like( exception { $invoice->mark_promoted }, qr/^Can't locate object method/,
+          "can't promote invoice");
+  });
 };
 
 run_me;
