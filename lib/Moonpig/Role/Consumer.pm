@@ -196,7 +196,7 @@ has replacement_plan => (
   },
 );
 
-sub build_and_install_replacement {
+sub build_replacement {
   my ($self) = @_;
 
   Moonpig::X->throw("can't build replacement: one exists")
@@ -215,6 +215,12 @@ sub build_and_install_replacement {
     { xid => $self->xid, $self->_replacement_extra_args },
   );
 
+  return $replacement;
+}
+
+sub build_and_install_replacement {
+  my ($self) = @_;
+  my $replacement = $self->build_replacement();
   $self->replacement($replacement);
   return $replacement;
 }
