@@ -43,6 +43,12 @@ sub resource_post {
     # can find their owner object. -- rjbs, 2012-02-29
     $ledger->save;
 
+    # XXX: This should be possible via public means.  We need to bypass the
+    # save queue because MySQL does not have deferred FK resolution, and if we
+    # try to queue a job for a not-yet-saved ledger, it will die immediately
+    # instead of being safely resolved at COMMIT-time. -- rjbs, 2012-04-05
+    Moonpig->env->storage->_store_ledger($ledger);
+
     if ($arg{consumers}) {
       my $consumers = $arg{consumers};
 
@@ -114,8 +120,6 @@ sub resource_post {
     }
 
     $ledger->heartbeat;
-
-    Moonpig->env->save_ledger($ledger);
   });
 
   return $ledger;
