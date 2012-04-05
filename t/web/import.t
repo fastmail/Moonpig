@@ -79,13 +79,8 @@ test "get a ledger guid via web" => sub {
     sub {
       my ($ledger) = @_;
       my @credits = $ledger->credits;
-      is(@credits, 2, "we made two credits by importing");
-      my ($r_credit) = grep { $_->is_refundable } @credits;
-      my ($n_credit) = grep {!$_->is_refundable } @credits;
-
-      ok($r_credit, "one is refundable");
-      ok($n_credit, "one is not refundable");
-      cmp_ok($r_credit->amount, '>', $n_credit->amount, "mostly it's refundable");
+      is(@credits, 1, "we made one credit by importing");
+      ok($credits[0]->is_refundable, "...and it is refundable");
 
       my @consumers = $ledger->active_consumers;
       is(@consumers, 1, "we have one active consumer");
