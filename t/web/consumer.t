@@ -87,7 +87,7 @@ sub setup_account {
 
       $self->elapse(0.5);
 
-      my $invoices = $ua->mp_get("$ledger_path/invoices/unpaid");
+      my $invoices = $ua->mp_get("$ledger_path/invoices/payable")->{items};
 
       cmp_deeply(
         $invoices,

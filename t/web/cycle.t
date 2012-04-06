@@ -101,7 +101,7 @@ sub setup_account {
 
       $self->elapse(1);
 
-      my $invoices = $ua->mp_get("$ledger_path/invoices/unpaid");
+      my $invoices = $ua->mp_get("$ledger_path/invoices/payable")->{items};
 
       cmp_deeply(
         $invoices,
@@ -115,7 +115,7 @@ sub setup_account {
             charges   => ignore(),
           }),
         ],
-        "there is one unpaid invoice -- what we expect",
+        "there is one payable invoice -- what we expect",
       );
 
       my $invoice_guid = $invoices->[0]{guid};

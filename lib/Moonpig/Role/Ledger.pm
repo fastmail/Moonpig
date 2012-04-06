@@ -10,7 +10,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 require Stick::Role::Routable::AutoInstance;
 Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
-Stick::Role::HasCollection->VERSION(0.307);
+Stick::Role::HasCollection->VERSION(0.308); # ppack + subcol
 
 _generate_subcomponent_methods(qw(consumer debit credit coupon));
 
@@ -808,11 +808,7 @@ PARTIAL_PACK {
     credits => ppack($self->credit_collection),
     jobs    => ppack($self->job_collection),
 
-    unpaid_invoices => {
-      items => [
-        map { ppack($_) } grep { $_->is_unpaid && ! $_->is_abandoned } $self->invoices
-      ],
-    },
+    unpaid_invoices => $self->invoice_collection->payable,
 
     active_xids => {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
