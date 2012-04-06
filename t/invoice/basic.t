@@ -405,6 +405,8 @@ test 'quote-related' => sub {
 
       $ledger->perform_dunning;
 
+      is($ledger->amount_due, dollars(100), 'we owe $100 (inv, not quote)');
+
       my @invoices = $ledger->payable_invoices;
       is(@invoices, 1, "we have one payable invoice");
     },
