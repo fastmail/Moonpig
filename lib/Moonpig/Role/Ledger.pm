@@ -48,7 +48,7 @@ with(
     item => 'invoice',
     collection_roles => [ 'Moonpig::Role::Collection::InvoiceExtras',
                           'Stick::Role::Collection::CanFilter',
-			],
+                          ],
     is => 'ro',
   },
   'Stick::Role::HasCollection' => {
@@ -810,6 +810,7 @@ PARTIAL_PACK {
         map { ppack($_) } grep { $_->is_unpaid && ! $_->is_abandoned } $self->invoices
       ],
     },
+
     active_xids => {
       map {; $_ => ppack($self->active_consumer_for_xid($_)) }
         $self->xids_handled

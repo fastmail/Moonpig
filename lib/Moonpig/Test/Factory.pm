@@ -30,7 +30,7 @@ use Sub::Exporter -setup => {
 
 =head2 C<do_with_fresh_ledger>
 
-	do_with_fresh_ledger($args, $code);
+  do_with_fresh_ledger($args, $code);
 
 This builds a new ledger and associated components with C<<
 build(%$args) >> (see below) and tells Moonpig to propagate it into a
@@ -220,9 +220,9 @@ This builds and returns a single ledger.  Arguments are the same as
 for the C<ledger> element of the arguments to the C<build> function,
 described above.  That is, these two calls are in all cases identical:
 
-	build_ledger($args)
+  build_ledger($args)
 
-	build(ledger => $args)
+  build(ledger => $args)
 
 except that the first returns the ledger and the second returns a hash
 with the ledger stored under the key C<ledger>.
@@ -231,8 +231,8 @@ with the ledger stored under the key C<ledger>.
 
 Use this if you need to build the ledger and consumers separately.
 
-        my $ledger = build_ledger();
-	my $stuff = build_consumers($ledger, $args);
+  my $ledger = build_ledger();
+  my $stuff = build_consumers($ledger, $args);
 
 Here C<$args> is an argument hash suitable for passing to C<build>.
 C<build_consumers> works the same way but inserts the consumers into

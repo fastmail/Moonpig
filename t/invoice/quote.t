@@ -25,7 +25,7 @@ test 'basic' => sub {
     sub {
       my ($ledger) = @_;
       my $q = class("Invoice::Quote")->new({
-	 ledger => $ledger,
+        ledger => $ledger,
       });
       ok($q, "made quote");
       ok(  $q->is_quote, "it is a quote");
@@ -101,8 +101,8 @@ test promote_and_pay => sub {
       ok(  $q->is_invoice, "q is now an invoice");
       ok(! $q->first_consumer->is_active, "but new consumer still not yet active");
       is($ledger->get_component("c")->replacement,
-	 $q->first_consumer,
-	 "when active service fails over, it fails over to new extension");
+        $q->first_consumer,
+        "when active service fails over, it fails over to new extension");
     });
 };
 

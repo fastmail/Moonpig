@@ -134,12 +134,13 @@ test "basic_event" => sub {
   $c->register_event_handler('test', 'testhandler', queue_handler("c", \@eq));
   my $e = event('test', { noise => 'thumpa' });
   $c->handle_event($e);
-  { my ($receiver, $event) = @{$eq[0]};
+  {
+    my ($receiver, $event) = @{$eq[0]};
     is($receiver, $c);
     is($event, $e);
     cmp_deeply($event->payload, { noise => 'thumpa',
-				  timestamp => Test::Deep::isa('DateTime'),
-				});
+        timestamp => Test::Deep::isa('DateTime'),
+    });
   }
 };
 
