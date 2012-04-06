@@ -402,6 +402,11 @@ test 'quote-related' => sub {
       my $q = $ledger->quote_for_extended_service($c->xid, years(2));
 
       $self->assert_current_invoice_is_not_quote($ledger);
+
+      $ledger->perform_dunning;
+
+      my @invoices = $ledger->payable_invoices;
+      is(@invoices, 1, "we have one payable invoice");
     },
   );
 };

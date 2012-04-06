@@ -47,7 +47,11 @@ sub is_unpaid {
 }
 
 sub is_payable {
-  return($_[0]->is_closed && $_[0]->is_unpaid && ! $_[0]->is_abandoned);
+  return( $_[0]->is_closed
+    && $_[0]->is_unpaid
+    && ! $_[0]->is_abandoned
+    && $_[0]->is_invoice
+  );
 }
 
 has _abandoned_at => (
