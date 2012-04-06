@@ -23,7 +23,7 @@ use Moonpig::Util qw(class event sumof);
 use Moonpig::X;
 use MooseX::SetOnce;
 
-use Stick::Util qw(ppack);
+use Stick::Util qw(ppack true false);
 
 use namespace::autoclean;
 
@@ -194,7 +194,11 @@ sub ident {
 
 sub is_quote {
   my ($self) = @_;
-  $self->can("quote_expiration_time") && ! $self->is_promoted;
+  return (
+    ($self->can("quote_expiration_time") && ! $self->is_promoted)
+    ? true
+    : false
+  )
 }
 sub is_invoice { ! $_[0]->is_quote }
 
@@ -208,6 +212,7 @@ PARTIAL_PACK {
     closed_at    => $self->closed_at,
     created_at   => $self->date,
     charges      => [ map {; ppack($_) } $self->all_charges ],
+    is_quote     => $self->is_quote,
   });
 };
 
