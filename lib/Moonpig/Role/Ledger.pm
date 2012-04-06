@@ -309,7 +309,10 @@ sub quote_for_extended_service {
   my $active_consumer = $self->active_consumer_for_xid($xid)
     or confess "No active service for '$xid' to extend";
   $self->start_quote;
-  my $chain_head = $active_consumer->build_replacement();
+
+  Moonpig::X->throw("consumer for '$xid' could not build a replacement")
+    unless my $chain_head = $active_consumer->build_replacement();
+
   $chain_length -= $chain_head->estimated_lifetime;
   my @chain = $chain_head->_adjust_replacement_chain($chain_length);
   my $quote = $self->end_quote;
