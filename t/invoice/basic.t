@@ -376,17 +376,34 @@ test 'payment by two credits' => sub {
   pass("everything ran to completion without dying");
 };
 
+sub assert_current_invoice_is_not_quote {
+  my ($self, $ledger) = @_;
+  my $invoice = $ledger->current_invoice;
+
+  ok(  $invoice->is_invoice, "current invoice is an invoice, not a quote");
+  ok(! $invoice->is_quote, "current invoice is not a quote");
+  ok(! $invoice->can('mark_promoted'), "can't promote invoice");
+}
+
 test 'quote-related' => sub {
-  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
-    my ($ledger) = @_;
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      c => { template => 'yearly', make_active => 1 },
+    },
+    sub {
+      my ($ledger) = @_;
 
-    my $invoice = $ledger->current_invoice;
+      $self->assert_current_invoice_is_not_quote($ledger);
 
-    ok(  $invoice->is_invoice, "current invoice is a regular invoice, not a quote");
-    ok(! $invoice->is_quote, "current invoice is not a quote");
-    like( exception { $invoice->mark_promoted }, qr/^Can't locate object method/,
-          "can't promote invoice");
-  });
+      # Make sure that getting a quote doesn't leave a quote in
+      # current_invoices;
+      my $c = $ledger->get_component('c');
+      my $q = $ledger->quote_for_extended_service($c->xid, years(2));
+
+      $self->assert_current_invoice_is_not_quote($ledger);
+    },
+  );
 };
 
 run_me;
