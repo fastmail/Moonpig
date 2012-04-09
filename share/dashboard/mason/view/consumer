@@ -1,11 +1,12 @@
 %# vim:set ft=mason:
 <%args>
-$ledger_guid
+$ledger_id
 $consumer_guid
 </%args>
 <%perl>
+my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 my $consumer = $m->mp_request(
-  GET => "/ledger/by-guid/$ledger_guid/consumers/guid/$consumer_guid");
+  GET => $m->mp_ledger_path($ledger_id) . "/consumers/guid/$consumer_guid");
 $m->redirect('/') unless $consumer;
 my $xid = $consumer->{xid};
 </%perl>
@@ -14,13 +15,13 @@ my $xid = $consumer->{xid};
   <div>Consumer for resource: <% $xid |h %></div>
 
   <form method='post' action='/post/cancel-consumer'>
-    <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
     <input type='submit' value='Cancel Service (do not renew)' />
   </form>
 
   <form method='post' action='/post/terminate-consumer'>
-    <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
     <input type='submit' value='Terminate Service (cancel and deactivate)' />
   </form>

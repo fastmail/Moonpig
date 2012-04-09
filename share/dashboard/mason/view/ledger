@@ -1,8 +1,8 @@
 %# vim:set ft=mason:
 <%args>
-$guid
+$ledger_id
 </%args>
-% my $ledger = $m->mp_request(GET => "/ledger/by-guid/$guid");
+% my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 % $m->redirect('/') unless $ledger;
 <&| /page/full, title => "Moonpig Ledger " . $ledger->{ident} &>
 

@@ -1,13 +1,13 @@
 %# vim:set ft=mason:
 <%args>
-$ledger_guid
+$ledger_id
 </%args>
-% my $ledger = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid");
+% my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 % $m->redirect('/') unless $ledger;
-<&| /page/full, title => "Moonpig Ledger $ledger_guid Contact" &>
+<&| /page/full, title => "Moonpig Ledger $ledger->{ident} Contact" &>
 
 <form action='/post/contact' method='POST'>
-  <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+  <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
 
   First name: <input name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
   <br />

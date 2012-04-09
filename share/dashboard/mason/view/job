@@ -1,17 +1,19 @@
 %# vim:set ft=mason:
 <%args>
-$ledger_guid
+$ledger_id
 $job_id
 </%args>
 <%perl>
-my $job = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/jobs/guid/$job_id");
+my $job = $m->mp_request(GET =>
+  $m->mp_ledger_path($ledger_id) . "/jobs/guid/$job_id");
 $m->redirect('/') unless $job;
-my $logs = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/jobs/guid/$job_id/logs");
+my $logs = $m->mp_request(GET =>
+  $m->mp_ledger_path($ledger_id) . "/jobs/guid/$job_id/logs");
 </%perl>
-<&| /page/full, title => "Job $job_id for Ledger $ledger_guid" &>
+<&| /page/full, title => "Job $job_id for Ledger $job->{ledger_guid}" &>
 % if ($job->{status} eq 'incomplete') {
   <form method='post' action='/post/cancel-job'>
-    <input type='hidden' name='ledger_guid' value='<% $ledger_guid |h %>' />
+    <input type='hidden' name='ledger_guid' value='<% $job->{ledger_guid} |h %>' />
     <input type='hidden' name='job_id' value='<% $job_id |h %>' />
     <input type='submit' value='Cancel Job' />
   </form>

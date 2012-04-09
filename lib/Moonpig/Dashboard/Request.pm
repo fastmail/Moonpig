@@ -33,6 +33,12 @@ sub mp_request {
   $ua->mp_request($method, $path, $arg, $extra_arg);
 }
 
+sub mp_ledger_path {
+  my ($self, $id) = @_;
+  my $type = ($id =~ /:/) ? 'xid' : 'guid';
+  return(sprintf '/ledger/by-%s/%s', $type, $id);
+}
+
 sub dump {
   my ($self, $arg) = @_;
 

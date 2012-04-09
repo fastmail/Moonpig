@@ -1,15 +1,15 @@
 %# vim:set ft=mason:
 <%args>
-$ledger_guid
+$ledger_id
 </%args>
-% my $invoices = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/invoices");
+% my $invoices = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices");
 % $m->redirect('/') unless $invoices;
-<&| /page/full, title => "Moonpig Ledger $ledger_guid, Invoice History" &>
+<&| /page/full, title => "Moonpig Ledger Invoice History" &>
 
 <& /widget/last-response, label => 'HTTP Response for Invoices Collection' &>
 
 % for my $invoice (@{ $invoices->{items} }) {
-%   $invoice = $m->mp_request(GET => "/ledger/by-guid/$ledger_guid/invoices/guid/$invoice->{guid}");
+%   $invoice = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice->{guid}");
   <& /widget/invoice, invoice => $invoice &>
 % }
 
