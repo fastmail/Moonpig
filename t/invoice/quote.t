@@ -195,6 +195,10 @@ test 'invoice handling' => sub {
   });
 };
 
+test 'attachment points' => sub {
+  pass();
+};
+
 
 run_me;
 done_testing;
