@@ -461,7 +461,7 @@ sub amount_available {
   return max(0, $total - $earmarked_amount);
 }
 
-sub amount_due {
+publish amount_due => { } => sub {
   my ($self) = @_;
 
   my $due   = (sumof { $_->total_amount } $self->payable_invoices)
@@ -470,7 +470,7 @@ sub amount_due {
 
   return 0 if $avail >= $due;
   return abs($due - $avail);
-}
+};
 
 sub amount_unapplied {
   my ($self) = @_;
