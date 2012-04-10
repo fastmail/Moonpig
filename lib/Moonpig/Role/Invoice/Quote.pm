@@ -4,6 +4,7 @@ package Moonpig::Role::Invoice::Quote;
 use Carp qw(confess croak);
 use Moonpig;
 use Moonpig::Types qw(GUID Time);
+use Moonpig::Util qw(days);
 use Moose::Role;
 use MooseX::SetOnce;
 use Moose::Util::TypeConstraints qw(union);
@@ -33,12 +34,13 @@ has quote_expiration_time => (
   is => 'rw',
   isa => Time,
   predicate => 'has_quote_expiration_time',
+  default => sub { Moonpig->env->now + days(30) },
 );
 
 sub quote_has_expired {
   my ($self) = @_;
   $self->has_quote_expiration_time &&
-    Moonpig->env->now->precedes($self->quote_expiration_time);
+    Moonpig->env->now->follows($self->quote_expiration_time);
 }
 
 has attachment_point_guid => (
