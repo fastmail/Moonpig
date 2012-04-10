@@ -200,10 +200,71 @@ test 'invoice handling' => sub {
   });
 };
 
-test 'attachment points' => sub {
-  pass();
-};
+test 'attachment points and obsolesence' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger({ c => { template => 'quick', xid => "test:A" } },
+    sub {
+      my ($ledger) = @_;
+      my $cA = $ledger->get_component("c");
+      {
+        my $qA = $ledger->quote_for_extended_service(
+          "test:A",
+          days(3),
+         );
+        my $qA2 = $ledger->quote_for_extended_service(
+          "test:A",
+          days(3),
+         );
 
+        is($qA->attachment_point_guid, $cA->guid, "quote A's attachment point is cA");
+        ok(! $qA->is_obsolete(), "quote A not yet obsolete");
+        ok(! $qA2->is_obsolete(), "quote A2 not yet obsolete");
+        is(exception { $qA->execute }, undef, "executed quote A");
+        my $cA2 = $cA->replacement;
+
+        $cA->expire;
+        ok($cA2->is_active, "cA's replacement is active");
+        ok($qA2->is_obsolete(), "quote A2 is now obsolete");
+        like(exception { $qA2->execute }, qr/obsolete/, "can't execute obsolete quote");
+
+        $cA2->expire;
+        ok($qA2->is_obsolete(), "quote A2 is still obsolete");
+        like(exception { $qA2->execute }, qr/obsolete/, "still can't execute obsolete quote");
+
+        my $qA3 = $ledger->quote_for_extended_service(
+          "test:A",
+          days(3),
+         );
+        ok(! $qA3->is_obsolete(),
+           "quote A3 for resuming service is not obsolete");
+        is(exception { $qA3->execute }, undef, "executed quote A3");
+        isnt($ledger->active_consumer_for_xid("test:A"), undef,
+             "service A reactivated via new quote");
+      }
+
+      {
+        my $qB = $ledger->quote_for_new_service(
+          { template => 'quick' },
+          { xid => "test:B" },
+          days(3),
+         );
+        my $qB2 = $ledger->quote_for_new_service(
+          { template => 'quick' },
+          { xid => "test:B" },
+          days(3),
+         );
+        is($qB->attachment_point_guid, undef, "quote B has no attachment point");
+        is($qB2->attachment_point_guid, undef, "quote B2 has no attachment point");
+        ok(! $qB->is_obsolete(), "quote B not obsolete");
+        ok(! $qB2->is_obsolete(), "quote B2 not obsolete");
+
+        $qB->execute;
+        ok($qB2->is_obsolete(), "quote B2 obsolete after executing quote B");
+        $ledger->active_consumer_for_xid("test:B")->handle_terminate;
+        ok(! $qB2->is_obsolete, "quote B2 no longer obsolete after service terminated");
+      }
+    });
+};
 
 run_me;
 done_testing;
