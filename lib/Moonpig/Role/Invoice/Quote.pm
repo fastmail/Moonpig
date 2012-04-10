@@ -46,9 +46,10 @@ sub quote_has_expired {
 has attachment_point_guid => (
   is => 'rw',
   isa => union([GUID, 'Undef']),
-  predicate => 'has_attachment_point',
   traits => [ qw(SetOnce) ],
 );
+
+sub has_attachment_point { defined $_[0]->attachment_point_guid }
 
 # A quote quotes the price to continue service in a particular way from a particular consumer.
 # If service continues from that consumer in a different way, the quote is obsolete.
