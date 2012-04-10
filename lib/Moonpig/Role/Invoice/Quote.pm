@@ -54,19 +54,27 @@ sub has_attachment_point { defined $_[0]->attachment_point_guid }
 # A quote quotes the price to continue service in a particular way from a particular consumer.
 # If service continues from that consumer in a different way, the quote is obsolete.
 sub is_obsolete {
+  my ($self) = @_;
+  my $xid = $self->first_consumer->xid;
+  my $active = $self->ledger->active_consumer_for_xid($xid);
+  ! $self->can_be_attached_to( $active );
+}
+
+sub can_be_attached_to {
   my ($self, $active_consumer) = @_;
+  @_ == 2 or confess "Missing argument to Quote->can_be_attached_to";
 
   # Even if there was service before, and it has expired, it's still
   # okay to execute this quote to continue service.
-  return () unless $active_consumer;  # Not obsolete
+  return 1 unless $active_consumer;  # Not obsolete
 
   # But if the quote was to start fresh service, and the service
   # started differently, the quote is obsolete.
-  return 1 unless $self->has_attachment_point;
+  return () unless $self->has_attachment_point;
 
   # If there is active service, and the quote is to extend that
   # service, it must be extended from the same point.
-  return $self->attachment_point_guid ne $active_consumer->guid;
+  return $self->attachment_point_guid eq $active_consumer->guid;
 }
 
 before _pay_charges => sub {
@@ -101,7 +109,7 @@ sub execute {
   my $xid = $first_consumer->xid;
   my $active_consumer = $self->active_consumer($xid);
 
-  if ($self->is_obsolete( $active_consumer ) ) {
+  unless ($self->can_be_attached_to( $active_consumer ) ) {
     Moonpig::X->throw("can't execute obsolete quote",
                       quote_guid => $self->guid,
                       xid => $xid,
@@ -137,4 +145,3 @@ sub record_expected_attachment_point {
 }
 
 1;
-
