@@ -113,13 +113,13 @@ test 'inactive chain' => sub {
       my ($ledger) = @_;
       for my $generator (
         sub {
-          $ledger->_add_consumer_chain_from_template(
-            "quick",
+          $ledger->_add_consumer_chain(
+            { template => "quick" },
             { xid => "consumer:test:a" },
             days(10)) },
         sub {
           $ledger->_add_consumer_chain(
-            class('Consumer::ByTime::FixedAmountCharge'),
+            { class => class('Consumer::ByTime::FixedAmountCharge') },
             { xid => "consumer:test:a",
               replacement_plan => [ get => '/consumer-template/quick' ],
               charge_amount => dollars(100),
@@ -141,7 +141,7 @@ test 'inactive chain' => sub {
 sub make_and_check_quote {
   my ($self, $ledger) = @_;
   my ($q, @chain) = $ledger->quote_for_new_service(
-    class('Consumer::ByTime::FixedAmountCharge'),
+    { class => class('Consumer::ByTime::FixedAmountCharge') },
     { xid => "consumer:test:a",
       replacement_plan => [ get => '/consumer-template/quick' ],
       charge_amount => dollars(200),
