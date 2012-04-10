@@ -277,29 +277,27 @@ sub add_consumer_from_template {
   );
 }
 
-### XXX too much duplicated logic in these next few methods.  Clean up.
-### 2012-03-27 mjd
-
 # normally used only as part of ->quote_for_.*_service
+# $kind is either { template => $template_name } or { class => $class_name }
 sub _add_consumer_chain {
-  my ($self, $class, $arg, $chain_length) = @_;
-  my $consumer = $self->add_consumer($class, $arg);
+  my ($self, $kind, $arg, $chain_length) = @_;
+  my $consumer;
+  if (exists $kind->{template}) {
+    $consumer = $self->add_consumer_from_template($kind->{template}, $arg);
+  } elsif (exists $kind->{class}) {
+    $consumer = $self->add_consumer($kind->{class}, $arg);
+  } else {
+    confess "Unexpected 'kind' argument '$kind' to Ledger::_add_consumer_chain";
+  }
   $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
   return ($consumer, $consumer->replacement_chain);
 }
 
-# normally used only as part of ->quote_for_.*_service
-sub _add_consumer_chain_from_template {
-  my ($self, $template, $arg, $chain_length) = @_;
-  my $consumer = $self->add_consumer_from_template($template, $arg);
-  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
-  return ($consumer, $consumer->replacement_chain);
-}
-
+# $kind is either { template => $template_name } or { class => $class_name }
 sub quote_for_new_service {
-  my ($self, $class, $arg, $chain_length) = @_;
+  my ($self, $kind, $arg, $chain_length) = @_;
   $self->start_quote;
-  my @chain = $self->_add_consumer_chain($class, $arg, $chain_length);
+  my @chain = $self->_add_consumer_chain($kind, $arg, $chain_length);
   my $quote = $self->end_quote;
   return wantarray() ? ($quote, @chain) : $quote;
 }
