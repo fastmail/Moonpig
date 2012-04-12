@@ -279,7 +279,7 @@ test cost_estimate => sub {
     sub {
       my ($ledger) = @_;
       my ($c) = $ledger->get_component("c");
-      is($c->estimate_cost_for_interval(days(365)), dollars(100), "cost estimate for 1y");
+      is($c->estimate_cost_for_interval({ interval => days(365) }), dollars(100), "cost estimate for 1y");
     });
 };
 

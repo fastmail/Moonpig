@@ -25,7 +25,7 @@ test "cost_estimate" => sub {
     },
     sub {
       my ($ledger) = @_;
-      is($ledger->estimate_cost_for_interval(days(365)),
+      is($ledger->estimate_cost_for_interval({ interval => days(365) }),
          dollars(100 + 10 + 100/2),
          "estimate for three various consumers");
     },

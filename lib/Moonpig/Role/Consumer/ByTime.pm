@@ -199,12 +199,13 @@ sub calculate_total_charge_amount_on {
   return $total_charge_amount;
 }
 
-sub estimate_cost_for_interval {
-  my ($self, $interval) = @_;
+publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
+  my ($self, $arg) = @_;
+  my $interval = $arg->{interval};
   my @pairs = $self->initial_invoice_charge_pairs;
   my $total = sum pair_rights @pairs;
   return $total * ($interval / $self->cost_period);
-}
+};
 
 sub can_make_payment_on {
   my ($self, $date) = @_;
