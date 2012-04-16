@@ -810,6 +810,7 @@ PARTIAL_PACK {
     credits => ppack($self->credit_collection),
     jobs    => ppack($self->job_collection),
 
+    amount_due => $self->amount_due,
     unpaid_invoices => $self->invoice_collection->payable,
 
     active_xids => {
