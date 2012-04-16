@@ -283,7 +283,7 @@ sub add_consumer_from_template {
 # normally used only as part of ->quote_for_.*_service
 # $kind is either { template => $template_name } or { class => $class_name }
 sub _add_consumer_chain {
-  my ($self, $kind, $arg, $chain_length) = @_;
+  my ($self, $kind, $arg, $chain_duration) = @_;
   my $consumer;
   if (exists $kind->{template}) {
     $consumer = $self->add_consumer_from_template($kind->{template}, $arg);
@@ -292,21 +292,21 @@ sub _add_consumer_chain {
   } else {
     confess "Unexpected 'kind' argument '$kind' to Ledger::_add_consumer_chain";
   }
-  $consumer->_adjust_replacement_chain($chain_length - $consumer->estimated_lifetime);
+  $consumer->_adjust_replacement_chain($chain_duration - $consumer->estimated_lifetime);
   return ($consumer, $consumer->replacement_chain);
 }
 
 # $kind is either { template => $template_name } or { class => $class_name }
 sub quote_for_new_service {
-  my ($self, $kind, $arg, $chain_length) = @_;
+  my ($self, $kind, $arg, $chain_duration) = @_;
   $self->start_quote;
-  my @chain = $self->_add_consumer_chain($kind, $arg, $chain_length);
+  my @chain = $self->_add_consumer_chain($kind, $arg, $chain_duration);
   my $quote = $self->end_quote;
   return wantarray() ? ($quote, @chain) : $quote;
 }
 
 sub quote_for_extended_service {
-  my ($self, $xid, $chain_length) = @_;
+  my ($self, $xid, $chain_duration) = @_;
   my $active_consumer = $self->active_consumer_for_xid($xid)
     or confess "No active service for '$xid' to extend";
   $self->start_quote;
@@ -314,8 +314,8 @@ sub quote_for_extended_service {
   Moonpig::X->throw("consumer for '$xid' could not build a replacement")
     unless my $chain_head = $active_consumer->build_replacement();
 
-  $chain_length -= $chain_head->estimated_lifetime;
-  my @chain = $chain_head->_adjust_replacement_chain($chain_length);
+  $chain_duration -= $chain_head->estimated_lifetime;
+  my @chain = $chain_head->_adjust_replacement_chain($chain_duration);
   my $quote = $self->end_quote;
   return wantarray() ? ($quote, $chain_head, @chain) : $quote;
 }

@@ -121,7 +121,7 @@ test 'signup for one, buy five more, have one' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_length => years(5) });
+             ->adjust_replacement_chain({ chain_duration => years(5) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(500));
@@ -153,7 +153,7 @@ test 'signup for one, buy six, get one free' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_length => years(6) });
+             ->adjust_replacement_chain({ chain_duration => years(6) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(600));
@@ -184,7 +184,7 @@ test 'signup for one, buy eleven, get two free' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_length => years(11) });
+             ->adjust_replacement_chain({ chain_duration => years(11) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(1100));

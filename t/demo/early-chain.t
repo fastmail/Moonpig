@@ -11,7 +11,7 @@ after setup_before_big_loop => sub {
   my ($self, $ledger)= @_;
 
   $self->active_consumer->adjust_replacement_chain({
-    chain_length => years(1)
+    chain_duration => years(1)
   });
 };
 

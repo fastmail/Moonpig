@@ -120,18 +120,18 @@ sub replacement_chain {
 publish adjust_replacement_chain => {
    '-http_method' => 'post',
    '-path'        => 'create-replacements',
-   chain_length   => TimeInterval,
+   chain_duration   => TimeInterval,
 } => sub {
   my ($self, $arg) = @_;
-  my $chain_length = $arg->{chain_length};
-  return [ $self->_adjust_replacement_chain($chain_length)->replacement_chain ];
+  my $chain_duration = $arg->{chain_duration};
+  return [ $self->_adjust_replacement_chain($chain_duration)->replacement_chain ];
 };
 
 sub _adjust_replacement_chain {
-  my ($self, $chain_length, $depth) = @_;
+  my ($self, $chain_duration, $depth) = @_;
   $depth //= 0;
 
-  if ($chain_length <= 0) {
+  if ($chain_duration <= 0) {
     $self->replacement(undef) if $self->has_replacement;
     return;
   }
@@ -141,14 +141,14 @@ sub _adjust_replacement_chain {
     $replacement = $self->build_and_install_replacement()
       # The consumer specifies no replacement, so we can't continue the chain
       or confess(sprintf "replacement chain ended with %d days to go",
-                 $chain_length / 86400);
+                 $chain_duration / 86400);
   }
 
   $replacement = $replacement->_joined_chain_at_depth($depth+1)
     if $replacement->can('_joined_chain_at_depth');
 
   $replacement->_adjust_replacement_chain(
-    $chain_length - $replacement->estimated_lifetime,
+    $chain_duration - $replacement->estimated_lifetime,
     $depth + 1,
   );
 
