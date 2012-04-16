@@ -624,6 +624,16 @@ sub cashout_unapplied_amount {
   return;
 }
 
+publish quote_for_extended_service => {chain_duration => TimeInterval} => sub {
+  my ($self, $arg) = @_;
+  Moonpig::X->throw("consumer not active") unless $self->is_active;
+
+  my $ledger = $self->ledger;
+
+  my $quote = $ledger->quote_for_extended_service($arg->{chain_duration});
+  return $quote;
+};
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,
