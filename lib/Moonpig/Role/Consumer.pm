@@ -624,7 +624,10 @@ sub cashout_unapplied_amount {
   return;
 }
 
-publish quote_for_extended_service => {chain_duration => TimeInterval} => sub {
+publish quote_for_extended_service => {
+  -http_method   => 'post',
+  chain_duration => TimeInterval,
+} => sub {
   my ($self, $arg) = @_;
   Moonpig::X->throw("consumer not active") unless $self->is_active;
 
