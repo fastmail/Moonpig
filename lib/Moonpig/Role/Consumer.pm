@@ -633,7 +633,11 @@ publish quote_for_extended_service => {
 
   my $ledger = $self->ledger;
 
-  my $quote = $ledger->quote_for_extended_service($arg->{chain_duration});
+  my $quote = $ledger->quote_for_extended_service(
+    $self->xid,
+    $arg->{chain_duration}
+  );
+
   return $quote;
 };
 
