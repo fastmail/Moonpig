@@ -171,4 +171,28 @@ sub _send_invoice_email {
   }));
 }
 
+sub _send_psynch_email {
+  my ($self, $consumer, $quote) = @_;
+
+  $Logger->log([
+    "sending psynch quote for %s to contacts of %s",
+    $consumer->xid,
+    $self->ident,
+  ]);
+
+  $self->handle_event(event('send-mkit', {
+    kit => 'psynch',
+    arg => {
+      subject => "PAYMENT IS NOT DUE",
+
+      # This should get names with addresses, unlike the contact-humans
+      # handler, which wants envelope recipients.
+      to_addresses => [ $self->contact->email_addresses ],
+      quote        => $quote,
+      ledger       => $self,
+      consumer     => $consumer,
+    },
+  }));
+}
+
 1;

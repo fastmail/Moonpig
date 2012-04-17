@@ -1,0 +1,18 @@
+REQUEST ID: ...
+
+Charges on your service {{ $consumer->xid }} recently increased.
+Service is now expected to continue until {{
+$consumer->replacement_chain_expiration_date->iso }}.  If you would
+like to restore the original, later expiration date, please pay the
+following amount:
+
+{{
+    for my $charge ($quote->all_charges) {
+      $OUT .= sprintf "      %s ... %-60s ... \$%0.2f\n",
+        $charge->date,
+        $charge->description,
+        Moonpig::Util::to_dollars($charge->amount);
+    }
+    "";
+}}
+
