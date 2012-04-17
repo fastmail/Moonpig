@@ -11,6 +11,7 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::Trait::Copy;
+use POSIX qw(ceil);
 
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
@@ -21,10 +22,22 @@ with(
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
   'Moonpig::Role::Consumer::PredictsExpiration',
+  'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );
 
 requires 'charge_pairs_on';
+
+use Moonpig::Behavior::EventHandlers;
+implicit_event_handlers {
+  return {
+    'heartbeat' => {
+      maybe_psynch => Moonpig::Events::Handler::Method->new(
+        method_name => '_send_psynch_quote',
+       ),
+    }
+  };
+};
 
 use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
@@ -312,6 +325,35 @@ sub _estimated_remaining_funded_lifetime {
   $periods = int($periods) if $args->{ignore_partial_charge_periods};
 
   return $periods * $self->charge_frequency;
+}
+
+has last_psynch_shortfall => (
+  is => 'rw',
+  isa => TimeInterval,
+  init_arg => undef,
+  default => 0,
+);
+
+sub _send_psynch_quote {
+  my ($self) = @_;
+  return unless $self->is_active;
+  my $shortfall = $self->_predicted_shortfall;
+  $self->last_psynch_shortfall($shortfall);
+
+  return unless $shortfall > $self->last_psynch_shortfall;
+
+  $self->ledger->start_quote;
+  {
+    my $shortfall_days = ceil($shortfall / days(1));
+    $self->charge_current_invoice({
+      extra_tags => [ 'psynch' ],
+      description => sprintf("Shortfall of $shortfall_days %s",
+                             $shortfall_days == 1 ? "day" : "days"),
+      amount => $self->estimate_cost_for_interval({ interval => $shortfall }),
+    });
+  }
+  my $quote = $self->ledger->end_quote($self);
+  $self->ledger->_send_psync_email($self, $quote);
 }
 
 1;
