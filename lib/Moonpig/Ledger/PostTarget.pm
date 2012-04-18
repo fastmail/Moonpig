@@ -77,6 +77,10 @@ sub resource_post {
       }
     }
 
+    if ($arg{invoice_internally}) {
+      $ledger->current_invoice->mark_internal;
+    }
+
     if ($arg{old_payment_info}) {
       # Not worrying about closed/open.  The ledger is brand new.  We just find
       # invoices that need money, then provide it.
@@ -100,6 +104,12 @@ sub resource_post {
     }
 
     $ledger->heartbeat;
+
+    if ($arg{invoice_internally}) {
+      my @internal_invoices = grep { $_->is_internal } $ledger->invoices;
+      Moonpig::X->throw("internal invoice was created and not paid")
+        if @internal_invoices and grep { ! $_->is_paid } @internal_invoices;
+    }
   });
 
   return $ledger;

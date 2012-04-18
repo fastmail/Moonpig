@@ -44,7 +44,8 @@ test "get a ledger guid via web" => sub {
       },
     },
 
-    old_payment_info => { sample => [ { payment => 'money!' } ] },
+    invoice_internally => 1,
+    old_payment_info   => { sample => [ { payment => 'money!' } ] },
   };
 
   my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });

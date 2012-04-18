@@ -24,6 +24,7 @@ use Moonpig::X;
 use MooseX::SetOnce;
 
 use Stick::Util qw(ppack true false);
+use Stick::Types qw(StickBool);
 
 use namespace::autoclean;
 
@@ -75,6 +76,25 @@ sub mark_abandoned {
   $self->_abandoned_at(Moonpig->env->now);
 }
 
+has is_internal => (
+  reader => 'is_internal',
+  writer => '_set_is_internal',
+  isa    => StickBool,
+  traits => [ qw(SetOnce) ],
+  predicate => '_has_is_internal',
+);
+
+sub mark_internal {
+  my ($self) = @_;
+  Moonpig::X->throw("tried to internalize a closed invoice")
+    if $self->is_closed;
+  $self->_set_is_internal(true);
+}
+
+after mark_closed => sub {
+  $_[0]->_set_is_internal(false) unless $_[0]->_has_is_internal;
+};
+
 # transfer non-abandoned charges to ledger's current open invoice
 sub abandon {
   my ($self) = @_;
@@ -120,7 +140,6 @@ sub cancel {
   $_->mark_abandoned for $self->all_charges;
   $self->abandon_without_replacement();
 }
-
 
 implicit_event_handlers {
   return {
@@ -213,6 +232,7 @@ PARTIAL_PACK {
     created_at   => $self->date,
     charges      => [ map {; ppack($_) } $self->all_charges ],
     is_quote     => $self->is_quote,
+    is_internal  => $self->is_internal,
   });
 };
 
