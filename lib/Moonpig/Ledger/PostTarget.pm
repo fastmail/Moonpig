@@ -14,6 +14,12 @@ use List::AllUtils qw(part);
 
 use namespace::autoclean;
 
+sub resource_get {
+  my ($self) = @_;
+  my @guids = Moonpig->env->storage->ledger_guids;
+  return \@guids;
+}
+
 sub resource_post {
   my ($self, $received_arg) = @_;
 

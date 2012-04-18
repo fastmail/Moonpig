@@ -72,6 +72,9 @@ test "get a ledger guid via web" => sub {
       $consumer_guid,
       'replacement_chain_expiration_date';
     $replacement_date_str = $ua->mp_get($url);
+
+    my $guids = $ua->mp_get('/ledgers');
+    is_deeply($guids, [ $guid ], "we can GET /ledgers for guids");
   });
 
   Moonpig->env->storage->do_ro_with_ledger(
