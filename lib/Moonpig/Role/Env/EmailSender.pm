@@ -29,7 +29,7 @@ sub process_email_queue {
     my $email = Email::MIME->new($job->payload('email'));
 
     my $env = JSON->new->decode( $job->payload('env') );
-    Moonpig->env->send_email($email, $env);
+    $self->send_email($email, $env);
     $job->mark_complete;
     $count++;
   });
