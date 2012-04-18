@@ -14,7 +14,7 @@ use Moonpig::UserAgent;
 use t::lib::ConsumerTemplateSet::Demo;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use namespace::autoclean;
@@ -44,7 +44,6 @@ test "get a ledger guid via web" => sub {
       },
     },
 
-    invoice_internally => 1,
     old_payment_info   => { sample => [ { payment => 'money!' } ] },
   };
 
@@ -97,6 +96,16 @@ test "get a ledger guid via web" => sub {
       );
 
       is($replacement_date_str, "$exp_date" =~ s/T/ /r, "...same as via HTTP");
+    },
+  );
+
+  Moonpig->env->storage->do_ro_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+      $self->heartbeat_and_send_mail($ledger);
+      my @deliveries = Moonpig->env->email_sender->deliveries;
+      is(@deliveries, 0, "we didn't email any invoices, they're internal");
     },
   );
 };

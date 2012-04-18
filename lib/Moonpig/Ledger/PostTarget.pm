@@ -77,11 +77,9 @@ sub resource_post {
       }
     }
 
-    if ($arg{invoice_internally}) {
-      $ledger->current_invoice->mark_internal;
-    }
-
     if ($arg{old_payment_info}) {
+      $ledger->current_invoice->mark_internal;
+
       # Not worrying about closed/open.  The ledger is brand new.  We just find
       # invoices that need money, then provide it.
       my @charges =
@@ -105,7 +103,11 @@ sub resource_post {
 
     $ledger->heartbeat;
 
-    if ($arg{invoice_internally}) {
+    if ($arg{old_payment_info}) {
+      # This really shouldn't be reachable.  If we have old_payment_info, we
+      # should have just created enough cash to cover everything.  But it also
+      # shouldn't hurt.  It could catch non-application, or second invoices,
+      # or... who knows what. -- rjbs, 2012-04-18
       my @internal_invoices = grep { $_->is_internal } $ledger->invoices;
       Moonpig::X->throw("internal invoice was created and not paid")
         if @internal_invoices and grep { ! $_->is_paid } @internal_invoices;
