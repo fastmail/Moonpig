@@ -122,19 +122,28 @@ sub _charge_for_autopay {
 }
 
 sub _send_invoice_email {
-  my ($self, $invoices) = @_;
+  my ($self, $invoices_ref) = @_;
 
   # invoices has arrived here pre-sorted by ->perform_dunning
+  my @invoices = grep { ! $_->is_internal } @$invoices_ref;
+
+  unless (@invoices) {
+    $Logger->log([
+      "dunning ledger %s but not sending invoices; they're all internal",
+      $self->ident,
+    ]);
+    return;
+  }
 
   $Logger->log([
     "sending invoices %s to contacts of %s",
-    [ map {; $_->ident } @$invoices ],
+    [ map {; $_->ident } @invoices ],
     $self->ident,
   ]);
 
   $self->_last_dunning({
     time     => Moonpig->env->now,
-    invoices => $invoices,
+    invoices => \@invoices,
     overearmarked => $self->amount_overearmarked,
   });
 
@@ -146,7 +155,7 @@ sub _send_invoice_email {
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
-      invoices     => $invoices,
+      invoices     => \@invoices,
       ledger       => $self,
     },
   }));
