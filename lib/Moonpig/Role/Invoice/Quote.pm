@@ -13,8 +13,6 @@ with(
   'Moonpig::Role::Invoice'
 );
 
-# requires qw(is_quote is_invoice);
-
 # XXX better name here
 has promoted_at => (
   is   => 'rw',

@@ -51,7 +51,7 @@ sub is_payable {
   return( $_[0]->is_closed
     && $_[0]->is_unpaid
     && ! $_[0]->is_abandoned
-    && $_[0]->is_invoice
+    && $_[0]->isnt_quote
   );
 }
 
@@ -219,7 +219,7 @@ sub is_quote {
     : false
   )
 }
-sub is_invoice { ! $_[0]->is_quote }
+sub isnt_quote { ! $_[0]->is_quote }
 
 PARTIAL_PACK {
   my ($self) = @_;

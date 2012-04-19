@@ -31,7 +31,6 @@ test 'basic' => sub {
       );
       ok($q, "made quote");
       ok(  $q->is_quote, "it is a quote");
-      ok(! $q->is_invoice, "it is a regular invoice");
 
       like(exception { $q->_pay_charges },
            qr/unpromoted quote/,
@@ -47,7 +46,6 @@ test 'basic' => sub {
       $q->mark_promoted;
 
       ok(! $q->is_quote, "it is no longer a quote");
-      ok(  $q->is_invoice, "it is now a regular invoice");
 
       like(exception { $q->mark_promoted },
            qr/cannot change value/,
@@ -68,7 +66,6 @@ test promote_and_pay => sub {
       ok($q->is_promoted, "q was promoted");
       ok($q->is_payable, "q is payable");
       ok(! $q->is_quote, "q is no longer a quote");
-      ok(  $q->is_invoice, "q is now an invoice");
       ok($q->first_consumer->is_active, "chain was activated");
 
       $self->heartbeat_and_send_mail($ledger);
@@ -103,7 +100,7 @@ test promote_and_pay => sub {
         is($i, 4, "chain extension is 4 consumers long");
       }
       $q->execute;
-      ok(  $q->is_invoice, "q is now an invoice");
+      ok(  $q->isnt_quote, "q is now an invoice");
       ok(! $q->first_consumer->is_active, "but new consumer still not yet active");
       is($ledger->get_component("c")->replacement,
         $q->first_consumer,

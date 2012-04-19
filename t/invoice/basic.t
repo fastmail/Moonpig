@@ -380,7 +380,7 @@ sub assert_current_invoice_is_not_quote {
   my ($self, $ledger) = @_;
   my $invoice = $ledger->current_invoice;
 
-  ok(  $invoice->is_invoice, "current invoice is an invoice, not a quote");
+  ok(  $invoice->isnt_quote, "current invoice is not a quote");
   ok(! $invoice->is_quote, "current invoice is not a quote");
   ok(! $invoice->can('mark_promoted'), "can't promote invoice");
 }
