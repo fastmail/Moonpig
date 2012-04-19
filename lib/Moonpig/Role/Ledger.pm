@@ -13,6 +13,7 @@ require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.308); # ppack + subcol
 
 _generate_subcomponent_methods(qw(consumer debit credit coupon));
+_generate_chargecollection_methods(qw(invoice journal));
 
 with(
   'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
@@ -336,61 +337,69 @@ sub end_quote {
   return $quote;
 }
 
-for my $thing (qw(journal invoice)) {
-  my $role          = sprintf "Moonpig::Role::%s", ucfirst $thing;
-  my $default_class = class(ucfirst $thing);
-  my $things        = "${thing}s";
-  my $reader        = "_$things";
-  my $push          = "_push_$thing";
+# Compile-time generation of accessors for invoice and journal subcomponents
+sub _generate_chargecollection_methods {
+  for my $thing (qw(journal invoice)) {
+    my $role          = sprintf "Moonpig::Role::%s", ucfirst $thing;
+    my $default_class = class(ucfirst $thing);
+    my $things        = "${thing}s";
+    my $reader        = "_$things";
+    my $push          = "_push_$thing";
 
-  has $things => (
-    reader  => $reader,
-    isa     => ArrayRef[ role_type($role) ],
-    default => sub { [] },
-    traits  => [ qw(Array) ],
-    handles => {
-      $things => 'elements',
-      $push   => 'push',
-    },
-  );
+    has $things => (
+      reader  => $reader,
+      isa     => ArrayRef[ role_type($role) ],
+      default => sub { [] },
+      traits  => [ qw(Array) ],
+      handles => {
+        $things => 'elements',
+        $push   => 'push',
+      },
+    );
 
-  my $_has_current_thing = sub {
-    my ($self) = @_;
-    my $things = $self->$reader;
-    @$things and $things->[-1]->is_open;
-  };
+    my $_has_current_thing = sub {
+      my ($self) = @_;
+      my $things = $self->$reader;
+      @$things and $things->[-1]->is_open;
+    };
 
-  my $has_current_thing = "has_current_$thing";
-  Sub::Install::install_sub({
-    as   => $has_current_thing,
-    code => $_has_current_thing,
-  });
-
-  my $_ensure_one_thing = sub {
-    my ($self, $class) = @_;
-
-    $class ||= $default_class;
-    my $things = $self->$reader;
-    return if $self->$has_current_thing;
-
-    Class::MOP::load_class($class);
-
-    my $thing = $class->new({
-      ledger => $self,
+    my $has_current_thing = "has_current_$thing";
+    Sub::Install::install_sub({
+      as   => $has_current_thing,
+      code => $_has_current_thing,
     });
 
-    $self->$push($thing);
-    return;
-  };
-
-  Sub::Install::install_sub({
-    as   => "current_$thing",
-    code => sub {
+    my $_ensure_one_thing = sub {
       my ($self, $class) = @_;
-      $self->$_ensure_one_thing($class);
-      $self->$reader->[-1];
-    }
-  });
+
+      $class ||= $default_class;
+      my $things = $self->$reader;
+      return if $self->$has_current_thing;
+
+      Class::MOP::load_class($class);
+
+      my $thing = $class->new({
+        ledger => $self,
+      });
+
+      $self->$push($thing);
+      return;
+    };
+
+    Sub::Install::install_sub({
+      as   => "current_$thing",
+      code => sub {
+        my ($self, $class) = @_;
+        $self->$_ensure_one_thing($class);
+        $self->$reader->[-1];
+      }
+    });
+
+    Sub::Install::install_sub({
+      as   => "$thing\_array",
+      code => sub { [ $_[0]->$things ] },
+    });
+  }
 }
 
 has _invoice_ident_registry => (
@@ -424,14 +433,6 @@ sub latest_invoice {
   )[0];
 
   return $latest;
-}
-
-sub invoice_array {
-  [ $_[0]->invoices ]
-}
-
-sub journal_array {
-  [ $_[0]->invoices ]
 }
 
 sub payable_invoices {
