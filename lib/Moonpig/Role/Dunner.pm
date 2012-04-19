@@ -78,7 +78,7 @@ sub perform_dunning {
          }
     grep { any { ! $_->is_abandoned } $_->all_charges }
     grep { ! $_->is_abandoned && $_->is_unpaid && $_->has_charges }
-    $self->invoices;
+    $self->invoices_without_quotes;
 
   return unless $self->_should_dunn_again(\@invoices);
 

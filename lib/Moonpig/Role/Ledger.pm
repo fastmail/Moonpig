@@ -429,7 +429,7 @@ sub latest_invoice {
   my $latest = (
     sort { $b->created_at <=> $a->created_at
         || $b->guid       cmp $a->guid # incredibly unlikely, but let's plan
-         } $self->invoices
+         } $self->invoices_without_quotes
   )[0];
 
   return $latest;
@@ -440,6 +440,16 @@ sub payable_invoices {
   grep {; $_->is_payable } $self->invoices;
 }
 
+sub invoices_without_quotes {
+  my ($self) = @_;
+  grep {; ! $_->is_quote } $self->invoices;
+}
+
+sub quotes {
+  my ($self) = @_;
+  grep {; $_->is_quote } $self->invoices;
+}
+
 sub abandon_invoice {
   my ($self, $invoice) = @_;
 
@@ -448,7 +458,7 @@ sub abandon_invoice {
 
 sub amount_earmarked {
   my ($self) = @_;
-  my @invoices = grep { $_->is_paid } $self->invoices;
+  my @invoices = grep { $_->is_paid } $self->invoices_without_quotes;
   my @charges  = grep { ! $_->is_executed && ! $_->is_abandoned }
                  map  { $_->all_charges } @invoices;
 

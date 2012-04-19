@@ -2,7 +2,7 @@ use 5.12.0;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars months to_dollars years);
+use Moonpig::Util qw(class days dollars months sumof to_dollars years);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -60,11 +60,8 @@ before run_test => sub {
 
 sub pay_unpaid_invoices {
   my ($self, $ledger, $expect) = @_;
-  my $total = 0;
 
-  for my $invoice ($ledger->invoices) {
-    $total += $invoice->total_amount unless $invoice->is_paid;
-  }
+  my $total = sumof { $_->total_amount } $ledger->payable_invoices;
   if (defined $expect) {
     is(
       $total,

@@ -85,7 +85,7 @@ sub resource_post {
       my @charges =
         map  { $_->all_charges }
         grep { $_->is_unpaid   }
-        $ledger->invoices;
+        $ledger->invoices_without_quotes;
 
       my %is_active = map { $_->guid => 1 } $ledger->active_consumers;
 
@@ -108,7 +108,7 @@ sub resource_post {
       # should have just created enough cash to cover everything.  But it also
       # shouldn't hurt.  It could catch non-application, or second invoices,
       # or... who knows what. -- rjbs, 2012-04-18
-      my @internal_invoices = grep { $_->is_internal } $ledger->invoices;
+      my @internal_invoices = grep { $_->is_internal } $ledger->invoices_without_quotes;
       Moonpig::X->throw("internal invoice was created and not paid")
         if @internal_invoices and grep { ! $_->is_paid } @internal_invoices;
     }

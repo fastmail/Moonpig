@@ -535,7 +535,7 @@ sub abandon_charges_on_invoice {
 sub abandon_all_unpaid_charges {
   my ($self) = @_;
   grep $self->abandon_charges_on_invoice($_) > 0,
-    grep { ! $_->is_paid && ! $_->is_abandoned } $self->ledger->invoices;
+    grep { ! $_->is_paid && ! $_->is_abandoned } $self->ledger->invoices_without_quotes;
 }
 
 sub all_charges {
@@ -547,7 +547,7 @@ sub all_charges {
   my @charges = grep { $_->owner_guid eq $guid }
                 map  { $_->all_charges }
                 grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
-                $self->ledger->invoices;
+                $self->ledger->invoices_without_quotes;
 
   return @charges;
 }
@@ -560,7 +560,7 @@ sub relevant_invoices {
   my $guid = $self->guid;
   my @invoices = grep { (! $_->is_closed || $_->closed_at >= $self->created_at)
                         && any { $_->owner_guid eq $guid } $_->all_charges
-                      } $self->ledger->invoices;
+                      } $self->ledger->invoices_without_quotes;
 
   return @invoices;
 }

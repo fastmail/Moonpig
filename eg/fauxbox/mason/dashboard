@@ -49,8 +49,6 @@ $ledger_path
 <%perl>
 my $invoices = $m->mp_request(GET => "$ledger_path/invoices/unpaid");
 my @invoice_guids = map {; $_->{guid} } @{$invoices || []};
-# my $total = reduce {$a+$b}, 0, map { $_->total_amount } $last_rfp->invoices;
-# return unless $last_rfp and $total > 0;
 </%perl>
 
 <h2>unpaid invoices</h2>

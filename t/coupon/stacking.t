@@ -33,10 +33,6 @@ sub pay_unpaid_invoices {
     Moonpig->env->storage->do_rw(sub { $ledger->heartbeat });
   }
 
-  # for my $invoice ($ledger->invoices) {
-  #   $total += $invoice->total_amount unless $invoice->is_paid;
-  # }
-  # printf "# Total amount payable: %.2f\n", $total / 100000;
   $ledger->process_credits;
 }
 
@@ -68,7 +64,7 @@ sub try_coupon {
         });
       $L->add_credit(class('Credit::Simulated'), { amount => dollars(100) });
       $self->pay_unpaid_invoices($L);
-      { my ($inv) = $L->invoices;
+      { my ($inv) = $L->invoices_without_quotes;
         ok($inv->is_paid, "invoice is paid");
       }
 

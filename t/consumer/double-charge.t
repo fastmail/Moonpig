@@ -59,8 +59,7 @@ test "check amounts" => sub {
 
 sub payable_invoice {
   my ($self, $ledger) = @_;
-  my ($inv) = grep { ! $_->is_open and ! $_->is_paid }
-    $ledger->invoices;
+  my ($inv) = $ledger->payable_invoices;
   return $inv;
 }
 
