@@ -70,6 +70,7 @@ schema:
       fields:
         guid: { name: guid, data_type: varchar, size: 36, is_primary_key: 1 }
         ident: { name: ident, data_type: varchar, size: 10, is_nullable: 0 }
+        serialization_version: { name: serialization_version, data_type: int unsigned, is_nullable: 0 }
         frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
         frozen_classes: { name: frozen_classes, data_type: blob, is_nullable: 0 }
       constraints:
@@ -705,8 +706,8 @@ sub _store_ledger {
             $dbh->do(
               q{
                 INSERT INTO ledgers
-                (guid, ident, frozen_ledger, frozen_classes)
-                VALUES (?, ?, ?, ?)
+                (guid, ident, serialization_version, frozen_ledger, frozen_classes)
+                VALUES (?, ?, 1, ?, ?)
               },
               undef,
               $ledger->guid,
