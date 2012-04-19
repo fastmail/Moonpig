@@ -330,8 +330,8 @@ sub _estimated_remaining_funded_lifetime {
 has last_psynch_shortfall => (
   is => 'rw',
   isa => TimeInterval,
-  init_arg => undef,
   default => 0,
+  traits => [ qw(Copy) ],
 );
 
 sub _send_psynch_quote {
