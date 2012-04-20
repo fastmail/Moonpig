@@ -114,6 +114,17 @@ sub replacement_chain {
     ? ($self->replacement, $self->replacement->replacement_chain) : ();
 }
 
+sub replacement_chain_end {
+  my ($self) = @_;
+
+  my $end = $self;
+  if (my @chain = $self->replacement_chain) {
+    $end = $chain[-1];
+  }
+
+  return $end;
+}
+
 # The chain length here is a TimeInterval that says how long the chain
 # should last for. The created chain will be at least that long.
 # It returns the head of the new chain.

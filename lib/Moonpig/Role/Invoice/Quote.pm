@@ -59,12 +59,12 @@ sub is_obsolete {
 }
 
 sub can_be_attached_to {
-  my ($self, $active_consumer) = @_;
+  my ($self, $potential_target) = @_;
   @_ == 2 or confess "Missing argument to Quote->can_be_attached_to";
 
   # Even if there was service before, and it has expired, it's still
   # okay to execute this quote to continue service.
-  return 1 unless $active_consumer;  # Not obsolete
+  return 1 unless $potential_target;  # Not obsolete
 
   # But if the quote was to start fresh service, and the service
   # started differently, the quote is obsolete.
@@ -72,7 +72,7 @@ sub can_be_attached_to {
 
   # If there is active service, and the quote is to extend that
   # service, it must be extended from the same point.
-  return $self->attachment_point_guid eq $active_consumer->guid;
+  return $self->attachment_point_guid eq $potential_target->guid;
 }
 
 before _pay_charges => sub {
@@ -105,29 +105,31 @@ sub execute {
 
   my $first_consumer = $self->first_consumer;
   my $xid = $first_consumer->xid;
-  my $active_consumer = $self->active_consumer($xid);
 
-  unless ($self->can_be_attached_to( $active_consumer ) ) {
+  my $attachment_target = $self->target_consumer($xid);
+
+  unless ($self->can_be_attached_to( $attachment_target ) ) {
     Moonpig::X->throw("can't execute obsolete quote",
                       quote_guid => $self->guid,
                       xid => $xid,
                       expected_attachment_point => $self->attachment_point_guid,
-                      active_attachment_point => $active_consumer && $active_consumer->guid);
+                      active_attachment_point => $attachment_target && $attachment_target->guid);
   }
 
   $self->mark_promoted;
 
-  if ($active_consumer) {
-    $active_consumer->replacement($first_consumer);
+  if ($attachment_target) {
+    $attachment_target->replacement($first_consumer);
   } else {
     $first_consumer->become_active;
   }
 }
 
-sub active_consumer {
+sub target_consumer {
   my ($self, $xid) = @_;
   $xid ||= $self->first_consumer->xid;
-  return $self->ledger->active_consumer_for_xid( $xid );
+  my $active = $self->ledger->active_consumer_for_xid( $xid );
+  return($active ? $active->replacement_chain_end : undef);
 }
 
 after mark_closed => sub {
@@ -137,7 +139,7 @@ after mark_closed => sub {
 
 sub record_expected_attachment_point {
   my ($self) = @_;
-  my $attachment_point = $self->active_consumer;
+  my $attachment_point = $self->target_consumer;
   my $guid = $attachment_point ? $attachment_point->guid : undef;
   $self->attachment_point_guid($guid);
 }
