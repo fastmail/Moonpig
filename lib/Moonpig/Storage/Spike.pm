@@ -89,6 +89,19 @@ schema:
           reference_table: ledgers
           reference_fields: [ guid ]
 
+    ledger_search_fields:
+      name: ledger_search_fields
+      fields:
+        ledger_guid: { name: ledger_guid, data_type: varchar, size: 36, is_nullable: 0 }
+        field_name: { name: field_name, data_type: varchar, size: 36, is_nullable: 0 }
+        field_value: { name: field_value, data_type: varchar, size: 128, is_nullable: 0 }
+      constraints:
+        - type: FOREIGN KEY
+          fields: [ ledger_guid ]
+          reference_table: ledgers
+          reference_fields: [ guid ]
+          on_delete: cascade
+
     metadata:
       name: metadata
       fields:
