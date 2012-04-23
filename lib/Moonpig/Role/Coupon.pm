@@ -6,6 +6,8 @@ use Moonpig::Util qw(class);
 use Moose::Role;
 
 with(
+  'Moonpig::Role::CanExpire',
+  'Moonpig::Role::ConsumerComponent',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
 );
