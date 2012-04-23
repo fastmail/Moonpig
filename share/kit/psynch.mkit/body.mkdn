@@ -1,10 +1,12 @@
 REQUEST ID: ...
 
-Charges on your service {{ $consumer->xid }} recently increased.
-Service is now expected to continue until {{
-$consumer->replacement_chain_expiration_date->iso }}.  If you would
-like to restore the original, later expiration date, please pay the
-following amount:
+You've recently updated your service {{ $consumer->xid }}.
+Due to those changes, your account price has changed.  Based on funds 
+on hand, service is now expected to continue until {{$consumer->replacement_chain_expiration_date->iso }}.  
+
+If you would prefer, you can make a pro-rated payment to extend your service 
+to your previous expiration date.  The pro-rated charge to extend service to 
+{{$consumer->replacement_chain_expiration_date->iso }} is:
 
 {{
     for my $charge ($quote->all_charges) {
@@ -16,3 +18,8 @@ following amount:
     "";
 }}
 
+To make payment online, or find instructions for alternate payment methods, 
+please go to <https://www.pobox.com/pay>.  If you wish to alter your account 
+services, please go to <https://pobox.com/login/mason/edit/upgrade.mhtml> or 
+contact us at <pobox@pobox.com>.  If no action is taken, service will continue 
+through {{$consumer->replacement_chain_expiration_date->iso }}.
