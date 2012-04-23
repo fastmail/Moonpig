@@ -30,7 +30,7 @@ publish replacement_chain_expiration_date => {} => sub {
 
 PARTIAL_PACK {
   return {
-    replacement_chain_expiration_date => $self->replacement_chain_expiration_date,
+    replacement_chain_expiration_date => $_[0]->replacement_chain_expiration_date,
   };
 };
 

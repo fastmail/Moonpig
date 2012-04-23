@@ -9,6 +9,7 @@ use MooseX::StrictConstructor;
 
 use Carp qw(carp confess croak);
 use Class::Rebless 0.009;
+use Data::GUID qw(guid_string);
 use Digest::MD5 qw(md5_hex);
 use DBI;
 use DBIx::Connector;
@@ -69,6 +70,7 @@ schema:
       name: ledgers
       fields:
         guid: { name: guid, data_type: varchar, size: 36, is_primary_key: 1 }
+        entity_id: { name: entity_id, data_type: varchar, size: 36, is_nullable: 0 }
         ident: { name: ident, data_type: varchar, size: 10, is_nullable: 0 }
         serialization_version: { name: serialization_version, data_type: int unsigned, is_nullable: 0 }
         frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
@@ -684,12 +686,13 @@ sub _store_ledger {
 
     my $rv = $dbh->do(
       q{
-        UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?
+        UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?, entity_id = ?
         WHERE guid = ?
       },
       undef,
       $frozen_ledger,
       $frozen_classes,
+      guid_string(),
       $ledger->guid,
     );
 
@@ -719,14 +722,15 @@ sub _store_ledger {
             $dbh->do(
               q{
                 INSERT INTO ledgers
-                (guid, ident, serialization_version, frozen_ledger, frozen_classes)
-                VALUES (?, ?, 1, ?, ?)
+                (guid, ident, serialization_version, frozen_ledger, frozen_classes, entity_id)
+                VALUES (?, ?, 1, ?, ?, ?)
               },
               undef,
               $ledger->guid,
               $ident,
               $frozen_ledger,
               $frozen_classes,
+              guid_string(),
             );
 
             return 1;
