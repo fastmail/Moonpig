@@ -8,7 +8,6 @@ use Moose::Role;
 with(
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
-  'Moonpig::Role::LedgerComponent',
 );
 
 use namespace::autoclean;
