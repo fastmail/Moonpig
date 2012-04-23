@@ -492,16 +492,24 @@ sub charge_current_invoice {
 
 sub charge_invoice {
   my ($self, $invoice, $args) = @_;
+  $args = { %$args }; # Don't screw up caller's hash
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
   $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
 
+  # Might modify $args
+  my @coupon_line_items = $self->apply_coupons_to_charge_args($args);
+
   # If there's no ->build_invoice_charge method, let the Invoice
   # object build the charge from the arguments.
   $args = $self->build_invoice_charge($args) if $self->can("build_invoice_charge");
 
-  $invoice->add_charge($args);
+  my $charge = $invoice->add_charge($args);
+
+  $invoice->add_line_item($_) for @coupon_line_items;
+
+  return $charge;
 }
 
 has extra_charge_tags => (

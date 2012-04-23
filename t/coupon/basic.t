@@ -27,7 +27,7 @@ sub set_up_consumer {
   my ($self, $ledger) = @_;
   my $coupon_desc =  [ class("Coupon::FixedPercentage", "Coupon::Universal"),
                        { discount_rate => 0.25,
-                         description => "blanket 25% discount",
+                         description => "Joe's discount",
                        }] ;
 
   $ledger->add_consumer_from_template("quick",
@@ -43,6 +43,16 @@ test "consumer setup" => sub {
       my ($ledger) = @_;
       my ($consumer) = $self->set_up_consumer($ledger);
       is(@{$consumer->coupon_array}, 1, "consumer has a coupon");
+      my @charges = $ledger->current_invoice->all_charges;
+      is(@charges, 1, "one charge");
+#      is(@charges, 2, "two charges (1 + 1 line item)");
+
+      is($charges[0]->amount, dollars(75), "true charge amount: \$75");
+      SKIP: { skip "line items unimplemented", 2;
+        is($charges[1]->amount, 0, "line item amount: 0mc");
+        like($charges[1]->description, qr/Joe's discount/, "line item description");
+        like($charges[1]->description, qr/25%/, "line item description amount");
+      }
     });
 };
 
