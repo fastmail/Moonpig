@@ -11,6 +11,8 @@ use Stick::Publisher::Publish 0.20110324;
 use List::AllUtils qw(any);
 use Moonpig::Util qw(sumof);
 
+use Moonpig::Behavior::Packable;
+
 requires 'estimated_lifetime'; # TimeInterval, from created to predicted exp
 requires 'expiration_date';    # Time, predicted exp date
 requires 'remaining_life';     # TimeInterval, from now to predicted exp
@@ -24,6 +26,12 @@ publish replacement_chain_expiration_date => {} => sub {
   }
 
   return($self->expiration_date + (sumof { $_->estimated_lifetime } @chain));
+};
+
+PARTIAL_PACK {
+  return {
+    replacement_chain_expiration_date => $self->replacement_chain_expiration_date,
+  };
 };
 
 1;

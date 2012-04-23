@@ -78,16 +78,15 @@ $active_consumers
 </%args>
 <div class='consumers'>
   <h2>Active Consumers</h2>
-  <table>
 % for my $xid (sort keys %$active_consumers) {
-    <tr>
-      <th>
-        <a href='/ledger/<% $ledger->{guid} |h %>/consumer/<% $active_consumers->{$xid}->{guid} |h %>'><% $xid |h %></a>
-      </th>
-      <td>...</td>
-    </tr>
+%   my $consumer = $active_consumers->{$xid};
+  <div class='consumer'>
+    <table>
+      <tr><th>xid</th><td><a href='/ledger/<% $ledger->{guid} |h %>/consumer/<% $consumer->{guid} |h %>'><% $xid |h %></a></td></th></tr>
+      <tr><th>est. exp. date</th><td><% $consumer->{replacement_chain_expiration_date} |h %></td></th></tr>
+    </table>
+  </div>
 % }
-  </table>
 </div>
 </%method>
 
