@@ -20,56 +20,32 @@ has description => (
   required => 1,
 );
 
-has lifetime => (
-  is => 'ro',
-  isa => TimeInterval,
-  predicate => 'has_expiration_date',
-);
+# Return true/false indicating whether to adjust the charge arguments
+requires 'applies_to_charge';
 
-sub expiration_date {
-  my ($self) = @_;
-  return unless $self->has_expiration_date;
-  return $self->created_at + $self->lifetime;
-}
-
-has credit_class => (
-  is => 'ro',
-  isa => 'Str',
-  default => class('Credit::Discount'),
-);
-
-sub is_expired {
-  my ($self) = @_;
-  $self->has_expiration_date
-    and $self->expiration_date->precedes(Moonpig->env->now);
-}
-
-requires 'applies_to';
-requires 'discount_amount_for';
-
-around applies_to => sub {
+around applies_to_charge => sub {
   my ($orig, $self, @args) = @_;
   return $self->is_expired ? () : $self->$orig(@args);
 };
 
-sub mark_applied { } # No-op
+# adjust the charge arguments and return line items for adjustments
+requires 'adjust_charge_args';
 
-sub applies_to_invoice {
-  my ($self, $invoice) = @_;
-  return grep $self->applies_to($_), $invoice->all_charges;
-}
+after adjust_charge_args => sub {
+  my ($self, @args) = @_;
+  $self->mark_applied;
+};
 
-sub create_discount_for {
-  my ($self, $charge) = @_;
-  return if $self->is_expired;
-  return unless $self->applies_to($charge);
+sub mark_applied { } # Decorated by Coupon::SingleUse for example
 
-  my $amount = $self->discount_amount_for($charge);
-  return if $amount == 0;
-
-  return $self->ledger->add_credit(
-    $self->credit_class,
-    { amount => $amount });
+sub line_item {
+  my ($self, $desc) = @_;
+  return ();  # XXX UNIMPLEMENTED
+  class("LineItem")->new({
+    consumer => $self->owner,
+    description => $desc,
+    tags => $self->tags,
+  });
 }
 
 1;
