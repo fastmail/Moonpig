@@ -827,8 +827,10 @@ PARTIAL_PACK {
     unpaid_invoices => $self->invoice_collection->payable,
 
     active_xids => {
-      map {; $_ => ppack($self->active_consumer_for_xid($_)) }
-        $self->xids_handled
+      map {;
+        my $xid = $_; # somewhere downstream of here is a topicalization bug
+        $xid => ppack($self->active_consumer_for_xid($xid))
+      } $self->xids_handled
     },
     yearly_cost_estimate => $self->estimate_cost_for_interval({
       interval => years(1),
