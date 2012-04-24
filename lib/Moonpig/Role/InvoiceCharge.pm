@@ -13,11 +13,11 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Types qw(Time);
 use MooseX::SetOnce;
 
-has abandoned_date => (
+has abandoned_at => (
   is => 'ro',
   isa => Time,
   predicate => 'is_abandoned',
-  writer    => '__set_abandoned_date',
+  writer    => '__set_abandoned_at',
   traits => [ qw(SetOnce) ],
 );
 
@@ -25,7 +25,7 @@ sub counts_toward_total { ! $_[0]->is_abandoned }
 
 sub mark_abandoned {
   my ($self) = @_;
-  $self->__set_abandoned_date( Moonpig->env->now );
+  $self->__set_abandoned_at( Moonpig->env->now );
 }
 
 has executed_at => (
