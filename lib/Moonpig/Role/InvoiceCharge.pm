@@ -10,6 +10,7 @@ with(
 
 use namespace::autoclean;
 use Moonpig::Behavior::EventHandlers;
+use Moonpig::Behavior::Packable;
 use Moonpig::Types qw(Time);
 use MooseX::SetOnce;
 
@@ -42,6 +43,15 @@ implicit_event_handlers {
       'default' => Moonpig::Events::Handler::Noop->new,
     },
   }
+};
+
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    executed_at  => $self->executed_at,
+    abandoned_at => $self->abandoned_at,
+  };
 };
 
 1;
