@@ -1,34 +1,31 @@
 <%args>
 $invoice
 </%args>
-<div class='invoice'>
-  <table>
-    <tr>
-      <th class='guid'>
-        <a href='/ledger/<% $invoice->{ledger_guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a></th>
-      <td><% $invoice->{date} |h %></td>
-      <td><% mc($invoice->{total_amount}) |h %></td>
-    </tr>
-  </table>
-</div>
+<div class='invoice' style='border:thin black solid'>
+  <h3>Invoice <% $invoice->{ident} %></h3>
 
 % if ($invoice->{is_quote}) {
-<div style='border: thin black solid'>
-  <p>Execute Quote</p>
+  <p><strong>This invoice is actually a quote.</strong></p>
   <form action='/post/execute-quote' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
     <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
-    <input type='submit' value='Execute Quote'/>
+    <input type='submit' value='Execute Quote' />
   </form>
-</div>
 % }
 
-<table>
+  <p><strong>GUID:        </strong>
+      <a href='/ledger/<% $invoice->{ledger_guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{guid} |h %></a>
+  </p>
+  <p><strong>Invoice Date:</strong> <% $invoice->{closed_at} |h %></p>
+  <p><strong>Total Amount:</strong> <% mc($invoice->{total_amount}) |h%></p>
+
+  <table>
 % for my $charge (@{ $invoice->{charges} }) {
-  <tr>
-    <td><% $charge->{description} |h %></td>
-    <td><% $charge->{description} |h %></td>
-    <td><% mc($charge->{amount}) |h %></td>
-  </tr>
+    <tr>
+      <td><% $charge->{description} |h %></td>
+      <td><% mc($charge->{amount}) |h %></td>
+    </tr>
 % }
-</table>
+  </table>
+
+</div>
