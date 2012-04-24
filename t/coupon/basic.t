@@ -87,5 +87,10 @@ test "consumer journal charging" => sub {
     });
 };
 
+test "tags" => sub {
+  local $TODO = "todo";
+  fail();
+};
+
 run_me;
 done_testing;
