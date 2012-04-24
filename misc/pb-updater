@@ -3,20 +3,15 @@ use 5.14.1;
 use Moonpig;
 use Pobox::Moonpig::Env;
 
-my @guids = qw(
-  A4E53364-5CAD-11E1-B71C-F913E7420ACE
-  E7892824-58C5-11E1-994D-EA3D2A1AB90E
-  3B1C9B00-58E0-11E1-994D-EA3D2A1AB90E
-  3BA06EEE-58E0-11E1-994D-EA3D2A1AB90E
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    print "I have ledger " . $ledger->ident . "\n";
+    for my $consumer ($ledger->consumers) {
+      print "  It contains consumer " . $consumer->ident . "\n";
+      delete $consumer->{extra_journal_charge_tags};
+      $consumer->{extra_charge_tags} = delete $consumer->{extra_invoice_charge_tags};
+    }
+  }
 );
 
-for my $guid (@guids) {
-  Moonpig->env->storage->do_rw_with_ledger(
-    $guid,
-    sub {
-      my ($ledger) = @_;
-      $ledger->contact->{phone_book}{home}
-        = delete $ledger->contact->{phone_number};
-    },
-  );
-};
