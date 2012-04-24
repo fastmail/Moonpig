@@ -159,9 +159,9 @@ $ledger
 % for my $quote (sort { $b->{closed_at} cmp $a->{closed_at} } @$quotes) {
     <tr>
       <th class='guid'>
-        <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{ident} |h %></a></th>
-      <td><% $invoice->{closed_at} |h %></td>
-      <td><% mc($invoice->{total_amount}) |h %></td>
+        <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $quote->{guid} |h %>'><% $quote->{ident} |h %></a></th>
+      <td><% $quote->{closed_at} |h %></td>
+      <td><% mc($quote->{total_amount}) |h %></td>
     </tr>
 % }
   </table>
