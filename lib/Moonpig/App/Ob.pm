@@ -59,10 +59,12 @@ sub _initial_display {
     $self->obwarn("No ledgers in storage\n");
   } elsif (@$ledger_guids == 1) {
     $self->output("\$it = ledger $ledger_guids->[0]");
-  } else {
+  } elsif (@$ledger_guids <= 10) {
     for my $i (0 .. $#$ledger_guids) {
       $self->output(sprintf "\$it[%d] = ledger %s", $i, $ledger_guids->[$i]);
     }
+  } else {
+    $self->output(sprintf "%d ledgers available", 0+@$ledger_guids);
   }
 }
 
@@ -181,7 +183,8 @@ sub run {
   my ($self) = @_;
   my $st = $self->storage;
   my @guids = $st->ledger_guids();
-  my @ledgers = map $st->_retrieve_ledger_from_db($_), @guids;
+  my @ledgers = @guids < 10 ?
+    map $st->_retrieve_ledger_from_db($_), @guids : ();
   $self->last_result( [ @ledgers ] );
 
   if (Moonpig->env->does('Moonpig::Role::Env::WithMockedTime')) {
