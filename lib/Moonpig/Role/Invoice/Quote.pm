@@ -6,6 +6,8 @@ use Moonpig;
 use Moonpig::Types qw(GUID Time);
 use Moonpig::Util qw(days);
 use Moose::Role;
+use Stick::Publisher;
+use Stick::Publisher::Publish;
 use MooseX::SetOnce;
 use Moose::Util::TypeConstraints qw(union);
 
@@ -95,7 +97,7 @@ sub first_consumer {
   return $c;
 }
 
-sub execute {
+publish execute => { -http_method => 'post', -path => 'execute' } => sub {
   my ($self) = @_;
 
   if ($self->quote_has_expired) {
@@ -109,11 +111,13 @@ sub execute {
   my $attachment_target = $self->target_consumer($xid);
 
   unless ($self->can_be_attached_to( $attachment_target ) ) {
-    Moonpig::X->throw("can't execute obsolete quote",
-                      quote_guid => $self->guid,
-                      xid => $xid,
-                      expected_attachment_point => $self->attachment_point_guid,
-                      active_attachment_point => $attachment_target && $attachment_target->guid);
+    Moonpig::X->throw(
+      "can't execute obsolete quote",
+      quote_guid => $self->guid,
+      xid => $xid,
+      expected_attachment_point => $self->attachment_point_guid,
+      active_attachment_point => $attachment_target && $attachment_target->guid
+    );
   }
 
   $self->mark_promoted;
@@ -123,7 +127,7 @@ sub execute {
   } else {
     $first_consumer->become_active;
   }
-}
+};
 
 sub target_consumer {
   my ($self, $xid) = @_;

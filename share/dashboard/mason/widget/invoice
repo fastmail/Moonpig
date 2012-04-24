@@ -12,9 +12,18 @@ $invoice
   </table>
 </div>
 
+% if ($invoice->{is_quote}) {
+<form action='/post/execute-quote'>
+  <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
+  <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
+  <input type='submit' />
+</form>
+% }
+
 <table>
 % for my $charge (@{ $invoice->{charges} }) {
   <tr>
+    <td><% $charge->{description} |h %></td>
     <td><% $charge->{description} |h %></td>
     <td><% mc($charge->{amount}) |h %></td>
   </tr>
