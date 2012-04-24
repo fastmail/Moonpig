@@ -50,6 +50,16 @@ $ledger
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
   </form>
+
+  Add a credit from PayPal™:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Transaction: <input name='credit.attributes.transaction_id' />
+    Email Addr: <input name='credit.attributes.from_address' />
+    <input type='submit' value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='PayPal' />
+  </form>
 </div>
 </%method>
 
