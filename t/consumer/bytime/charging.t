@@ -242,7 +242,7 @@ test "variable charge" => sub {
         consumer => {
           class => class('Consumer::ByTime', '=ChargeTodaysDate'),
           bank  => dollars(500),
-          extra_journal_charge_tags => ["test"],
+          extra_charge_tags => ["test"],
           replacement_lead_time                   => years(1000),
           cost_period               => days(1),
           replacement_plan          => [ get => '/nothing' ],

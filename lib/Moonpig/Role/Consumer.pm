@@ -490,17 +490,7 @@ sub charge_current_journal {
   return $self->ledger->current_journal->charge($args);
 }
 
-has extra_journal_charge_tags => (
-  is  => 'ro',
-  isa => ArrayRef,
-  default => sub { [] },
-  traits => [ qw(Copy) ],
-);
-
-sub journal_charge_tags {
-  my ($self) = @_;
-  return [ $self->xid, @{$self->extra_journal_charge_tags} ]
-}
+sub journal_charge_tags { $_[0]->invoice_charge_tags }
 
 sub charge_current_invoice {
   my ($self, $args) = @_;
@@ -521,7 +511,7 @@ sub charge_invoice {
   $invoice->add_charge($args);
 }
 
-has extra_invoice_charge_tags => (
+has extra_charge_tags => (
   is  => 'ro',
   isa => ArrayRef,
   default => sub { [] },
@@ -530,7 +520,7 @@ has extra_invoice_charge_tags => (
 
 sub invoice_charge_tags {
   my ($self) = @_;
-  return [ $self->xid, @{$self->extra_invoice_charge_tags} ]
+  return [ $self->xid, @{$self->extra_charge_tags} ]
 }
 
 # and return a list (or count) of the abandoned charges

@@ -25,7 +25,7 @@ sub templates {
           charge_amount => dollars(100),
           cost_period => days(365),
           charge_description => 'boring test charge',
-          extra_journal_charge_tags  => [ 'a.b.c' ],
+          extra_charge_tags  => [ 'a.b.c' ],
 
           replacement_plan   => [ get => '/consumer-template/boring' ],
         },

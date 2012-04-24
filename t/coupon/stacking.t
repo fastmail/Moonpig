@@ -52,7 +52,7 @@ sub try_coupon {
       c => {
         template => 'quick',
         charge_amount => $charge_amount,
-        extra_invoice_charge_tags => \@x_charge_tags,
+        extra_charge_tags => \@x_charge_tags,
       }
     },
     sub {

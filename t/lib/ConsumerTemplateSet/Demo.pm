@@ -19,7 +19,7 @@ sub templates {
           charge_frequency   => days(7), # less frequent to make logs simpler
           charge_description => 'yoyodyne service',
           replacement_lead_time            => days(30),
-          extra_journal_charge_tags  => [ 'yoyodyne.basic' ],
+          extra_charge_tags  => [ 'yoyodyne.basic' ],
           grace_until        => Moonpig->env->now + days(3),
 
           replacement_plan   => [ get => '/consumer-template/demo-service' ],

@@ -30,7 +30,7 @@ sub templates {
           cost_period      => days(365),
           replacement_lead_time          => days(30),
           replacement_plan => [ get => "/consumer-template/$name" ],
-          extra_journal_charge_tags     => [ 'fauxbox.basic' ],
+          extra_charge_tags     => [ 'fauxbox.basic' ],
         },
       }
     },
@@ -46,7 +46,7 @@ sub templates {
           charge_amount => dollars(20),
           cost_period => days(5),
           replacement_lead_time     => days(2),
-          extra_journal_charge_tags => [ 'fauxbox.speedy' ],
+          extra_charge_tags => [ 'fauxbox.speedy' ],
           charge_frequency => days(1),
           grace_period_duration => days(1),
           replacement_plan => [ get => "/consumer-template/$name" ],
