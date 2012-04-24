@@ -10,6 +10,8 @@ with(
   'Moonpig::Role::HasGuid' => { -excludes => 'ident' },
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
 
 use Carp qw(confess croak);
@@ -235,5 +237,7 @@ PARTIAL_PACK {
     is_internal  => $self->is_internal,
   });
 };
+
+sub _class_subroute { return }
 
 1;

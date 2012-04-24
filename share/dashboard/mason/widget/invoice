@@ -13,11 +13,14 @@ $invoice
 </div>
 
 % if ($invoice->{is_quote}) {
-<form action='/post/execute-quote'>
-  <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
-  <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
-  <input type='submit' />
-</form>
+<div style='border: thin black solid'>
+  <p>Execute Quote</p>
+  <form action='/post/execute-quote' method='post'>
+    <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
+    <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
+    <input type='submit' value='Execute Quote'/>
+  </form>
+</div>
 % }
 
 <table>

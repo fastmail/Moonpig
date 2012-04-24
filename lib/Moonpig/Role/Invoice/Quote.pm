@@ -127,6 +127,8 @@ publish execute => { -http_method => 'post', -path => 'execute' } => sub {
   } else {
     $first_consumer->become_active;
   }
+
+  return $self;
 };
 
 sub target_consumer {
