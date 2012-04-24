@@ -342,6 +342,16 @@ sub do_ro_with_ledgers {
   $self->do_with_ledgers({ %$opts, ro => 1 }, $guids, $code);
 }
 
+sub do_with_each_ledger {
+  if (@_ == 2) {
+    splice @_, 1, 0, {}; # $opts was omitted, so splice it in
+  }
+  my ($self, $opts, $code) = @_;
+  for my $guid ($self->ledger_guids) {
+    $self->do_with_ledgers($opts, [$guid], $code);
+  }
+}
+
 # This cache is getting complicated. It should be turned into an object.
 # 20120229 mjd
 has _ledger_cache => (
