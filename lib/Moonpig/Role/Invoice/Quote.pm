@@ -11,6 +11,8 @@ use Stick::Publisher::Publish;
 use MooseX::SetOnce;
 use Moose::Util::TypeConstraints qw(union);
 
+use Moonpig::Behavior::Packable;
+
 with(
   'Moonpig::Role::Invoice'
 );
@@ -149,5 +151,13 @@ sub record_expected_attachment_point {
   my $guid = $attachment_point ? $attachment_point->guid : undef;
   $self->attachment_point_guid($guid);
 }
+
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    promoted_at => $self->promoted_at,
+  };
+};
 
 1;
