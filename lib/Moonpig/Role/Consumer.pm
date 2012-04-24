@@ -472,6 +472,7 @@ sub copy_attr_hash__ {
 
 sub charge_current_journal {
   my ($self, $args) = @_;
+  $args = { %$args };
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{from}       ||= $self;
@@ -480,6 +481,7 @@ sub charge_current_journal {
   $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
 
+  $self->apply_coupons_to_charge_args($args); # Could modify amount, desc., etc.
   return $self->ledger->current_journal->charge($args);
 }
 

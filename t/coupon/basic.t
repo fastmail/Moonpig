@@ -13,15 +13,7 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with ('Moonpig::Test::Role::UsesStorage');
 
-has xid => (
-  isa => 'Str',
-  is  => 'ro',
-  default => sub { state $i = 0; $i++; "consumer:b5g1:$i"; },
-);
-
-before run_test => sub {
-  Moonpig->env->reset_clock;
-};
+Moonpig->env->stop_clock;
 
 sub set_up_consumer {
   my ($self, $ledger) = @_;
@@ -30,10 +22,24 @@ sub set_up_consumer {
                          description => "Joe's discount",
                        }] ;
 
-  $ledger->add_consumer_from_template("quick",
-                                      { xid => $self->xid,
-                                        coupon_descs => [ $coupon_desc ],
-                                      });
+  my $consumer = $ledger->add_consumer_from_template("yearly",
+                                                     { xid => "test:A",
+                                                       coupon_descs => [ $coupon_desc ],
+                                                       charge_description => "with coupon",
+                                                       grace_period_duration => 0,
+                                                     });
+  my $amount = dollars(75);
+  my $cred = $ledger->add_credit(class('Credit::Simulated'),
+                                 { amount => $amount });
+  $ledger->create_transfer({
+      type   => 'consumer_funding',
+      from   => $cred,
+      to     => $consumer,
+      amount => $amount,
+    });
+  die unless $consumer->is_funded;
+  $consumer->become_active;
+  return $consumer;
 }
 
 test "consumer setup" => sub {
@@ -53,6 +59,31 @@ test "consumer setup" => sub {
         like($charges[1]->description, qr/Joe's discount/, "line item description");
         like($charges[1]->description, qr/25%/, "line item description amount");
       }
+    });
+};
+
+test "consumer journal charging" => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger({ n => { template => "yearly",
+                                xid => "test:B",
+                                bank => dollars(100),
+                                charge_description => "without coupon",
+                                make_active => 1,
+                                grace_period_duration => 0,
+                              }
+                        },
+    sub {
+      my ($ledger) = @_;
+      my ($without) = $ledger->get_component("n");
+      die unless $without->is_funded;
+      my ($with) = $self->set_up_consumer($ledger);
+      die unless $with->is_funded;
+      Moonpig->env->elapse_time( days(1/2) );
+      $ledger->heartbeat;
+      my @j_charges = sort { $a->amount <=> $b->amount } $ledger->current_journal->all_charges;
+      is(@j_charges, 2, "two journal charges");
+      cmp_ok($j_charges[0]->amount, '==', int($j_charges[1]->amount * 0.75),
+             "Coupon consumer charged 25% less.");
     });
 };
 
