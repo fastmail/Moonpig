@@ -33,29 +33,29 @@ test 'basic' => sub {
       ok(  $q->is_quote, "it is a quote");
 
       like(exception { $q->_pay_charges },
-           qr/unpromoted quote/,
-           "can't pay unpromoted quote");
+           qr/unexecuted quote/,
+           "can't pay unexecuted quote");
 
     SKIP:
       { skip "No longer any easy way to get an open quote", 2;
-        like(exception { $q->mark_promoted },
+        like(exception { $q->mark_executed },
              qr/open quote/,
-             "can't promote open quote");
+             "can't execute open quote");
         $q->mark_closed;
       }
-      $q->mark_promoted;
+      $q->mark_executed;
 
       ok(! $q->is_quote, "it is no longer a quote");
 
-      like(exception { $q->mark_promoted },
+      like(exception { $q->mark_executed },
            qr/cannot change value/,
            "second promotion failed");
 
   });
 };
 
-test promote_and_pay => sub {
-  # put a charge on a quote, close and promote it,
+test execute_and_pay => sub {
+  # put a charge on a quote, close and execute it,
   # pay it.
   my ($self) = @_;
   do_with_fresh_ledger({},
@@ -63,7 +63,7 @@ test promote_and_pay => sub {
       my ($ledger) = @_;
       my $q = $self->make_and_check_quote($ledger);
       $q->execute;
-      ok($q->is_promoted, "q was promoted");
+      ok($q->is_executed, "q was executed");
       ok($q->is_payable, "q is payable");
       ok(! $q->is_quote, "q is no longer a quote");
       ok($q->first_consumer->is_active, "chain was activated");

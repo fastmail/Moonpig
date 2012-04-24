@@ -216,7 +216,7 @@ sub ident {
 sub is_quote {
   my ($self) = @_;
   return (
-    ($self->can("quote_expiration_time") && ! $self->is_promoted)
+    ($self->can("quote_expiration_time") && ! $self->is_executed)
     ? true
     : false
   )

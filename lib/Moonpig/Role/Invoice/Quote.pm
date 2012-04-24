@@ -18,18 +18,18 @@ with(
 );
 
 # XXX better name here
-has promoted_at => (
+has executed_at => (
   is   => 'rw',
   isa  => Time,
   traits => [ qw(SetOnce) ],
-  predicate => 'is_promoted',
+  predicate => 'is_executed',
 );
 
-sub mark_promoted {
+sub mark_executed {
   my ($self) = @_;
-  confess sprintf "Can't promote open quote %s", $self->guid
+  confess sprintf "Can't execute open quote %s", $self->guid
     unless $self->is_closed;
-  $self->promoted_at(Moonpig->env->now);
+  $self->executed_at(Moonpig->env->now);
 }
 
 has quote_expiration_time => (
@@ -81,8 +81,8 @@ sub can_be_attached_to {
 
 before _pay_charges => sub {
   my ($self, @args) = @_;
-  confess sprintf "Can't pay charges on unpromoted quote %s", $self->guid
-    unless $self->is_promoted;
+  confess sprintf "Can't pay charges on unexecuted quote %s", $self->guid
+    unless $self->is_executed;
 };
 
 sub first_consumer {
@@ -132,7 +132,7 @@ publish execute => { -http_method => 'post', -path => 'execute' } => sub {
     );
   }
 
-  $self->mark_promoted;
+  $self->mark_executed;
 
   if ($attachment_target) {
     $attachment_target->replacement($first_consumer);
@@ -166,7 +166,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return {
-    promoted_at => $self->promoted_at,
+    executed_at => $self->executed_at,
   };
 };
 

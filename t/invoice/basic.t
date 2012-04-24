@@ -389,7 +389,7 @@ sub assert_current_invoice_is_not_quote {
 
   ok(  $invoice->isnt_quote, "current invoice is not a quote");
   ok(! $invoice->is_quote, "current invoice is not a quote");
-  ok(! $invoice->can('mark_promoted'), "can't promote invoice");
+  ok(! $invoice->can('mark_executed'), "can't execute non-quote invoice");
 }
 
 test 'quote-related' => sub {
