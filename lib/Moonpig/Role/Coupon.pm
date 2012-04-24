@@ -10,6 +10,7 @@ with(
   'Moonpig::Role::ConsumerComponent',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
+  'Moonpig::Role::HasTagset' => {} ,
 );
 
 use namespace::autoclean;
@@ -24,15 +25,16 @@ has description => (
 requires 'applies_to_charge';
 
 around applies_to_charge => sub {
-  my ($orig, $self, @args) = @_;
-  return $self->is_expired ? () : $self->$orig(@args);
+  my ($orig, $self, $args) = @_;
+  return $self->is_expired ? () : $self->$orig($args);
 };
 
 # adjust the charge arguments and return line items for adjustments
 requires 'adjust_charge_args';
 
 after adjust_charge_args => sub {
-  my ($self, @args) = @_;
+  my ($self, $args) = @_;
+  push @{$args->{tags}}, $self->taglist;
   $self->mark_applied;
 };
 

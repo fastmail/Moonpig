@@ -15,11 +15,19 @@ with ('Moonpig::Test::Role::UsesStorage');
 
 Moonpig->env->stop_clock;
 
+my $coupon_tag = "coupon-tag";
+
+sub has_tag {
+  my ($tag, $charge) = @_;
+  grep $_ eq $tag, $charge->taglist;
+}
+
 sub set_up_consumer {
   my ($self, $ledger) = @_;
   my $coupon_desc =  [ class("Coupon::FixedPercentage", "Coupon::Universal"),
                        { discount_rate => 0.25,
                          description => "Joe's discount",
+                         tags => [ $coupon_tag ],
                        }] ;
 
   my $consumer = $ledger->add_consumer_from_template("yearly",
@@ -54,10 +62,12 @@ test "consumer setup" => sub {
 #      is(@charges, 2, "two charges (1 + 1 line item)");
 
       is($charges[0]->amount, dollars(75), "true charge amount: \$75");
-      SKIP: { skip "line items unimplemented", 2;
+      ok(has_tag($coupon_tag, $charges[0]), "invoice charge contains correct tag");
+      SKIP: { skip "line items unimplemented", 3;
         is($charges[1]->amount, 0, "line item amount: 0mc");
         like($charges[1]->description, qr/Joe's discount/, "line item description");
         like($charges[1]->description, qr/25%/, "line item description amount");
+        ok(has_tag($coupon_tag, $charges[1]), "line item contains correct tag");
       }
     });
 };
@@ -84,10 +94,12 @@ test "consumer journal charging" => sub {
       is(@j_charges, 2, "two journal charges");
       cmp_ok($j_charges[0]->amount, '==', int($j_charges[1]->amount * 0.75),
              "Coupon consumer charged 25% less.");
+      ok(has_tag($coupon_tag, $j_charges[0]), "journal charge contains correct tag");
+      ok(! has_tag($coupon_tag, $j_charges[1]), "sanity check");
     });
 };
 
-test "tags" => sub {
+test "required tags" => sub {
   local $TODO = "todo";
   fail();
 };
