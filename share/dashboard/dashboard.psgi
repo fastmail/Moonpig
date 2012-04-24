@@ -99,7 +99,7 @@ my $app = sub {
     )->exec;
 
     return [
-      200 => [ 'Content-Type' => 'text/html' ], [ $output ]
+      200 => [ 'Content-Type' => 'text/html; charset="utf-8"' ], [ $output ]
     ];
   } catch {
     if (try { $_->isa('Moonpig::Dashboard::Redirect') }) {
