@@ -1,0 +1,39 @@
+There are three or four different notaions of a consumer's remaining
+life.  Is this proliferation necessary?  Can it be cleaned up?
+
+* Some factors that affect the answer to the question "how long does
+  this consumer have to live":
+
+    1. Do fractional charge periods count?  For calculating expiration
+    dates, no; for calculating how much is required to top up the funds to
+    last a certain time, then yes.
+
+    2. Does it make sense to ask about an inactive consumer?  Only in some cases.
+
+    3. For an unfunded consumer in its grace period, do we count the grace
+    period, or just say zero?
+
+* Code that still needs to be cleaned up:
+
+  remaining_life
+  expiration_date
+  estimated_lifetime methods 
+    in each of 
+  Consumer::ByTime
+  Consumer::ByUsage
+  Consumer::FixedExpiration
+
+* Design idea: names like "remaining_life" are naive. There are
+  many different concepts of "remaining life" depending on context and
+  the purpose to which it will be put. Such functions should be
+  eliminated in favor of methods with more explicit names and fewer
+  hidden assumptions, such as _estimated_remaining_funded_lifetime and
+  its explicit ignore_partial_charge_periods argument.
+
+* Design idea: Perhaps there should be a simple, easily-stated
+  relationship between remaining life and expiration date.  Note that
+  this is nontrivial, since for some consumers (ByUsage) the expiration date
+  would be calculated from the remaining life, and for some
+  (FixedExpiration) it would be the other way around.
+
+
