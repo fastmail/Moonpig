@@ -55,6 +55,7 @@ test by_time => sub {
                bag(grep { 'last_charge_date' ne $_ } @basic, @makes_replacement,
                    qw(charge_description charge_frequency
                       charge_amount cost_period grace_period_duration
+                      proration_period
                     ),
                    $make_active ? qw(grace_until last_charge_date)
                      : (),

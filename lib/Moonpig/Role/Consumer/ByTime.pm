@@ -63,7 +63,25 @@ has proration_period => (
   isa  => TimeInterval,
   lazy => 1,
   default => sub { $_[0]->cost_period },
+  # Note *not* copied explicitly; see copy_attr_hash__ decorator below
 );
+
+# Fix up the proration period in the copied consumer
+around copy_attr_hash__ => sub {
+  my ($orig, $self, @args) = @_;
+  my $hash = $self->$orig(@args);
+  $hash->{proration_period} = $self->_new_proration_period();
+  return $hash;
+};
+
+sub _new_proration_period {
+  my ($self) = @_;
+  return $self->is_active
+    ? $self->_estimated_remaining_funded_lifetime({ amount => $self->unapplied_amount, # XXX ???
+                                                    ignore_partial_charge_periods => 0,
+                                                  })
+    : $self->proration_period;
+}
 
 after BUILD => sub {
   my ($self) = @_;
