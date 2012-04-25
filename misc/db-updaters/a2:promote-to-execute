@@ -1,0 +1,20 @@
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+# Quote promoted-at attribute renamed to executed-at
+# ab6db563fad4890355011820d3b163c50855f43d 
+#   rename quote-related "promote" to "execute"
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    for my $invoice ($ledger->invoices) {
+      next unless $invoice->is_quote && exists $invoice->{promoted_at};
+      print "Processing " . $invoice->ident, "\n";
+#      $invoice->{executed_at} = delete $invoice->{promoted_at};
+    }
+  }
+);
+
