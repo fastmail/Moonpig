@@ -107,8 +107,6 @@ sub resource_post {
       }
     }
 
-    $ledger->heartbeat;
-
     if ($arg{old_payment_info}) {
       # This really shouldn't be reachable.  If we have old_payment_info, we
       # should have just created enough cash to cover everything.  But it also

@@ -263,7 +263,10 @@ sub _predicted_shortfall {
   my $guid = $self->guid;
   my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
                 map  { $_->all_charges }
-                $self->ledger->payable_invoices;
+  # This counts charges on invoices that are payable, *and* on open
+  # invoices that will be payable once they are closed. mjd 20120427
+                grep { $_->is_unpaid && ! $_->is_abandoned && $_->isnt_quote }
+                  $self->ledger->invoices;
   my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
 
   # Next, figure out how long that money will last us.
