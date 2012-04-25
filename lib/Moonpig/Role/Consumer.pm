@@ -649,6 +649,7 @@ has coupon_array => (
   is => 'ro',
   isa => ArrayRef[ role_type('Moonpig::Role::Coupon') ],
   default  => sub { [] },
+  lazy => 1, # To preserve database compatibility
   traits   => [ qw(Array) ],
   handles => {
     add_coupon => 'push',
