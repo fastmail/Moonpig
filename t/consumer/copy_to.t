@@ -62,16 +62,24 @@ test bytime => sub {
     note(($make_active ? "active" : "inactive") . " consumer");
     Moonpig->env->storage->do_with_ledgers([ $A, $B ], sub {
       my ($ledger_a, $ledger_b) = @_;
+
+      my $credit = $ledger_a->add_credit(
+        class(qw(Credit::Simulated)),
+        { amount => dollars(100) },
+       );
+
       my $consumer = $ledger_a->add_consumer(
         class("Consumer::ByTime::FixedAmountCharge"),
         { charge_description => "monkey meat",
-        charge_amount => cents(1234),
-        cost_period => years(1),
-        replacement_lead_time => days(3),
-        replacement_plan    => [ get => '/nothing' ],
-        xid => "eat:more:possum:$make_active",
-        make_active => $make_active,
-      });
+          charge_amount => cents(1234),
+          cost_period => years(1),
+          replacement_lead_time => days(3),
+          replacement_plan    => [ get => '/nothing' ],
+          xid => "eat:more:possum:$make_active",
+          make_active => $make_active,
+        });
+      $ledger_a->heartbeat;
+
       my $copy = $consumer->copy_to($ledger_b);
       Moonpig->env->elapse_time( days(1) );
       is($copy->grace_period_duration,
