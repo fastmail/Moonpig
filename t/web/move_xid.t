@@ -70,7 +70,7 @@ sub setup_account {
 
       $rv{ledger_path} = sprintf "/ledger/by-guid/%s", $rv{ledger_guid};
 
-      $rv{account_guid} = do {
+      $rv{account} = do {
         my $account_info = {
           template      => 'fauxboxtest',
           template_args => {
@@ -89,6 +89,20 @@ sub setup_account {
 
         $result;
       };
+
+      $rv{account_guid} = $rv{account}{guid};
+
+      $rv{credit} = $ua->mp_post(
+        "$rv{ledger_path}/credits",
+        {
+          type => 'Simulated',
+          attributes => { amount => dollars(20) },
+        });
+
+      $ua->mp_post("$rv{ledger_path}/heartbeat", {});
+      $rv{invoices} = $ua->mp_get("$rv{ledger_path}/invoices");
+
+      $ua->mp_post("$rv{ledger_path}/heartbeat", {});
     };
 
   return \%rv;
