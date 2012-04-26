@@ -63,11 +63,33 @@ has proration_period => (
   isa  => TimeInterval,
   lazy => 1,
   default => sub { $_[0]->cost_period },
+  # Note *not* copied explicitly; see copy_attr_hash__ decorator below
 );
+
+# Fix up the proration period in the copied consumer
+around copy_attr_hash__ => sub {
+  my ($orig, $self, @args) = @_;
+  my $hash = $self->$orig(@args);
+  $hash->{proration_period} = $self->_new_proration_period();
+  return $hash;
+};
+
+sub _new_proration_period {
+  my ($self) = @_;
+  return $self->is_active
+    ? $self->_estimated_remaining_funded_lifetime({ amount => $self->unapplied_amount, # XXX ???
+                                                    ignore_partial_charge_periods => 0,
+                                                  })
+    : $self->proration_period;
+}
 
 after BUILD => sub {
   my ($self) = @_;
-  Moonpig::X->throw({ ident => 'proration longer than cost period' })
+  Moonpig::X->throw({ ident => 'proration longer than cost period',
+                      payload => {
+                        proration_period => $self->proration_period,
+                        cost_period => $self->cost_period,
+                       }})
     if $self->proration_period > $self->cost_period;
 };
 
@@ -97,13 +119,12 @@ publish expiration_date => { } => sub {
   if ($remaining <= 0) {
     return $self->grace_until if $self->in_grace_period;
     return Moonpig->env->now;
+  } else {
+    return $self->next_charge_date +
+      $self->_estimated_remaining_funded_lifetime({ amount => $remaining,
+                                                   ignore_partial_charge_periods => 1,
+                                                 });
   }
-
-  my $n_charge_periods_left
-    = int($remaining / $self->calculate_total_charge_amount_on( Moonpig->env->now ));
-
-  return $self->next_charge_date() +
-      $n_charge_periods_left * $self->charge_frequency;
 };
 
 # returns amount of life remaining, in seconds
@@ -225,9 +246,10 @@ sub _predicted_shortfall {
   my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
 
   # Next, figure out how long that money will last us.
-  my $each_chg = $self->calculate_total_charge_amount_on( Moonpig->env->now );
-  my $periods  = $funds / $each_chg;
-  my $to_live  = $periods * $self->charge_frequency;
+  my $estimated_remaining_funded_lifetime =
+      $self->_estimated_remaining_funded_lifetime({ amount => $funds,
+                                                   ignore_partial_charge_periods => 0,
+                                                 });
 
   # Next, figure out long we think it *should* last us.
   my $want_to_live;
@@ -238,17 +260,37 @@ sub _predicted_shortfall {
     $want_to_live = $self->proration_period;
   }
 
-  return 0 if $to_live >= $want_to_live;
+  return 0 if $estimated_remaining_funded_lifetime >= $want_to_live;
 
   # If you're going to run out of funds your final charge period, we don't
   # care.  In general, we plan to have charge_frequency stick with its default
   # value always: days(1).  If you were to use a days(30) charge frequency,
   # this could mean that someone could easily miss 29 days of service, which is
   # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
-  my $shortfall = $want_to_live - $to_live;
+  my $shortfall = $want_to_live - $estimated_remaining_funded_lifetime;
   return 0 if $shortfall < $self->charge_frequency;
 
   return $shortfall;
+}
+
+# Given an amount of money, estimate how long the money will last
+# at current rates of consumption.
+#
+# If the money will last for a fractional number of charge periods, you
+# might or might not want to count the final partial period.
+#
+sub _estimated_remaining_funded_lifetime {
+  my ($self, $args) = @_;
+
+  confess "Missing amount argument to _estimated_remaining_funded_lifetime"
+    unless defined $args->{amount};
+
+  my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now );
+
+  my $periods     = $args->{amount} / $each_charge;
+  $periods = int($periods) if $args->{ignore_partial_charge_periods};
+
+  return $periods * $self->charge_frequency;
 }
 
 1;
