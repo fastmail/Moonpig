@@ -85,7 +85,11 @@ sub _new_proration_period {
 
 after BUILD => sub {
   my ($self) = @_;
-  Moonpig::X->throw({ ident => 'proration longer than cost period' })
+  Moonpig::X->throw({ ident => 'proration longer than cost period',
+                      payload => {
+                        proration_period => $self->proration_period,
+                        cost_period => $self->cost_period,
+                       }})
     if $self->proration_period > $self->cost_period;
 };
 
