@@ -824,7 +824,7 @@ PARTIAL_PACK {
     jobs    => ppack($self->job_collection),
 
     amount_due => $self->amount_due,
-    unpaid_invoices => $self->invoice_collection->payable,
+    unpaid_invoices => ppack($self->invoice_collection->payable),
 
     active_xids => {
       map {;
