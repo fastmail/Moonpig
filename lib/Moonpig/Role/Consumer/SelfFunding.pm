@@ -35,6 +35,7 @@ has self_funding_credit_roles => (
 has self_funding_credit_amount => (
   is  => 'ro',
   isa => PositiveMillicents,
+  lazy => 1,
   required => 1,
   default  => sub {
     my ($self) = @_;
