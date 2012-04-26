@@ -133,7 +133,7 @@ coerce TrimmedNonBlankLine,
 
 subtype GUID, as Str, where { $_ =~ Data::GUID->string_guid_regex };
 
-subtype XID, as Str, where { /\A$simple_str_colonchain\z/ };
+subtype XID, as Str, where { /\A$simple_str_colonchain\z/ and length };
 
 ################################################################
 #
