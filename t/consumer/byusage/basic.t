@@ -9,6 +9,7 @@ use Test::More;
 use Test::Routine::Util;
 
 use t::lib::TestEnv;
+use t::lib::ConsumerTemplateSet::Test;
 
 use Moonpig::Test::Factory qw(build);
 use t::lib::Logger;
@@ -38,16 +39,11 @@ sub create_consumer {
   $args ||= {};
 
   my $stuff = build(
-    consumer => {
-      class            => class('Consumer::ByUsage'),
-      bank             => dollars(1),
-      charge_amount_per_unit    => cents(5),
-      replacement_lead_time          => days(30),
-      replacement_plan => [ get => '/nothing' ],
-      make_active      => 1,
-      %$args,
-    },
-  );
+    consumer => { template => 'byu_test',
+                  bank             => dollars(1),
+                  make_active      => 1,
+                  %$args,
+                });
 
   $Consumer = $stuff->{consumer};
   $Ledger   = $stuff->{ledger};
@@ -122,7 +118,6 @@ test low_water_replacement => sub {
   my $lwm = 7;
   $self->create_consumer({
     low_water_mark => $lwm,
-    replacement_plan => [ get => 'template-like-this' ],
     replacement_lead_time => 0,
   });
   my $q = 2;
@@ -197,7 +192,6 @@ test "test lifetime replacement" => sub {
       $self->discard_ledger;
       $self->create_consumer({
         low_water_mark => 0,
-        replacement_plan => [ get => 'template-like-this' ],
         replacement_lead_time => $replacement_lead_time,
       });
 
@@ -222,7 +216,6 @@ test default_low_water_check => sub {
   my ($self) = @_;
 
   $self->create_consumer({
-    replacement_plan => [ get => 'template-like-this' ],
     replacement_lead_time => 0,
   });
   my $q = 0;

@@ -10,7 +10,7 @@ use Test::Routine::Util;
 use Test::Routine;
 
 use t::lib::TestEnv;
-
+use t::lib::ConsumerTemplateSet::Test;
 use t::lib::Logger;
 use t::lib::Class::EventHandler::Test;
 use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
@@ -132,16 +132,11 @@ test "without_successor" => sub {
     Moonpig->env->stop_clock_at($jan1);
 
     my $xid = "consumer:test:" . guid_string();
-    do_with_fresh_ledger({ consumer => {
-      class                 => class('Consumer::ByTime::FixedAmountCharge'),
-      charge_description    => "test charge",
-      replacement_lead_time => days(20),
-      replacement_plan      => [ get => 'template-like-this' ],
-      charge_amount         => dollars(1),
-      cost_period      => days(1),
-      bank                  => dollars(31),
-      xid                   => $xid,
-    }}, sub {
+    do_with_fresh_ledger({ consumer => { template => 'boring2',
+                                         xid => $xid,
+                                         bank                  => dollars(31),
+                                       }},
+    sub {
       my ($ledger) = @_;
       $ledger->register_event_handler(
         'contact-humans', 'default', Moonpig::Events::Handler::Noop->new()

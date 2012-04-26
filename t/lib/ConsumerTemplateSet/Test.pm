@@ -2,7 +2,7 @@ package t::lib::ConsumerTemplateSet::Test;
 use Moose;
 with 'Moonpig::Role::ConsumerTemplateSet';
 
-use Moonpig::Util qw(days dollars);
+use Moonpig::Util qw(cents days dollars);
 
 use Data::GUID qw(guid_string);
 
@@ -31,6 +31,38 @@ sub templates {
         },
       }
     },
+
+    boring2 => sub {
+      my ($name) = @_;
+
+      return {
+        roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
+        arg   => {
+          charge_description    => "test charge",
+          replacement_lead_time => days(20),
+          replacement_plan      => [ get => '/consumer-template/boring2' ],
+          charge_amount         => dollars(1),
+          cost_period      => days(1),
+        },
+      }
+    },
+
+    byu_test => sub {
+      my ($name) = @_;
+
+      return {
+        roles => [ 'Consumer::ByUsage' ],
+        arg   => {
+          charge_amount_per_unit    => cents(5),
+          replacement_lead_time          => days(30),
+          replacement_plan => [ get => '/consumer-template/byu_test' ],
+          replacement_lead_time => days(20),
+          replacement_plan      => [ get => '/consumer-template/boring2' ],
+        },
+      }
+    },
+
+
   };
 }
 
