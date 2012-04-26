@@ -109,7 +109,7 @@ $ledger
   <h2>Unpaid Invoices</h2>
 % my $invoices = $ledger->{unpaid_invoices}{items};
 % my $total     = sumof(sub{ $_->{total_amount} }, @$invoices);
-% my $total_due = sumof(sub{ $_->{amount_due} }, @$invoices);
+% my $total_due = $ledger->{amount_due};
   <table>
     <tr>
       <th>Invoice No.</th>
@@ -123,7 +123,7 @@ $ledger
         <a href='/ledger/<% $ledger->{guid} |h %>/invoice/<% $invoice->{guid} |h %>'><% $invoice->{ident} |h %></a></th>
       <td><% $invoice->{closed_at} |h %></td>
       <td><% mc($invoice->{total_amount}) |h %></td>
-      <td><% mc($invoice->{amount_due}) |h %></td>
+      <td>&nbsp;</td>
     </tr>
 % }
     <tr class='total'>
