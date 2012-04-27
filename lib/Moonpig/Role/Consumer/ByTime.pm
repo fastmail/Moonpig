@@ -261,13 +261,8 @@ sub _predicted_shortfall {
   # First, figure out how much money we have and are due, and assume we're
   # going to get it all. -- rjbs, 2012-03-15
   my $guid = $self->guid;
-  my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
-                map  { $_->all_charges }
-  # This counts charges on invoices that are payable, *and* on open
-  # invoices that will be payable once they are closed. mjd 20120427
-                grep { $_->is_unpaid && ! $_->is_abandoned && $_->isnt_quote }
-                  $self->ledger->invoices;
-  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+
+  my $funds = $self->expected_funds;
 
   # Next, figure out how long that money will last us.
   my $estimated_remaining_funded_lifetime =
@@ -296,6 +291,23 @@ sub _predicted_shortfall {
 
   return $shortfall;
 }
+
+# Not just the amount we have on hand, but the amount we expect to have, assuming
+# that all our payable charges are paid.
+sub expected_funds {
+  my ($self) = @_;
+  my $guid = $self->guid;
+
+  my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
+                map  { $_->all_charges }
+  # This counts charges on invoices that are payable, *and* on open
+  # invoices that will be payable once they are closed. mjd 20120427
+                grep { $_->is_unpaid && ! $_->is_abandoned && $_->isnt_quote }
+                  $self->ledger->invoices;
+  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+  return $funds;
+}
+
 
 # Given an amount of money, estimate how long the money will last
 # at current rates of consumption.
