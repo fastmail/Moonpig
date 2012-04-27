@@ -2,7 +2,7 @@ package Moonpig::Role::Credit::CreditCard;
 # ABSTRACT: credit received from credit card
 use Moose::Role;
 
-use Moonpig::Types qw(TrimmedSingleLine);
+use Moonpig::Types qw(TrimmedNonBlankLine);
 
 use namespace::autoclean;
 
@@ -16,7 +16,8 @@ sub as_string {
 
 has transaction_id => (
   is  => 'ro',
-  isa => TrimmedSingleLine,
+  isa => TrimmedNonBlankLine,
+  coerce   => 1,
   required => 1,
 );
 
