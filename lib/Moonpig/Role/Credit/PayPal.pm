@@ -2,7 +2,7 @@ package Moonpig::Role::Credit::PayPal;
 # ABSTRACT: credit received from PayPal
 use Moose::Role;
 
-use Moonpig::Types qw(TrimmedSingleLine);
+use Moonpig::Types qw(TrimmedNonBlankLine);
 
 use namespace::autoclean;
 
@@ -17,18 +17,21 @@ sub as_string {
 
 has transaction_id => (
   is  => 'ro',
-  isa => TrimmedSingleLine,
+  isa => TrimmedNonBlankLine,
+  coerce   => 1,
   required => 1,
 );
 
 has from_name => (
   is  => 'ro',
-  isa => TrimmedSingleLine,
+  isa => TrimmedNonBlankLine,
+  coerce   => 1,
 );
 
 has from_address => (
   is  => 'ro',
-  isa => TrimmedSingleLine,
+  isa => TrimmedNonBlankLine,
+  coerce   => 1,
   required => 1,
 );
 
