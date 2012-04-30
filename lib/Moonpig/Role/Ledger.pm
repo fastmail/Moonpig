@@ -692,7 +692,26 @@ sub _collect_spare_change {
 
   delete $consider{ $_->guid } for @consumers;
 
-  $_->cashout_unapplied_amount for map { $_->[0] } values %consider;
+  my $min_to_collect = Moonpig->env->minimum_spare_change_amount;
+  for my $pair (values %consider) {
+    my ($consumer, $unapplied_amount) = @$pair;
+
+    my $min;
+    $min = $consumer->minimum_spare_change_amount
+      if $consumer->can('minimum_spare_change_amount');
+    $min //= $min_to_collect;
+
+    if ($unapplied_amount >= $min) {
+      $consumer->cashout_unapplied_amount;
+    } else {
+      $self->create_transfer({
+        type => 'transfer',
+        from   => $consumer,
+        to     => $self->current_journal,
+        amount => $unapplied_amount,
+      });
+    }
+  }
 }
 
 sub _class_subroute {

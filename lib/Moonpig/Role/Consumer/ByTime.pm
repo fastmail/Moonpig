@@ -225,6 +225,11 @@ sub calculate_total_charge_amount_on {
   return $total_charge_amount;
 }
 
+sub minimum_spare_change_amount {
+  my ($self) = @_;
+  return $self->calculate_total_charge_amount_on( Moonpig->env->now );
+}
+
 publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
   my ($self, $arg) = @_;
   my $interval = $arg->{interval};

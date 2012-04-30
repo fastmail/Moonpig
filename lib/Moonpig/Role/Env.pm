@@ -15,7 +15,7 @@ use Moonpig::Consumer::TemplateRegistry;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Ledger::PostTarget;
 use Moonpig::MKits;
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class dollars);
 
 use Moose::Util::TypeConstraints;
 
@@ -134,6 +134,12 @@ sub _extra_instance_subroute {
   }
 
   return;
+}
+
+# XXX: This should be made a required method that each application's Env must
+# implement, rather than a universal default. -- rjbs, 2012-04-30
+sub minimum_spare_change_amount {
+  return dollars(.5);
 }
 
 my %MP_ENV;

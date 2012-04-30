@@ -10,6 +10,7 @@ use t::lib::Logger '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use Data::GUID qw(guid_string);
+use List::AllUtils qw(max);
 use Moonpig::Util qw(class days dollars sum sumof to_dollars);
 use Moonpig::Types qw(GUID);
 
@@ -148,18 +149,31 @@ test "end to end demo" => sub {
     my $active_consumer = $ledger->active_consumer_for_xid( $self->xid );
     is($active_consumer, undef, "...but they're all inactive now");
 
-    # Every consumer wants $40 + $10, spent over the course of a year, charged
-    # every 7 days.  That means each charge is...
-    my $each_charge = dollars(50) / 365.25 * 7;
-
     # ...and that means we must not have any more credit left than that.
-    $ledger->_collect_spare_change;
-    my $avail = $ledger->amount_available;
+    is(
+      $ledger->amount_available,
+      0,
+      'any spare-change-collection went to journal (none were big)',
+    );
+
+    # Every consumer wants $40 + $10, spent over the course of a year, charged
+    # every 7 days.  That means each day's total charge is...
+    my $daily = $consumers[2]->calculate_total_charge_amount_on(
+      Moonpig->env->now,
+    );
+
+    # We shouldn't have any transfers larger than that.  It would/could mean we
+    # spare-change-collected something that could've paid for a whole day!
+    my $max =
+      max
+      map {; $_->amount }
+      $ledger->accountant->select({ target => $ledger->current_journal })->all;
+
     cmp_ok(
-      $ledger->amount_available, '<', $each_charge,
-      sprintf("ledger has less avail. credit (\$%.2f) than a charge (\$%.2f)",
-        to_dollars($avail),
-        to_dollars($each_charge),
+      $max, '<=', $daily,
+      sprintf("no transfer was greater than the daily charge: %.2f <= %.2f",
+        to_dollars($max),
+        to_dollars($daily),
       ),
     );
   });
