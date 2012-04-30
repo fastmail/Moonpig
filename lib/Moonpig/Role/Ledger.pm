@@ -696,10 +696,9 @@ sub _collect_spare_change {
   for my $pair (values %consider) {
     my ($consumer, $unapplied_amount) = @$pair;
 
-    my $min;
-    $min = $consumer->minimum_spare_change_amount
-      if $consumer->can('minimum_spare_change_amount');
-    $min //= $min_to_collect;
+    my $min = $consumer->can('minimum_spare_change_amount')
+            ? $consumer->minimum_spare_change_amount
+            : $min_to_collect;
 
     if ($unapplied_amount >= $min) {
       $consumer->cashout_unapplied_amount;
