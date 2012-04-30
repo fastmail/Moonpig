@@ -33,7 +33,6 @@ after process_daily_assertions => sub {
   );
 };
 
-
 after process_daily_assertions => sub {
   my ($self, $day, $ledger) = @_;
 
