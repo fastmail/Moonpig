@@ -191,6 +191,11 @@ around charge_one_day => sub {
   my $orig = shift;
   my ($self, @args) = @_;
 
+  my %p = $self->effective_funding_pairs;
+  if (%p and $self->does('Moonpig::Role::Consumer::MakesReplacement')) {
+    $self->maybe_make_replacement;
+  }
+
   unless ($self->can_make_payment_on( $self->next_charge_date )) {
     $self->expire;
     return;
