@@ -19,7 +19,7 @@ with(
 
 use namespace::autoclean;
 
-test "get a ledger guid via web" => sub {
+test "import a ledger via the web" => sub {
   my ($self) = @_;
 
   my $xid = 'test:xyz';
