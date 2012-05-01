@@ -2,7 +2,9 @@
 use strict;
 use warnings;
 
-use lib 'lib';
+use if $ENV{MOONPIG_DASHBOARD_TEST}, lib => 'lib';
+use if $ENV{MOONPIG_DASHBOARD_TEST}, 'Test::File::ShareDir',
+  -share => { -dist => { q{Moonpig} => q{share} } };
 
 use Encode qw(encode_utf8);
 use File::ShareDir qw(dist_dir);
