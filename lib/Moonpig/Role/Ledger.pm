@@ -232,6 +232,8 @@ sub _generate_subcomponent_methods {
 
         $self->$add_this_thing($value);
 
+        $Logger->log([ 'added %s to %s', $value->ident, $self->ident ]);
+
         $value->handle_event(event('created'));
 
         return $value;
