@@ -36,7 +36,7 @@ sub TO_JSON { $_[0]->ident }
 
 after BUILD => sub {
   my ($self) = @_;
-  $Logger->log([ 'created %s', $self->ident ]);
+  $Logger->log_debug([ 'created %s', $self->ident ]);
   Moonpig->env->register_object($self);
 };
 
