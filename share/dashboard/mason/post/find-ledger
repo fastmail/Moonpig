@@ -1,0 +1,17 @@
+%# vim:set ft=mason:
+<%perl>
+my $ledger_arg = CGI::Expand->expand_hash($r->parameters)->{ledger};
+my $find_by = $ledger_arg->{search};
+
+$m->redirect('/') unless $find_by;
+
+my $by = $find_by =~ /\AL-/ ? 'by-ident'
+       : $find_by =~ /:/    ? 'by-xid'
+       :                    ? 'by-guid';
+
+my $ledger = $m->mp_request(GET => "/ledger/$by/$find_by");
+
+$m->redirect('/') unless $find_by;
+
+$m->redirect("/ledger/$ledger->{guid}");
+

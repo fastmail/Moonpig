@@ -12,5 +12,5 @@ my $i = 0;
 <form id='<% $search_id |h %>' action="<% $action |h %>" method="<% $method |h %>">
   <label for='<% $field_id |h %>'><% $label |h %></label>
   <input id='<%  $field_id |h %>' type='text' name='search' />
-  <input type='submit' />
+  <input type='submit' value='Go!' />
 </form>
