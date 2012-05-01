@@ -4,6 +4,7 @@ use warnings;
 
 use lib 'lib';
 
+use Encode qw(encode_utf8);
 use File::ShareDir qw(dist_dir);
 use File::Spec;
 use HTML::Mason::Interp;
@@ -98,8 +99,10 @@ my $app = sub {
       out_method => \$output,
     )->exec;
 
+    my $octets = encode_utf8($output);
+
     return [
-      200 => [ 'Content-Type' => 'text/html; charset="utf-8"' ], [ $output ]
+      200 => [ 'Content-Type' => 'text/html; charset="utf-8"' ], [ $octets ]
     ];
   } catch {
     if (try { $_->isa('Moonpig::Dashboard::Redirect') }) {
