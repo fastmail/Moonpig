@@ -345,6 +345,84 @@ test grace_period => sub {
   }
 };
 
+test "spare change" => sub {
+  my ($self) = @_;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->stop_clock_at($jan1);
+
+  Moonpig->env->storage->do_rw(sub {
+    my $stuff = build(
+      consumer => {
+        class              => class('Consumer::ByTime::FixedAmountCharge'),
+        bank               => dollars(100),
+        charge_amount      => dollars(100),
+        cost_period        => days(100),
+        replacement_plan   => [ get => '/nothing' ],
+        charge_description => "test charge",
+        xid                => xid(),
+        replacement_lead_time => years(1000),
+      }
+    );
+
+    my $ledger   = $stuff->{ledger};
+    my $consumer = $stuff->{consumer};
+
+    Moonpig->env->elapse_time(86_400 * 10);
+    $ledger->heartbeat;
+
+    is($ledger->amount_available, 0, "we have no free cash on the ledger");
+    my $funds = $consumer->unapplied_amount;
+    cmp_ok($funds, '>', 0, "the consumer has some cash");
+
+    $stuff->{consumer}->expire;
+    $ledger->_collect_spare_change;
+
+    is($consumer->unapplied_amount, 0, "...the funds are gone from consumer");
+    is($ledger->amount_available, $funds, "...the funds went to the ledger!");
+  });
+};
+
+test "almost no spare change" => sub {
+  my ($self) = @_;
+
+  # Pretend today is 2000-01-01 for convenience
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->stop_clock_at($jan1);
+
+  Moonpig->env->storage->do_rw(sub {
+    my $stuff = build(
+      consumer => {
+        class              => class('Consumer::ByTime::FixedAmountCharge'),
+        bank               => dollars(1),   # less than one day's charge
+        charge_amount      => dollars(200),
+        cost_period        => days(100),
+        replacement_plan   => [ get => '/nothing' ],
+        charge_description => "test charge",
+        xid                => xid(),
+        replacement_lead_time => years(1000),
+      }
+    );
+
+    my $ledger   = $stuff->{ledger};
+    my $consumer = $stuff->{consumer};
+
+    Moonpig->env->elapse_time(86_400);
+    $ledger->heartbeat;
+
+    is($ledger->amount_available, 0, "we have no free cash on the ledger");
+    my $funds = $consumer->unapplied_amount;
+    cmp_ok($funds, '>', 0, "the consumer has some cash");
+
+    $stuff->{consumer}->expire;
+    $ledger->_collect_spare_change;
+
+    is($consumer->unapplied_amount, 0, "...the funds are gone from consumer");
+    is($ledger->amount_available, 0, "...and the ledger didn't get them!");
+  });
+};
+
 sub xid { "test:consumer:" . guid_string() }
 
 run_me;
