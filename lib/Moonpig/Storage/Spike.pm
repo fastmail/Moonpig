@@ -144,7 +144,7 @@ schema:
       fields:
         job_id: { name: job_id, data_type: integer, is_nullable: 0 }
         ident: { name: ident, data_type: varchar, size: 64, is_nullable: 0 }
-        payload: { name: payload, data_type: text, is_nullable: 0 }
+        payload: { name: payload, data_type: longtext, is_nullable: 0 }
       constraints:
         - type:   PRIMARY KEY
           fields: [ job_id, ident ]
