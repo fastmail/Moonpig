@@ -1,0 +1,18 @@
+use 5.14.1;
+use lib 'lib';
+use Pobox::Moonpig::Env;
+use Pobox::Moonpig::TemplateSet;
+
+$ENV{MOONPIG_TRACE_EVENTS} = 1;
+
+Moonpig->env->storage->do_with_ledger(
+  '310A1E58-8DAB-11E1-AE8F-125A466D128F',
+  sub {
+    my $ledger = shift;
+    $ledger->heartbeat;
+    my $consumer = $ledger->active_consumer_for_xid('pobox:bg:01462842');
+    say $consumer->replacement_chain_expiration_date;
+    say $consumer->grace_until;
+    die "DO NOT COMMIT!\n";
+  },
+);
