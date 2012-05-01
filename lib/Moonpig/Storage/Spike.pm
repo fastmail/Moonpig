@@ -73,8 +73,8 @@ schema:
         entity_id: { name: entity_id, data_type: varchar, size: 36, is_nullable: 0 }
         ident: { name: ident, data_type: varchar, size: 10, is_nullable: 0 }
         serialization_version: { name: serialization_version, data_type: int unsigned, is_nullable: 0 }
-        frozen_ledger: { name: frozen_ledger, data_type: blob, is_nullable: 0 }
-        frozen_classes: { name: frozen_classes, data_type: blob, is_nullable: 0 }
+        frozen_ledger: { name: frozen_ledger, data_type: longblob, is_nullable: 0 }
+        frozen_classes: { name: frozen_classes, data_type: longblob, is_nullable: 0 }
       constraints:
         - type: UNIQUE
           fields: [ ident ]
