@@ -1,8 +1,13 @@
 package Moonpig::Role::Ledger;
 # ABSTRACT: the fundamental hub of a billable account
 
+use 5.12.0;
+
 use Carp qw(confess croak);
 use Moose::Role;
+
+use Email::MessageID;
+use Sys::Hostname::Long;
 
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
@@ -590,6 +595,19 @@ sub _send_mkit {
     $event->payload->{kit},
     $event->payload->{arg},
   );
+
+  {
+    state $counter = 0;
+    # Do not get the Foo<1>-form ident during testing!  It isn't valid.
+    # -- rjbs, 2012-05-02
+    my $ident = $self->has_short_ident ? $self->short_ident : $self->guid;
+    $email->header_set('Message-ID' =>
+      Email::MessageID->new(
+        user => join(q{.}, $ident, $$, $^T, $counter++),
+        host => hostname_long(),
+      )->in_brackets,
+    );
+  }
 
   $self->queue_email($email, { to => $to, from => $from });
 }

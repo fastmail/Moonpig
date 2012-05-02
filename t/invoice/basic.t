@@ -104,6 +104,13 @@ test 'charge close and send' => sub {
    );
 
   {
+    my $msg_id = $email->header('Message-ID') =~ s/\A<|>\z//gr;
+    my ($local, $domain) = split /\@/, $msg_id;
+    my ($ident) = split /\./, $local;
+    is($ident, $guid, "the message id refers to the ledger");
+  }
+
+  {
     my ($part) = grep { $_->content_type =~ m{text/plain} } $email->subparts;
     my $text = $part->body_str;
     my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
