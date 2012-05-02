@@ -85,28 +85,26 @@ before _pay_charges => sub {
     unless $self->is_executed;
 };
 
+has first_consumer_guid => (
+  is => 'rw',
+  isa => GUID,
+  traits => [ qw(SetOnce) ],
+  predicate => 'has_first_consumer',
+);
+
 sub first_consumer {
   my ($self) = @_;
+  confess $self->ident . " has no first consumer"
+    unless $self->has_first_consumer;
 
-  my @consumers = map $_->owner, $self->all_charges;
-  my %consumers = map { $_->guid => $_ } @consumers;
-  for my $consumer (@consumers) {
-    $consumer->has_replacement && delete $consumers{$consumer->replacement->guid};
-  }
+  $self->ledger->consumer_collection
+    ->find_by_guid({ guid => $self->first_consumer_guid });
+}
 
-  ### XXX: This is a hack to avoid a bug fixed in the q1c branch. -- rjbs, 2012-05-07
-  my @guids = keys %consumers;
-  for my $guid (@guids) {
-    my $consumer = $self->ledger->consumer_collection
-      ->find_by_guid({ guid => $guid });
-    delete $consumers{ $guid } if $consumer->does('Moonpig::Role::Consumer::SelfFunding');
-  }
-  ### XXX: end hack
+sub record_first_consumer {
+  my ($self, $consumer) = @_;
 
-  confess sprintf "Can't figure out the first consumer of quote %s", $self->guid
-    unless keys %consumers == 1;
-  my ($c) = values(%consumers);
-  return $c;
+  $self->first_consumer_guid($consumer->guid);
 }
 
 publish execute => { -http_method => 'post', -path => 'execute' } => sub {

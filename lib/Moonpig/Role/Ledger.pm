@@ -308,8 +308,10 @@ sub _add_consumer_chain {
 sub quote_for_new_service {
   my ($self, $kind, $arg, $chain_duration) = @_;
   $self->start_quote;
+  # XXX What if an exception is thrown before the quote is ended?
+  # Couldn't that leave the ledger with an open quote?
   my @chain = $self->_add_consumer_chain($kind, $arg, $chain_duration);
-  my $quote = $self->end_quote;
+  my $quote = $self->end_quote($chain[0]);
   return wantarray() ? ($quote, @chain) : $quote;
 }
 
@@ -326,7 +328,7 @@ sub quote_for_extended_service {
 
   $chain_duration -= $chain_head->estimated_lifetime;
   my @chain = $chain_head->_adjust_replacement_chain($chain_duration);
-  my $quote = $self->end_quote;
+  my $quote = $self->end_quote($chain_head);
   return wantarray() ? ($quote, $chain_head, @chain) : $quote;
 }
 
@@ -340,8 +342,9 @@ sub start_quote {
 }
 
 sub end_quote {
-  my ($self) = @_;
+  my ($self, $first_consumer) = @_;
   my $quote = $self->current_invoice; # XXX someone should garbage-collect chargeless quotes
+  $quote->record_first_consumer($first_consumer);
   $quote->mark_closed;
   return $quote;
 }
