@@ -706,7 +706,7 @@ sub _collect_spare_change {
     $self->consumers;
 
   my %consider  = map  {; $_->[0]->guid => $_ }
-                  grep {; $_->[1] }
+                  grep {; $_->[1] > 0 }
                   map  {; [ $_, $_->unapplied_amount ] }
                   $self->consumers;
 
