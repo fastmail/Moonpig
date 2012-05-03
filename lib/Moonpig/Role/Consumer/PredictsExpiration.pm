@@ -10,16 +10,18 @@ use Stick::Publisher::Publish 0.20110324;
 use Try::Tiny;
 
 use List::AllUtils qw(any);
-use Moonpig::Util qw(sumof);
-
 use Moonpig::Behavior::Packable;
+use Moonpig::Util qw(sumof);
+use Stick::Types qw(StickBool);
 
 requires 'estimated_lifetime'; # TimeInterval, from activation to predicted exp
 requires 'expiration_date';    # Time, predicted exp date
-requires 'remaining_life';     # TimeInterval, from now to predicted exp
+requires '_estimated_remaining_funded_lifetime'; # TimeInterval, from created to predicted exp
 
-publish replacement_chain_expiration_date => {} => sub {
-  my ($self) = @_;
+publish replacement_chain_expiration_date => {
+  include_expected_funds => StickBool,
+} => sub {
+  my ($self, $opts) = @_;
 
   my @chain = $self->replacement_chain;
   if (any {! $_->does('Moonpig::Role::Consumer::PredictsExpiration')} @chain) {
@@ -32,14 +34,23 @@ publish replacement_chain_expiration_date => {} => sub {
   @chain = grep {; ! grep { ! $_->is_paid && ! $_->is_abandoned }
                     $_->relevant_invoices } @chain;
 
-  return($self->expiration_date + (sumof { $_->estimated_lifetime } @chain));
+  my $amount_method =
+    $opts->{include_expected_funds} ? "expected_funds"
+      : "unapplied_amount";
+
+  return $self->expiration_date +
+    sumof {
+      $_->_estimated_remaining_funded_lifetime({
+        amount => $_->$amount_method,
+        ignore_partial_charge_periods => 1,
+      }) } @chain;
 };
 
 PARTIAL_PACK {
   my ($self) = @_;
 
   return try {
-    my $exp_date = $self->replacement_chain_expiration_date;
+    my $exp_date = $self->replacement_chain_expiration_date({ include_expected_funds => 0 });
     return { replacement_chain_expiration_date => $exp_date };
   } catch {
     die $_ unless try { $_->ident eq "can't compute funded lifetime of zero-cost consumer" };
