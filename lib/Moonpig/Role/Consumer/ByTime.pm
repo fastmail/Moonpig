@@ -308,7 +308,6 @@ sub expected_funds {
   return $funds;
 }
 
-
 # Given an amount of money, estimate how long the money will last
 # at current rates of consumption.
 #
@@ -320,6 +319,8 @@ sub _estimated_remaining_funded_lifetime {
 
   confess "Missing amount argument to _estimated_remaining_funded_lifetime"
     unless defined $args->{amount};
+  Moonpig::X->throw("inactive consumer forbidden")
+      if $args->{must_be_active} && ! $self->is_active;
 
   my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now );
 
