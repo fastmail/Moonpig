@@ -56,7 +56,7 @@ test by_time => sub {
                    qw(charge_description charge_frequency
                       charge_amount cost_period grace_period_duration
                       proration_period
-                      last_psynch_shortfall
+                      last_psync_shortfall
                     ),
                    $make_active ? qw(grace_until last_charge_date)
                      : (),

@@ -32,8 +32,8 @@ use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
     'heartbeat' => {
-      maybe_psynch => Moonpig::Events::Handler::Method->new(
-        method_name => '_send_psynch_quote',
+      maybe_psync => Moonpig::Events::Handler::Method->new(
+        method_name => '_send_psync_quote',
        ),
     }
   };
@@ -343,26 +343,26 @@ sub _estimated_remaining_funded_lifetime {
   return $periods * $self->charge_frequency;
 }
 
-has last_psynch_shortfall => (
+has last_psync_shortfall => (
   is => 'rw',
   isa => TimeInterval,
   default => 0,
   traits => [ qw(Copy) ],
 );
 
-sub _send_psynch_quote {
+sub _send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
   my $shortfall = $self->_predicted_shortfall;
-  $self->last_psynch_shortfall($shortfall);
+  $self->last_psync_shortfall($shortfall);
 
-  return unless $shortfall > $self->last_psynch_shortfall;
+  return unless $shortfall > $self->last_psync_shortfall;
 
   $self->ledger->start_quote;
   {
     my $shortfall_days = ceil($shortfall / days(1));
     $self->charge_current_invoice({
-      extra_tags => [ 'psynch' ],
+      extra_tags => [ 'psync' ],
       description => sprintf("Shortfall of $shortfall_days %s",
                              $shortfall_days == 1 ? "day" : "days"),
       amount => $self->estimate_cost_for_interval({ interval => $shortfall }),

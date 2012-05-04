@@ -67,7 +67,7 @@ test "import a ledger via the web" => sub {
     ok($guid, "created ledger via post ($guid)");
 
     my $consumer_guid = $result->{active_xids}{$xid}{guid};
-    my $url = sprintf '/ledger/by-guid/%s/consumers/guid/%s/%s',
+    my $url = sprintf '/ledger/by-guid/%s/consumers/guid/%s/%s?include_expected_funds=0',
       $guid,
       $consumer_guid,
       'replacement_chain_expiration_date';
@@ -91,7 +91,8 @@ test "import a ledger via the web" => sub {
       # the "- days(1)" is because the heartbeat implicit to creation charges
       # for the first day! -- rjbs, 2012-03-01
       my $expected = Moonpig->env->now + years(6) - days(1);
-      my $exp_date = $consumers[0]->replacement_chain_expiration_date;
+      my $exp_date = $consumers[0]->replacement_chain_expiration_date(
+        { include_expected_funds => 1 });
 
       cmp_ok(
         abs($exp_date - $expected), '<', 86_400,

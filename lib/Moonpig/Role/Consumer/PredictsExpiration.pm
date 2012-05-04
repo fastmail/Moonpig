@@ -12,14 +12,16 @@ use Try::Tiny;
 use List::AllUtils qw(any);
 use Moonpig::Behavior::Packable;
 use Moonpig::Util qw(sumof);
-use Stick::Types qw(StickBool);
+use Moose::Util::TypeConstraints qw(maybe_type);
+use Stick::Types qw(OptionalStickBool);
 
 requires 'estimated_lifetime'; # TimeInterval, from activation to predicted exp
 requires 'expiration_date';    # Time, predicted exp date
 requires '_estimated_remaining_funded_lifetime'; # TimeInterval, from created to predicted exp
 
 publish replacement_chain_expiration_date => {
-  include_expected_funds => StickBool,
+  -http_method => 'get',
+  include_expected_funds => OptionalStickBool,
 } => sub {
   my ($self, $opts) = @_;
 
