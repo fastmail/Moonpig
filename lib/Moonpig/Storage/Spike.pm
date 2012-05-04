@@ -399,17 +399,20 @@ sub queue_job {
   my ($self, $ledger, $arg) = @_;
 
   if ($self->_has_update_mode and $self->_in_update_mode) {
-    $self->__queue_job($self, $ledger, $arg);
+    $self->__queue_job($ledger, $arg);
   } else {
     Moonpig::X->throw("queue_job outside of read-write transaction");
   }
 }
 
 sub __queue_job {
-  my ($self, $txn_handler, $ledger, $arg) = @_;
+  my ($self, $ledger, $arg) = @_;
   $arg->{payloads} //= {};
 
-  $txn_handler->txn(sub {
+  # We know this won't be called outside a transaction, so it doesn't matter to
+  # us whether or not we log the begin/end of this transaction. -- rjbs,
+  # 2012-05-04
+  $self->txn(sub {
     my $dbh = $_;
     $dbh->do(
       q{INSERT INTO jobs (type, ledger_guid, created_at) VALUES (?, ?, ?)},
@@ -668,16 +671,20 @@ sub _execute_saves {
   my ($self) = @_;
 
   return unless @{ $self->_ledger_queue };
-  $self->txn(sub {
-    for my $ledger (@{ $self->_ledger_queue }) {
-      $self->_store_ledger($ledger);
-    }
-  });
+
+  for my $ledger (@{ $self->_ledger_queue }) {
+    $self->_store_ledger($ledger);
+  }
+
   @{ $self->_ledger_queue } = ();
 }
 
 sub _store_ledger {
   my ($self, $ledger) = @_;
+
+  unless ($self->_has_update_mode and $self->_in_update_mode) {
+    Moonpig::X->throw("_store_ledger outside of read-write transaction");
+  }
 
   Ledger->assert_valid($ledger);
 
