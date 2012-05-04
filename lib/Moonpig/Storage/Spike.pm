@@ -194,6 +194,12 @@ sub _ensure_tables_exist {
 
   my $conn = $self->_conn;
 
+  $Logger->log([
+    "deploying %s v%s schema",
+    __PACKAGE__,
+    __PACKAGE__->VERSION // '(undef)',
+  ]);
+
   $conn->txn(sub {
     my ($dbh) = $_;
 
@@ -224,6 +230,8 @@ END_ERR
       (0) x 2,
     );
   });
+
+  $Logger->log("deployment complete");
 }
 
 has _update_mode_stack => (
