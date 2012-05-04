@@ -280,6 +280,14 @@ sub do_ro {
 sub __with_update_mode {
   my ($self, $mode, $code) = @_;
 
+  my $at_top = ! $self->_has_update_mode;
+  state $xact_pid_id = 1;
+
+  my $xact_id = $at_top ? join(q{.}, $$, $xact_pid_id++) : undef;
+
+  local $Logger = $Logger->proxy({ proxy_prefix => "xact<$xact_id>: " })
+    if $at_top;
+
   # The 'popper' here is an object which pops the mode stack when it
   # goes out of scope.  The sub argument is a callback that is invoked
   # if the stack becomes empty as a result.
@@ -291,7 +299,11 @@ sub __with_update_mode {
   # transaction ends and flush them all then. mjd 2011-11-14
   my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache });
 
-  return $code->();
+  my $rv = $code->();
+
+  $Logger->log("transaction completed") if $at_top;
+
+  return $rv;
 }
 
 sub do_with_ledgers {
