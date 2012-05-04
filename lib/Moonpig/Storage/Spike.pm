@@ -288,6 +288,8 @@ sub __with_update_mode {
   local $Logger = $Logger->proxy({ proxy_prefix => "xact<$xact_id>: " })
     if $at_top;
 
+  $Logger->log("transaction begun") if $at_top;
+
   # The 'popper' here is an object which pops the mode stack when it
   # goes out of scope.  The sub argument is a callback that is invoked
   # if the stack becomes empty as a result.
@@ -299,7 +301,12 @@ sub __with_update_mode {
   # transaction ends and flush them all then. mjd 2011-11-14
   my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache });
 
-  my $rv = $code->();
+  my $rv = try {
+    $code->();
+  } catch {
+    $Logger->log("transaction aborted by exception") if $at_top;
+    die $_;
+  };
 
   $Logger->log("transaction completed") if $at_top;
 
