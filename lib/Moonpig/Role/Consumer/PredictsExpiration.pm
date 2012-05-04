@@ -7,6 +7,7 @@ use namespace::autoclean;
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
+use Try::Tiny;
 
 use List::AllUtils qw(any);
 use Moonpig::Util qw(sumof);
@@ -34,8 +35,14 @@ publish replacement_chain_expiration_date => {} => sub {
 };
 
 PARTIAL_PACK {
-  return {
-    replacement_chain_expiration_date => $_[0]->replacement_chain_expiration_date,
+  my ($self) = @_;
+
+  return try {
+    my $exp_date = $self->replacement_chain_expiration_date;
+    return { replacement_chain_expiration_date => $exp_date };
+  } catch {
+    die $_ unless try { $_->ident eq "can't compute funded lifetime of zero-cost consumer" };
+    return { };
   };
 };
 

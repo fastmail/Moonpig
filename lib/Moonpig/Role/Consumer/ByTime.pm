@@ -297,6 +297,19 @@ sub _estimated_remaining_funded_lifetime {
 
   my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now );
 
+  Moonpig::X->throw("can't compute funded lifetime of negative-cost consumer")
+    if $each_charge < 0;
+
+  if ($each_charge == 0) {
+    Moonpig::X->throw({
+      ident => "can't compute funded lifetime of zero-cost consumer",
+      payload => {
+        consumer_guid => $self->guid,
+        ledger_guid   => $self->ledger->guid,
+      },
+    });
+  }
+
   my $periods     = $args->{amount} / $each_charge;
   $periods = int($periods) if $args->{ignore_partial_charge_periods};
 
