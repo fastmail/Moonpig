@@ -25,7 +25,7 @@ sub resource_post {
 
   my $ledger;
 
-  Moonpig->env->storage->txn(sub {
+  Moonpig->env->storage->do_rw(sub {
     my $class ||= class('Ledger');
     my %arg = %$received_arg;
 
