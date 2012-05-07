@@ -93,6 +93,16 @@ sub first_consumer {
   for my $consumer (@consumers) {
     $consumer->has_replacement && delete $consumers{$consumer->replacement->guid};
   }
+
+  ### XXX: This is a hack to avoid a bug fixed in the q1c branch. -- rjbs, 2012-05-07
+  my @guids = keys %consumers;
+  for my $guid (@guids) {
+    my $consumer = $self->ledger->consumer_collection
+      ->find_by_guid({ guid => $guid });
+    delete $consumers{ $guid } if $consumer->does('Moonpig::Role::Consumer::SelfFunding');
+  }
+  ### XXX: end hack
+
   confess sprintf "Can't figure out the first consumer of quote %s", $self->guid
     unless keys %consumers == 1;
   my ($c) = values(%consumers);
