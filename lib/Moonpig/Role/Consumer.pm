@@ -575,6 +575,11 @@ sub effective_funding_pairs {
   });
 }
 
+sub was_ever_funded {
+  my ($self) = @_;
+  $self->effective_funding_pairs;
+}
+
 sub cashout_unapplied_amount {
   my ($self) = @_;
   my $balance = $self->unapplied_amount;

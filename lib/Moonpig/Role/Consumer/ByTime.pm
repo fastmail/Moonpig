@@ -191,8 +191,7 @@ around charge_one_day => sub {
   my $orig = shift;
   my ($self, @args) = @_;
 
-  my %p = $self->effective_funding_pairs;
-  if (%p and $self->does('Moonpig::Role::Consumer::MakesReplacement')) {
+  if ($self->was_ever_funded and $self->does('Moonpig::Role::Consumer::MakesReplacement')) {
     $self->maybe_make_replacement;
   }
 
