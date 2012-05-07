@@ -623,7 +623,7 @@ has _active_xid_consumers => (
   default  => sub {  {}  },
   traits   => [ 'Hash' ],
   handles  => {
-    xids_handled     => 'keys',
+    active_xids => 'keys',
     _active_consumer_guids => 'values',
   },
 );
@@ -738,7 +738,7 @@ sub _class_subroute {
 
   if ($path->[0] eq 'by-xid') {
     my (undef, $xid) = splice @$path, 0, 2;
-    return Moonpig->env->storage->retrieve_ledger_for_xid($xid);
+    return Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($xid);
   }
 
   if ($path->[0] eq 'by-guid') {
@@ -868,7 +868,7 @@ PARTIAL_PACK {
       map {;
         my $xid = $_; # somewhere downstream of here is a topicalization bug
         $xid => ppack($self->active_consumer_for_xid($xid))
-      } $self->xids_handled
+      } $self->active_xids
     },
     yearly_cost_estimate => $self->estimate_cost_for_interval({
       interval => years(1),

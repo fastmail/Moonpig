@@ -91,6 +91,19 @@ schema:
           reference_table: ledgers
           reference_fields: [ guid ]
 
+    all_xid_ledgers:
+      name: all_xid_ledgers
+      fields:
+        xid: { name: xid, data_type: varchar, size: 256, is_nullable: 0 }
+        ledger_guid: { name: ledger_guid, data_type: varchar, size: 36, is_nullable: 0 }
+      constraints:
+        - type:   PRIMARY KEY
+          fields: [ xid, ledger_guid ]
+        - type: FOREIGN KEY
+          fields: [ ledger_guid ]
+          reference_table: ledgers
+          reference_fields: [ guid ]
+
     ledger_search_fields:
       name: ledger_search_fields
       fields:
@@ -793,17 +806,28 @@ sub _store_ledger {
       $ledger->guid,
     );
 
+    $dbh->do(
+      q{DELETE FROM all_xid_ledgers WHERE ledger_guid = ?},
+      undef,
+      $ledger->guid,
+    );
+
     my $xid_sth = $dbh->prepare(
       q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
     );
 
-    for my $xid ($ledger->xids_handled) {
-      $Logger->log_debug([
-        'registering ledger %s for xid %s',
-        $ledger->ident,
-        $xid,
-      ]);
+    for my $xid ($ledger->active_xids) {
       $xid_sth->execute($xid, $ledger->guid);
+    }
+
+    my $all_xid_sth = $dbh->prepare(
+      q{INSERT INTO all_xid_ledgers (xid, ledger_guid) VALUES (?,?)},
+    );
+
+    my %seen;
+    for my $consumer ($ledger->consumers) {
+      next if $seen{ $consumer->xid }++;
+      $all_xid_sth->execute($consumer->xid, $ledger->guid);
     }
   });
 
@@ -852,7 +876,27 @@ sub ledger_guids {
   return @$guids;
 }
 
-sub retrieve_ledger_for_xid {
+sub retrieve_ledger_unambiguous_for_xid {
+  my ($self, $xid) = @_;
+
+  my $active = $self->retrieve_ledger_active_for_xid($xid);
+  return $active if $active;
+
+  my @guids = $self->ledger_guids_for_xid($xid);
+
+  if (@guids == 1) {
+    $Logger->log_debug([ 'resolved xid %s to %s as inactive but unambigious',
+      $xid,
+      $guids[0],
+    ]);
+
+    return $self->retrieve_ledger_for_guid($guids[0]);
+  }
+
+  return;
+}
+
+sub retrieve_ledger_active_for_xid {
   my ($self, $xid) = @_;
 
   my $dbh = $self->_conn->dbh;
@@ -863,11 +907,27 @@ sub retrieve_ledger_for_xid {
     $xid,
   );
 
-  return unless defined $ledger_guid;
+  return unless $ledger_guid;
 
-  $Logger->log_debug([ 'retrieved guid %s for xid %s', $ledger_guid, $xid ]);
-
+  $Logger->log_debug([ 'resolved xid %s to %s by active service',
+    $xid,
+    $ledger_guid,
+  ]);
   return $self->retrieve_ledger_for_guid($ledger_guid);
+}
+
+sub ledger_guids_for_xid {
+  my ($self, $xid) = @_;
+
+  my $dbh = $self->_conn->dbh;
+
+  my $guids = $dbh->selectcol_arrayref(
+    q{SELECT ledger_guid FROM all_xid_ledgers WHERE xid = ?},
+    undef,
+    $xid,
+  );
+
+  return @$guids;
 }
 
 sub retrieve_ledger_for_ident {

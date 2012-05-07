@@ -24,10 +24,10 @@ use namespace::autoclean;
 test "store and retrieve" => sub {
   my ($self) = @_;
 
+  my $xid = 'yoyodyne:account:' . guid_string;
+
   my $pid = fork;
   Carp::croak("error forking") unless defined $pid;
-
-  my $xid = 'yoyodyne:account:' . guid_string;
 
   if ($pid) {
     wait;
@@ -42,7 +42,12 @@ test "store and retrieve" => sub {
     }
   } else {
     do_with_fresh_ledger(
-      { consumer => { template => 'demo-service', xid => $xid } },
+      {
+        consumer => {
+          template => 'demo-service',
+          xid       => $xid,
+        }
+      },
       sub {
         my ($ledger) = @_;
         $ledger->save;
@@ -61,6 +66,7 @@ test "store and retrieve" => sub {
     $guids[0],
     sub {
       my $consumer = $_[0]->active_consumer_for_xid($xid);
+      ok($consumer, "our consumer is there");
       $ident = $_[0]->short_ident;
     }
   );
@@ -69,6 +75,14 @@ test "store and retrieve" => sub {
     my $ledger = Moonpig->env->storage->retrieve_ledger_for_ident($ident);
     is($ledger->guid, $guids[0], "we can get the ledger by ident");
   });
+
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guids[0],
+    sub {
+      my $consumer = $_[0]->active_consumer_for_xid($xid);
+      $consumer->_terminate;
+    },
+  );
 
   pass('we lived');
 };

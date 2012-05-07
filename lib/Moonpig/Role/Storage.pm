@@ -68,6 +68,9 @@ requires 'ledger_guids';
 
 requires 'retrieve_ledger_for_guid';
 requires 'retrieve_ledger_for_ident';
-requires 'retrieve_ledger_for_xid';
+
+requires 'ledger_guids_for_xid';
+requires 'retrieve_ledger_active_for_xid';
+requires 'retrieve_ledger_unambiguous_for_xid';
 
 1;

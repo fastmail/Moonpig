@@ -48,7 +48,9 @@ test "global xid lookup" => sub {
   my ($ledger, $xid) = $self->_test_ledgers_and_xids;
 
   for my $id (1, 2) {
-    my $got_ledger = Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$id});
+    my $got_ledger = Moonpig->env->storage->retrieve_ledger_active_for_xid(
+      $xid->{$id}
+    );
 
     isa_ok(
       $got_ledger,
@@ -99,7 +101,7 @@ test "registered abandoned xid" => sub {
   # first, ensure that both X-1 and X-2 are taken by L-1 and L-2
   for (1, 2) {
     is(
-      Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$_})->guid,
+      Moonpig->env->storage->retrieve_ledger_active_for_xid($xid->{$_})->guid,
       $ledger->{$_}->guid,
       "xid $_ -> ledger $_",
     );
@@ -111,15 +113,23 @@ test "registered abandoned xid" => sub {
     $consumer->handle_event(event('terminate'));
   });
 
-  # now, X-1 should go nowhere, but X-2 is still taken by L-2
+  # now, active(X-1) is unclaimed
   is(
-    Moonpig->env->storage->retrieve_ledger_for_xid($xid->{1}),
+    Moonpig->env->storage->retrieve_ledger_active_for_xid($xid->{1}),
     undef,
-    "xid 1 -> (undef)",
+    "xid 1 -> (nothing)",
   );
 
+  # but unambiguous(X-1) should go to L-1, as the only once-held-it ledger
   is(
-    Moonpig->env->storage->retrieve_ledger_for_xid($xid->{2})->guid,
+    Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($xid->{1})->guid,
+    $ledger->{1}->guid,
+    "xid 1 -> ledger 1",
+  );
+
+  # ...and X-2 is still L-2
+  is(
+    Moonpig->env->storage->retrieve_ledger_active_for_xid($xid->{2})->guid,
     $ledger->{2}->guid,
     "xid 2 -> ledger 2",
   );
@@ -137,10 +147,9 @@ test "registered abandoned xid" => sub {
       });
   });
 
-
   # Now make sure that both X-1 and X-2 are on L-2
   for (1, 2) {
-    my $got_ledger = Moonpig->env->storage->retrieve_ledger_for_xid($xid->{$_});
+    my $got_ledger = Moonpig->env->storage->retrieve_ledger_active_for_xid($xid->{$_});
 
     is(
       $got_ledger->guid,
@@ -149,6 +158,18 @@ test "registered abandoned xid" => sub {
     );
   }
 
+  Moonpig->env->storage->do_with_ledger($ledger->{2}->guid, sub {
+    my ($ledger) = @_;
+    my $consumer = $ledger->active_consumer_for_xid($xid->{1});
+    $consumer->handle_event(event('terminate'));
+  });
+
+  # unambiguous(X-1) is now nothing, since there is no unambiguous answer
+  is(
+    Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($xid->{1}),
+    undef,
+    "xid 1 -> (nothing)",
+  );
 };
 
 run_me;
