@@ -7,14 +7,19 @@ use Pobox::Moonpig::Env;
 # ab6db563fad4890355011820d3b163c50855f43d 
 #   rename quote-related "promote" to "execute"
 
+my $I = 0;
 Moonpig->env->storage->do_with_each_ledger(
   sub {
     my ($ledger) = @_;
+#    print "ledger " . $ledger->ident . "\n";
     for my $invoice ($ledger->invoices) {
-      next unless $invoice->is_quote && exists $invoice->{promoted_at};
+#      print "  invoice " . $invoice->ident . "\n";
+      next unless exists $invoice->{promoted_at};
       print "Processing " . $invoice->ident, "\n";
-#      $invoice->{executed_at} = delete $invoice->{promoted_at};
+      $I++;
+      $invoice->{executed_at} = delete $invoice->{promoted_at};
     }
   }
 );
 
+print "$I quotes processed.\n";
