@@ -41,8 +41,7 @@ sub generate {
 
 sub xid {
   my (@args) = @_;
-  my @guids = map $st->retrieve_ledger_unambiguous_for_xid($_), @args;
-  my @ledgers = map $st->_retrieve_ledger_from_db($_), @args;
+  my @ledgers = map $st->retrieve_ledger_unambiguous_for_xid($_), @args;
   return wantarray ? @ledgers : $ledgers[0];
 }
 
