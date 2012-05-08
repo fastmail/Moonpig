@@ -112,6 +112,13 @@ sub abandon {
   $self->ledger->abandon_invoice($self);
 }
 
+sub abandon_if_empty {
+  my ($self) = @_;
+  return if $self->has_charges;
+  $self->abandoned_in_favor_of(undef);
+  $self->mark_abandoned;
+}
+
 # transfer non-abandoned charges to specified open invoice,
 # or just discard them if $new_invoice is omitted
 sub abandon_with_replacement {
