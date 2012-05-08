@@ -16,9 +16,9 @@ has applied_at => (
   writer    => '_set_applied_at',
 );
 
-sub mark_applied {
+after mark_applied => sub {
   $_[0]->_set_applied_at( Moonpig->env->now );
-}
+};
 
 around is_expired => sub {
   my $orig = shift;

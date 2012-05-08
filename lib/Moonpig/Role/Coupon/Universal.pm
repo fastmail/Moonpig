@@ -6,7 +6,7 @@ with(
   'Moonpig::Role::Coupon',
 );
 
-sub applies_to { 1 }
+sub applies_to_charge { 1 }
 
 1;
 

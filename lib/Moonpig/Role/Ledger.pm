@@ -17,7 +17,7 @@ Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.308); # ppack + subcol
 
-_generate_subcomponent_methods(qw(consumer debit credit coupon));
+_generate_subcomponent_methods(qw(consumer debit credit));
 _generate_chargecollection_methods(qw(invoice journal));
 
 with(
@@ -60,10 +60,6 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'journal',
     is => 'ro',
-  },
-  'Stick::Role::HasCollection' => {
-    item => 'coupon',
-    collection_roles => [ ],
   },
   'Stick::Role::HasCollection' => {
     item => 'job',
@@ -179,7 +175,6 @@ sub _extra_instance_subroute {
   my ($first) = @$path;
   my %x_rt = (
     consumers => $self->consumer_collection,
-    coupons   => $self->coupon_collection,
     credits   => $self->credit_collection,
     invoices  => $self->invoice_collection,
     jobs      => $self->job_collection,
@@ -513,14 +508,6 @@ sub process_credits {
   for my $invoice (
     sort { $a->created_at <=> $b->created_at } $self->payable_invoices
   ) {
-    {
-      # XXX: We broke coupons and have yet to repair them.
-      my @coupon_apps = $self->find_coupon_applications__($invoice);
-      my @coupon_credits = map $_->{coupon}->create_discount_for($_->{charge}),
-        @coupon_apps;
-      Moonpig::X->throw("coupon support is broken") if @coupon_apps;
-    }
-
     last if $invoice->total_amount > $available;
 
     $invoice->mark_paid;
@@ -533,19 +520,6 @@ sub destroy_credits__ {
   for my $c (@credits) {
     delete $self->_credits->{$c->guid};
   }
-}
-
-# Given an invoice, find all outstanding coupons that apply to its charges
-# return a list of { coupon => $coupon, charge => $charge } items indicating
-# which coupons apply to which charges
-sub find_coupon_applications__ {
-  my ($self, $invoice) = @_;
-  my @coupons = $self->coupons;
-  my @res;
-  for my $coupon ($self->coupons) {
-    push @res, map { coupon => $coupon, charge => $_ }, $coupon->applies_to_invoice($invoice);
-  }
-  return @res;
 }
 
 implicit_event_handlers {

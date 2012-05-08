@@ -147,10 +147,11 @@ can be transferred from a credit to a refund.
 
 =head3 Coupon
 
-Coupons are attached to consumers.  When the consumer is activated, it tells
-its coupon how much money it wants and the coupon will create and return a
-credit.  That credit's value to fund the consumer is used before any other
-funds.
+Coupons are attached to consumers.  When ever the consumer is about to
+charge either the invoice or the ledger, it hands the charge arguments
+to the coupon first. The coupon has the option of modifying the
+arguments before the charge is created.  A 25%-off coupon will adjust
+invoice and journal charges down by 25%.
 
 =head3 Quotes
 

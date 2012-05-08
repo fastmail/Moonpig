@@ -321,6 +321,11 @@ after BUILD => sub {
     $self->_adjust_replacement_chain($extend_by, 1);
   }
 
+  if (exists $arg->{coupon_descs}) {
+    my $coupon_descs = delete($arg->{coupon_descs});
+    $self->add_coupon_from_desc($_) for @$coupon_descs;
+  }
+
   $self->become_active if delete $arg->{make_active};
 };
 
@@ -467,6 +472,7 @@ sub copy_attr_hash__ {
 
 sub charge_current_journal {
   my ($self, $args) = @_;
+  $args = { %$args };
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{from}       ||= $self;
@@ -475,6 +481,7 @@ sub charge_current_journal {
   $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
 
+  $self->apply_coupons_to_charge_args($args); # Could modify amount, desc., etc.
   return $self->ledger->current_journal->charge($args);
 }
 
@@ -487,16 +494,24 @@ sub charge_current_invoice {
 
 sub charge_invoice {
   my ($self, $invoice, $args) = @_;
+  $args = { %$args }; # Don't screw up caller's hash
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
   $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
 
+  # Might modify $args
+  my @coupon_line_items = $self->apply_coupons_to_charge_args($args);
+
   # If there's no ->build_invoice_charge method, let the Invoice
   # object build the charge from the arguments.
   $args = $self->build_invoice_charge($args) if $self->can("build_invoice_charge");
 
-  $invoice->add_charge($args);
+  my $charge = $invoice->add_charge($args);
+
+  $invoice->add_line_item($_) for @coupon_line_items;
+
+  return $charge;
 }
 
 has extra_charge_tags => (
@@ -634,6 +649,37 @@ publish quote_for_extended_service => {
 
   return $quote;
 };
+
+has coupon_array => (
+  is => 'ro',
+  isa => ArrayRef[ role_type('Moonpig::Role::Coupon') ],
+  default  => sub { [] },
+  lazy => 1, # To preserve database compatibility
+  traits   => [ qw(Array) ],
+  handles => {
+    add_coupon => 'push',
+    coupons => 'elements',
+    has_coupons => 'count',
+  },
+);
+
+sub apply_coupons_to_charge_args {
+  my ($self, $args) = @_;
+  my @coupon_line_items;
+  for my $coupon ($self->coupons) {
+    push @coupon_line_items, $coupon->adjust_charge_args($args)
+      if $coupon->applies_to_charge($args);
+  }
+  return @coupon_line_items;
+}
+
+sub add_coupon_from_desc {
+  my ($self, $desc) = @_;
+  my ($class, $args) = @$desc;
+  my $coupon = $class->new({ %$args, consumer => $self });
+  $self->add_coupon($coupon);
+  return $coupon;
+}
 
 PARTIAL_PACK {
   return {

@@ -133,6 +133,8 @@ sub abandon_with_replacement {
   return $new_invoice;
 }
 
+sub add_line_item { $_[0]->_add_charge($_[1]) }
+
 sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
 
 # use this when we're sure we'll never be paid for this invoice

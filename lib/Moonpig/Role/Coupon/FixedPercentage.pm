@@ -24,4 +24,13 @@ sub discount_amount_for {
   return $charge->amount * $self->discount_rate;
 }
 
+sub adjust_charge_args {
+  my ($self, $args) = @_;
+  my $percent = sprintf "%2d%%", 100 * $self->discount_rate;
+  $args->{description} .= " (discounted $percent)";
+  my $discount = $args->{amount} * $self->discount_rate;
+  $args->{amount} -= $discount;
+  return $self->line_item($self->description . ": $percent discount");
+}
+
 1;
