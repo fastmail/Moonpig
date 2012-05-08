@@ -1,0 +1,19 @@
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    print "I have ledger " . $ledger->ident . "\n";
+    for my $consumer ($ledger->consumers) {
+      print exists $consumer->{extra_invoice_charge_tags} ? "I" : " ";
+      print exists $consumer->{extra_journal_charge_tags} ? "J" : " ";
+      print exists $consumer->{extra_charge_tags} ? "C" : " ";
+      print exists $consumer->{extra_charge_tags} && !  $consumer->{extra_charge_tags} ? "!" : " ";
+      print " ", $consumer->ident . "\n";
+    }
+  }
+);
+

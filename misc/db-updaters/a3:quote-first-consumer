@@ -1,0 +1,69 @@
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+use Moonpig::Types qw(GUID);
+
+$|=1;
+
+# Set up new first_consumer_guid attribute for each quote
+# 7d06c6f7efc9b2018b060002f024d030eeb7938a
+#   Explicitly record each quote's first consumer when it is created
+
+my $I = 0;
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+#    print "ledger " . $ledger->ident . "\n";
+    for my $invoice ($ledger->invoices) {
+      next unless $invoice->is_quote;
+      next if exists $invoice->{first_consumer_guid};
+      print "Quote " . $invoice->ident . "\n";
+
+      my $c1 = eval { $invoice->first_consumer };
+      my $guid;
+      if ($c1) {
+        $guid = $c1->guid;
+        print "  First consumer was " . $c1->guid . "\n";
+      } else {
+        print "  Couldn't figure out first consumer.\n";
+        print "  Using crazy algorithm.\n";
+        $guid = crazy($ledger->guid, $invoice->ident);
+        unless (GUID->check($guid)) {
+          warn "Malformed guid; skipping\n";
+          next;
+        }
+        print "  First consumer was $guid\n";
+      }
+
+      $invoice->{first_consumer_guid} = $guid;
+      $I++;
+    }
+  }
+);
+
+print "$I quotes processed.\n";
+
+sub crazy {
+  my ($ledger_guid, $quote_ident) = @_;
+  my $L = Moonpig->env->storage->retrieve_ledger_for_guid($ledger_guid)
+    or return;
+
+  my ($I) = grep { $_->ident eq $quote_ident } $L->quotes
+    or return;
+
+  my @consumers = map $_->owner, $I->all_charges;
+  my %consumers = map { $_->guid, $_ } @consumers;
+
+  my $longest_chain_length = 0;
+  my $earliest_consumer;
+  for my $guid (keys %consumers) {
+    my $consumer = $consumers{$guid};
+    my @chain = $consumer->replacement_chain;
+    if (@chain > $longest_chain_length) {
+      $earliest_consumer = $consumer;
+      $longest_chain_length = @chain;
+    }
+  }
+  return $earliest_consumer->guid;
+}
