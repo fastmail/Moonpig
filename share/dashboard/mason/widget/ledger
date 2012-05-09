@@ -22,9 +22,18 @@ $ledger
 <div class='credits'>
   <h2>Payment History</h2>
   <table>
+    <tr>
+      <th>&nbsp;</th>
+      <th>Type</th>
+      <th>Created</th>
+      <th>Amount</th>
+      <th>Unapplied</th>
+    </tr>
 % for my $credit (sort { $b->{created_at} cmp $a->{created_at} } @$credits) {
     <tr>
-      <th class='guid'><% $credit->{guid} |h %></th>
+      <td><a href='/ledger/<% $ledger->{guid} %>/credit/<% $credit->{guid} %>'>
+        (details)
+      </a></td>
       <td><% $credit->{type} |h %></td>
       <td><% $credit->{created_at} |h %></td>
       <td><% mc($credit->{amount}) |h %></td>

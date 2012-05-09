@@ -3,5 +3,6 @@
 /ledger/:ledger_id/contact                 => /view/contact
 /ledger/:ledger_id/invoices                => /view/invoice-history
 /ledger/:ledger_id/invoice/:invoice_guid   => /view/invoice
+/ledger/:ledger_id/credit/:credit_guid     => /view/credit
 /ledger/:ledger_id/consumer/:consumer_guid => /view/consumer
 /ledger/:ledger_id/job/:job_id             => /view/job

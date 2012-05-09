@@ -25,7 +25,7 @@ $ledger
     <tr><th>Country</th><td><% $contact->{country} |h %></td></tr>
 
 % for my $key (keys %{ $contact->{phone_book} }) {
-    <tr><th>Phone number <% $key |h %></th><td><% $contact->{phone_book}{$key} |h %></td></tr>
+    <tr><th>Phone (<% $key |h %>)</th><td><% $contact->{phone_book}{$key} |h %></td></tr>
 % }
 
     <tr><th rowspan='<% 0 + @email_addresses %>'>Email</th><td><% shift @email_addresses |h %></td></tr>
