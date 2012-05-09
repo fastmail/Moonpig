@@ -314,8 +314,8 @@ sub expected_funds {
 # If the money will last for a fractional number of charge periods, you
 # might or might not want to count the final partial period.
 #
-sub _estimated_remaining_funded_lifetime {
-  my ($self, $args) = @_;
+around _estimated_remaining_funded_lifetime => sub {
+  my ($orig, $self, $args) = @_;
 
   confess "Missing amount argument to _estimated_remaining_funded_lifetime"
     unless defined $args->{amount};
@@ -341,7 +341,7 @@ sub _estimated_remaining_funded_lifetime {
   $periods = int($periods) if $args->{ignore_partial_charge_periods};
 
   return $periods * $self->charge_frequency;
-}
+};
 
 has last_psync_shortfall => (
   is => 'rw',

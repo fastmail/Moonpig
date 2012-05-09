@@ -17,7 +17,6 @@ use Stick::Types qw(OptionalStickBool);
 
 requires 'estimated_lifetime'; # TimeInterval, from activation to predicted exp
 requires 'expiration_date';    # Time, predicted exp date
-requires '_estimated_remaining_funded_lifetime'; # TimeInterval, from created to predicted exp
 
 publish replacement_chain_expiration_date => {
   -http_method => 'get',
@@ -47,6 +46,11 @@ publish replacement_chain_expiration_date => {
         ignore_partial_charge_periods => 1,
       }) } @chain;
 };
+
+# Use an "around" modifier to override this if your consumer actually needs to do it
+sub _estimated_remaining_funded_lifetime {
+  confess("Role::Consumer::ByUsage::_estimated_remaining_funded_lifetime unimplemented");
+}
 
 PARTIAL_PACK {
   my ($self) = @_;
