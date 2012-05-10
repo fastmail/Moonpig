@@ -1,0 +1,14 @@
+%# vim:set ft=mason:
+<%args>
+$ledger_id
+$credit_guid
+</%args>
+<%perl>
+my $credit = $m->mp_request(
+  GET => $m->mp_ledger_path($ledger_id) . "/credits/guid/$credit_guid");
+$m->redirect('/') unless $credit;
+</%perl>
+<&| /page/full, title => "Moonpig Credit $credit_guid" &>
+
+  <& /widget/dump, dump => $invoice, what => 'Credit' &>
+</&>
