@@ -33,11 +33,21 @@ sub last_dunned_invoice {
   return $self->_last_dunning->{invoices}->[0];
 }
 
-has dunning_frequency => (
+has custom_dunning_frequency => (
   is => 'rw',
   isa => TimeInterval,
-  default => days(3),
+  predicate => 'has_custom_dunning_frequency',
+  clearer   => 'clear_custom_dunning_frequency',
 );
+
+sub dunning_frequency {
+  my ($self) = @_;
+
+  return $self->custom_dunning_frequency
+    if $self->has_custom_dunning_frequency;
+
+  return Moonpig->env->default_dunning_frequency;
+}
 
 sub _should_dunn_again {
   my ($self, $invoices) = @_;

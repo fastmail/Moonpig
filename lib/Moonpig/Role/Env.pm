@@ -37,6 +37,8 @@ has _global_share_from_env => (
   },
 );
 
+requires 'default_dunning_frequency';
+
 requires 'extra_share_roots';
 
 sub share_roots {

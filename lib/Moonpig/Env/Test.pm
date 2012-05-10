@@ -20,7 +20,7 @@ use File::ShareDir ();
 use Moonpig::X;
 use Moonpig::DateTime;
 use Moonpig::Types qw(Time);
-use Moonpig::Util qw(class);
+use Moonpig::Util qw(class days);
 
 use Moose::Util::TypeConstraints;
 
@@ -113,5 +113,7 @@ sub format_guid {
   my $reg = $self->_guid_serial_number_registry;
   return ($reg->{ $guid } ||= $i++)
 }
+
+sub default_dunning_frequency { days(3) }
 
 1;

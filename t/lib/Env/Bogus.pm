@@ -12,6 +12,8 @@ use namespace::autoclean;
 sub extra_share_roots {}
 sub register_object   {}
 
+sub default_dunning_frequency { 1 }
+
 # EmailSender
 
 sub default_from_email_address { confess "unimplemented" }
