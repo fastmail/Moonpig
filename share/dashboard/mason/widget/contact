@@ -12,7 +12,7 @@ $ledger
       <% $contact->{first_name} |h %>
       <% $contact->{last_name} |h %>
     </td></tr>
-    <tr><th>Organization</th><td><% $contact->{organization} || '' |h %></td></tr>
+    <tr><th>Organization</th><td><% $contact->{organization} // '' |h %></td></tr>
 
     <tr><th rowspan='<% 0 + @address_lines %>'>Address</th><td><% shift @address_lines |h %></td></tr>
 % for my $line (@address_lines) {
@@ -20,8 +20,8 @@ $ledger
 % }
 
     <tr><th>City</th><td><% $contact->{city} |h %></td></tr>
-    <tr><th>State/Region</th><td><% $contact->{state} |h %></td></tr>
-    <tr><th>Postal Code</th><td><% $contact->{postal_code} |h %></td></tr>
+    <tr><th>State/Region</th><td><% $contact->{state} // '' |h %></td></tr>
+    <tr><th>Postal Code</th><td><% $contact->{postal_code} // '' |h %></td></tr>
     <tr><th>Country</th><td><% $contact->{country} |h %></td></tr>
 
 % for my $key (keys %{ $contact->{phone_book} }) {
