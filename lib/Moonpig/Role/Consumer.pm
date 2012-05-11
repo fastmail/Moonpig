@@ -527,7 +527,7 @@ sub invoice_charge_tags {
 }
 
 # and return a list (or count) of the abandoned charges
-sub abandon_charges_on_invoice {
+sub _abandon_charges_on_invoice {
   my ($self, $invoice) = @_;
   my @charges = grep ! $_->is_abandoned,
     grep $self->guid eq $_->owner_guid,
@@ -536,9 +536,10 @@ sub abandon_charges_on_invoice {
   return @charges;
 }
 
+# promise: returns the abandoned charges
 sub abandon_all_unpaid_charges {
   my ($self) = @_;
-  grep $self->abandon_charges_on_invoice($_) > 0,
+  grep $self->_abandon_charges_on_invoice($_) > 0,
     grep { ! $_->is_paid && ! $_->is_abandoned } $self->ledger->invoices_without_quotes;
 }
 
