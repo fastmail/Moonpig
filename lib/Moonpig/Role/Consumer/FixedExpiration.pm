@@ -46,7 +46,7 @@ sub remaining_life {
 
 sub estimated_lifetime {
   my ($self) = @_;
-  return $self->expiration_date - $self->created_at;
+  return $self->expiration_date - $self->activated_at;
 }
 
 1;
