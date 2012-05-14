@@ -423,6 +423,28 @@ test "almost no spare change" => sub {
   });
 };
 
+test "abandon unfunded charges" => sub {
+  my ($self) = @_;
+
+  my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
+  Moonpig->env->stop_clock_at($jan1);
+
+  do_with_fresh_ledger(
+    { c => { template => 'boring' } },
+    sub {
+      my ($ledger) = @_;
+      my ($c) = $ledger->get_component("c");
+
+      $ledger->heartbeat;
+      is($ledger->amount_due, dollars(100), '$100 due to start');
+
+      Moonpig->env->elapse_time(86_400 * 40);
+      $ledger->heartbeat;
+      is($ledger->amount_due, 0, '...but we abandon it when never paid');
+    }
+  );
+};
+
 sub xid { "test:consumer:" . guid_string() }
 
 run_me;
