@@ -298,6 +298,8 @@ before expire => sub {
     ? event('fail-over')
     : event('terminate')
   );
+
+  $self->abandon_unpaid_funding_charges;
 };
 
 after BUILD => sub {
@@ -528,19 +530,36 @@ sub invoice_charge_tags {
 
 # and return a list (or count) of the abandoned charges
 sub _abandon_charges_on_invoice {
-  my ($self, $invoice) = @_;
-  my @charges = grep ! $_->is_abandoned,
-    grep $self->guid eq $_->owner_guid,
-      $invoice->all_charges;
+  my ($self, $invoice, $even_sticky) = @_;
+
+  my @charges = grep { ! $_->is_abandoned }
+                grep { $self->guid eq $_->owner_guid }
+                $invoice->all_charges;
+
+  unless ($even_sticky) {
+    @charges = grep { ! $_->has_tag('moonpig.keep-after-expiring') } @charges;
+  }
+
   $_->mark_abandoned for @charges;
   return @charges;
 }
 
 # promise: returns the abandoned charges
+sub abandon_unpaid_funding_charges {
+  my ($self) = @_;
+
+  return grep { $self->_abandon_charges_on_invoice($_) > 0 }
+         grep { ! $_->is_paid && ! $_->is_abandoned }
+         $self->ledger->invoices_without_quotes;
+}
+
+# promise: returns the abandoned charges
 sub abandon_all_unpaid_charges {
   my ($self) = @_;
-  grep $self->_abandon_charges_on_invoice($_) > 0,
-    grep { ! $_->is_paid && ! $_->is_abandoned } $self->ledger->invoices_without_quotes;
+
+  return grep { $self->_abandon_charges_on_invoice($_, 1) > 0 }
+         grep { ! $_->is_paid && ! $_->is_abandoned }
+         $self->ledger->invoices_without_quotes;
 }
 
 sub all_charges {
