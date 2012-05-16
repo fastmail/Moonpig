@@ -207,20 +207,14 @@ sub _ensure_tables_exist {
 
   my $conn = $self->_conn;
 
-  $Logger->log([
-    "deploying %s v%s schema",
-    __PACKAGE__,
-    __PACKAGE__->VERSION // '(undef)',
-  ]);
-
-  $conn->txn(sub {
+  my $did_deploy = $conn->txn(sub {
     my ($dbh) = $_;
 
     my ($schema_md5) = eval {
       $dbh->selectrow_array("SELECT schema_md5 FROM metadata");
     };
 
-    return if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
+    return 0 if defined $schema_md5 and $schema_md5 eq $SCHEMA_MD5;
     if (defined $schema_md5) {
       Carp::croak( <<END_ERR );
 database is of an incompatible schema
@@ -228,6 +222,12 @@ want: $SCHEMA_MD5
 have: $schema_md5
 END_ERR
     }
+
+    $Logger->log([
+      "deploying %s v%s schema",
+      __PACKAGE__,
+      __PACKAGE__->VERSION // '(undef)',
+    ]);
 
     my @hunks = $self->_sql_hunks_to_deploy_schema;
 
@@ -242,9 +242,11 @@ END_ERR
       $SCHEMA_MD5,
       (0) x 2,
     );
+
+    return 1;
   });
 
-  $Logger->log("deployment complete");
+  $Logger->log("deployment complete") if $did_deploy;
 }
 
 has _update_mode_stack => (
