@@ -273,13 +273,10 @@ sub handle_cancel {
   my ($self, $event) = @_;
   return if $self->is_canceled;
   $self->mark_canceled;
-  if ($self->has_replacement) {
-    $self->replacement->expire;
-  } else {
-    # XXX Now that replacements can be superseded, shouldn't this occur
-    # even if there is a replacement already? 2012-01-23 mjd
-    $self->replacement_plan([ get => '/nothing' ]);
-  }
+
+  $self->replacement(undef) if $self->has_replacement;
+  $self->replacement_plan([ get => '/nothing' ]);
+
   return;
 }
 

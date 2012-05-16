@@ -158,7 +158,13 @@ test clobber_replacement => sub {
   $consumer = $ledger->consumer_collection
     ->find_by_guid({ guid => $consumer_guid });
 
-  ok($consumer->replacement->is_expired, "replacement has expired");
+  is($consumer->replacement, undef, "no replacement, anymore");
+
+  is_deeply(
+    [ $consumer->replacement_plan_parts ],
+    [ get => '/nothing' ],
+    "no replacement planned, either",
+  );
 };
 
 sub elapse {
