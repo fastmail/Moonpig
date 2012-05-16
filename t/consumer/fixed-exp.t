@@ -25,10 +25,13 @@ test "fixed-expiration consumer" => sub {
 
     my $c = $ledger->add_consumer(
       class('Consumer::FixedExpiration'),
-      { expiration_date => $expiration_date,
-        replacement_plan => [ get => '/nothing' ],
+      {
         xid => "some:random:xid",
-      });
+        make_active => 1,
+        expiration_date  => $expiration_date,
+        replacement_plan => [ get => '/nothing' ],
+      },
+    );
 
     isa_ok($c, class('Consumer::FixedExpiration'));
     is($c->remaining_life, days(30), "initial remaining life");
