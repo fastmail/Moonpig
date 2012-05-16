@@ -15,16 +15,6 @@ use Stick::Types qw(StickBool);
 with ('Moonpig::Role::HandlesEvents');
 requires 'calculate_charge_pairs_on';
 
-implicit_event_handlers {
-  return {
-    heartbeat => {
-      charge => Moonpig::Events::Handler::Method->new(
-        method_name => 'charge',
-      ),
-    },
-  };
-};
-
 # Last time I charged
 has last_charge_date => (
   is   => 'rw',
@@ -53,7 +43,7 @@ has allows_overdrafts => (
 );
 
 sub charge {
-  my ($self, $event, $arg) = @_;
+  my ($self, $event) = @_;
 
   my $now = $event->timestamp;
 

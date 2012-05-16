@@ -60,8 +60,27 @@ implicit_event_handlers {
         method_name => 'handle_terminate',
       ),
     },
+
+    # XXX: rjbs thinks we should probably not heartbeat any consumers except
+    # for active consumers.  mjd thinks this will limit our ability to use
+    # heartbeats for generic intermittant actions, which is currently possible
+    # against both active and never-active (but not active-then-expired)
+    # consumers. -- rjbs, 2012-05-16
+    'heartbeat' => {
+      maybe_charge => Moonpig::Events::Handler::Method->new(
+        method_name => 'maybe_charge',
+      ),
+    },
   };
 };
+
+requires 'charge';
+
+sub maybe_charge {
+  my ($self, $event) = @_;
+  return unless $self->is_active;
+  $self->charge($event);
+}
 
 has _superseded_at => (
   is => 'rw',

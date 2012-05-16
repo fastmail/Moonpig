@@ -10,6 +10,8 @@ with(
   'Moonpig::Role::StubBuild',
 );
 
+sub charge { }
+
 use namespace::autoclean;
 
 1;

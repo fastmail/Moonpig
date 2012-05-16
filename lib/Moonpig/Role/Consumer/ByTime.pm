@@ -182,7 +182,6 @@ around charge => sub {
   my ($self, @args) = @_;
 
   return if $self->in_grace_period;
-  return unless $self->is_active;
 
   $self->$orig(@args);
 };

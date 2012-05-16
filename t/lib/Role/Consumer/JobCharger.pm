@@ -7,6 +7,7 @@ use namespace::autoclean;
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::Consumer::Dummy',
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 

@@ -24,11 +24,9 @@ use Moonpig::Types qw(PositiveMillicents PositiveInt Time TimeInterval);
 
 use namespace::autoclean;
 
-implicit_event_handlers {
-  return {
-    heartbeat => { },
-  };
-};
+# We charge by usage, not by time in any way, so even if we're active and get a
+# heartbeat, we do not need to do a charge then. -- rjbs, 2012-05-16
+sub charge { }
 
 has charge_amount_per_unit => (
   is => 'ro',

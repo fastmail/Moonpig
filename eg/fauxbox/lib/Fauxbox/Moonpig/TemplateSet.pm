@@ -12,6 +12,7 @@ sub templates {
       my ($name) = @_;
 
       return {
+        roles => [ qw(Consumer::Dummy) ],
         arg   => {
           make_active      => 1,
           replacement_plan => [ get => "/consumer-template/$name" ],

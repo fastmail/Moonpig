@@ -14,16 +14,6 @@ use namespace::autoclean;
 
 use Moonpig::Behavior::EventHandlers;
 
-implicit_event_handlers {
-  return {
-    heartbeat => {
-      charge => Moonpig::Events::Handler::Method->new(
-        method_name => '_check_expiry',
-      ),
-    },
-  };
-};
-
 sub expiration_date;
 has expiration_date => (
   is  => 'ro',
@@ -31,7 +21,7 @@ has expiration_date => (
   required => 1,
 );
 
-sub _check_expiry {
+sub charge {
   my ($self) = @_;
   return if $self->is_expired;
   $self->expire if $self->expiration_date <= Moonpig->env->now;
