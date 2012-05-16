@@ -290,6 +290,9 @@ has xid => (
 before expire => sub {
   my ($self) = @_;
 
+  Moonpig::X->throw("can't expire an inactive consumer")
+    unless $self->is_active;
+
   $self->handle_event(
     $self->has_replacement
     ? event('fail-over')
