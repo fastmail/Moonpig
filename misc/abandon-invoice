@@ -1,0 +1,31 @@
+#!perl
+use 5.14.1;
+
+# I used this to deal with some people who canceled their service but still had
+# invoices.  The invoices couldn't be dunned, because the expiration date
+# couldn't be computed, because it tries to find active service.
+#
+# The invoices *shouldn't* have been dunned, though, because they won't be
+# paid.  It won't happen with no cancelations because consumers will abandon
+# their charges when they terminate.
+#
+# This might come up again, though, with other consumers still in the system.
+# -- rjbs, 2012-05-17
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+Moonpig->env->storage->do_rw_with_ledger(
+  'E6E6A5EA-8EFD-11E1-BCEF-B626466D128F',
+  sub {
+    my ($ledger) = @_;
+    my (@consumers) = $ledger->consumers;
+    say $ledger->amount_due;
+    $_->abandon_all_unpaid_charges for @consumers;
+    my ($invoice) = grep { $_->guid eq '5F1497B4-938D-11E1-A887-F5EA81BE021E' }
+                    $ledger->invoices;
+    $invoice->abandon_without_replacement;
+    say $ledger->amount_due;
+  }
+);
+
