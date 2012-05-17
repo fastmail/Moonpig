@@ -182,13 +182,7 @@ around charge => sub {
   my ($self, @args) = @_;
 
   return if $self->in_grace_period;
-
-  unless ($self->is_active) {
-    Moonpig->env->report_exception(
-      Carp::longmess("charge call reached inactive ByTime consumer")
-    );
-    return;
-  }
+  return unless $self->is_active;
 
   $self->$orig(@args);
 };
