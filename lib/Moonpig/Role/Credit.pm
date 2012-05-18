@@ -99,7 +99,6 @@ sub dissolve {
 
   my $ledger = $self->ledger;
 
-
   my @pairs = $self->current_allocation_pairs;
 
   my $cpa = $ledger->accountant;
