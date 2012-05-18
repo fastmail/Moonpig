@@ -227,5 +227,60 @@ test "jobs left unfinished" => sub {
   ok($ran, "the job was unlocked after the previous work");
 };
 
+test "cache clearing" => sub {
+  my ($self) = @_;
+
+  {
+    my @cache = Moonpig->env->storage->_ledger_cache_contents;
+    is(@cache, 0, "the cache is empty!");
+  }
+
+  my $guid;
+  do_with_fresh_ledger(
+    {
+      consumer => {
+        template => 'demo-service',
+        xid       => guid_string,
+      }
+    },
+    sub {
+      my ($ledger) = @_;
+      $guid = $ledger->guid;
+
+      {
+        my %cache = Moonpig->env->storage->_ledger_cache_contents;
+        is(keys %cache, 1, "we are alone in the cache");
+      }
+
+      $ledger->save;
+    }
+  );
+
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+
+      {
+        my %cache = Moonpig->env->storage->_ledger_cache_contents;
+        is(keys %cache, 1, "we have cached exactly one ledger");
+      }
+
+      Moonpig->env->storage->do_rw_with_ledger(
+        $guid,
+        sub {
+          my %cache = Moonpig->env->storage->_ledger_cache_contents;
+          is(keys %cache, 1, "we have cached exactly one ledger");
+        },
+      );
+
+      {
+        my %cache = Moonpig->env->storage->_ledger_cache_contents;
+        is(keys %cache, 1, "we have cached exactly one ledger");
+      }
+    }
+  );
+};
+
 run_me;
 done_testing;

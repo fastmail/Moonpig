@@ -412,6 +412,7 @@ has _ledger_cache => (
     _has_cached_ledger => 'exists',
     _cached_ledger => 'get',
     _flush_ledger_cache => 'clear',
+    _ledger_cache_contents => 'elements', # in case of emergency
     _ledger_cache_is_empty => 'is_empty',
   },
 );
