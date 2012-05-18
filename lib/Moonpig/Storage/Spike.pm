@@ -303,6 +303,12 @@ sub __with_update_mode {
   local $Logger = $Logger->proxy({ proxy_prefix => "xact<$xact_id>: " })
     if $at_top;
 
+  if ($at_top and ! $self->_ledger_cache_is_empty) {
+    my $error = "ledger cache not empty when beginning top-level xact";
+    Moonpig->env->send_exception_report($error);
+    Moonpig::X->throw($error);
+  }
+
   $Logger->log("transaction begun") if $at_top;
 
   # The 'popper' here is an object which pops the mode stack when it
@@ -406,6 +412,7 @@ has _ledger_cache => (
     _has_cached_ledger => 'exists',
     _cached_ledger => 'get',
     _flush_ledger_cache => 'clear',
+    _ledger_cache_is_empty => 'is_empty',
   },
 );
 
