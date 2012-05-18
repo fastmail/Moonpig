@@ -1,7 +1,9 @@
 {{
   require Data::Dumper;
   JSON->new->ascii->pretty->canonical->encode({
-    exception => Data::Dumper::Dumper($exception),
+    exception => ref($exception)
+               ? $exception
+               : Data::Dumper::Dumper($exception),
     dumpable  => Data::Dumper::Dumper(\%dumpable),
   });
 }}
