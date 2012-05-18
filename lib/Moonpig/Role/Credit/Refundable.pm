@@ -16,7 +16,7 @@ sub refund_unapplied_amount {
   Moonpig::X->throw("can't refund more than ledger's amount available")
     unless $self->unapplied_amount <= $self->ledger->amount_available;
 
-  $self->issue_refund;
+  $self->issue_refund; # XXX: pass an amount!!
 
   my $refund = $self->ledger->add_debit(class(qw(Debit::Refund)));
 
