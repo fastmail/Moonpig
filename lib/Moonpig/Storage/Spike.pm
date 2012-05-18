@@ -965,6 +965,10 @@ sub retrieve_ledger_for_ident {
 sub retrieve_ledger_for_guid {
   my ($self, $guid) = @_;
 
+  unless ($self->_in_transaction) {
+    Moonpig::X->throw("retrieve_ledger outside of transaction");
+  }
+
   $Logger->log_debug([ 'retrieving ledger under guid %s', $guid ]);
 
   my $ledger;

@@ -31,13 +31,15 @@ test "route to get a collection" => sub {
 
   my $guid = do_with_fresh_ledger({}, sub { return $_[0]->guid });
 
-  my ($collection) = Moonpig->env->route(
-    [ 'ledger', 'by-guid', $guid, 'debits' ],
-  );
-  ok($collection);
+  Moonpig->env->storage->do_ro(sub {
+    my ($collection) = Moonpig->env->route(
+      [ 'ledger', 'by-guid', $guid, 'debits' ],
+    );
+    ok($collection);
 
-  is($collection->resource_request(get => {}), $collection,
-     "collection is a self-getter");
+    is($collection->resource_request(get => {}), $collection,
+       "collection is a self-getter");
+  });
 };
 
 test "pages" => sub {

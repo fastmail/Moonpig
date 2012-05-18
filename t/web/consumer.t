@@ -138,33 +138,40 @@ test clobber_replacement => sub {
   );
   $self->elapse(3);
 
-  $ledger = Moonpig->env->storage
-    ->retrieve_ledger_for_guid($v1->{ledger_guid});
-  $consumer = $ledger->active_consumer_for_xid($a_xid);
-  my $consumer_guid = $consumer->guid;
+  my $consumer_guid;
 
-  ok($consumer->replacement, "account has a replacement");
-  ok($consumer->has_replacement, "account has a replacement (predicate)");
-  isnt($consumer->replacement->guid, $consumer->guid,
-       "replacement is different");
-  ok($consumer->replacement->does("Moonpig::Role::Consumer::ByTime"),
-       "replacement is another ByTime");
-  ok(! $consumer->replacement->unapplied_amount, "replacement is unfunded");
-  ok(! $consumer->replacement->is_expired, "replacement has not yet expired");
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = Moonpig->env->storage
+      ->retrieve_ledger_for_guid($v1->{ledger_guid});
+    $consumer = $ledger->active_consumer_for_xid($a_xid);
+    $consumer_guid = $consumer->guid;
+
+    ok($consumer->replacement, "account has a replacement");
+    ok($consumer->has_replacement, "account has a replacement (predicate)");
+    isnt($consumer->replacement->guid, $consumer->guid,
+         "replacement is different");
+    ok($consumer->replacement->does("Moonpig::Role::Consumer::ByTime"),
+         "replacement is another ByTime");
+    ok(! $consumer->replacement->unapplied_amount, "replacement is unfunded");
+    ok(! $consumer->replacement->is_expired, "replacement has not yet expired");
+  });
 
   $ua->mp_post("$ledger_path/consumers/active/$a_xid/cancel", {});
-  $ledger = Moonpig->env->storage
-    ->retrieve_ledger_for_guid($v1->{ledger_guid});
-  $consumer = $ledger->consumer_collection
-    ->find_by_guid({ guid => $consumer_guid });
 
-  is($consumer->replacement, undef, "no replacement, anymore");
+  Moonpig->env->storage->do_rw(sub {
+    $ledger = Moonpig->env->storage
+      ->retrieve_ledger_for_guid($v1->{ledger_guid});
+    $consumer = $ledger->consumer_collection
+      ->find_by_guid({ guid => $consumer_guid });
 
-  is_deeply(
-    [ $consumer->replacement_plan_parts ],
-    [ get => '/nothing' ],
-    "no replacement planned, either",
-  );
+    is($consumer->replacement, undef, "no replacement, anymore");
+
+    is_deeply(
+      [ $consumer->replacement_plan_parts ],
+      [ get => '/nothing' ],
+      "no replacement planned, either",
+    );
+  });
 };
 
 sub elapse {
@@ -195,7 +202,7 @@ test cancel_early => sub {
     });
   $self->elapse(1);
 
-  {
+  Moonpig->env->storage->do_rw(sub {
     $ledger = Moonpig->env->storage
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
@@ -203,18 +210,18 @@ test cancel_early => sub {
 
     my @plan = $consumer->replacement_plan_parts;
     isnt($plan[1], "/nothing", "replacement plan uri is not 'nothing'");
-  }
+  });
 
   $ua->mp_post("$ledger_path/consumers/xid/$a_xid/cancel", {});
 
-  {
+  Moonpig->env->storage->do_rw(sub {
     $ledger = Moonpig->env->storage
       ->retrieve_ledger_for_guid($v1->{ledger_guid});
     $consumer = $ledger->consumer_collection->find_by_xid({ xid => $a_xid });
 
     my @plan = $consumer->replacement_plan_parts;
     is($plan[1], "/nothing", "replacement plan uri is now 'nothing'");
-  }
+  });
 };
 
 sub now {
