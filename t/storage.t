@@ -21,6 +21,36 @@ use t::lib::ConsumerTemplateSet::Demo;
 
 use namespace::autoclean;
 
+test "xact death" => sub {
+  my ($self) = @_;
+
+  my $guid;
+  my $failed = try {
+    Moonpig->env->storage->_fail_next_save(1);
+    do_with_fresh_ledger(
+      {
+        consumer => {
+          template => 'demo-service',
+          xid       => "some:xid:" . guid_string,
+        }
+      },
+      sub {
+        my ($ledger) = @_;
+        $guid = $ledger->guid;
+        $ledger->save;
+      }
+    );
+    return 0;
+  } catch {
+    return 1;
+  };
+
+  ok($failed, "we failed the save as requested!");
+
+  my @deliveries = Moonpig->env->email_sender->deliveries;
+  is(@deliveries, 1, "...which got us an exception report");
+};
+
 test "store and retrieve" => sub {
   my ($self) = @_;
 

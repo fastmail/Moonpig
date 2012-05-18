@@ -738,113 +738,141 @@ sub _store_ledger {
 
   my $ident;
 
-  my $conn = $self->_conn;
-  $conn->txn(sub {
-    my ($dbh) = @_;
+  try {
+    my $conn = $self->_conn;
+    $conn->txn(sub {
+      my ($dbh) = @_;
 
-    my ($count) = $dbh->selectrow_array(
-      q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
-      undef,
-      $ledger->guid,
-    );
+      my ($count) = $dbh->selectrow_array(
+        q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
+        undef,
+        $ledger->guid,
+      );
 
-    $_->_clear_event_handler_registry for ($ledger, $ledger->consumers);
+      $_->_clear_event_handler_registry for ($ledger, $ledger->consumers);
 
-    my $frozen_ledger  = nfreeze( $ledger );
-    my $frozen_classes = nfreeze( class_roles );
+      my $frozen_ledger  = nfreeze( $ledger );
+      my $frozen_classes = nfreeze( class_roles );
 
-    my $rv = $dbh->do(
-      q{
-        UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?, entity_id = ?
-        WHERE guid = ?
-      },
-      undef,
-      $frozen_ledger,
-      $frozen_classes,
-      guid_string(),
-      $ledger->guid,
-    );
+      my $rv = $dbh->do(
+        q{
+          UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?, entity_id = ?
+          WHERE guid = ?
+        },
+        undef,
+        $frozen_ledger,
+        $frozen_classes,
+        guid_string(),
+        $ledger->guid,
+      );
 
-    if ($rv and $rv == 0) {
-      # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
+      if ($rv and $rv == 0) {
+        # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
 
-      # This shouldn't really ever happen -- if it already has a short_ident,
-      # that means you have saved it once, so the UPDATE above should have been
-      # useful.  Still, there is no need to forbid this right now, so let's
-      # just carry on as usual.  We won't keep trying to insert over and over,
-      # though.  If we have an ident and can't insert, we give up. -- rjbs,
-      # 2012-02-14
-      my $existing_ident = $ledger->short_ident;
+        # This shouldn't really ever happen -- if it already has a short_ident,
+        # that means you have saved it once, so the UPDATE above should have been
+        # useful.  Still, there is no need to forbid this right now, so let's
+        # just carry on as usual.  We won't keep trying to insert over and over,
+        # though.  If we have an ident and can't insert, we give up. -- rjbs,
+        # 2012-02-14
+        my $existing_ident = $ledger->short_ident;
 
-      my $saved = 0;
+        my $saved = 0;
 
-      until ($saved) {
-        $saved = try {
-          $conn->svp(sub {
-            my ($dbh) = @_;
-            my $ident = $existing_ident // 'L-' . random_short_ident(1e9);
+        until ($saved) {
+          $saved = try {
+            $conn->svp(sub {
+              my ($dbh) = @_;
+              my $ident = $existing_ident // 'L-' . random_short_ident(1e9);
 
-            $ledger->set_short_ident($ident) unless $existing_ident;
+              $ledger->set_short_ident($ident) unless $existing_ident;
 
-            $frozen_ledger = nfreeze( $ledger );
+              $frozen_ledger = nfreeze( $ledger );
 
-            $dbh->do(
-              q{
-                INSERT INTO ledgers
-                (guid, ident, serialization_version, frozen_ledger, frozen_classes, entity_id)
-                VALUES (?, ?, 1, ?, ?, ?)
-              },
-              undef,
-              $ledger->guid,
-              $ident,
-              $frozen_ledger,
-              $frozen_classes,
-              guid_string(),
-            );
+              $dbh->do(
+                q{
+                  INSERT INTO ledgers
+                  (guid, ident, serialization_version, frozen_ledger, frozen_classes, entity_id)
+                  VALUES (?, ?, 1, ?, ?, ?)
+                },
+                undef,
+                $ledger->guid,
+                $ident,
+                $frozen_ledger,
+                $frozen_classes,
+                guid_string(),
+              );
 
-            return 1;
-          });
-        };
+              return 1;
+            });
+          };
 
-        if ($existing_ident && ! $saved) {
-          Moonpig::X->throw("conflict inserting ledger with preset ident");
+          if ($existing_ident && ! $saved) {
+            Moonpig::X->throw("conflict inserting ledger with preset ident");
+          }
         }
       }
-    }
 
-    $dbh->do(
-      q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
-      undef,
-      $ledger->guid,
+      $dbh->do(
+        q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
+        undef,
+        $ledger->guid,
+      );
+
+      $dbh->do(
+        q{DELETE FROM all_xid_ledgers WHERE ledger_guid = ?},
+        undef,
+        $ledger->guid,
+      );
+
+      my $xid_sth = $dbh->prepare(
+        q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
+      );
+
+      for my $xid ($ledger->active_xids) {
+        $xid_sth->execute($xid, $ledger->guid);
+      }
+
+      my $all_xid_sth = $dbh->prepare(
+        q{INSERT INTO all_xid_ledgers (xid, ledger_guid) VALUES (?,?)},
+      );
+
+      my %seen;
+      for my $consumer ($ledger->consumers) {
+        next if $seen{ $consumer->xid }++;
+        $all_xid_sth->execute($consumer->xid, $ledger->guid);
+      }
+
+      if ($self->_fail_next_save) {
+        $self->_fail_next_save(0);
+        Moonpig::X->throw("fail_next_save was true");
+      }
+    });
+  } catch {
+    my $error = $_;
+
+    Moonpig->env->report_exception(
+      Carp::longmess("error while saving ledger"),
+      {
+        ledger_guid => $ledger->guid,
+        error       => $error,
+        cache_keys  => [ keys %{ {$self->_ledger_cache_contents} } ],
+        xact_stack  => $self->_update_mode_stack,
+        active_xids => [ $ledger->active_xids ],
+      }
     );
 
-    $dbh->do(
-      q{DELETE FROM all_xid_ledgers WHERE ledger_guid = ?},
-      undef,
-      $ledger->guid,
-    );
-
-    my $xid_sth = $dbh->prepare(
-      q{INSERT INTO xid_ledgers (xid, ledger_guid) VALUES (?,?)},
-    );
-
-    for my $xid ($ledger->active_xids) {
-      $xid_sth->execute($xid, $ledger->guid);
-    }
-
-    my $all_xid_sth = $dbh->prepare(
-      q{INSERT INTO all_xid_ledgers (xid, ledger_guid) VALUES (?,?)},
-    );
-
-    my %seen;
-    for my $consumer ($ledger->consumers) {
-      next if $seen{ $consumer->xid }++;
-      $all_xid_sth->execute($consumer->xid, $ledger->guid);
-    }
-  });
+    die $error;
+  };
 
   return $ledger;
 }
+
+has _fail_next_save => (
+  is  => 'rw',
+  isa => 'Bool',
+  default => 0,
+);
 
 sub _reinstate_stored_time {
   my ($self) = @_;
