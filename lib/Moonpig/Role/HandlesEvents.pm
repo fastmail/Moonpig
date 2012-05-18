@@ -21,6 +21,7 @@ has _event_handler_registry => (
     owner => $_[0] })
   },
   handles  => [ qw(register_event_handler) ],
+  clearer  => '_clear_event_handler_registry',
 );
 
 sub handle_event {
