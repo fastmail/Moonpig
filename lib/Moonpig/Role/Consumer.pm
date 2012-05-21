@@ -551,7 +551,7 @@ sub invoice_charge_tags {
 sub _abandon_charges_on_invoice {
   my ($self, $invoice, $even_sticky) = @_;
 
-  my @charges = grep { ! $_->is_abandoned }
+  my @charges = grep { ! $_->is_abandoned && ! $_->is_executed }
                 grep { $self->guid eq $_->owner_guid }
                 $invoice->all_charges;
 
