@@ -21,7 +21,7 @@ $invoice
 
   <table>
 % for my $charge (@{ $invoice->{charges} }) {
-    <tr>
+    <tr class='<% $charge->{abandoned_at} ? "abandoned" : '' %>'>
       <td><% $charge->{description} |h %></td>
       <td><% mc($charge->{amount}) |h %></td>
     </tr>

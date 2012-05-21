@@ -1,3 +1,7 @@
+.abandoned {
+  text-decoration: line-through;
+}
+
 .dumpcontainer {
   background-color: #fed;
   border: 1px black dashed;
