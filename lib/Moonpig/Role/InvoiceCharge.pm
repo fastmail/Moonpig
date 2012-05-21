@@ -26,6 +26,7 @@ sub counts_toward_total { ! $_[0]->is_abandoned }
 
 sub mark_abandoned {
   my ($self) = @_;
+  Moonpig::X->throw("can't abandon an executed charge") if $self->is_executed;
   $self->__set_abandoned_at( Moonpig->env->now );
 }
 
