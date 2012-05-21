@@ -50,6 +50,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return {
+    owner_guid   => $self->owner_guid,
     executed_at  => $self->executed_at,
     abandoned_at => $self->abandoned_at,
   };
