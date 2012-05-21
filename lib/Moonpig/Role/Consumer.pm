@@ -568,7 +568,7 @@ sub abandon_unpaid_funding_charges {
   my ($self) = @_;
 
   return grep { $self->_abandon_charges_on_invoice($_) > 0 }
-         grep { ! $_->is_paid && ! $_->is_abandoned }
+         grep { ! $_->is_abandoned }
          $self->ledger->invoices_without_quotes;
 }
 
@@ -577,7 +577,7 @@ sub abandon_all_unpaid_charges {
   my ($self) = @_;
 
   return grep { $self->_abandon_charges_on_invoice($_, 1) > 0 }
-         grep { ! $_->is_paid && ! $_->is_abandoned }
+         grep { ! $_->is_abandoned }
          $self->ledger->invoices_without_quotes;
 }
 

@@ -193,7 +193,11 @@ test "superseded consumers abandon unpaid charges" => sub {
       my ($c, $d, $e) = $ledger->get_component(qw(c d e));
       my $i1 = make_charges($ledger, consumers => [ $c, $d, $e ], amount => dollars(5));
       $i1->mark_closed;
-      $i1->mark_paid; # should I have created a credit and done this right?
+
+      # This is a hack.  We should be paying normally. -- rjbs, 2012-05-21
+      $i1->mark_paid;
+      $_->__set_executed_at( Moonpig->env->now ) for $i1->all_charges;
+
       is($i1->total_amount, dollars(15));
 
       my $i2 = make_charges($ledger, consumers => [ $c, $d, $e ], amount => dollars(10));
