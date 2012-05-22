@@ -26,7 +26,18 @@ package HTML::Mason::Commands {
   use Moonpig::App::Ob::Dumper ();
   use List::Util ();
 
-  sub mc { sprintf '$%.02f', ((shift) / 100_000) }
+  sub mc {
+    my ($mc) = @_;
+    my $dol = $mc / (100 * 1000);
+    my $fmt = sprintf '%.6f', $dol;
+
+    my $fcent = substr $fmt, -4, 4, '';
+
+    my $str = sprintf '$%.02f', $fmt;
+    $str .= '+' unless $fcent eq '0000';
+
+    return $str;
+  }
 
   sub sum {
     return List::Util::reduce(sub { $a + $b }, 0, @_);
