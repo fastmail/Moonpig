@@ -10,5 +10,5 @@ $m->redirect('/') unless $credit;
 </%perl>
 <&| /page/full, title => "Moonpig Credit $credit_guid" &>
 
-  <& /widget/dump, dump => $invoice, what => 'Credit' &>
+  <& /widget/dump, dump => $credit, what => 'Credit' &>
 </&>
