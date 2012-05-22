@@ -7,7 +7,7 @@ $ledger
 <div class='contact'>
   <h2>Ledger Contact</h2>
   <a href='/ledger/<% $ledger->{guid} |h %>/contact'>edit contact</a>
-  <table>
+  <table class="table">
     <tr><th>Name</th><td>
       <% $contact->{first_name} |h %>
       <% $contact->{last_name} |h %>

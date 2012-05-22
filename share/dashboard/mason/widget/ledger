@@ -6,16 +6,28 @@ $ledger
 <div class="row-fluid">
 <div class="span6">
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
-  <& SELF:quotes, ledger => $ledger &>
 </div>
 <div class="span6">
   <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
 </div>
 </div>
 
-  <& SELF:invoices, ledger => $ledger &>
+<div class="row-fluid">
+<div class="span6">
+ <& SELF:invoices, ledger => $ledger &>
+</div>
+<div class="span6">
+  <& SELF:quotes, ledger => $ledger &>
+</div>
+</div>
+
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
+
+<div class="row-fluid">
+<div class="span12">
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
+</div>
+</div>
 
 <div class="row-fluid">
 <div class="span12">
@@ -28,9 +40,53 @@ $ledger
 $credits
 $ledger
 </%args>
-<div class='credits'>
+<div class="row-fluid">
+<div class="span6">
+<h2>Enter Payment</h2>
+
+  Pay by Check:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Bank name: <input name='credit.attributes.bank_name' />
+    Check &#x2116;: <input name='credit.attributes.check_number' />
+    <input type='submit' class="btn" value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='Check' />
+  </form>
+
+  Pay with PayPal&#x2122;:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Transaction: <input name='credit.attributes.transaction_id' />
+    Email Addr: <input name='credit.attributes.from_address' />
+    <input type='submit' class="btn" value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='PayPal' />
+  </form>
+
+  Add credit from Authorize.net:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Transaction ID: <input name='credit.attributes.transaction_id' />
+    <input type='submit' class="btn" value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='CreditCard' />
+  </form>
+
+
+  Add a courtesy credit:
+  <form method='post' action='/post/credit'>
+    Amount ($): <input name='credit.attributes.amount' />
+    Reason (req): <input name='credit.attributes.reason' />
+    <input type='submit' class="btn" value='Add Credit' />
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='credit.type' value='Courtesy' />
+  </form>
+</div>
+<div class="span6">
   <h2>Payment History</h2>
-  <table>
+  <table class="table">
+  <thead>
     <tr>
       <th>&nbsp;</th>
       <th>Type</th>
@@ -38,6 +94,8 @@ $ledger
       <th>Amount</th>
       <th>Unapplied</th>
     </tr>
+    </thead>
+    <tbody>
 % for my $credit (sort { $b->{created_at} cmp $a->{created_at} } @$credits) {
     <tr>
       <td><a href='/ledger/<% $ledger->{guid} %>/credit/<% $credit->{guid} %>'>
@@ -49,45 +107,9 @@ $ledger
       <td><% mc($credit->{unapplied_amount}) |h %></td>
     </tr>
 % }
+  </tbody>
   </table>
-
-  Add a courtesy credit:
-  <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Reason (req): <input name='credit.attributes.reason' />
-    <input type='submit' value='Add Credit' />
-    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
-    <input type='hidden' name='credit.type' value='Courtesy' />
-  </form>
-
-  Pay by Check:
-  <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Bank name: <input name='credit.attributes.bank_name' />
-    Check &#x2116;: <input name='credit.attributes.check_number' />
-    <input type='submit' value='Add Credit' />
-    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
-    <input type='hidden' name='credit.type' value='Check' />
-  </form>
-
-  Add a credit from a credit card:
-  <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Transaction ID: <input name='credit.attributes.transaction_id' />
-    <input type='submit' value='Add Credit' />
-    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
-    <input type='hidden' name='credit.type' value='CreditCard' />
-  </form>
-
-  Add a credit from PayPal&#x2122;:
-  <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Transaction: <input name='credit.attributes.transaction_id' />
-    Email Addr: <input name='credit.attributes.from_address' />
-    <input type='submit' value='Add Credit' />
-    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
-    <input type='hidden' name='credit.type' value='PayPal' />
-  </form>
+</div>
 </div>
 </%method>
 
