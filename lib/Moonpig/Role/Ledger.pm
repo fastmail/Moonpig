@@ -48,6 +48,7 @@ with(
     item => 'credit',
     collection_roles => [ 'Moonpig::Role::Collection::CreditExtras',
                           'Stick::Role::Collection::Mutable',
+                          'Stick::Role::Collection::CanFilter',
                          ],
   },
   'Stick::Role::HasCollection' => {

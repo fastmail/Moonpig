@@ -3,6 +3,8 @@ package Moonpig::Role::Credit;
 use Moose::Role;
 
 with(
+  'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
