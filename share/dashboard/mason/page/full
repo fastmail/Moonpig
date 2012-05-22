@@ -1,14 +1,14 @@
 <%args>
 $title
 </%args>
+<!DOCTYPE html>
 <html>
 <head>
-  <title><% $title |h %></title>
-  <link rel="stylesheet" href="/css/dashboard.css" />
-<script src="http://www.pobox.com/js/jquery-1.7.1.min.js" type="text/javascript">
-<script src="http://www.pobox.com/js/bootstrap.min.js" type="text/javascript">
-<link href="http://www.pobox.com/css/bootstrap/css/bootstrap.min.css" type="text/css" rel="stylesheet">
-<link href="http://www.pobox.com/css/bootstrap/css/bootstrap-responsive.min.css" type="text/css" rel="stylesheet">
+<title><% $title |h %></title>
+  <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap-responsive.min.css" />
+<script src="http://www.pobox.com/js/jquery-1.7.1.min.js" type="text/javascript" />
+<script src="http://www.pobox.com/js/bootstrap.min.js" type="text/javascript" />
 </head>
 
 <script>
@@ -39,20 +39,20 @@ $(function () {
 <a href="http://moonpig.icgroup.com:3060/">Billing</a>
 </li>
 <li>
-<a href="http://lab.pobox.com:3021">Customer Service Dashboard</a>
-</li>
-<li>
-<a href="http://helpspot.pobox.com/admin.php">Ticket System</a>
+<a href="http://helpspot.pobox.com/admin.php">Tickets</a>
 </li>
 <li>
 <a href="http://atmail.pobox.com/admin.php">Atmail Admin</a>
+</li>
+<li>
+<a href="https://rr-n1-tor.opensrs.net/resellers/">OpenSRS</a>
 </li>
 </ul>
 </div>
 </div>
 </div>
 </div>
-<div class="container" style="background-color: #fff; padding-left:10px; padding-right: 10px;">
+<div class="container" style="background-color: #fff; padding-left:10px; padding-right: 10px; margin-top:-18px">
 <div class="page-header">
   <h1><% $title |h %></h1>
 </div>

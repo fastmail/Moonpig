@@ -5,13 +5,13 @@ $ledger
 
 <div class="row-fluid">
 <div class="span6">
-  <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
-</div>
-<div class="span6">
   <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
 </div>
+<div class="span6">
+  <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
 </div>
-
+</div>
+<hr>
 <div class="row-fluid">
 <div class="span6">
  <& SELF:invoices, ledger => $ledger &>
@@ -20,15 +20,15 @@ $ledger
   <& SELF:quotes, ledger => $ledger &>
 </div>
 </div>
-
+<hr>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
-
+<hr>
 <div class="row-fluid">
 <div class="span12">
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 </div>
 </div>
-
+<hr>
 <div class="row-fluid">
 <div class="span12">
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
@@ -42,46 +42,54 @@ $ledger
 </%args>
 <div class="row-fluid">
 <div class="span6">
-<h2>Enter Payment</h2>
-
-  Pay by Check:
+<h2>Enter Payments</h2>
+<div class="row-fluid">
+<div class="span6">
+  <h4>Check</h4>
   <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Bank name: <input name='credit.attributes.bank_name' />
-    Check &#x2116;: <input name='credit.attributes.check_number' />
+    <label for="credit.attributes.amount">Amount ($)</label> <input type="text" name='credit.attributes.amount' />
+    <label for="credit.attributes.bank_name">Bank name</label> <input type="text" name='credit.attributes.bank_name' />
+    <label for="credit.attributes.check_number">Check &#x2116;</label> <input type="text" name='credit.attributes.check_number' />
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
   </form>
-
-  Pay with PayPal&#x2122;:
+</div>
+<div class="span6">
+  <h4>PayPal</h4>
   <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Transaction: <input name='credit.attributes.transaction_id' />
-    Email Addr: <input name='credit.attributes.from_address' />
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
+    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' />
+    <label for="credit.attributes.from_address">Email Addr</label> <input name='credit.attributes.from_address' />
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='PayPal' />
   </form>
-
-  Add credit from Authorize.net:
+</div>
+</div>
+<div class="row-fluid">
+<div class="span6">
+  <h4>Credit from Authorize.net</h4>
   <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Transaction ID: <input name='credit.attributes.transaction_id' />
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
+    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' />
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='CreditCard' />
   </form>
+</div>
+<div class="span6">
 
-
-  Add a courtesy credit:
+  <h4>Pobox courtesy credit</h4>
   <form method='post' action='/post/credit'>
-    Amount ($): <input name='credit.attributes.amount' />
-    Reason (req): <input name='credit.attributes.reason' />
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
+    <label for="credit.attributes.amount">Reason (req)</label> <input name='credit.attributes.reason' />
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Courtesy' />
   </form>
+</div>
+</div>
 </div>
 <div class="span6">
   <h2>Payment History</h2>
@@ -119,7 +127,7 @@ $jobs
 </%args>
 <div class='jobs'>
   <h2>Outstanding Jobs</h2>
-  <table>
+  <table class="table">
 % for my $job (@$jobs) {
     <tr>
       <th class='id'><% $job->{id} |h %></th>
@@ -136,18 +144,14 @@ $jobs
 $ledger
 $active_consumers
 </%args>
-<div class='consumers'>
   <h2>Active Consumers</h2>
+    <table class="table table-condensed">
 % for my $xid (sort keys %$active_consumers) {
 %   my $consumer = $active_consumers->{$xid};
-  <div class='consumer'>
-    <table>
-      <tr><th>xid</th><td><a href='/ledger/<% $ledger->{guid} |h %>/consumer/<% $consumer->{guid} |h %>'><% $xid |h %></a></td></th></tr>
+      <tr style="border-top:2px solid #000"><th>xid</th><td><a href='/ledger/<% $ledger->{guid} |h %>/consumer/<% $consumer->{guid} |h %>'><% $xid |h %></a></td></th></tr>
       <tr><th>est. exp. date</th><td><% $consumer->{replacement_chain_expiration_date} |h %></td></th></tr>
-    </table>
-  </div>
 % }
-</div>
+    </table>
 </%method>
 
 <%method invoices>
@@ -158,13 +162,15 @@ $ledger
 % my $invoices = $ledger->{unpaid_invoices}{items};
 % my $total     = sumof(sub{ $_->{total_amount} }, @$invoices);
 % my $total_due = $ledger->{amount_due};
-  <table>
+  <table class="table">
+    <thead>
     <tr>
       <th>Invoice No.</th>
       <th>Date</th>
       <th>Total</th>
       <th>Due</th>
     </tr>
+    </thead>
 % for my $invoice (sort { $b->{closed_at} cmp $a->{closed_at} } @$invoices) {
     <tr>
       <th class='guid'>
@@ -183,11 +189,10 @@ $ledger
   </table>
 
   <div>
-    <a href='/ledger/<% $ledger->{guid} |h %>/invoices'>
+    <a class="btn" href='/ledger/<% $ledger->{guid} |h %>/invoices'>
       view all invoices
     </a>
   </div>
-</div>
 </%method>
 
 <%method quotes>
@@ -199,12 +204,14 @@ $ledger
 % my @quotes = @{ $quotes->{items} };
 <div class='invoices'>
   <h2>Quotes</h2>
-  <table>
+  <table class="table">
+  <thead>
     <tr>
       <th>Invoice No.</th>
       <th>Date</th>
       <th>Total</th>
     </tr>
+  </thead>
 % for my $quote (sort { $b->{closed_at} cmp $a->{closed_at} } @quotes) {
     <tr>
       <th class='guid'>
