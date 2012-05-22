@@ -3,15 +3,24 @@
 $ledger
 </%args>
 
-<div class='ledger'>
-  <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
+<div class="row-fluid">
+<div class="span6">
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
   <& SELF:quotes, ledger => $ledger &>
+</div>
+<div class="span6">
+  <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
+</div>
+</div>
+
   <& SELF:invoices, ledger => $ledger &>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 
+<div class="row-fluid">
+<div class="span12">
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
+</div>
 </div>
 
 <%method credits>
@@ -42,7 +51,7 @@ $ledger
 % }
   </table>
 
-  Add a courtesty credit:
+  Add a courtesy credit:
   <form method='post' action='/post/credit'>
     Amount ($): <input name='credit.attributes.amount' />
     Reason (req): <input name='credit.attributes.reason' />
@@ -51,7 +60,7 @@ $ledger
     <input type='hidden' name='credit.type' value='Courtesy' />
   </form>
 
-  Add a credit from a check:
+  Pay by Check:
   <form method='post' action='/post/credit'>
     Amount ($): <input name='credit.attributes.amount' />
     Bank name: <input name='credit.attributes.bank_name' />
@@ -123,7 +132,6 @@ $active_consumers
 <%args>
 $ledger
 </%args>
-<div class='invoices'>
   <h2>Unpaid Invoices</h2>
 % my $invoices = $ledger->{unpaid_invoices}{items};
 % my $total     = sumof(sub{ $_->{total_amount} }, @$invoices);
