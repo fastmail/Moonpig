@@ -156,7 +156,7 @@ implicit_event_handlers {
 sub _pay_charges {
   my ($self, $event) = @_;
 
-  my @charges = $self->all_charges;
+  my @charges = grep { ! $_->is_abandoned } $self->all_charges;
 
   my $collection = $self->ledger->consumer_collection;
   my @guids     = uniq map { $_->owner_guid } @charges;
