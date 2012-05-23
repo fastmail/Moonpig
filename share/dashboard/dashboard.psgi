@@ -130,7 +130,7 @@ builder {
   # enable 'Debug';
   enable(
     "Plack::Middleware::Static",
-    path => qr{^/(images|js)/},
+    path => qr{^/(images|js|css)/},
     root => $root->subdir(qw(static)),
   );
 
