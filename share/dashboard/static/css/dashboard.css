@@ -17,14 +17,6 @@
   white-space: pre;
 }
 
-.contact table {
-  border: thin black solid;
-}
-
 .guid {
   font-family: monospace;
-}
-
-.total th {
-  text-align: right;
 }
