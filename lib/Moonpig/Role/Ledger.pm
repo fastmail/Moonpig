@@ -296,7 +296,11 @@ sub _add_consumer_chain {
   } else {
     confess "Unexpected 'kind' argument '$kind' to Ledger::_add_consumer_chain";
   }
-  $consumer->_adjust_replacement_chain($chain_duration - $consumer->estimated_lifetime);
+
+  $consumer->_adjust_replacement_chain(
+    $chain_duration - $consumer->estimated_lifetime, 1
+  );
+
   return ($consumer, $consumer->replacement_chain);
 }
 
@@ -323,7 +327,7 @@ sub quote_for_extended_service {
     unless my $chain_head = $end_consumer->build_replacement();
 
   $chain_duration -= $chain_head->estimated_lifetime;
-  my @chain = $chain_head->_adjust_replacement_chain($chain_duration);
+  my @chain = $chain_head->_adjust_replacement_chain($chain_duration, 1);
   my $quote = $self->end_quote($chain_head);
   return wantarray() ? ($quote, $chain_head, @chain) : $quote;
 }
