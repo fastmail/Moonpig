@@ -21,4 +21,13 @@ has transaction_id => (
   required => 1,
 );
 
+use Moonpig::Behavior::Packable;
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    transaction_id => $self->transaction_id,
+  };
+};
+
 1;

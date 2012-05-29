@@ -35,4 +35,15 @@ has from_address => (
   required => 1,
 );
 
+use Moonpig::Behavior::Packable;
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    transaction_id => $self->transaction_id,
+    from_name      => $self->from_name,
+    from_address   => $self->from_address,
+  };
+};
+
 1;

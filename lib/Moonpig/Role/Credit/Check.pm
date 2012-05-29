@@ -25,4 +25,14 @@ has bank_name => (
   required => 1,
 );
 
+use Moonpig::Behavior::Packable;
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    check_number => $self->check_number,
+    bank_name    => $self->bank_name,
+  };
+};
+
 1;

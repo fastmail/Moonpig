@@ -14,4 +14,13 @@ has reason => (
   required => 1,
 );
 
+use Moonpig::Behavior::Packable;
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    reason => $self->reason,
+  };
+};
+
 1;
