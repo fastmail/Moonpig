@@ -2,7 +2,7 @@
 $invoice
 </%args>
 <div class='invoice<% $invoice->{is_internal} ? ' internal' : '' %>' style='border:thin black solid'>
-  <h3>Invoice <% $invoice->{ident} %></h3>
+  <h3<% $invoice->{is_abandoned} ? " class='abandoned'" : '' %>>Invoice <% $invoice->{ident} %></h3>
 
 % if ($invoice->{is_quote}) {
   <p><strong>This invoice is actually a quote.</strong></p>
