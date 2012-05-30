@@ -1,0 +1,25 @@
+#!perl
+use 5.14.1;
+
+$|++;
+
+use Moonpig;
+use Moonpig::Util qw(to_dollars);
+use Pobox::Moonpig;
+
+my @credit;
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    for my $consumer (
+      grep { $_->does('Pobox::Moonpig::Consumer::PoboxAccount') }
+      $ledger->active_consumers
+    ) {
+      print join(q{,},
+        $consumer->xid,
+        eval{$consumer->replacement_chain_expiration_date}||'??') . "\n";
+    }
+  }
+);
+

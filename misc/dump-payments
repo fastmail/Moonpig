@@ -1,0 +1,26 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Moonpig::Util qw(to_dollars);
+use Pobox::Moonpig;
+
+my @credit;
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    my @credits = grep { ! $_->does('Moonpig::Role::Credit::Imported') }
+                  $ledger->credits;
+    for my $credit (@credits) {
+      my $type = (ref $credit) =~ s/^Moonpig::Class::Credit:://r;
+      print join(q{,},
+        $ledger->ident,
+        $credit->guid,
+        $type,
+        $credit->created_at,
+        to_dollars($credit->amount)) . "\n";
+    }
+  }
+);
+
