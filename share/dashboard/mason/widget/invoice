@@ -2,7 +2,7 @@
 $invoice
 </%args>
 <div class='invoice<% $invoice->{is_internal} ? ' internal' : '' %>' style='border:thin black solid'>
-  <h3<% $invoice->{is_abandoned} ? " class='abandoned'" : '' %>>Invoice <% $invoice->{ident} %></h3>
+  <h3<% $invoice->{is_abandoned} ? " class='abandoned'" : '' %>>Invoice <% $invoice->{ident} %><% $invoice->{is_internal} ? ' (internal)' : '' %></h3>
 
 % if ($invoice->{is_quote}) {
   <p><strong>This invoice is actually a quote.</strong></p>
@@ -20,9 +20,17 @@ $invoice
   <p><strong>Total Amount:</strong> <% mc($invoice->{total_amount}) |h%></p>
 
   <table>
+    <tr>
+      <th>description</th>
+      <th>xid</th>
+      <th>consumer</th>
+      <th>amount</th>
+    </tr>
 % for my $charge (@{ $invoice->{charges} }) {
     <tr class='<% $charge->{abandoned_at} ? "abandoned" : '' %>'>
       <td><% $charge->{description} |h %></td>
+      <td><% $charge->{tags}[0] |h %></td>
+      <td><a href='/ledger/<% $invoice->{ledger_guid} |h %>/consumer/<% $charge->{owner_guid} |h %>'>(link)</a></td>
       <td><% mc($charge->{amount}) |h %></td>
     </tr>
 % }
