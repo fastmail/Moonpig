@@ -40,6 +40,7 @@ PARTIAL_PACK {
     description => $self->description,
     amount      => $self->amount,
     date        => $self->date,
+    tags        => [ $self->taglist ],
   };
 };
 
