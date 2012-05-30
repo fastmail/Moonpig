@@ -21,3 +21,7 @@
 .guid {
   font-family: monospace;
 }
+
+.invoice.internal {
+  background-color: #ddd;
+}

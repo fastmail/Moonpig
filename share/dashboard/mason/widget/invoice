@@ -1,7 +1,7 @@
 <%args>
 $invoice
 </%args>
-<div class='invoice' style='border:thin black solid'>
+<div class='invoice<% $invoice->{is_internal} ? ' internal' : '' %>' style='border:thin black solid'>
   <h3>Invoice <% $invoice->{ident} %></h3>
 
 % if ($invoice->{is_quote}) {

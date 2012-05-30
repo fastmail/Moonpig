@@ -1,18 +1,25 @@
+#!perl
 use 5.14.1;
 
 use Moonpig;
-use Pobox::Moonpig::Env;
+use Moonpig::Util qw(to_dollars);
+use Pobox::Moonpig;
+
+my @credit;
 
 Moonpig->env->storage->do_with_each_ledger(
   sub {
     my ($ledger) = @_;
-    print "I have ledger " . $ledger->ident . "\n";
-    for my $consumer ($ledger->consumers) {
-      print exists $consumer->{extra_invoice_charge_tags} ? "I" : " ";
-      print exists $consumer->{extra_journal_charge_tags} ? "J" : " ";
-      print exists $consumer->{extra_charge_tags} ? "C" : " ";
-      print exists $consumer->{extra_charge_tags} && !  $consumer->{extra_charge_tags} ? "!" : " ";
-      print " ", $consumer->ident . "\n";
+    my @credits = grep { ! $_->does('Moonpig::Role::Credit::Imported') }
+                  $ledger->credits;
+    for my $credit (@credits) {
+      my $type = (ref $credit) =~ s/^Moonpig::Class::Credit:://r;
+      print join(q{,},
+        $ledger->ident,
+        $credit->guid,
+        $type,
+        $credit->created_at,
+        to_dollars($credit->amount)) . "\n";
     }
   }
 );
