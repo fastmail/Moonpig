@@ -237,6 +237,7 @@ PARTIAL_PACK {
     charges      => [ map {; ppack($_) } $self->all_charges ],
     is_quote     => $self->is_quote,
     is_internal  => $self->is_internal,
+    abandoned_at => $self->abandoned_at,
   });
 };
 
