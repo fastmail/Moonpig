@@ -134,7 +134,7 @@ sub remaining_life {
   $self->expiration_date - $when;
 }
 
-sub will_die_soon { 0 } # Provided by MakesReplacement
+sub will_die_soon { 0 } # The real work is done by MakesReplacement's advice
 
 sub estimated_lifetime {
   my ($self) = @_;
