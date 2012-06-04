@@ -302,7 +302,7 @@ sub expected_funds {
                 map  { $_->all_charges }
   # This counts charges on invoices that are payable, *and* on open
   # invoices that will be payable once they are closed. mjd 20120427
-                grep { $_->is_unpaid && ! $_->is_abandoned && $_->isnt_quote }
+                grep { ! $_->is_abandoned && $_->isnt_quote }
                   $self->ledger->invoices;
   my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
   return $funds;
