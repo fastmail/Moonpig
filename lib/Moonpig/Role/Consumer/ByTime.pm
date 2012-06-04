@@ -109,6 +109,10 @@ after become_active => sub {
 
 sub expiration_date;
 publish expiration_date => { } => sub {
+  $_[0]->bytime_expiration_date;
+};
+
+sub bytime_expiration_date {
   my ($self) = @_;
 
   $self->is_active ||
