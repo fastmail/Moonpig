@@ -90,7 +90,10 @@ test "import a ledger via the web" => sub {
 
       # the "- days(1)" is because the heartbeat implicit to creation charges
       # for the first day! -- rjbs, 2012-03-01
-      my $expected = Moonpig->env->now + years(6) - days(1);
+      # This is 6*52 weeks, not 6 years, because these consumers charge weekly, and so they
+      # run out of money after 52 such charges; the extra 1.25 days worth of money are
+      # absorbed. -- mjd, 2012-06-04
+      my $expected = Moonpig->env->now + weeks(6*52) - days(1);
       my $exp_date = $consumers[0]->replacement_chain_expiration_date(
         { include_expected_funds => 1 });
 
