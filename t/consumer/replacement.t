@@ -167,6 +167,22 @@ test "replacement chain" => sub {
     });
 };
 
+test "replacement chain to zero" => sub {
+  my ($self) = @_;
+
+  do_with_fresh_ledger(
+    { c => { template => 'quick',
+             xid => "test:consumer:xyz",
+           }}, # lasts 2d
+    sub {
+      my ($ledger) = @_;
+      my ($c) = $ledger->get_component('c');
+      my $repl = $c->adjust_replacement_chain({ chain_duration => 0 });
+      ok("lived");
+    },
+  );
+};
+
 sub make_charges {
   my ($ledger, %args) = @_;
   my @consumers = @{$args{consumers}};
