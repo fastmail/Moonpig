@@ -121,9 +121,10 @@ publish expiration_date => { } => sub {
     return Moonpig->env->now;
   } else {
     return $self->next_charge_date +
-      $self->_estimated_remaining_funded_lifetime({ amount => $remaining,
-                                                   ignore_partial_charge_periods => 1,
-                                                 });
+      $self->_estimated_remaining_funded_lifetime({
+        amount => $remaining,
+        ignore_partial_charge_periods => 1,
+      });
   }
 };
 
