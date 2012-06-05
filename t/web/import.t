@@ -91,7 +91,6 @@ test "import a ledger via the web" => sub {
       is(@consumers, 1, "we have one active consumer");
       {
         my $c = $consumers[0];
-        $c = $c->replacement while $c->has_replacement;
         $consumer_guid = $c->guid;
       }
 
@@ -124,6 +123,27 @@ test "import a ledger via the web" => sub {
       is(@deliveries, 0, "we didn't email any invoices, they're internal");
     },
   );
+
+#  Moonpig->env->stop_clock_at( $expected_expiration_date - days(5) );
+  note "waiting for entire chain to expire...";
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+      my $exp_date = ($ledger->active_consumers)[0]
+        ->replacement_chain_expiration_date({ include_expected_funds => 0 });
+      my $last = $ledger->consumer_collection->find_by_guid({ guid => $consumer_guid });
+      $last = $last->replacement while $last->has_replacement;
+
+      my $last_unexpired_date;
+      until ($last->is_expired) {
+        $last_unexpired_date = Moonpig->env->now;
+        $ledger->heartbeat;
+        Moonpig->env->elapse_time(86_400);
+      }
+      is ($last_unexpired_date->iso, $exp_date->iso, "predicted chain expiration date was correct");
+    });
+
 };
 
 test "import a ledger, with proration, via the web" => sub {
