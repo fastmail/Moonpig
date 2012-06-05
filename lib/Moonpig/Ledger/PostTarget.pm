@@ -98,13 +98,15 @@ sub resource_post {
       my $total    = sumof { $_->amount } @charges;
       my $pay_info = $arg{old_payment_info};
 
-      $ledger->add_credit(
-        class('Credit::Imported::Refundable'),
-        {
-          amount => $total,
-          old_payment_info => $pay_info,
-        },
-      );
+      if ($total) {
+        $ledger->add_credit(
+          class('Credit::Imported::Refundable'),
+          {
+            amount => $total,
+            old_payment_info => $pay_info,
+          },
+        );
+      }
     }
 
     $ledger->heartbeat;
