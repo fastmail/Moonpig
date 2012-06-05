@@ -84,8 +84,6 @@ sub resource_post {
     }
 
     if ($arg{old_payment_info}) {
-      $ledger->current_invoice->mark_internal;
-
       # Not worrying about closed/open.  The ledger is brand new.  We just find
       # invoices that need money, then provide it.
       my @charges =
@@ -93,12 +91,12 @@ sub resource_post {
         grep { $_->is_unpaid   }
         $ledger->invoices_without_quotes;
 
-      my %is_active = map { $_->guid => 1 } $ledger->active_consumers;
-
       my $total    = sumof { $_->amount } @charges;
       my $pay_info = $arg{old_payment_info};
 
       if ($total) {
+        $ledger->current_invoice->mark_internal;
+
         $ledger->add_credit(
           class('Credit::Imported::Refundable'),
           {
