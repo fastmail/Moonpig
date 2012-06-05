@@ -262,7 +262,7 @@ sub _predicted_shortfall {
   # going to get it all. -- rjbs, 2012-03-15
   my $guid = $self->guid;
 
-  my $funds = $self->expected_funds;
+  my $funds = $self->expected_funds({ include_unpaid_charges => 1 });
 
   # Next, figure out how long that money will last us.
   my $estimated_remaining_funded_lifetime =
@@ -292,18 +292,25 @@ sub _predicted_shortfall {
   return $shortfall;
 }
 
-# Not just the amount we have on hand, but the amount we expect to have, assuming
-# that all our payable charges are paid.
+# Not just the amount we have on hand, but the amount we expect to have, once
+# our paid charges are executed, and possibly also assuming that our unpaid
+# charges are paid and executed.
 sub expected_funds {
-  my ($self) = @_;
+  my ($self, $options) = @_;
+
+  defined($options->{include_unpaid_charges})
+    or confess "expected_funds missing required include_unpaid_charges option";
+
   my $guid = $self->guid;
 
+  my @invoices = grep { ! $_->is_abandoned && $_->isnt_quote }
+    $self->ledger->invoices;
+  @invoices = grep { $_->is_paid } @invoices unless $options->{include_unpaid_charges};
+
+
   my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
-                map  { $_->all_charges }
-  # This counts charges on invoices that are payable, *and* on open
-  # invoices that will be payable once they are closed. mjd 20120427
-                grep { ! $_->is_abandoned && $_->isnt_quote }
-                  $self->ledger->invoices;
+                map  { $_->all_charges } @invoices;
+
   my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
   return $funds;
 }
@@ -314,6 +321,9 @@ sub expected_funds {
 # If the money will last for a fractional number of charge periods, you
 # might or might not want to count the final partial period.
 #
+# XXX 20120605 ignore_partial_charge_periods should have *three* options:
+#  1. include  2. round up  3. round down
+#  see long comment in PredictsExpiration.pm for why.
 around _estimated_remaining_funded_lifetime => sub {
   my ($orig, $self, $args) = @_;
 

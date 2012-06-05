@@ -29,22 +29,18 @@ publish replacement_chain_expiration_date => {
     Moonpig::X->throw("replacement in chain cannot predict expiration");
   }
 
-  # XXX: HORRIBLE!!! This MUST MUST MUST be removed ASAP, but for now will
-  # prevent users from seeing an exp. date for consumers that are not fully
-  # paid. -- rjbs, 2012-04-26
-  @chain = grep {; ! grep { ! $_->is_paid && ! $_->is_abandoned }
-                    $_->relevant_invoices } @chain;
-
-  my $amount_method =
-    $opts->{include_expected_funds} ? "expected_funds"
-      : "unapplied_amount";
-
-  return $self->expiration_date +
-    sumof {
-      $_->_estimated_remaining_funded_lifetime({
-        amount => $_->$amount_method,
+  # XXX 20120605 mjd We shouldn't be ignoring the partial charge
+  # period here, which rounds down; we should be rounding UP to the
+  # nearest complete charge period, because we are calculating a total
+  # expiration date, and each consumer won't be activating its
+  # successor until it expires, which occurs at the *end* of the last
+  # paid charge period.
+  return($self->expiration_date + (sumof {
+    $_->_estimated_remaining_funded_lifetime({
+        amount => $_->expected_funds({ include_unpaid_charges =>
+                                         $opts->{include_expected_funds} || 0 }),
         ignore_partial_charge_periods => 1,
-      }) } @chain;
+    }) } @chain));
 };
 
 # Use an "around" modifier to override this if your consumer actually needs to do it

@@ -8,7 +8,7 @@ use Plack::Test;
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(days years);
+use Moonpig::Util qw(days weeks years);
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 use Moonpig::UserAgent;
 use t::lib::ConsumerTemplateSet::Demo;
@@ -18,6 +18,8 @@ with(
 );
 
 use namespace::autoclean;
+
+my $jan1 = Moonpig::DateTime->new(year => 2000, month => 1, day => 1);
 
 test "import a ledger via the web" => sub {
   my ($self) = @_;
@@ -51,9 +53,7 @@ test "import a ledger via the web" => sub {
 
   my $guid;
 
-  Moonpig->env->stop_clock_at(
-    Moonpig::DateTime->new(year => 2000, month => 1, day => 1),
-  );
+  Moonpig->env->stop_clock_at( $jan1 );
 
   my $replacement_date_str;
   test_psgi(Moonpig::Web::App->app, sub {
@@ -77,6 +77,8 @@ test "import a ledger via the web" => sub {
     is_deeply($guids, [ $guid ], "we can GET /ledgers for guids");
   });
 
+  my $consumer_guid;
+  my $expected_expiration_date = $jan1 + weeks(6*52);
   Moonpig->env->storage->do_ro_with_ledger(
     $guid,
     sub {
@@ -87,18 +89,25 @@ test "import a ledger via the web" => sub {
 
       my @consumers = $ledger->active_consumers;
       is(@consumers, 1, "we have one active consumer");
+      {
+        my $c = $consumers[0];
+        $c = $c->replacement while $c->has_replacement;
+        $consumer_guid = $c->guid;
+      }
 
-      # the "- days(1)" is because the heartbeat implicit to creation charges
-      # for the first day! -- rjbs, 2012-03-01
       # This is 6*52 weeks, not 6 years, because these consumers charge weekly, and so they
       # run out of money after 52 such charges; the extra 1.25 days worth of money are
       # absorbed. -- mjd, 2012-06-04
-      my $expected = Moonpig->env->now + weeks(6*52) - days(1);
+      # XXX 20120605 mjd Actually it should be 6*53 weeks, because
+      # each consumer fails over to the next only at the *end* of its
+      # last incompletely funded charge period; fix this when we add
+      # the round_up option to ignore_partial_charge_periods as per 20120605
+      # comments elsewhere.
       my $exp_date = $consumers[0]->replacement_chain_expiration_date(
-        { include_expected_funds => 1 });
+        { include_expected_funds => 0 });
 
       cmp_ok(
-        abs($exp_date - $expected), '<', 86_400,
+        abs($exp_date - $expected_expiration_date), '<', 86_400,
         "our chain's estimated exp. date is within a day of expectations",
       );
 
@@ -186,8 +195,6 @@ test "import a ledger, with proration, via the web" => sub {
       my @consumers = $ledger->active_consumers;
       is(@consumers, 1, "we have one active consumer");
 
-      # the "- days(1)" is because the heartbeat implicit to creation charges
-      # for the first day! -- rjbs, 2012-03-01
       my $expected = Moonpig->env->now + days(.5);
       my $exp_date = $consumers[0]->replacement_chain_expiration_date;
 
