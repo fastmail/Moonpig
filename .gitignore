@@ -2,3 +2,4 @@
 eg/fauxbox/var
 pod2htm?.tmp
 doc/design.html
+/doc/*-branch

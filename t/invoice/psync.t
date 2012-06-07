@@ -6,7 +6,7 @@ use Test::Fatal;
 use t::lib::TestEnv;
 use Stick::Util qw(ppack);
 
-use Moonpig::Util qw(class dollars event years);
+use Moonpig::Util qw(class days dollars event years);
 
 with(
   't::lib::Factory::EventHandler',
@@ -18,6 +18,20 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 before run_test => sub {
   Moonpig->env->email_sender->clear_deliveries;
+};
+
+test 'quote' => sub {
+  do_with_fresh_ledger({ c => { class => class("t::Consumer::VaryingCharge"),
+                                cost_period => days(7),
+                                next_charge_amount => dollars(1),
+                                replacement_plan => [ get => '/nothing' ],
+                              }}, sub {
+    my ($ledger) = @_;
+    my $c = $ledger->get_component("c");
+    ok($c);
+    ok($c->does('Moonpig::Role::Consumer::ByTime'));
+    ok($c->does("t::lib::Role::Consumer::VaryingCharge"));
+  });
 };
 
 test 'regression' => sub {
