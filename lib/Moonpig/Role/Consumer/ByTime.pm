@@ -372,7 +372,7 @@ sub _send_psync_quote {
   {
     my $shortfall_days = ceil($shortfall / days(1));
     $self->charge_current_invoice({
-      extra_tags => [ 'psync' ],
+      extra_tags => [ 'moonpig.psync' ],
       description => sprintf("Shortfall of $shortfall_days %s",
                              $shortfall_days == 1 ? "day" : "days"),
       amount => $self->estimate_cost_for_interval({ interval => $shortfall }),
