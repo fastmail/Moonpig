@@ -84,11 +84,17 @@ test 'setup sanity checks' => sub {
 test 'quote' => sub {
   do_test {
     my ($ledger, $c) = @_;
+    my $sender = Moonpig->env->email_sender;
+
     is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
     elapse($ledger);
     is(scalar($ledger->quotes), 0, "no quotes yet");
     elapse($ledger);
     is(scalar($ledger->quotes), 0, "no quotes yet");
+
+    Moonpig->env->process_email_queue;
+    is(() = $sender->deliveries, 1, "one email delivery (the invoice)");
+    Moonpig->env->email_sender->clear_deliveries;
 
     $c->total_charge_amount(dollars(14));
     is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
@@ -99,6 +105,10 @@ test 'quote' => sub {
     ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
     is($ch->owner_guid, $c->guid, "charge owner");
     is($ch->amount, dollars(7), "charge amount");
+
+    Moonpig->env->process_email_queue;
+    my $sender = Moonpig->env->email_sender;
+    is(my ($delivery) = $sender->deliveries, 1, "one email delivery (the psync quote)");
   };
 };
 
