@@ -32,15 +32,6 @@ use namespace::autoclean;
 
 sub now { Moonpig->env->now() }
 
-sub charge_amount_on {
-  my ($self, $date) = @_;
-
-  my %charge_pairs = $self->charge_pairs($date);
-  my $amount = sum(values %charge_pairs);
-
-  return $amount;
-}
-
 sub initial_invoice_charge_pairs {
   my ($self) = @_;
   my @pairs = $self->charge_pairs_on( Moonpig->env->now );
