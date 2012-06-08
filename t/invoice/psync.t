@@ -6,7 +6,7 @@ use Test::Fatal;
 use t::lib::TestEnv;
 use Stick::Util qw(ppack);
 
-use Moonpig::Util qw(class days dollars event years);
+use Moonpig::Util qw(class days dollars event weeks years);
 
 with(
   't::lib::Factory::EventHandler',
@@ -84,7 +84,21 @@ test 'setup sanity checks' => sub {
 test 'quote' => sub {
   do_test {
     my ($ledger, $c) = @_;
-    pass();
+    is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
+    elapse($ledger);
+    is(scalar($ledger->quotes), 0, "no quotes yet");
+    elapse($ledger);
+    is(scalar($ledger->quotes), 0, "no quotes yet");
+
+    $c->total_charge_amount(dollars(14));
+    is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
+    elapse($ledger);
+    is(my ($qu) = $ledger->quotes, 1, "psync quote sent");
+    ok($qu->is_closed, "quote is closed");
+    is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
+    ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
+    is($ch->owner_guid, $c->guid, "charge owner");
+    is($ch->amount, dollars(7), "charge amount");
   };
 };
 

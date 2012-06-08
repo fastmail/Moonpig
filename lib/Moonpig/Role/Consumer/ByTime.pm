@@ -255,6 +255,7 @@ sub can_make_payment_on {
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
+# how much sooner will we run out of money than when we would have expected to run out?
 sub _predicted_shortfall {
   my ($self) = @_;
 
@@ -365,9 +366,9 @@ sub _send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
   my $shortfall = $self->_predicted_shortfall;
-  $self->last_psync_shortfall($shortfall);
 
   return unless $shortfall > $self->last_psync_shortfall;
+  $self->last_psync_shortfall($shortfall);
 
   $self->ledger->start_quote;
   {
