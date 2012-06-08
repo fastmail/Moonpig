@@ -365,10 +365,12 @@ has last_psync_shortfall => (
 sub _send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
-  my $shortfall = $self->_predicted_shortfall;
 
-  return unless $shortfall > $self->last_psync_shortfall;
+  my $shortfall = $self->_predicted_shortfall;
+  my $last_shortfall = $self->last_psync_shortfall;
   $self->last_psync_shortfall($shortfall);
+
+  return unless $shortfall > $last_shortfall;
 
   $self->ledger->start_quote;
   {
