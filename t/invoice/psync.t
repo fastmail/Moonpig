@@ -43,8 +43,9 @@ sub do_test (&) {
 }
 
 sub elapse {
-  my ($ledger) = @_;
-  Moonpig->env->elapse_time(86_400);
+  my ($ledger, $days) = @_;
+  $days //= 1;
+  Moonpig->env->elapse_time(86_400 * $days);
   $ledger->heartbeat;
 }
 
@@ -86,29 +87,42 @@ test 'quote' => sub {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
 
-    is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
-    elapse($ledger);
-    is(scalar($ledger->quotes), 0, "no quotes yet");
-    elapse($ledger);
-    is(scalar($ledger->quotes), 0, "no quotes yet");
+    subtest "do not send psync quotes until rate changes" => sub {
+      is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
+      elapse($ledger);
+      is(scalar($ledger->quotes), 0, "no quotes yet");
+      elapse($ledger);
+      is(scalar($ledger->quotes), 0, "no quotes yet");
 
-    Moonpig->env->process_email_queue;
-    is(() = $sender->deliveries, 1, "one email delivery (the invoice)");
-    Moonpig->env->email_sender->clear_deliveries;
+      Moonpig->env->process_email_queue;
+      is(() = $sender->deliveries, 1, "one email delivery (the invoice)");
+      Moonpig->env->email_sender->clear_deliveries;
+    };
 
-    $c->total_charge_amount(dollars(14));
-    is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
-    elapse($ledger);
-    is(my ($qu) = $ledger->quotes, 1, "psync quote sent");
-    ok($qu->is_closed, "quote is closed");
-    is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
-    ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
-    is($ch->owner_guid, $c->guid, "charge owner");
-    is($ch->amount, dollars(7), "charge amount");
+    subtest "generate psync quote when rate changes" => sub {
+      $c->total_charge_amount(dollars(14));
+      is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
+      elapse($ledger);
+      is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+      ok($qu->is_closed, "quote is closed");
+      is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
+      ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
+      is($ch->owner_guid, $c->guid, "charge owner");
+      is($ch->amount, dollars(7), "charge amount");
 
-    Moonpig->env->process_email_queue;
-    my $sender = Moonpig->env->email_sender;
-    is(my ($delivery) = $sender->deliveries, 1, "one email delivery (the psync quote)");
+      Moonpig->env->process_email_queue;
+      my $sender = Moonpig->env->email_sender;
+      is(my ($delivery) = $sender->deliveries, 1, "one email delivery (the psync quote)");
+      Moonpig->env->email_sender->clear_deliveries;
+    };
+
+    subtest "do not generate further quotes or send further email" => sub {
+      elapse($ledger, 3);
+      is(my ($qu) = $ledger->quotes, 1, "no additional psync quotes generated");
+      Moonpig->env->process_email_queue;
+      my $sender = Moonpig->env->email_sender;
+      is(my ($delivery) = $sender->deliveries, 0, "no additional email delivered");
+    };
   };
 };
 
