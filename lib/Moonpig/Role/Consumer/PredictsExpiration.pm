@@ -29,7 +29,8 @@ publish replacement_chain_expiration_date => {} => sub {
   # XXX: HORRIBLE!!! This MUST MUST MUST be removed ASAP, but for now will
   # prevent users from seeing an exp. date for consumers that are not fully
   # paid. -- rjbs, 2012-04-26
-  @chain = grep {; ! grep { ! $_->is_paid } $_->relevant_invoices } @chain;
+  @chain = grep {; ! grep { ! $_->is_paid && ! $_->is_abandoned }
+                    $_->relevant_invoices } @chain;
 
   return($self->expiration_date + (sumof { $_->estimated_lifetime } @chain));
 };
