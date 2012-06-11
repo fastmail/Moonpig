@@ -368,23 +368,31 @@ sub _send_psync_quote {
 
   my $shortfall = $self->_predicted_shortfall;
   my $last_shortfall = $self->last_psync_shortfall;
+
+  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
+  return if $shortfall == $last_shortfall;
   $self->last_psync_shortfall($shortfall);
 
-  return unless $shortfall > $last_shortfall;
+  my @old = $self->ledger->find_old_psync_quotes($self->xid);
 
-  $self->ledger->start_quote;
-  {
-    my $shortfall_days = ceil($shortfall / days(1));
-    $self->charge_current_invoice({
-      extra_tags => [ 'moonpig.psync' ],
-      description => sprintf("Shortfall of $shortfall_days %s",
-                             $shortfall_days == 1 ? "day" : "days"),
-      amount => $self->estimate_cost_for_interval({ interval => $shortfall }),
-    });
+  if ($shortfall > 0) {
+    $self->ledger->start_quote;
+    {
+      my $shortfall_days = ceil($shortfall / days(1));
+      $self->charge_current_invoice({
+        extra_tags => [ 'moonpig.psync' ],
+        description => sprintf("Shortfall of $shortfall_days %s",
+                               $shortfall_days == 1 ? "day" : "days"),
+        amount => $self->estimate_cost_for_interval({ interval => $shortfall }),
+      });
+    }
+    my $quote = $self->ledger->end_quote($self);
+    $quote->psync_for_xid($self->xid);
+    $self->ledger->_send_psync_email($self, $quote);
+  } else {
+    $self->ledger->_send_psync_email($self, undef);
   }
-  my $quote = $self->ledger->end_quote($self);
-  $quote->psync_for_xid($self->xid);
-  $self->ledger->_send_psync_email($self, $quote);
+  $_->mark_abandoned() for @old;
 }
 
 1;
