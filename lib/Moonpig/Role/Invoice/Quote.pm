@@ -115,6 +115,11 @@ publish execute => { -http_method => 'post', -path => 'execute' } => sub {
       $self->guid, $self->quote_expiration_time->iso;
   }
 
+  if ($self->is_abandoned) {
+    confess sprintf "Can't execute quote '%s'; it was abandoned at %s\n",
+      $self->guid, $self->abandoned_at->iso;
+  }
+
   my $first_consumer = $self->first_consumer;
   my $xid = $first_consumer->xid;
 
