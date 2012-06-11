@@ -107,6 +107,7 @@ test 'quote' => sub {
       ok($qu->is_closed, "quote is closed");
       is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
       ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
+      ok($ch->has_tag($c->xid), "charge has correct xid tag");
       is($ch->owner_guid, $c->guid, "charge owner");
       is($ch->amount, dollars(7), "charge amount");
 
