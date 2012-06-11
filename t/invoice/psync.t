@@ -142,6 +142,59 @@ test 'quote' => sub {
   };
 };
 
+test 'varying charges' => sub {
+  do_test {
+    my ($ledger, $c) = @_;
+    my $sender = Moonpig->env->email_sender;
+    my ($q1, $q2, $q3);
+
+    subtest "rate goes up to 14" => sub {
+      $c->total_charge_amount(dollars(14));
+      elapse($ledger);
+      is(($q1) = $ledger->quotes, 1, "first psync quote generated");
+      Moonpig->env->process_email_queue;
+      Moonpig->env->email_sender->clear_deliveries;
+    };
+
+    subtest "rate goes down to 9" => sub {
+      $c->total_charge_amount(dollars(9));
+      elapse($ledger);
+      is(my (@q) = $ledger->quotes, 2, "second psync quote generated");
+      $q2 = $q[1];
+      ok($q1->is_abandoned, "first quote was automatically abandoned");
+      is($q2->total_amount, dollars(2), "new quote amount");
+      my $d = get_single_delivery();
+    };
+
+    subtest "rate goes up to 14 again" => sub {
+      $c->total_charge_amount(dollars(14));
+      elapse($ledger);
+      is(my (@q) = $ledger->quotes, 3, "third psync quote generated");
+      $q3 = $q[2];
+      ok($q2->is_abandoned, "first quote was automatically abandoned");
+      is($q3->total_amount, dollars(7), "new quote amount");
+      my $d = get_single_delivery();
+    };
+
+    # If it goes down the the actually paid amount, don't send a quote,
+    # just an email
+    subtest "rate goes all the way back down to 7" => sub {
+      $c->total_charge_amount(dollars(7));
+      elapse($ledger);
+      is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
+      ok($q3->is_abandoned, "third quote was automatically abandoned");
+      my $d = get_single_delivery();
+    };
+
+    subtest "rate drops below 7" => sub {
+      $c->total_charge_amount(dollars(3));
+      elapse($ledger);
+      is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
+      my $d = get_single_delivery();
+    }
+  };
+};
+
 test 'regression' => sub {
   my ($self) = @_;
 
