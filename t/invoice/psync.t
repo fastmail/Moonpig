@@ -42,6 +42,16 @@ sub do_test (&) {
   });
 }
 
+sub get_single_delivery {
+  my ($msg) = @_;
+  $msg //= "exactly one delivery";
+  Moonpig->env->process_email_queue;
+  my $sender = Moonpig->env->email_sender;
+  is(my ($delivery) = $sender->deliveries, 1, $msg);
+  $sender->clear_deliveries;
+  return $delivery;
+}
+
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
@@ -95,8 +105,7 @@ test 'quote' => sub {
       is(scalar($ledger->quotes), 0, "no quotes yet");
 
       Moonpig->env->process_email_queue;
-      is(() = $sender->deliveries, 1, "one email delivery (the invoice)");
-      Moonpig->env->email_sender->clear_deliveries;
+      get_single_delivery("one email delivery (the invoice)");
     };
 
     subtest "generate psync quote when rate changes" => sub {
@@ -120,8 +129,7 @@ test 'quote' => sub {
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
-      is(my ($delivery) = $sender->deliveries, 1, "one email delivery (the psync quote)");
-      Moonpig->env->email_sender->clear_deliveries;
+      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
     };
 
     subtest "do not generate further quotes or send further email" => sub {
