@@ -1,0 +1,14 @@
+REQUEST ID: ...
+
+You've recently updated your service {{ $consumer->xid }}.
+Due to those changes, your account price has decreased.
+
+Your account was due to expire after {{
+  $consumer->replacement_chain_expiration_date({
+     include_expected_funds => 0 })->iso }}.  Because of the lower
+  rate, it will now expire on 
+{{$consumer->replacement_chain_expiration_date({
+    include_expected_funds => 1 })->iso }} instead.
+
+This message is for your information only. You need take no further
+action.

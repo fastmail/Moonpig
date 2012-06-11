@@ -171,24 +171,28 @@ sub _send_invoice_email {
   }));
 }
 
+# If there's a quote, it's for the amount of money the consumers need to advance
+# their expire date back to where it was.  If not, then the expire date advanced
+# and we're just sending a notification of that fact.
 sub _send_psync_email {
   my ($self, $consumer, $quote) = @_;
 
+  my $what = $quote ? "psync quote" : "psync reverse notice";
   $Logger->log([
-    "sending psync quote for %s to contacts of %s",
+    "sending $what for %s to contacts of %s",
     $consumer->xid,
     $self->ident,
   ]);
 
   $self->handle_event(event('send-mkit', {
-    kit => 'psync',
+    kit => $quote ? 'psync' : 'psync-notice',
     arg => {
       subject => "PAYMENT IS NOT DUE",
 
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
-      quote        => $quote,
+      $quote ? (quote        => $quote) : (),
       ledger       => $self,
       consumer     => $consumer,
     },
