@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice::Quote;
 
 use Carp qw(confess croak);
 use Moonpig;
-use Moonpig::Types qw(GUID Time);
+use Moonpig::Types qw(GUID Time XID);
 use Moonpig::Util qw(days);
 use Moose::Role;
 use Stick::Publisher;
@@ -49,6 +49,15 @@ has attachment_point_guid => (
   is => 'rw',
   isa => union([GUID, 'Undef']),
   traits => [ qw(SetOnce) ],
+);
+
+# If this quote is a psync quote, we record the XID of the service for
+# which it psyncs.
+has psync_for_xid => (
+  is => 'rw',
+  isa => XID,
+  traits => [ qw(SetOnce) ],
+  predicate => 'is_psync_quote',
 );
 
 sub has_attachment_point { defined $_[0]->attachment_point_guid }

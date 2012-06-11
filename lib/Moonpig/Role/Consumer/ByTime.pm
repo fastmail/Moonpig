@@ -383,6 +383,7 @@ sub _send_psync_quote {
     });
   }
   my $quote = $self->ledger->end_quote($self);
+  $quote->psync_for_xid($self->xid);
   $self->ledger->_send_psync_email($self, $quote);
 }
 

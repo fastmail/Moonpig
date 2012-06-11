@@ -105,6 +105,8 @@ test 'quote' => sub {
       elapse($ledger);
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
+      ok($qu->is_psync_quote, "quote is a psync quote");
+      is($qu->psync_for_xid, $c->xid, "quote's psync xid is correct");
       is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
       ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
       ok($ch->has_tag($c->xid), "charge has correct xid tag");
