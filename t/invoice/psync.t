@@ -103,10 +103,15 @@ test 'quote' => sub {
       $c->total_charge_amount(dollars(14));
       is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
       elapse($ledger);
+
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
       ok($qu->is_psync_quote, "quote is a psync quote");
       is($qu->psync_for_xid, $c->xid, "quote's psync xid is correct");
+      { my @old = $ledger->find_old_psync_quotes($c->xid);
+        ok(@old == 1 && $old[0] == $qu, "find_old_psync_quotes");
+      }
+
       is (my ($ch) = $qu->all_charges, 1, "one charge on psync quote");
       ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
       ok($ch->has_tag($c->xid), "charge has correct xid tag");

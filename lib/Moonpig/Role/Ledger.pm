@@ -349,6 +349,14 @@ sub end_quote {
   return $quote;
 }
 
+sub find_old_psync_quotes {
+  my ($self, $xid) = @_;
+  my @q = grep { ! $_->is_abandoned && ! $_->is_executed &&
+                   $_->is_psync_quote && $_->psync_for_xid eq $xid }
+    $self->quotes;
+  return @q;
+}
+
 # Compile-time generation of accessors for invoice and journal subcomponents
 sub _generate_chargecollection_methods {
   for my $thing (qw(journal invoice)) {
