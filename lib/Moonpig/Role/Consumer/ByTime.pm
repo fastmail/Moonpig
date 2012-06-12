@@ -256,6 +256,8 @@ sub can_make_payment_on {
 }
 
 # how much sooner will we run out of money than when we would have expected to run out?
+# Might return a negative value if the consumer has too much money; you may want to
+# clip negative values to 0. - 20120612 mjd
 sub _predicted_shortfall {
   my ($self) = @_;
 
@@ -268,7 +270,7 @@ sub _predicted_shortfall {
   # Next, figure out how long that money will last us.
   my $estimated_remaining_funded_lifetime =
       $self->_estimated_remaining_funded_lifetime({ amount => $funds,
-                                                   ignore_partial_charge_periods => 0,
+                                                    ignore_partial_charge_periods => 0,
                                                  });
 
   # Next, figure out long we think it *should* last us.
@@ -280,16 +282,7 @@ sub _predicted_shortfall {
     $want_to_live = $self->proration_period;
   }
 
-  return 0 if $estimated_remaining_funded_lifetime >= $want_to_live;
-
-  # If you're going to run out of funds your final charge period, we don't
-  # care.  In general, we plan to have charge_frequency stick with its default
-  # value always: days(1).  If you were to use a days(30) charge frequency,
-  # this could mean that someone could easily miss 29 days of service, which is
-  # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
   my $shortfall = $want_to_live - $estimated_remaining_funded_lifetime;
-  return 0 if $shortfall < $self->charge_frequency;
-
   return $shortfall;
 }
 
@@ -369,8 +362,15 @@ sub _send_psync_quote {
   my $shortfall = $self->_predicted_shortfall;
   my $last_shortfall = $self->last_psync_shortfall;
 
-  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
-  return if $shortfall == $last_shortfall;
+#  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
+
+  # If you're going to run out of funds your final charge period, we don't
+  # care.  In general, we plan to have charge_frequency stick with its default
+  # value always: days(1).  If you were to use a days(30) charge frequency,
+  # this could mean that someone could easily miss 29 days of service, which is
+  # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
+  return if abs($shortfall - $last_shortfall) < $self->charge_frequency;
+
   $self->last_psync_shortfall($shortfall);
 
   my @old = $self->ledger->find_old_psync_quotes($self->xid);
