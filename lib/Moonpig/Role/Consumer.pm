@@ -206,11 +206,23 @@ sub replacement {
       $self->replacement->mark_superseded;
     }
 
+    if ($new_replacement && $new_replacement->replacement_chain_contains($self)) {
+      confess sprintf "Mustn't create replacement loop between %s and %s\n",
+        $self->ident, $new_replacement->ident;
+    }
+
     push @{$self->_replacement_history}, $new_replacement;
     return $new_replacement;
   } else {
     return $self->_replacement_history->[-1];
   }
+}
+
+# return true if $a or its replacement chain includes $b
+sub replacement_chain_contains {
+  my ($a, $b) = @_;
+  return $a->guid eq $b->guid
+    || $a->has_replacement && $a->replacement->replacement_chain_contains($b);
 }
 
 sub has_replacement {
