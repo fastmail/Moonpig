@@ -233,5 +233,35 @@ test "superseded consumers abandon unpaid charges" => sub {
     });
 };
 
+test "replacement chain loops" => sub {
+  plan tests => 16;
+  for my $test (qw(cc cd ce cf
+                   dc dd de df
+                   ec ed ee ef
+                   fc fd fe ff)) {
+    my $bad = { cc => 1, dd => 1, ee => 1,
+                dc => 1, ed => 1, ec => 1,
+                ff => 1 };
+    do_with_fresh_ledger(
+      { c => { template => 'dummy', replacement => 'd', make_active => 0 },
+        d => { template => 'dummy', replacement => 'e', make_active => 0 },
+        e => { template => 'dummy',                     make_active => 0 },
+        f => { template => 'dummy',                     make_active => 0 },
+       },
+      sub {
+        my ($ledger) = @_;
+        my ($x1, $x2) = split //, $test;
+        my ($c1, $c2) = map $ledger->get_component($_), $x1, $x2;
+        my $result = exception { $c1->replacement($c2) };
+        if ($bad->{$test}) {
+          like($result, qr/replacement loop/,
+               "caught attempt to make replacement loop via $x1 and $x2");
+        } else {
+          is($result, undef, "OK to make replacement of $x1 be $x2");
+        }
+      });
+  }
+};
+
 run_me;
 done_testing;
