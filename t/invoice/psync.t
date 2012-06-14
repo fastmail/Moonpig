@@ -195,6 +195,21 @@ test 'varying charges' => sub {
   };
 };
 
+test "paid and executed" => sub {
+  do_test {
+    my ($ledger, $c) = @_;
+    $c->total_charge_amount(dollars(10));
+    elapse($ledger);
+
+    my ($qu) = $ledger->quotes;
+    is($qu->total_amount, dollars(3), "psync quote issued for \$3");
+    $qu->execute;
+    is($c->_predicted_shortfall, 0, "quote executed -> no shortfall");
+    ok(! $qu->is_paid, "quote not yet paid");
+
+  };
+};
+
 test 'regression' => sub {
   my ($self) = @_;
 
