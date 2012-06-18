@@ -62,6 +62,18 @@ sub templates {
       }
     },
 
+    psync => sub {
+      my ($name) = @_;
+      return {
+        roles => [ 't::Consumer::VaryingCharge' ],
+        arg => {
+          total_charge_amount => dollars(7),
+          cost_period => days(7),
+          replacement_plan => [ get => '/consumer-template/psync' ],
+        },
+      },
+    },
+
 
   };
 }

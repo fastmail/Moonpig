@@ -14,6 +14,7 @@ with(
 );
 
 use t::lib::ConsumerTemplateSet::Demo;
+use t::lib::ConsumerTemplateSet::Test;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
@@ -25,9 +26,7 @@ before run_test => sub {
 
 sub do_test (&) {
   my ($code) = @_;
-  do_with_fresh_ledger({ c => { class => class("t::Consumer::VaryingCharge"),
-                                total_charge_amount => dollars(7),
-                                cost_period => days(7),
+  do_with_fresh_ledger({ c => { template => 'psync',
                                 replacement_plan => [ get => '/nothing' ],
                               }}, sub {
     my ($ledger) = @_;
