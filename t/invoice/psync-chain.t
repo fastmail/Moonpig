@@ -78,6 +78,8 @@ test 'setup sanity checks' => sub {
       ok(! $chain[0]->is_active, "chain 0 not yet active");
       ok(! $chain[1]->is_active, "chain 1 not yet active");
       ok(  $c->is_active, "initial consumer is active");
+      is($d->guid, $chain[0]->guid, "\$d set up");
+      is($e->guid, $chain[1]->guid, "\$e set up");
     }
 
     note "Elapsing a day on the ledger to clear payment";
@@ -102,8 +104,31 @@ test 'setup sanity checks' => sub {
 };
 
 test 'psync chains' => sub {
-  # 
-  pass();
+  do_test {
+    my ($ledger, $c, $d, $e) = @_;
+    subtest "psync quote" => sub {
+      $_->total_charge_amount(dollars(10)) for $c, $d, $e;
+      is($_->_predicted_shortfall, days(3), "extra charge -> shortfall 3 days")
+        for $c, $d, $e;
+      elapse($ledger);
+
+      is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+      ok($qu->is_closed, "quote is closed");
+      ok($qu->is_psync_quote, "quote is a psync quote");
+      is($qu->psync_for_xid, $c->xid, "quote's psync xid is correct");
+
+      is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
+      subtest "psync charge amounts" => sub {
+        is($_->amount, dollars(3)) for @ch;
+      };
+      is ($qu->total_amount, dollars(9), "psync total amount");
+
+      Moonpig->env->process_email_queue;
+      my $sender = Moonpig->env->email_sender;
+      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
+    };
+  };
+
 };
 
 run_me;
