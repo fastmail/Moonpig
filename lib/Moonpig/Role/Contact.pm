@@ -20,18 +20,21 @@ use namespace::autoclean;
 has first_name => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce   => 1,
   required => 1,
 );
 
 has last_name => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce   => 1,
   required => 1,
 );
 
 has organization => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce    => 1,
   predicate => 'has_organization',
 );
 
@@ -62,18 +65,21 @@ has address_lines => (
 has [ qw(city country) ] => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce   => 1,
   required => 1,
 );
 
 has state => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce    => 1,
   predicate => 'has_state',
 );
 
 has postal_code => (
   is  => 'ro',
   isa => TrimmedSingleLine,
+  coerce    => 1,
   predicate => 'has_postal_code',
 );
 
