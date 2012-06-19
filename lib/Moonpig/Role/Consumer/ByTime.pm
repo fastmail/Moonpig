@@ -33,7 +33,7 @@ implicit_event_handlers {
   return {
     'heartbeat' => {
       maybe_psync => Moonpig::Events::Handler::Method->new(
-        method_name => '_send_psync_quote',
+        method_name => '_maybe_send_psync_quote',
        ),
     }
   };
@@ -361,7 +361,7 @@ has last_psync_shortfall => (
   traits => [ qw(Copy) ],
 );
 
-sub _send_psync_quote {
+sub _maybe_send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
 
