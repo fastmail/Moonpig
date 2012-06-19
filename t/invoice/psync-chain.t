@@ -1,3 +1,4 @@
+use strict;
 use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
@@ -97,6 +98,12 @@ test 'setup sanity checks' => sub {
     ok($inv[0]->is_closed, "the invoice is closed");
     ok($inv[0]->is_paid, "the invoice is paid");
 
+    { Moonpig->env->process_email_queue;
+      my ($delivery) = get_single_delivery("discarding initial invoice");
+      Moonpig->env->email_sender->clear_deliveries;
+      (() = Moonpig->env->email_sender->deliveries) == 0 or die;
+    }
+
     my @qu = $ledger->quotes;
     is(@qu, 0, "no quotes");
 
@@ -106,9 +113,18 @@ test 'setup sanity checks' => sub {
 test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
+
+    { # discard initial invoice
+      elapse($ledger);
+      Moonpig->env->process_email_queue;
+      Moonpig->env->email_sender->clear_deliveries;
+    }
+
     subtest "psync quote" => sub {
       $_->total_charge_amount(dollars(10)) for $c, $d, $e;
-      is($_->_predicted_shortfall, days(3), "extra charge -> shortfall 3 days")
+      # At $10/7 per day, the $7 payment will be used up in 49/10 days,
+      # leaving a shortfall of 7 - 49/10 = 21/10 days.
+      is($_->_predicted_shortfall, days(2.1), "extra charge -> shortfall 2.1 days")
         for $c, $d, $e;
       elapse($ledger);
 
@@ -122,9 +138,10 @@ test 'psync chains' => sub {
         is($_->amount, dollars(3)) for @ch;
       };
       is ($qu->total_amount, dollars(9), "psync total amount");
+    };
 
+    subtest "psync email" => sub {
       Moonpig->env->process_email_queue;
-      my $sender = Moonpig->env->email_sender;
       my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
     };
   };
