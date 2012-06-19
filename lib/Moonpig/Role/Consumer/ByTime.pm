@@ -244,9 +244,15 @@ sub minimum_spare_change_amount {
 publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
   my ($self, $arg) = @_;
   my $interval = $arg->{interval};
-  my @pairs = $self->charge_pairs_on( Moonpig->env->now );
-  my $total = sum pair_rights @pairs;
-  return $total * ($interval / $self->cost_period);
+  if ($self->is_active) {
+    my @pairs = $self->charge_pairs_on( Moonpig->env->now );
+    my $total = sum pair_rights @pairs;
+    return $total * ($interval / $self->cost_period);
+  } else {
+    my @pairs = $self->initial_invoice_charge_pairs( );
+    my $total = sum pair_rights @pairs;
+    return $total * ($interval / $self->cost_period);
+  }
 };
 
 sub can_make_payment_on {
@@ -377,15 +383,7 @@ sub _send_psync_quote {
 
   if ($shortfall > 0) {
     $self->ledger->start_quote;
-    {
-      my $shortfall_days = ceil($shortfall / days(1));
-      $self->charge_current_invoice({
-        extra_tags => [ 'moonpig.psync' ],
-        description => sprintf("Shortfall of $shortfall_days %s",
-                               $shortfall_days == 1 ? "day" : "days"),
-        amount => $self->estimate_cost_for_interval({ interval => $shortfall }),
-      });
-    }
+    $self->_issue_psync_charges($shortfall);
     my $quote = $self->ledger->end_quote($self);
     $quote->psync_for_xid($self->xid);
     $self->ledger->_send_psync_email($self, $quote);
@@ -393,6 +391,19 @@ sub _send_psync_quote {
     $self->ledger->_send_psync_email($self, undef);
   }
   $_->mark_abandoned() for @old;
+}
+
+sub _issue_psync_charges {
+  my ($self, $shortfall) = @_;
+  my $shortfall_days = ceil($shortfall / days(1));
+  my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
+  $self->charge_current_invoice({
+    extra_tags => [ 'moonpig.psync' ],
+    description => sprintf("Shortfall of $shortfall_days %s",
+                           $shortfall_days == 1 ? "day" : "days"),
+    amount => $amount,
+  }) if $amount > 0;
+  $self->replacement->_issue_psync_charges($shortfall) if $self->has_replacement;
 }
 
 1;
