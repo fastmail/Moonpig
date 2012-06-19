@@ -357,7 +357,7 @@ around _estimated_remaining_funded_lifetime => sub {
 has last_psync_shortfall => (
   is => 'rw',
   isa => TimeInterval,
-  default => 0,
+  predicate => 'has_last_psync_shortfall',
   traits => [ qw(Copy) ],
 );
 
@@ -367,7 +367,8 @@ sub _maybe_send_psync_quote {
   return unless $self->all_charges > 0;
 
   my $shortfall = $self->_predicted_shortfall;
-  my $last_shortfall = $self->last_psync_shortfall;
+  my $had_last_shortfall = $self->has_last_psync_shortfall;
+  my $last_shortfall = $self->last_psync_shortfall // 0;
 
 #  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
 
@@ -379,6 +380,7 @@ sub _maybe_send_psync_quote {
   return if abs($shortfall - $last_shortfall) < $self->charge_frequency;
 
   $self->last_psync_shortfall($shortfall);
+  return unless $had_last_shortfall; # don't issue invoice
 
   my @old = $self->ledger->find_old_psync_quotes($self->xid);
 
