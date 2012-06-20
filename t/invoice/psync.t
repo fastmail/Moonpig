@@ -155,46 +155,56 @@ test 'varying charges' => sub {
     my ($q1, $q2, $q3);
 
     subtest "rate goes up to 28" => sub {
-      elapse($ledger);
+      elapse($ledger, 3);
       $c->total_charge_amount(dollars(28));
       elapse($ledger);
+      # At this point, 10 days and $9 remain
       is(($q1) = $ledger->quotes, 1, "first psync quote generated");
+      is($q1->total_amount, dollars(11), "psync quote amount");
       Moonpig->env->process_email_queue;
       Moonpig->env->email_sender->clear_deliveries;
     };
+    # At this point, 10 days and $9 remain
 
     subtest "rate goes down to 18" => sub {
-      $c->total_charge_amount(dollars(18));
+      $c->total_charge_amount(dollars(21));
       elapse($ledger);
+      # At this point, 9 days and $7.5 remain
       is(my (@q) = $ledger->quotes, 2, "second psync quote generated");
       $q2 = $q[1];
       ok($q1->is_abandoned, "first quote was automatically abandoned");
-      is($q2->total_amount, dollars(4), "new quote amount");
+      is($q2->total_amount, dollars(6), "new quote amount");
       my $d = get_single_delivery();
     };
+    # At this point, 9 days and $7.5 remain
 
     subtest "rate goes up to 28 again" => sub {
       $c->total_charge_amount(dollars(28));
       elapse($ledger);
+      # At this point, 8 days and $5.5 remain
       is(my (@q) = $ledger->quotes, 3, "third psync quote generated");
       $q3 = $q[2];
       ok($q2->is_abandoned, "second quote was automatically abandoned");
-      is($q3->total_amount, dollars(14), "new quote amount");
+      is($q3->total_amount, dollars(10.5), "new quote amount");
       my $d = get_single_delivery();
     };
+    # At this point, 8 days and $5.5 remain
 
-    # If it goes down the the actually paid amount, don't send a quote,
-    # just an email
-    subtest "rate goes all the way back down to 14" => sub {
-      $c->total_charge_amount(dollars(14));
+    # If it goes down to the amount actually on hand, don't send a quote,
+    # just an email.
+    subtest "rate goes down to 9.625" => sub {
+      # $5.5 / 8 days = $.6875 per day = $9.625 per 14 days
+      $c->total_charge_amount(dollars(9.625));
       elapse($ledger);
+      # At this point, 7 days and $4.8125 remain
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       ok($q3->is_abandoned, "third quote was automatically abandoned");
       my $d = get_single_delivery();
     };
+    # At this point, 7 days and $4.8125 remain
 
-    subtest "rate drops below 14" => sub {
-      $c->total_charge_amount(dollars(6));
+    subtest "rate gets low" => sub {
+      $c->total_charge_amount(dollars(0.01));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       my $d = get_single_delivery();
