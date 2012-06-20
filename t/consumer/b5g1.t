@@ -230,5 +230,80 @@ test 'signup for eleven, get two free' => sub {
   );
 };
 
+test 'signup for one, quote five more, have one' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(100));
+
+      my $quote = $ledger->quote_for_extended_service($self->xid, years(5));
+
+      is(
+        $ledger->active_consumer_for_xid($self->xid)->guid,
+        $quote->attachment_point_guid,
+        "quote attaches where we expected",
+      );
+
+      my $head  = $quote->first_consumer;
+      my @chain = $head->replacement_chain;
+
+      my $summ = B5G1::Summary->new([ $head, @chain ]);
+
+      is($summ->consumers, 6, "there are six consumers");
+
+      is($summ->paid_consumers, 5, "five are paid");
+      is($summ->free_consumers, 1, "one is free");
+      is_deeply([$summ->free_indexes], [5], "...and the free one is last");
+    },
+  );
+};
+
+test 'already invoiced for 1, get quote for 4, get one free' => sub {
+  my ($self) = @_;
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+
+      is($ledger->amount_due, dollars(100), 'we owe $100 already');
+
+      my $quote = $ledger->quote_for_extended_service($self->xid, years(4));
+
+      is(
+        $ledger->active_consumer_for_xid($self->xid)->guid,
+        $quote->attachment_point_guid,
+        "quote attaches where we expected",
+      );
+
+      my $head  = $quote->first_consumer;
+      my @chain = $head->replacement_chain;
+
+      my $summ = B5G1::Summary->new([ $head, @chain ]);
+
+      is($summ->consumers, 5, "there are five consumers on the quote");
+
+      is($summ->paid_consumers, 4, "four are paid");
+      is($summ->free_consumers, 1, "one is free");
+      is_deeply([$summ->free_indexes], [4], "...and the free one is last");
+    },
+  );
+};
+
 run_me;
 done_testing;
