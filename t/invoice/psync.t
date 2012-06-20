@@ -171,7 +171,7 @@ test 'varying charges' => sub {
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "third psync quote generated");
       $q3 = $q[2];
-      ok($q2->is_abandoned, "first quote was automatically abandoned");
+      ok($q2->is_abandoned, "second quote was automatically abandoned");
       is($q3->total_amount, dollars(14), "new quote amount");
       my $d = get_single_delivery();
     };
