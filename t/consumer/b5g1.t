@@ -283,20 +283,24 @@ test 'already invoiced for 1, get quote for 4, get one free' => sub {
 
       is($ledger->amount_due, dollars(100), 'we owe $100 already');
 
-      $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_duration => years(4) });
+      my $quote = $ledger->quote_for_extended_service($self->xid, years(4));
 
-      $ledger->heartbeat;
+      is(
+        $ledger->active_consumer_for_xid($self->xid)->guid,
+        $quote->attachment_point_guid,
+        "quote attaches where we expected",
+      );
 
-      $self->pay_unpaid_invoices($ledger, dollars(500));
+      my $head  = $quote->first_consumer;
+      my @chain = $head->replacement_chain;
 
-      my $summ = $self->b5_summary($ledger);
+      my $summ = B5G1::Summary->new([ $head, @chain ]);
 
-      is($summ->consumers, 6, "there are six consumers");
+      is($summ->consumers, 5, "there are five consumers on the quote");
 
-      is($summ->paid_consumers, 5, "five are paid");
+      is($summ->paid_consumers, 4, "four are paid");
       is($summ->free_consumers, 1, "one is free");
-      is_deeply([$summ->free_indexes], [5], "...and the free one is last");
+      is_deeply([$summ->free_indexes], [4], "...and the free one is last");
     },
   );
 };
