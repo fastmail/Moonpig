@@ -31,10 +31,10 @@ sub do_test (&) {
                               }}, sub {
     my ($ledger) = @_;
     my $c = $ledger->get_component("c");
-    my ($credit) = $ledger->add_credit(
-      class(qw(Credit::Simulated)),
-      { amount => dollars(14) },
-    );
+    my ($credit) = $ledger->credit_collection->add({
+      type => 'Simulated',
+      attributes => { amount => dollars(14) }
+    });
     $ledger->name_component("credit", $credit);
 
     $code->($ledger, $c);
@@ -54,8 +54,8 @@ sub get_single_delivery {
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
-  Moonpig->env->elapse_time(86_400 * $days);
   $ledger->heartbeat;
+  Moonpig->env->elapse_time(86_400 * $days);
 }
 
 test 'setup sanity checks' => sub {
@@ -71,7 +71,7 @@ test 'setup sanity checks' => sub {
     is($c->_estimated_remaining_funded_lifetime({ amount => dollars(14) }), days(14),
       "est lifetime 14d");
 
-    elapse($ledger);
+    $ledger->perform_dunning; # close the invoice and process the credit
 
     is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
@@ -106,10 +106,15 @@ test 'quote' => sub {
       Moonpig->env->process_email_queue;
       get_single_delivery("one email delivery (the invoice)");
     };
+    # At this point, 12 days and $12 remain
 
     subtest "generate psync quote when rate changes" => sub {
+      elapse($ledger);
+      # Have $14-$3 = $11; now spending $2/day => lifetime = 5.5d
+      # remaining lifetime should have been 14-3 = 11d.
+      # To top up the account, need to get $1 per remaining day = $11
       $c->total_charge_amount(dollars(28));
-      is($c->_predicted_shortfall, weeks(1), "double charge -> shortfall 1 week");
+      is($c->_predicted_shortfall, days(5.5), "double charge -> shortfall 5.5d");
       elapse($ledger) until $ledger->quotes;
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
@@ -124,7 +129,7 @@ test 'quote' => sub {
       ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
       ok($ch->has_tag($c->xid), "charge has correct xid tag");
       is($ch->owner_guid, $c->guid, "charge owner");
-      is($ch->amount, dollars(14), "charge amount");
+      is($ch->amount, dollars(11), "charge amount");
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
@@ -132,7 +137,7 @@ test 'quote' => sub {
     };
 
     subtest "do not generate further quotes or send further email" => sub {
-      elapse($ledger, 14);
+      elapse($ledger, 1) until $c->is_expired;
       is(my ($qu) = $ledger->quotes, 1, "no additional psync quotes generated");
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;

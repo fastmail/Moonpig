@@ -70,6 +70,7 @@ sub templates {
           total_charge_amount => dollars(14),
           cost_period => days(14),
           replacement_plan => [ get => '/consumer-template/psync' ],
+          grace_period_duration => days(0),
         },
       },
     },
