@@ -323,11 +323,17 @@ sub quote_for_extended_service {
 
   my $end_consumer = $active_consumer->replacement_chain_end;
 
+  my $start_depth = 0;
+
   Moonpig::X->throw("consumer for '$xid' could not build a replacement")
     unless my $chain_head = $end_consumer->build_replacement();
 
   $chain_duration -= $chain_head->estimated_lifetime;
-  my @chain = $chain_head->_adjust_replacement_chain($chain_duration, 1);
+  my @chain = $chain_head->_adjust_replacement_chain(
+    $chain_duration,
+    $start_depth + 1, # +1 because we made the $chain_head by hand; count it!
+  );
+
   my $quote = $self->end_quote($chain_head);
   return wantarray() ? ($quote, $chain_head, @chain) : $quote;
 }
