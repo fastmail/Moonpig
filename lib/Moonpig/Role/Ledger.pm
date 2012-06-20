@@ -323,7 +323,10 @@ sub quote_for_extended_service {
 
   my $end_consumer = $active_consumer->replacement_chain_end;
 
+  # If the endpoint has not been paid-for yet, then it's part of the 5 you have
+  # to buy start counting with it.  -- rjbs, 2012-06-20
   my $start_depth = 0;
+  $start_depth++ unless grep {; $_->is_paid } $end_consumer->relevant_invoices;
 
   Moonpig::X->throw("consumer for '$xid' could not build a replacement")
     unless my $chain_head = $end_consumer->build_replacement();
