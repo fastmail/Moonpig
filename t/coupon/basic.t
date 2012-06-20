@@ -30,12 +30,14 @@ sub set_up_consumer {
                          tags => [ $coupon_tag ],
                        }] ;
 
-  my $consumer = $ledger->add_consumer_from_template("yearly",
-                                                     { xid => "test:A",
-                                                       coupon_descs => [ $coupon_desc ],
-                                                       charge_description => "with coupon",
-                                                       grace_period_duration => 0,
-                                                     });
+  my $consumer = $ledger->add_consumer_from_template(
+    "yearly",
+    { xid => "test:A",
+      coupon_descs => [ $coupon_desc ],
+      charge_description => "with coupon",
+      grace_period_duration => 0,
+    });
+
   my $amount = dollars(75);
   my $cred = $ledger->add_credit(class('Credit::Simulated'),
                                  { amount => $amount });
@@ -62,11 +64,23 @@ test "consumer setup" => sub {
 #      is(@charges, 2, "two charges (1 + 1 line item)");
 
       is($charges[0]->amount, dollars(75), "true charge amount: \$75");
-      ok(has_tag($coupon_tag, $charges[0]), "invoice charge contains correct tag");
+      ok(
+        has_tag($coupon_tag, $charges[0]),
+        "invoice charge contains correct tag",
+      );
+
       SKIP: { skip "line items unimplemented", 3;
         is($charges[1]->amount, 0, "line item amount: 0mc");
-        like($charges[1]->description, qr/Joe's discount/, "line item description");
-        like($charges[1]->description, qr/25%/, "line item description amount");
+        like(
+          $charges[1]->description,
+          qr/Joe's discount/,
+          "line item description",
+        );
+        like(
+          $charges[1]->description,
+          qr/25%/,
+          "line item description amount"
+        );
         ok(has_tag($coupon_tag, $charges[1]), "line item contains correct tag");
       }
     });
@@ -90,13 +104,18 @@ test "consumer journal charging" => sub {
       die unless $with->is_funded;
       Moonpig->env->elapse_time( days(1/2) );
       $ledger->heartbeat;
-      my @j_charges = sort { $a->amount <=> $b->amount } $ledger->current_journal->all_charges;
+      my @j_charges = sort { $a->amount <=> $b->amount }
+                      $ledger->current_journal->all_charges;
       is(@j_charges, 2, "two journal charges");
       cmp_ok($j_charges[0]->amount, '==', int($j_charges[1]->amount * 0.75),
              "Coupon consumer charged 25% less.");
-      ok(has_tag($coupon_tag, $j_charges[0]), "journal charge contains correct tag");
+      ok(
+        has_tag($coupon_tag, $j_charges[0]),
+        "journal charge contains correct tag",
+      );
       ok(! has_tag($coupon_tag, $j_charges[1]), "sanity check");
-    });
+    }
+  );
 };
 
 test "required tags" => sub {
