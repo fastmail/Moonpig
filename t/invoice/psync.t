@@ -54,8 +54,10 @@ sub get_single_delivery {
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
-  $ledger->heartbeat;
-  Moonpig->env->elapse_time(86_400 * $days);
+  for (1 .. $days) {
+    $ledger->heartbeat;
+    Moonpig->env->elapse_time(86_400);
+  }
 }
 
 test 'setup sanity checks' => sub {
