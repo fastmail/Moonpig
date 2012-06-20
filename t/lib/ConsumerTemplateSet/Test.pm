@@ -67,8 +67,8 @@ sub templates {
       return {
         roles => [ 't::Consumer::VaryingCharge' ],
         arg => {
-          total_charge_amount => dollars(7),
-          cost_period => days(7),
+          total_charge_amount => dollars(14),
+          cost_period => days(14),
           replacement_plan => [ get => '/consumer-template/psync' ],
         },
       },

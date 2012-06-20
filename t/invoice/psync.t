@@ -33,7 +33,7 @@ sub do_test (&) {
     my $c = $ledger->get_component("c");
     my ($credit) = $ledger->add_credit(
       class(qw(Credit::Simulated)),
-      { amount => dollars(7) },
+      { amount => dollars(14) },
     );
     $ledger->name_component("credit", $credit);
 
@@ -65,19 +65,19 @@ test 'setup sanity checks' => sub {
     ok($c->does('Moonpig::Role::Consumer::ByTime'));
     ok($c->does("t::lib::Role::Consumer::VaryingCharge"));
     is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
-    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
     is($c->expected_funds({ include_unpaid_charges => 0 }), 0, "expected funds not incl unpaid");
-    is($c->_estimated_remaining_funded_lifetime({ amount => dollars(7) }), days(7),
-      "est lifetime 7d");
+    is($c->_estimated_remaining_funded_lifetime({ amount => dollars(14) }), days(14),
+      "est lifetime 14d");
 
     elapse($ledger);
 
-    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
-    is($c->expected_funds({ include_unpaid_charges => 0 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 0 }), dollars(14),
        "expected funds not incl unpaid");
-    is($c->unapplied_amount, dollars(7), "did not spend any money yet");
+    is($c->unapplied_amount, dollars(14), "did not spend any money yet");
     is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
 
     my @inv = $ledger->invoices;
@@ -108,9 +108,9 @@ test 'quote' => sub {
     };
 
     subtest "generate psync quote when rate changes" => sub {
-      $c->total_charge_amount(dollars(14));
-      is($c->_predicted_shortfall, weeks(1/2), "double charge -> shortfall 1/2 week");
-      elapse($ledger);
+      $c->total_charge_amount(dollars(28));
+      is($c->_predicted_shortfall, weeks(1), "double charge -> shortfall 1 week");
+      elapse($ledger) until $ledger->quotes;
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
@@ -124,7 +124,7 @@ test 'quote' => sub {
       ok($ch->has_tag("moonpig.psync"), "charge is properly tagged");
       ok($ch->has_tag($c->xid), "charge has correct xid tag");
       is($ch->owner_guid, $c->guid, "charge owner");
-      is($ch->amount, dollars(7), "charge amount");
+      is($ch->amount, dollars(14), "charge amount");
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
@@ -132,7 +132,7 @@ test 'quote' => sub {
     };
 
     subtest "do not generate further quotes or send further email" => sub {
-      elapse($ledger, 3);
+      elapse($ledger, 14);
       is(my ($qu) = $ledger->quotes, 1, "no additional psync quotes generated");
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
@@ -147,46 +147,47 @@ test 'varying charges' => sub {
     my $sender = Moonpig->env->email_sender;
     my ($q1, $q2, $q3);
 
-    subtest "rate goes up to 14" => sub {
-      $c->total_charge_amount(dollars(14));
+    subtest "rate goes up to 28" => sub {
+      elapse($ledger);
+      $c->total_charge_amount(dollars(28));
       elapse($ledger);
       is(($q1) = $ledger->quotes, 1, "first psync quote generated");
       Moonpig->env->process_email_queue;
       Moonpig->env->email_sender->clear_deliveries;
     };
 
-    subtest "rate goes down to 9" => sub {
-      $c->total_charge_amount(dollars(9));
+    subtest "rate goes down to 18" => sub {
+      $c->total_charge_amount(dollars(18));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 2, "second psync quote generated");
       $q2 = $q[1];
       ok($q1->is_abandoned, "first quote was automatically abandoned");
-      is($q2->total_amount, dollars(2), "new quote amount");
+      is($q2->total_amount, dollars(4), "new quote amount");
       my $d = get_single_delivery();
     };
 
-    subtest "rate goes up to 14 again" => sub {
-      $c->total_charge_amount(dollars(14));
+    subtest "rate goes up to 28 again" => sub {
+      $c->total_charge_amount(dollars(28));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "third psync quote generated");
       $q3 = $q[2];
       ok($q2->is_abandoned, "first quote was automatically abandoned");
-      is($q3->total_amount, dollars(7), "new quote amount");
+      is($q3->total_amount, dollars(14), "new quote amount");
       my $d = get_single_delivery();
     };
 
     # If it goes down the the actually paid amount, don't send a quote,
     # just an email
-    subtest "rate goes all the way back down to 7" => sub {
-      $c->total_charge_amount(dollars(7));
+    subtest "rate goes all the way back down to 14" => sub {
+      $c->total_charge_amount(dollars(14));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       ok($q3->is_abandoned, "third quote was automatically abandoned");
       my $d = get_single_delivery();
     };
 
-    subtest "rate drops below 7" => sub {
-      $c->total_charge_amount(dollars(3));
+    subtest "rate drops below 14" => sub {
+      $c->total_charge_amount(dollars(6));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       my $d = get_single_delivery();
