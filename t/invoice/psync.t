@@ -215,12 +215,13 @@ test 'varying charges' => sub {
 test "paid and executed" => sub {
   do_test {
     my ($ledger, $c) = @_;
+    elapse($ledger, 3) ;
     $c->total_charge_amount(dollars(28));
-    elapse($ledger);
-    # At this point, 13 days and $12 remain
+    elapse($ledger, 1) ;
+    # At this point, 10 days and $9 remain
 
     my ($qu) = $ledger->quotes;
-    is($qu->total_amount, dollars(14), "psync quote issued for \$14");
+    is($qu->total_amount, dollars(11), "psync quote issued for \$11");
     $qu->execute;
     is($c->_predicted_shortfall, 0, "quote executed -> no shortfall");
     ok(! $qu->is_paid, "quote not yet paid");

@@ -380,7 +380,7 @@ sub _maybe_send_psync_quote {
   return if abs($shortfall - $last_shortfall) < $self->charge_frequency;
 
   $self->last_psync_shortfall($shortfall);
-  return unless $had_last_shortfall; # don't issue invoice
+  return if ! $had_last_shortfall && $shortfall <= 0;
 
   my @old = $self->ledger->find_old_psync_quotes($self->xid);
 
