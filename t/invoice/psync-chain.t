@@ -111,6 +111,11 @@ test 'setup sanity checks' => sub {
   };
 };
 
+sub close_enough {
+  my ($a, $b, $msg) = @_;
+  ok(abs($a - $b) < 1, $msg);
+}
+
 test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
@@ -123,7 +128,8 @@ test 'psync chains' => sub {
       # leaving a shortfall of 14 - 196/20 = 42/10 days.
       is($_->_predicted_shortfall, days(4.2), "extra charge -> shortfall 4.2 days")
         for $c, $d, $e;
-      elapse($ledger);
+      elapse($ledger, 2);
+      # At this point, 12 days and $548/14 ~=~ $40.57 remain
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
@@ -144,6 +150,17 @@ test 'psync chains' => sub {
         Moonpig->env->email_sender->deliveries;
       is(@deliveries, 1, "psync quote was emailed");
       Moonpig->env->email_sender->clear_deliveries;
+    };
+
+    subtest "psync quote amounts after some charging" => sub {
+      $_->total_charge_amount(dollars(14)) for $c, $d, $e;
+      # Consumer C has $156/14 left of its original $196/14, enough for 11.143 days
+      # at the current rate.
+      $DB::single=1;
+      close_enough($c->_predicted_shortfall, days(0.8571429),
+                   "active consumer still has a shortfall");
+      is($_->_predicted_shortfall, days(0), "inactive consumers no longer have a shortfall")
+        for $d, $e;
     };
   };
 
