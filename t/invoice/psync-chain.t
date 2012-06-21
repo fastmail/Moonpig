@@ -29,10 +29,10 @@ sub do_test (&) {
   do_with_fresh_ledger({ c => { template => 'psync' } }, sub {
     my ($ledger) = @_;
     my $c = $ledger->get_component("c");
-    $c->_adjust_replacement_chain(days(14));
+    $c->_adjust_replacement_chain(days(28));
     my ($credit) = $ledger->add_credit(
       class(qw(Credit::Simulated)),
-      { amount => dollars(21) },
+      { amount => dollars(42) },
     );
     $ledger->name_component("credit", $credit);
     my $d = $c->replacement;
@@ -57,8 +57,10 @@ sub get_single_delivery {
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
-  Moonpig->env->elapse_time(86_400 * $days);
-  $ledger->heartbeat;
+  for (1 .. $days) {
+    $ledger->heartbeat;
+    Moonpig->env->elapse_time(86_400);
+  }
 }
 
 test 'setup sanity checks' => sub {
@@ -68,10 +70,10 @@ test 'setup sanity checks' => sub {
     ok($c->does('Moonpig::Role::Consumer::ByTime'));
     ok($c->does("t::lib::Role::Consumer::VaryingCharge"));
     is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
-    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
     is($c->expected_funds({ include_unpaid_charges => 0 }), 0, "expected funds not incl unpaid");
-    is($c->_estimated_remaining_funded_lifetime({ amount => dollars(7) }), days(7),
+    is($c->_estimated_remaining_funded_lifetime({ amount => dollars(14) }), days(14),
       "est lifetime 7d");
 
     { my @chain = $c->replacement_chain;
@@ -83,14 +85,13 @@ test 'setup sanity checks' => sub {
       is($e->guid, $chain[1]->guid, "\$e set up");
     }
 
-    note "Elapsing a day on the ledger to clear payment";
-    elapse($ledger);
+    $ledger->perform_dunning; # close the invoice and process the credit
 
-    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
-    is($c->expected_funds({ include_unpaid_charges => 0 }), dollars(7),
+    is($c->expected_funds({ include_unpaid_charges => 0 }), dollars(14),
        "expected funds not incl unpaid");
-    is($c->unapplied_amount, dollars(7), "did not spend any money yet");
+    is($c->unapplied_amount, dollars(14), "did not spend any money yet");
     is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
 
     my @inv = $ledger->invoices;
@@ -114,17 +115,13 @@ test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
 
-    { # discard initial invoice
-      elapse($ledger);
-      Moonpig->env->process_email_queue;
-      Moonpig->env->email_sender->clear_deliveries;
-    }
+    # At this point, 14 days and $14 remain
 
     subtest "psync quote" => sub {
-      $_->total_charge_amount(dollars(10)) for $c, $d, $e;
-      # At $10/7 per day, the $7 payment will be used up in 49/10 days,
-      # leaving a shortfall of 7 - 49/10 = 21/10 days.
-      is($_->_predicted_shortfall, days(2.1), "extra charge -> shortfall 2.1 days")
+      $_->total_charge_amount(dollars(20)) for $c, $d, $e;
+      # At $20/14 per day, the $14 remaining will be used up in 196/20 days,
+      # leaving a shortfall of 14 - 196/20 = 42/10 days.
+      is($_->_predicted_shortfall, days(4.2), "extra charge -> shortfall 4.2 days")
         for $c, $d, $e;
       elapse($ledger);
 
@@ -135,14 +132,18 @@ test 'psync chains' => sub {
 
       is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
       subtest "psync charge amounts" => sub {
-        is($_->amount, dollars(3)) for @ch;
+        is($_->amount, dollars(6)) for @ch;
       };
-      is ($qu->total_amount, dollars(9), "psync total amount");
+      is ($qu->total_amount, dollars(18), "psync total amount");
     };
 
     subtest "psync email" => sub {
       Moonpig->env->process_email_queue;
-      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
+      # throw away the invoice.
+      my @deliveries = grep {$_->{email}->header('Subject') ne "PAYMENT IS DUE"}
+        Moonpig->env->email_sender->deliveries;
+      is(@deliveries, 1, "psync quote was emailed");
+      Moonpig->env->email_sender->clear_deliveries;
     };
   };
 
