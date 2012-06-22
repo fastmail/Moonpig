@@ -21,8 +21,11 @@ has charge_amount => (
 );
 
 # Does not vary with time
-sub charge_pairs_on {
-  return ($_[0]->charge_description, $_[0]->charge_amount);
+sub charge_structs_on {
+  return ({
+    description => $_[0]->charge_description,
+    amount      => $_[0]->charge_amount,
+  });
 }
 
 # Description for charge.  You will probably want to override this method

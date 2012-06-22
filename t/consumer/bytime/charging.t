@@ -211,10 +211,13 @@ test "proration" => sub {
   use Moonpig::Util qw(dollars);
   use Moonpig::Types qw(PositiveMillicents);
 
-  sub charge_pairs_on {
+  sub charge_structs_on {
     my ($self, $date) = @_;
 
-    return ('service charge' => dollars( $date->day ));
+    return ({
+      description => 'service charge',
+      amount      => dollars( $date->day ),
+    });
   }
 }
 

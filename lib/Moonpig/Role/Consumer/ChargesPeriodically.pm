@@ -2,7 +2,6 @@ package Moonpig::Role::Consumer::ChargesPeriodically;
 # ABSTRACT: a consumer that issues charges when it gets a heartbeat event
 
 use Carp qw(confess croak);
-use List::MoreUtils qw(natatime);
 use Moose::Role;
 use Moonpig;
 use Moonpig::DateTime;
@@ -13,7 +12,7 @@ use Moonpig::Util qw(days);
 use Stick::Types qw(StickBool);
 
 with ('Moonpig::Role::HandlesEvents');
-requires 'calculate_charge_pairs_on';
+requires 'calculate_charge_structs_on';
 
 # Last time I charged
 has last_charge_date => (
@@ -65,15 +64,13 @@ sub charge_one_day {
 
   my $next_charge_date = $self->next_charge_date;
 
-  my @charge_pairs = $self->calculate_charge_pairs_on( $next_charge_date );
+  my @charge_structs = $self->calculate_charge_structs_on( $next_charge_date );
 
-  my $iter = natatime 2, @charge_pairs;
-
-  while (my ($desc, $amt) = $iter->()) {
+  for my $struct (@charge_structs) {
     $self->charge_current_journal({
-      desc => $desc,
+      desc => $struct->{description},
       date => $next_charge_date,
-      amount => $amt,
+      amount => $struct->{amount},
       skip_funds_check => $self->allows_overdrafts,
     });
   }

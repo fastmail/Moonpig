@@ -11,8 +11,11 @@ with(
   'Moonpig::Role::Consumer::InvoiceOnCreation',
 );
 
-sub initial_invoice_charge_pairs {
-  return ('basic payment' => dollars(1));
+sub initial_invoice_charge_structs {
+  return ({
+    description => 'basic payment',
+    amount      => dollars(1),
+  });
 }
 
 around _invoice => sub {

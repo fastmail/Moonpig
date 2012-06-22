@@ -8,16 +8,24 @@ use Moonpig::Util qw(dollars);
 
 use namespace::autoclean;
 
-sub charge_pairs_on {
+sub charge_structs_on {
   my ($self, $date) = @_;
 
   my $account = $self->account;
 
-  my @charge_pairs = ('Fauxbox Basic Account' => dollars(20));
-  push @charge_pairs, ('Premium Services' => dollars(30))
-    if $account->was_premium_at($date);
+  my @charge_structs = ({
+    description => 'Fauxbox Basic Account',
+    amount      => dollars(20),
+  });
 
-  return @charge_pairs;
+  if ($account->was_premium_at($date)) {
+    push @charge_structs, ({
+      description => 'Premium Services',
+      amount      => dollars(30),
+    });
+  }
+
+  return @charge_structs;
 }
 
 1;

@@ -2,7 +2,6 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
-use List::AllUtils qw(natatime);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Util qw(class days event sum sumof pair_rights);
@@ -26,7 +25,7 @@ with(
   'Moonpig::Role::StubBuild',
 );
 
-requires 'charge_pairs_on';
+requires 'charge_structs_on';
 
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
@@ -45,14 +44,14 @@ use namespace::autoclean;
 
 sub now { Moonpig->env->now() }
 
-sub initial_invoice_charge_pairs {
+sub initial_invoice_charge_structs {
   my ($self) = @_;
-  my @pairs = $self->charge_pairs_on( Moonpig->env->now );
+  my @structs = $self->charge_structs_on( Moonpig->env->now );
 
   my $ratio = $self->proration_period / $self->cost_period;
-  $pairs[$_] *= $ratio for grep { $_ % 2 } keys @pairs;
+  $_->{amount} *= $ratio for @structs;
 
-  return @pairs;
+  return @structs;
 }
 
 has cost_period => (
@@ -216,22 +215,22 @@ around charge_one_day => sub {
 };
 
 # how much do we charge each time we issue a new charge?
-sub calculate_charge_pairs_on {
+sub calculate_charge_structs_on {
   my ($self, $date) = @_;
 
   my $n_periods = $self->cost_period / $self->charge_frequency;
 
-  my @charge_pairs = $self->charge_pairs_on( $date );
+  my @charge_structs = $self->charge_structs_on( $date );
 
-  $charge_pairs[$_] /= $n_periods for grep { $_ % 2 } keys @charge_pairs;
+  $_->{amount} /= $n_periods for @charge_structs;
 
-  return @charge_pairs;
+  return @charge_structs;
 }
 
 sub calculate_total_charge_amount_on {
   my ($self, $date) = @_;
-  my @charge_pairs = $self->calculate_charge_pairs_on( $date );
-  my $total_charge_amount = sum pair_rights @charge_pairs;
+  my @charge_structs = $self->calculate_charge_structs_on( $date );
+  my $total_charge_amount = sumof { $_ ->{amount} } @charge_structs;
 
   return $total_charge_amount;
 }
@@ -244,15 +243,13 @@ sub minimum_spare_change_amount {
 publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
   my ($self, $arg) = @_;
   my $interval = $arg->{interval};
-  if ($self->is_active) {
-    my @pairs = $self->charge_pairs_on( Moonpig->env->now );
-    my $total = sum pair_rights @pairs;
-    return $total * ($interval / $self->cost_period);
-  } else {
-    my @pairs = $self->initial_invoice_charge_pairs( );
-    my $total = sum pair_rights @pairs;
-    return $total * ($interval / $self->cost_period);
-  }
+
+  my @structs = $self->is_active
+              ? $self->charge_structs_on( Moonpig->env->now )
+              : $self->initial_invoice_charge_structs;
+
+  my $total = sumof {; $_->{amount} } @structs;
+  return $total * ($interval / $self->cost_period);
 };
 
 sub can_make_payment_on {
