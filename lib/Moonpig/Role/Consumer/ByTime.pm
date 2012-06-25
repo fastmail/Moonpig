@@ -385,10 +385,9 @@ sub _maybe_send_psync_quote {
   my @old = $self->ledger->find_old_psync_quotes($self->xid);
 
   if ($shortfall > 0) {
-    $self->ledger->start_quote;
+    $self->ledger->start_quote({ psync_for_xid => $self->xid });
     $self->_issue_psync_charges($shortfall);
     my $quote = $self->ledger->end_quote($self);
-    $quote->psync_for_xid($self->xid);
     $self->ledger->_send_psync_email($self, $quote);
   } else {
     $self->ledger->_send_psync_email($self, undef);
