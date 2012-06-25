@@ -54,9 +54,8 @@ has attachment_point_guid => (
 # If this quote is a psync quote, we record the XID of the service for
 # which it psyncs.
 has psync_for_xid => (
-  is => 'rw',
+  is => 'ro',
   isa => XID,
-  traits => [ qw(SetOnce) ],
   predicate => 'is_psync_quote',
 );
 
