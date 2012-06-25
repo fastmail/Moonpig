@@ -37,13 +37,15 @@ publish replacement_chain_expiration_date => {
   # paid charge period.
   return($self->expiration_date + (sumof {
     $_->_estimated_remaining_funded_lifetime({
-        amount => $_->expected_funds({ include_unpaid_charges =>
-                                         $opts->{include_expected_funds} || 0 }),
-        ignore_partial_charge_periods => 1,
+      amount => $_->expected_funds(
+        { include_unpaid_charges =>
+            $opts->{include_expected_funds} || 0 }),
+      ignore_partial_charge_periods => 1,
     }) } @chain));
 };
 
-# Use an "around" modifier to override this if your consumer actually needs to do it
+# Use an "around" modifier to override this if your consumer actually
+# needs to do it
 sub _estimated_remaining_funded_lifetime {
   confess("Role::Consumer::ByUsage::_estimated_remaining_funded_lifetime unimplemented");
 }

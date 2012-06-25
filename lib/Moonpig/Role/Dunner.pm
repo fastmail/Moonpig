@@ -3,6 +3,7 @@ package Moonpig::Role::Dunner;
 use Moose::Role;
 
 use List::AllUtils 'any';
+use Moonpig;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
@@ -171,9 +172,10 @@ sub _send_invoice_email {
   }));
 }
 
-# If there's a quote, it's for the amount of money the consumers need to advance
-# their expire date back to where it was.  If not, then the expire date advanced
-# and we're just sending a notification of that fact.
+# If there's a quote, it's for the amount of money the consumers need
+# to advance their expire date back to where it was.  If not, then the
+# expire date advanced and we're just sending a notification of that
+# fact.
 sub _send_psync_email {
   my ($self, $consumer, $quote) = @_;
 

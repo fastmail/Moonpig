@@ -156,7 +156,6 @@ test 'psync chains' => sub {
       $_->total_charge_amount(dollars(14)) for $c, $d, $e;
       # Consumer C has $156/14 left of its original $196/14, enough for 11.143 days
       # at the current rate.
-      $DB::single=1;
       close_enough($c->_predicted_shortfall, days(0.8571429),
                    "active consumer still has a shortfall");
       is($_->_predicted_shortfall, days(0), "inactive consumers no longer have a shortfall")
