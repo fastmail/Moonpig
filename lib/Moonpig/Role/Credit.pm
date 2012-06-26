@@ -117,14 +117,11 @@ sub dissolve {
       amount => $amount,
     });
 
-    $object->charge_invoice(
-      $ledger->current_invoice,
-      {
-        extra_tags  => [ qw(reinvoice) ],
-        amount      => $amount,
-        description => "replace funds from " . $self->as_string,
-      },
-    );
+    $object->charge_current_invoice({
+      extra_tags  => [ qw(reinvoice) ],
+      amount      => $amount,
+      description => "replace funds from " . $self->as_string,
+    });
 
     if ($object->does('Moonpig::Role::Consumer::ByTime')) {
       my $two_weeks = Moonpig->env->now + days(14);

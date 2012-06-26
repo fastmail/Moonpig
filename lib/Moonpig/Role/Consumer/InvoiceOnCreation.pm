@@ -32,10 +32,8 @@ implicit_event_handlers {
 sub _invoice {
   my ($self) = @_;
 
-  my $invoice = $self->ledger->current_invoice;
-
   for my $struct ($self->initial_invoice_charge_structs) {
-    $self->charge_invoice($invoice, {
+    $self->charge_current_invoice({
       description => $struct->{description},
       amount      => $struct->{amount},
     });

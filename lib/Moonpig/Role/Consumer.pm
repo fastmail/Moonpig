@@ -536,12 +536,9 @@ sub journal_charge_tags { $_[0]->invoice_charge_tags }
 
 sub charge_current_invoice {
   my ($self, $args) = @_;
-  $self->charge_invoice($self->ledger->current_invoice, $args);
-}
-
-sub charge_invoice {
-  my ($self, $invoice, $args) = @_;
   $args = { %$args }; # Don't screw up caller's hash
+
+  my $invoice = $self->ledger->current_invoice;
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
