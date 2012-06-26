@@ -22,7 +22,10 @@ publish replacement_chain_expiration_date => {
   -http_method => 'get',
   include_expected_funds => OptionalStickBool,
 } => sub {
-  my ($self, $opts) = @_;
+  my ($self, $_opts) = @_;
+  my $opts = { %$_opts };
+  $opts->{include_expected_funds} //= 0;
+  $opts->{amount} //= $self->unapplied_amount;
 
   my @chain = $self->replacement_chain;
   if (any {! $_->does('Moonpig::Role::Consumer::PredictsExpiration')} @chain) {
@@ -35,13 +38,15 @@ publish replacement_chain_expiration_date => {
   # expiration date, and each consumer won't be activating its
   # successor until it expires, which occurs at the *end* of the last
   # paid charge period.
-  return($self->expiration_date + (sumof {
-    $_->_estimated_remaining_funded_lifetime({
-      amount => $_->expected_funds(
-        { include_unpaid_charges =>
-            $opts->{include_expected_funds} || 0 }),
-      ignore_partial_charge_periods => 1,
-    }) } @chain));
+  return(Moonpig->env->now +
+         $self->_estimated_remaining_funded_lifetime($opts) +
+         (sumof {
+           $_->_estimated_remaining_funded_lifetime({
+             amount => $_->expected_funds(
+               { include_unpaid_charges =>
+                   $opts->{include_expected_funds} }),
+             ignore_partial_charge_periods => 1,
+           }) } @chain));
 };
 
 # Use an "around" modifier to override this if your consumer actually
