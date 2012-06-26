@@ -118,7 +118,7 @@ test "consumer journal charging" => sub {
       cmp_ok(
         $j_charges[0]->amount,
         '==',
-        int($j_charges[1]->amount * 0.75),
+        $j_charges[1]->amount - int($j_charges[1]->amount * 0.25),
         "Coupon consumer charged 25% less.",
       );
       ok(
