@@ -38,8 +38,6 @@ after adjust_charge_args => sub {
   $self->mark_applied;
 };
 
-sub mark_applied { } # Decorated by Coupon::SingleUse for example
-
 sub line_item {
   my ($self, $desc) = @_;
   return ();  # XXX UNIMPLEMENTED

@@ -19,11 +19,6 @@ has discount_rate => (
   default => 0,
 );
 
-sub discount_amount_for {
-  my ($self, $charge) = @_;
-  return $charge->amount * $self->discount_rate;
-}
-
 sub adjust_charge_args {
   my ($self, $args) = @_;
   my $percent = sprintf "%2d%%", 100 * $self->discount_rate;
