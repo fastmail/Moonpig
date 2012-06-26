@@ -367,11 +367,6 @@ after BUILD => sub {
     $self->_adjust_replacement_chain($extend_by, 1, $importing);
   }
 
-  if (exists $arg->{coupon_descs}) {
-    my $coupon_descs = delete($arg->{coupon_descs});
-    $self->add_coupon_from_desc($_) for @$coupon_descs;
-  }
-
   $self->become_active if delete $arg->{make_active};
 };
 
@@ -714,35 +709,17 @@ publish quote_for_extended_service => {
   return $quote;
 };
 
-has coupon_array => (
-  is => 'ro',
-  isa => ArrayRef[ role_type('Moonpig::Role::Coupon') ],
-  default  => sub { [] },
-  lazy => 1, # To preserve database compatibility
-  traits   => [ qw(Array) ],
-  handles => {
-    add_coupon => 'push',
-    coupons => 'elements',
-    has_coupons => 'count',
-  },
-);
-
 sub apply_coupons_to_charge_args {
   my ($self, $args) = @_;
   my @coupon_line_items;
-  for my $coupon ($self->coupons) {
-    push @coupon_line_items, $coupon->adjust_charge_args($args)
-      if $coupon->applies_to_charge($args);
-  }
-  return @coupon_line_items;
-}
 
-sub add_coupon_from_desc {
-  my ($self, $desc) = @_;
-  my ($class, $args) = @$desc;
-  my $coupon = $class->new({ %$args, consumer => $self });
-  $self->add_coupon($coupon);
-  return $coupon;
+  # XXX: re-enable these! -- rjbs, 2012-06-25
+  # for my $coupon ($self->coupons) {
+  #   push @coupon_line_items, $coupon->adjust_charge_args($args)
+  #     if $coupon->applies_to_charge($args);
+  # }
+
+  return @coupon_line_items;
 }
 
 PARTIAL_PACK {
