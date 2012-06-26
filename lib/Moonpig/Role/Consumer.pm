@@ -713,11 +713,10 @@ sub apply_coupons_to_charge_args {
   my ($self, $args) = @_;
   my @coupon_line_items;
 
-  # XXX: re-enable these! -- rjbs, 2012-06-25
-  # for my $coupon ($self->coupons) {
-  #   push @coupon_line_items, $coupon->adjust_charge_args($args)
-  #     if $coupon->applies_to_charge($args);
-  # }
+  for my $coupon ($self->ledger->coupons) {
+    push @coupon_line_items, $coupon->adjust_charge_args($args)
+      if $coupon->applies_to_charge($args);
+  }
 
   return @coupon_line_items;
 }

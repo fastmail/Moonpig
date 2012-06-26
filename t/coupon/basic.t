@@ -24,16 +24,20 @@ sub has_tag {
 
 sub set_up_consumer {
   my ($self, $ledger) = @_;
-  my $coupon_desc =  [ class("Coupon::FixedPercentage", "Coupon::Universal"),
-                       { discount_rate => 0.25,
-                         description => "Joe's discount",
-                         tags => [ $coupon_tag ],
-                       }] ;
+
+  my $coupon_desc =  [
+    class("Coupon::FixedPercentage", "Coupon::Universal"),
+    {
+      discount_rate => 0.25,
+      description => "Joe's discount",
+      tags => [ $coupon_tag ],
+    }
+  ];
 
   my $consumer = $ledger->add_consumer_from_template(
     "yearly",
     { xid => "test:A",
-      coupon_descs => [ $coupon_desc ],
+      # coupon_descs => [ $coupon_desc ],
       charge_description => "with coupon",
       grace_period_duration => 0,
     });
@@ -58,7 +62,10 @@ test "consumer setup" => sub {
     sub {
       my ($ledger) = @_;
       my ($consumer) = $self->set_up_consumer($ledger);
-      is(@{$consumer->coupon_array}, 1, "consumer has a coupon");
+
+      my @coupons = $ledger->coupons;
+      is(@coupons, 1, "ledger has a coupon");
+
       my @charges = $ledger->current_invoice->all_charges;
       is(@charges, 1, "one charge");
 #      is(@charges, 2, "two charges (1 + 1 line item)");

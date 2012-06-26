@@ -17,7 +17,7 @@ Stick::Role::Routable::AutoInstance->VERSION(0.307);
 require Stick::Role::HasCollection;
 Stick::Role::HasCollection->VERSION(0.308); # ppack + subcol
 
-_generate_subcomponent_methods(qw(consumer debit credit));
+_generate_subcomponent_methods(qw(consumer coupon credit debit));
 _generate_chargecollection_methods(qw(invoice journal));
 
 with(
@@ -57,6 +57,11 @@ with(
                           'Stick::Role::Collection::CanFilter',
                           ],
     is => 'ro',
+  },
+  'Stick::Role::HasCollection' => {
+    item => 'coupon',
+    collection_roles => [ 'Stick::Role::Collection::Mutable',
+                          ],
   },
   'Stick::Role::HasCollection' => {
     item => 'journal',

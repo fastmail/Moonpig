@@ -4,7 +4,10 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::Coupon',
-  'Moonpig::Role::HasTagset' => { attr => 'target_tags', predicate => 'has_target_tag' },
+  'Moonpig::Role::HasTagset' => {
+    attr      => 'target_tags',
+    predicate => 'has_target_tag'
+  },
 );
 
 sub applies_to_charge {
