@@ -25,19 +25,19 @@ sub has_tag {
 sub set_up_consumer {
   my ($self, $ledger) = @_;
 
-  my $coupon_desc =  [
-    class("Coupon::FixedPercentage", "Coupon::Universal"),
-    {
-      discount_rate => 0.25,
-      description => "Joe's discount",
-      tags => [ $coupon_tag ],
-    }
-  ];
+  my $coupon = class("Coupon::FixedPercentage", "Coupon::RequiredTags")->new({
+    discount_rate => 0.25,
+    description => "Joe's discount",
+    ledger => $ledger,
+    tags => [ $coupon_tag ],
+    target_tags => [ 'test:A' ]
+  });
+
+  $ledger->add_this_coupon($coupon);
 
   my $consumer = $ledger->add_consumer_from_template(
     "yearly",
     { xid => "test:A",
-      # coupon_descs => [ $coupon_desc ],
       charge_description => "with coupon",
       grace_period_duration => 0,
     });
@@ -114,8 +114,13 @@ test "consumer journal charging" => sub {
       my @j_charges = sort { $a->amount <=> $b->amount }
                       $ledger->current_journal->all_charges;
       is(@j_charges, 2, "two journal charges");
-      cmp_ok($j_charges[0]->amount, '==', int($j_charges[1]->amount * 0.75),
-             "Coupon consumer charged 25% less.");
+
+      cmp_ok(
+        $j_charges[0]->amount,
+        '==',
+        int($j_charges[1]->amount * 0.75),
+        "Coupon consumer charged 25% less.",
+      );
       ok(
         has_tag($coupon_tag, $j_charges[0]),
         "journal charge contains correct tag",

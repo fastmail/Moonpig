@@ -7,10 +7,10 @@ use Moose::Role;
 
 with(
   'Moonpig::Role::CanExpire',
-  'Moonpig::Role::ConsumerComponent',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::HasTagset' => {} ,
+  'Moonpig::Role::LedgerComponent',
 );
 
 use namespace::autoclean;
@@ -29,23 +29,14 @@ around applies_to_charge => sub {
   return $self->is_expired ? () : $self->$orig($args);
 };
 
-# adjust the charge arguments and return line items for adjustments
-requires 'adjust_charge_args';
+# tells the CouponCombiner what to do
+requires 'instruction_for_charge';
 
-after adjust_charge_args => sub {
-  my ($self, $args) = @_;
-  push @{$args->{tags}}, $self->taglist;
-  $self->mark_applied;
+around instruction_for_charge => sub {
+  my ($orig, $self, $struct) = @_;
+  return unless $self->applies_to_charge($struct);
+  push @{$struct->{tags}}, $self->taglist;
+  return $self->$orig($struct);
 };
-
-sub line_item {
-  my ($self, $desc) = @_;
-  return ();  # XXX UNIMPLEMENTED
-  class("LineItem")->new({
-    consumer => $self->owner,
-    description => $desc,
-    tags => $self->tags,
-  });
-}
 
 1;

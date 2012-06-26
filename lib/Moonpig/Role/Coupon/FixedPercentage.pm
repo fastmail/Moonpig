@@ -19,13 +19,13 @@ has discount_rate => (
   default => 0,
 );
 
-sub adjust_charge_args {
+sub instruction_for_charge {
   my ($self, $args) = @_;
-  my $percent = sprintf "%2d%%", 100 * $self->discount_rate;
-  $args->{description} .= " (discounted $percent)";
-  my $discount = $args->{amount} * $self->discount_rate;
-  $args->{amount} -= $discount;
-  return $self->line_item($self->description . ": $percent discount");
+
+  return {
+    description  => $self->description,
+    discount_pct => $self->discount_rate,
+  };
 }
 
 1;

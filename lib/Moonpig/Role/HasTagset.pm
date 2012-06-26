@@ -10,11 +10,13 @@ parameter attr => (isa => Str, default => 'tags');
 # Name of the method that asks if an object possesses a certain tag
 parameter predicate => (isa => Str, default => 'has_tag');
 
+parameter taglist_method => (isa => Str, default => 'taglist');
 
 role {
   my ($p) = @_;
   my $attr = $p->attr;
   my $predicate = $p->predicate;
+  my $taglist_method = $p->taglist_method;
 
   has $attr => (
     is => 'ro',
@@ -22,7 +24,7 @@ role {
     default => sub { [] },
   );
 
-  method taglist => sub { @{$_[0]->$attr} };
+  method $taglist_method => sub { @{$_[0]->$attr} };
 
   method $predicate => sub {
     my ($self, $tag) = @_;
