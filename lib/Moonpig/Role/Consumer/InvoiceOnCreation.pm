@@ -34,8 +34,7 @@ sub _invoice {
 
   for my $struct ($self->initial_invoice_charge_structs) {
     $self->charge_current_invoice({
-      description => $struct->{description},
-      amount      => $struct->{amount},
+      %$struct,
     });
   }
 }

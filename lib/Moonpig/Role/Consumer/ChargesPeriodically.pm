@@ -68,9 +68,10 @@ sub charge_one_day {
 
   for my $struct (@charge_structs) {
     $self->charge_current_journal({
-      desc => $struct->{description},
+      description => $struct->{description},
       date => $next_charge_date,
       amount => $struct->{amount},
+      extra_tags => $struct->{extra_tags},
       skip_funds_check => $self->allows_overdrafts,
     });
   }

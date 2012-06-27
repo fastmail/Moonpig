@@ -461,7 +461,7 @@ sub copy_balance_to__ {
     sub {
       my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
       $self->charge_current_journal({
-        desc        => sprintf("Transfer management of '%s' to ledger %s",
+        description => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
         amount      => $amount,
         extra_tags  => [ "moonpig.transient" ],
