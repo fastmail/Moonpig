@@ -554,15 +554,16 @@ sub charge_current_invoice {
 }
 
 has extra_charge_tags => (
-  is  => 'ro',
   isa => ArrayRef,
   default => sub { [] },
-  traits => [ qw(Copy) ],
+  traits  => [ qw(Array Copy) ],
+  handles => { extra_charge_tags => 'elements' },
+  reader  => '_extra_charge_tags', # needed for copy_attr_hash__
 );
 
 sub invoice_charge_tags {
   my ($self) = @_;
-  return [ $self->xid, @{$self->extra_charge_tags} ]
+  return [ $self->xid, $self->extra_charge_tags ]
 }
 
 # and return a list (or count) of the abandoned charges
