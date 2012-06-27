@@ -1,11 +1,11 @@
-package Moonpig::Role::Coupon::RequiredTags;
-# ABSTRACT: a coupon that applies only to charges that have particular tags
+package Moonpig::Role::Discount::RequiredTags;
+# ABSTRACT: a discount that applies only to charges that have particular tags
 use Moose::Role;
 
 use namespace::autoclean;
 
 with(
-  'Moonpig::Role::Coupon',
+  'Moonpig::Role::Discount',
   'Moonpig::Role::HasTagset' => {
     attr      => 'target_tags',
     predicate => 'has_target_tag',

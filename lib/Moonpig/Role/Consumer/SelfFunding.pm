@@ -1,5 +1,5 @@
 package Moonpig::Role::Consumer::SelfFunding;
-# ABSTRACT: a coupon that pays its own pay
+# ABSTRACT: a consumer that pays its own initial charges
 use Moose::Role;
 
 use List::AllUtils qw(max);

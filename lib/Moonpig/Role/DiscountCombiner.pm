@@ -1,5 +1,5 @@
-package Moonpig::Role::CouponCombiner;
-# ABSTRACT: a helper that applies coupons to charge structures
+package Moonpig::Role::DiscountCombiner;
+# ABSTRACT: a helper that applies discounts to charge structures
 use Moonpig;
 use Moose::Role;
 
@@ -16,28 +16,28 @@ has ledger => (
   weak_ref => 1,
 );
 
-sub apply_coupons_to_charge_struct {
+sub apply_discounts_to_charge_struct {
   my ($self, $struct) = @_;
 
-  # No coupons?  No munging.
-  my @coupons = $self->ledger->coupons;
-  return unless @coupons;
+  # No discounts?  No munging.
+  my @discounts = $self->ledger->discounts;
+  return unless @discounts;
 
   my %by_key;
 
-  for my $coupon (@coupons) {
-    next unless my $instruction = $coupon->instruction_for_charge($struct);
+  for my $discount (@discounts) {
+    next unless my $instruction = $discount->instruction_for_charge($struct);
 
     # Instructions may contain only:
     #   description
     #   discount_pct
     #   XXX: add_tags
-    $instruction->{coupon} = $coupon;
+    $instruction->{discount} = $discount;
 
-    my $key = $coupon->guid;
+    my $key = $discount->guid;
 
-    if ($coupon->does('Moonpig::Role::Coupon::CombiningDiscount')) {
-      $key = $coupon->combining_discount_key;
+    if ($discount->does('Moonpig::Role::Discount::CombiningDiscount')) {
+      $key = $discount->combining_discount_key;
     }
 
     push @{ $by_key{ $key } }, $instruction;

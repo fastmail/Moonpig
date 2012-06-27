@@ -1,5 +1,5 @@
-package Moonpig::Role::Coupon::CombiningDiscount;
-# ABSTRACT: a coupon that can combine its discount with another
+package Moonpig::Role::Discount::CombiningDiscount;
+# ABSTRACT: a discount that can combine its discount with another
 use Moose::Role;
 
 use Moonpig::Types qw(NonBlankLine);
@@ -7,7 +7,7 @@ use Moonpig::Types qw(NonBlankLine);
 use namespace::autoclean;
 
 with(
-  'Moonpig::Role::Coupon',
+  'Moonpig::Role::Discount',
 );
 
 has combining_discount_key => (

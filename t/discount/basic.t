@@ -15,7 +15,7 @@ with ('Moonpig::Test::Role::UsesStorage');
 
 Moonpig->env->stop_clock;
 
-my $coupon_tag = "coupon-tag";
+my $discount_tag = "discount-tag";
 
 sub has_tag {
   my ($tag, $charge) = @_;
@@ -25,20 +25,20 @@ sub has_tag {
 sub set_up_consumer {
   my ($self, $ledger) = @_;
 
-  my $coupon = class("Coupon::FixedPercentage", "Coupon::RequiredTags")->new({
+  my $discount = class("Discount::FixedPercentage", "Discount::RequiredTags")->new({
     discount_rate => 0.25,
     description => "Joe's discount",
     ledger => $ledger,
-    tags => [ $coupon_tag ],
+    tags => [ $discount_tag ],
     target_tags => [ 'test:A' ]
   });
 
-  $ledger->add_this_coupon($coupon);
+  $ledger->add_this_discount($discount);
 
   my $consumer = $ledger->add_consumer_from_template(
     "yearly",
     { xid => "test:A",
-      charge_description => "with coupon",
+      charge_description => "with discount",
       grace_period_duration => 0,
     });
 
@@ -63,8 +63,8 @@ test "consumer setup" => sub {
       my ($ledger) = @_;
       my ($consumer) = $self->set_up_consumer($ledger);
 
-      my @coupons = $ledger->coupons;
-      is(@coupons, 1, "ledger has a coupon");
+      my @discounts = $ledger->discounts;
+      is(@discounts, 1, "ledger has a discount");
 
       my @charges = $ledger->current_invoice->all_charges;
       is(@charges, 1, "one charge");
@@ -72,7 +72,7 @@ test "consumer setup" => sub {
 
       is($charges[0]->amount, dollars(75), "true charge amount: \$75");
       ok(
-        has_tag($coupon_tag, $charges[0]),
+        has_tag($discount_tag, $charges[0]),
         "invoice charge contains correct tag",
       );
 
@@ -88,7 +88,7 @@ test "consumer setup" => sub {
           qr/25%/,
           "line item description amount"
         );
-        ok(has_tag($coupon_tag, $charges[1]), "line item contains correct tag");
+        ok(has_tag($discount_tag, $charges[1]), "line item contains correct tag");
       }
     });
 };
@@ -98,7 +98,7 @@ test "consumer journal charging" => sub {
   do_with_fresh_ledger({ n => { template => "yearly",
                                 xid => "test:B",
                                 bank => dollars(100),
-                                charge_description => "without coupon",
+                                charge_description => "without discount",
                                 make_active => 1,
                                 grace_period_duration => 0,
                               }
@@ -119,13 +119,13 @@ test "consumer journal charging" => sub {
         $j_charges[0]->amount,
         '==',
         $j_charges[1]->amount - int($j_charges[1]->amount * 0.25),
-        "Coupon consumer charged 25% less.",
+        "discount consumer charged 25% less.",
       );
       ok(
-        has_tag($coupon_tag, $j_charges[0]),
+        has_tag($discount_tag, $j_charges[0]),
         "journal charge contains correct tag",
       );
-      ok(! has_tag($coupon_tag, $j_charges[1]), "sanity check");
+      ok(! has_tag($discount_tag, $j_charges[1]), "sanity check");
     }
   );
 };

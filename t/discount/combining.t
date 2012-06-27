@@ -18,17 +18,17 @@ Moonpig->env->stop_clock;
 test "consumer journal charging" => sub {
   my ($self) = @_;
   do_with_fresh_ledger(
-    # We'll set up the consumers later.  We need to get the coupons in place
-    # first so that the invoice charges are not affected by the coupons. --
+    # We'll set up the consumers later.  We need to get the discounts in place
+    # first so that the invoice charges are not affected by the discounts. --
     # rjbs, 2012-06-27
     { },
     sub {
       my ($ledger) = @_;
 
-      my $coupon_A = class(qw(
-        Coupon::FixedPercentage
-        Coupon::RequiredTags
-        Coupon::CombiningDiscount
+      my $discount_A = class(qw(
+        Discount::FixedPercentage
+        Discount::RequiredTags
+        Discount::CombiningDiscount
       ))->new({
         discount_rate => 0.30,
         description   => "30% big spender discount",
@@ -37,12 +37,12 @@ test "consumer journal charging" => sub {
         combining_discount_key => 'combine',
       });
 
-      $ledger->add_this_coupon($coupon_A);
+      $ledger->add_this_discount($discount_A);
 
-      my $coupon_B = class(qw(
-        Coupon::FixedPercentage
-        Coupon::RequiredTags
-        Coupon::CombiningDiscount
+      my $discount_B = class(qw(
+        Discount::FixedPercentage
+        Discount::RequiredTags
+        Discount::CombiningDiscount
       ))->new({
         discount_rate => 0.20,
         description   => "20% pathetic loser discount",
@@ -51,11 +51,11 @@ test "consumer journal charging" => sub {
         combining_discount_key => 'combine',
       });
 
-      $ledger->add_this_coupon($coupon_B);
+      $ledger->add_this_discount($discount_B);
 
-      my $coupon_C = class(qw(
-        Coupon::FixedPercentage
-        Coupon::RequiredTags
+      my $discount_C = class(qw(
+        Discount::FixedPercentage
+        Discount::RequiredTags
       ))->new({
         discount_rate => 0.10,
         description   => "10% family discount",
@@ -63,7 +63,7 @@ test "consumer journal charging" => sub {
         target_tags   => [ 'family' ],
       });
 
-      $ledger->add_this_coupon($coupon_C);
+      $ledger->add_this_discount($discount_C);
 
       build_consumers($ledger, {
         C0 => {

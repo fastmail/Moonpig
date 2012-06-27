@@ -1,4 +1,4 @@
-package Moonpig::Role::Coupon::FixedPercentage;
+package Moonpig::Role::Discount::FixedPercentage;
 # ABSTRACT: a percentage discount
 use Moose::Role;
 
@@ -7,7 +7,7 @@ use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(Num);
 
 with(
-  'Moonpig::Role::Coupon',
+  'Moonpig::Role::Discount',
 );
 
 use namespace::autoclean;

@@ -1,4 +1,4 @@
-package Moonpig::Role::Coupon;
+package Moonpig::Role::Discount;
 # ABSTRACT: a discount for paying for a certain service
 use Moonpig;
 use Moonpig::Types qw(Factory Time TimeInterval);
@@ -29,7 +29,7 @@ around applies_to_charge => sub {
   return $self->is_expired ? () : $self->$orig($args);
 };
 
-# tells the CouponCombiner what to do
+# tells the DiscountCombiner what to do
 requires 'instruction_for_charge';
 
 around instruction_for_charge => sub {

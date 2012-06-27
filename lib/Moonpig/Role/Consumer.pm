@@ -523,7 +523,7 @@ sub charge_current_journal {
   $args->{date}       ||= Moonpig->env->now;
   $args->{consumer}   = $self;
 
-  $self->apply_coupons_to_charge_args($args); # Could modify amount, desc., etc.
+  $self->apply_discounts_to_charge_args($args); # Could modify amount, desc., etc.
   return $self->ledger->current_journal->charge($args);
 }
 
@@ -540,7 +540,7 @@ sub charge_current_invoice {
   $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
 
   # Might modify $args
-  my @coupon_line_items = $self->apply_coupons_to_charge_args($args);
+  my @discount_line_items = $self->apply_discounts_to_charge_args($args);
 
   # If there's no ->build_invoice_charge method, let the Invoice
   # object build the charge from the arguments.
@@ -548,7 +548,7 @@ sub charge_current_invoice {
 
   my $charge = $invoice->add_charge($args);
 
-  $invoice->add_line_item($_) for @coupon_line_items;
+  $invoice->add_line_item($_) for @discount_line_items;
 
   return $charge;
 }
@@ -709,14 +709,14 @@ publish quote_for_extended_service => {
   return $quote;
 };
 
-sub apply_coupons_to_charge_args {
+sub apply_discounts_to_charge_args {
   my ($self, $args) = @_;
 
-  my $combiner = class('CouponCombiner')->new({ ledger => $self->ledger });
+  my $combiner = class('DiscountCombiner')->new({ ledger => $self->ledger });
 
-  my @coupon_line_items = $combiner->apply_coupons_to_charge_struct($args);
+  my @discount_line_items = $combiner->apply_discounts_to_charge_struct($args);
 
-  return @coupon_line_items;
+  return @discount_line_items;
 }
 
 PARTIAL_PACK {
