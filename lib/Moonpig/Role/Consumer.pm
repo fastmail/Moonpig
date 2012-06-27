@@ -464,7 +464,7 @@ sub copy_balance_to__ {
         desc        => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
         amount      => $amount,
-        extra_tags  => [ "transient" ],
+        extra_tags  => [ "moonpig.transient" ],
       });
 
       my $credit = $new_ledger->add_credit(
