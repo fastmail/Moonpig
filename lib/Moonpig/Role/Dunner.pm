@@ -194,7 +194,9 @@ sub _send_psync_email {
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
-      $quote ? (quote        => $quote) : (),
+      old_expiration_date => Moonpig->env->now,
+      new_expiration_date => Moonpig->env->now,
+      $quote ? (charge_amount => $quote->total_amount) : (),
       ledger       => $self,
       consumer     => $consumer,
     },

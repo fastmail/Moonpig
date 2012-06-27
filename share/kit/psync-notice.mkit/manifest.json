@@ -27,7 +27,9 @@
           "consumer"    : "/perl/obj",
           "ledger"      : "/perl/obj",
           "subject"     : "//str",
-          "to_addresses": { "type": "//arr", "contents": "//str" }
+          "to_addresses": { "type": "//arr", "contents": "//str" },
+          "old_expiration_date"       : "/perl/obj",
+          "new_expiration_date"       : "/perl/obj"
         }
       }
     }

@@ -24,11 +24,13 @@
       "schema": {
         "type": "//rec",
         "required": {
-          "consumer"    : "/perl/obj",
-          "ledger"      : "/perl/obj",
-          "quote"       : "/perl/obj",
-          "subject"     : "//str",
-          "to_addresses": { "type": "//arr", "contents": "//str" }
+          "consumer"                  : "/perl/obj",
+          "ledger"                    : "/perl/obj",
+          "old_expiration_date"       : "/perl/obj",
+          "new_expiration_date"       : "/perl/obj",
+          "charge_amount"             : "//num",
+          "subject"                   : "//str",
+          "to_addresses"              : { "type": "//arr", "contents": "//str" }
         }
       }
     }
