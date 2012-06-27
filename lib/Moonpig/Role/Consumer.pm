@@ -519,7 +519,7 @@ sub charge_current_journal {
   $args->{from}       ||= $self;
   $args->{to}         ||= $self->ledger->current_journal;
   $args->{extra_tags} ||= [];
-  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
+  $args->{tags}       ||= [ $self->journal_charge_tags, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
   $args->{consumer}   = $self;
 
@@ -537,7 +537,7 @@ sub charge_current_invoice {
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
-  $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
+  $args->{tags}       ||= [ $self->invoice_charge_tags, @extra_tags ];
 
   # Might modify $args
   my @discount_line_items = $self->apply_discounts_to_charge_args($args);
@@ -563,7 +563,7 @@ has extra_charge_tags => (
 
 sub invoice_charge_tags {
   my ($self) = @_;
-  return [ $self->xid, $self->extra_charge_tags ]
+  return($self->xid, $self->extra_charge_tags);
 }
 
 # and return a list (or count) of the abandoned charges
