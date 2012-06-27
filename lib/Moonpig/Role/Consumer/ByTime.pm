@@ -365,7 +365,7 @@ has last_psync_shortfall => (
 sub _maybe_send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
-  return unless $self->all_charges > 0;
+  return unless grep(! $_->is_abandoned, $self->all_charges) > 0;
 
   my $shortfall = $self->_predicted_shortfall;
   my $had_last_shortfall = $self->has_last_psync_shortfall;
