@@ -177,9 +177,11 @@ sub _send_invoice_email {
 # expire date advanced and we're just sending a notification of that
 # fact.
 sub _send_psync_email {
-  my ($self, $consumer, $quote) = @_;
+  my ($self, $consumer, $info) = @_;
 
+  my $quote = $info->{quote};
   my $what = $quote ? "psync quote" : "psync reverse notice";
+
   $Logger->log([
     "sending $what for %s to contacts of %s",
     $consumer->xid,
@@ -194,8 +196,8 @@ sub _send_psync_email {
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
-      old_expiration_date => Moonpig->env->now,
-      new_expiration_date => Moonpig->env->now,
+      old_expiration_date => $info->{old_expiration_date},
+      new_expiration_date => $info->{new_expiration_date},
       $quote ? (charge_amount => $quote->total_amount) : (),
       ledger       => $self,
       consumer     => $consumer,

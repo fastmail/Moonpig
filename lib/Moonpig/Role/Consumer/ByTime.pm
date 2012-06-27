@@ -388,17 +388,32 @@ sub _maybe_send_psync_quote {
   $self->last_psync_shortfall($shortfall);
   return if ! $had_last_shortfall && $shortfall <= 0;
 
-  my @old = $self->ledger->find_old_psync_quotes($self->xid);
+  my @old_quotes = $self->ledger->find_old_psync_quotes($self->xid);
+
+  # OLD date is the one we had before the service upgrade, which will be RESTORED
+  # if the user pays the invoice
+  my $old_exp_date =  Moonpig->env->now +
+    $self->want_to_live +
+    $self->replacement_chain_lifetime({ include_expected_funds => 1 });
+
+  my $notice_info = {
+
+    old_expiration_date => $old_exp_date,
+
+    # NEW date is the one caused by the service upgrade, which will
+    # PERSIST if the user DOES NOT pay the invoice
+    new_expiration_date => $old_exp_date - $shortfall,
+  };
 
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
     $self->_issue_psync_charges($shortfall);
-    my $quote = $self->ledger->end_quote($self);
-    $self->ledger->_send_psync_email($self, $quote);
-  } else {
-    $self->ledger->_send_psync_email($self, undef);
+    $notice_info->{quote} = $self->ledger->end_quote($self);
   }
-  $_->mark_abandoned() for @old;
+
+  $self->ledger->_send_psync_email($self, $notice_info);
+
+  $_->mark_abandoned() for @old_quotes;
 }
 
 sub _issue_psync_charges {
