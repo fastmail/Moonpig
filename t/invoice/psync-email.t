@@ -108,13 +108,14 @@ test 'single consumer' => sub {
     my $sender = Moonpig->env->email_sender;
 
     subtest "generate psync quote when rate changes" => sub {
-      elapse($ledger,3);
+      elapse($ledger,4);
       get_single_delivery("one email delivery (the invoice)");
-      # Have $14-$3 = $11; now spending $2/day => lifetime = 5.5d
-      # remaining lifetime should have been 14-3 = 11d.
-      # To top up the account, need to get $1 per remaining day = $11
+      # Have $14-$4 = $10 after 4 days;
+      # now spending $2/day => remaining lifetime = 5d
+      # remaining lifetime should have been 10d
+      # To top up the account, need to get $1 per remaining day = $10
       $c->total_charge_amount(dollars(28));
-      is($c->_predicted_shortfall, days(5.5), "double charge -> shortfall 5.5d");
+      is($c->_predicted_shortfall, days(5), "double charge -> shortfall 5d");
       elapse($ledger) until $ledger->quotes;
 
       Moonpig->env->process_email_queue;
@@ -122,8 +123,11 @@ test 'single consumer' => sub {
       my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
       my $body = body($delivery);
       like($body, qr/\S/, "psync mail body is not empty");
-      like($body, qr/\$11\.00/, "found correct amount");
-            warn("#". $body);
+      like($body, qr/\$10\.00/, "found correct charge amount");
+      my ($new_date) = $body =~ qr/expected to continue until\s+(\w+day, January \d\d, 2000)/;
+      is ($new_date, "Monday, January 10, 2000", "new expiration date");
+      my ($old_date) = $body =~ qr/extend service to\s+(\w+day, January \d\d, 2000)/;
+      is ($old_date, "Saturday, January 15, 2000", "old expiration date");
     };
 
   };
