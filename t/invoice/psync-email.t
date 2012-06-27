@@ -122,7 +122,8 @@ test 'single consumer' => sub {
       my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
       my $body = body($delivery);
       like($body, qr/\S/, "psync mail body is not empty");
-      note($body);
+      like($body, qr/\$11\.00/, "found correct amount");
+            warn("#". $body);
     };
 
   };
