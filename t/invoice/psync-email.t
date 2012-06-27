@@ -107,7 +107,7 @@ test 'single consumer' => sub {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
 
-    subtest "generate psync quote when rate changes" => sub {
+    subtest "psync quote when rate changes" => sub {
       elapse($ledger,4);
       get_single_delivery("one email delivery (the invoice)");
       # Have $14-$4 = $10 after 4 days;
@@ -117,16 +117,32 @@ test 'single consumer' => sub {
       $c->total_charge_amount(dollars(28));
       is($c->_predicted_shortfall, days(5), "double charge -> shortfall 5d");
       elapse($ledger) until $ledger->quotes;
+      # We now have $8 and have used up 5 days
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
       my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
       my $body = body($delivery);
       like($body, qr/\S/, "psync mail body is not empty");
+      like($body, qr/to make payment/i, "this is the request for payment");
       like($body, qr/\$10\.00/, "found correct charge amount");
-      my ($new_date) = $body =~ qr/expected to continue until\s+(\w+day, January \d\d, 2000)/;
+      my ($new_date) = $body =~ qr/expected to continue until\s+(\w+day, \w+ [\d ]\d, \d{4})/;
       is ($new_date, "Monday, January 10, 2000", "new expiration date");
-      my ($old_date) = $body =~ qr/extend service to\s+(\w+day, January \d\d, 2000)/;
+      my ($old_date) = $body =~ qr/extend service to\s+(\w+day, \w+ [\d ]\d, \d{4})/;
+      is ($old_date, "Saturday, January 15, 2000", "old expiration date");
+    };
+    # We now have $8 and have used up 5 days
+
+    subtest "psync notice when rate changes" => sub {
+      $c->total_charge_amount(dollars(7)); # $.50 per day
+      elapse($ledger);
+      # We now have $7.50 and have used up 6 days
+      my ($delivery) = get_single_delivery("one email delivery (the psync notice)");
+      my $body = body($delivery);
+      like($body, qr/your account price has decreased/i, "this is the nonpayment notice");
+      my ($new_date) = $body =~ qr/will now expire on\s+(\w+day, (\w+) [\d ]\d, \d{4})/;
+      is ($new_date, "Sunday, January 22, 2000", "new expiration date");
+      my ($old_date) = $body =~ qr/was due to expire after\s+(\w+day, \w+ [\d ]\d, \d{4})/;
       is ($old_date, "Saturday, January 15, 2000", "old expiration date");
     };
 
