@@ -261,6 +261,16 @@ sub can_make_payment_on {
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
+sub want_to_live {
+  my ($self) = @_;
+  if ($self->is_active) {
+    return $self->proration_period
+             - ($self->next_charge_date - $self->activated_at);
+  } else {
+    return $self->proration_period;
+  }
+}
+
 # how much sooner will we run out of money than when we would have
 # expected to run out?  Might return a negative value if the consumer
 # has too much money. The caller of this function may therefore want
@@ -281,13 +291,7 @@ sub _predicted_shortfall {
                                                  });
 
   # Next, figure out long we think it *should* last us.
-  my $want_to_live;
-  if ($self->is_active) {
-    $want_to_live = $self->proration_period
-                  - ($self->next_charge_date - $self->activated_at);
-  } else {
-    $want_to_live = $self->proration_period;
-  }
+  my $want_to_live = $self->want_to_live;
 
   my $shortfall = $want_to_live - $estimated_remaining_funded_lifetime;
   return $shortfall;
