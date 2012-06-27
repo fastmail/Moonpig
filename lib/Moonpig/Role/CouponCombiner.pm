@@ -36,7 +36,7 @@ sub apply_coupons_to_charge_struct {
 
     my $key = $coupon->guid;
 
-    if ($coupon->can('Moonpig::Role::Coupon::CombiningDiscount')) {
+    if ($coupon->does('Moonpig::Role::Coupon::CombiningDiscount')) {
       $key = $coupon->combining_discount_key;
     }
 
