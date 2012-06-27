@@ -2,6 +2,8 @@ package Moonpig::Role::Coupon::RequiredTags;
 # ABSTRACT: a coupon that applies only to charges that have particular tags
 use Moose::Role;
 
+use namespace::autoclean;
+
 with(
   'Moonpig::Role::Coupon',
   'Moonpig::Role::HasTagset' => {
