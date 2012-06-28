@@ -1,0 +1,40 @@
+{
+  "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
+  "renderer"  : [
+    "Text::Template",
+    {
+      "template_args": { "DELIMITERS": [ "{{", "}}" ] }
+    }
+  ],
+  "assembler" : [
+    "Markdown",
+    {
+      "html_wrapper": "/Moonpig/kit/wrapper/wrapper.html",
+      "text_wrapper": "/Moonpig/kit/wrapper/wrapper.txt"
+    }
+  ],
+  "header": [
+    { "Subject": "{{$subject}}" },
+    { "To":      "{{ join q{,}, @to_addresses }}" },
+    { "From":    "{{ Moonpig->env->default_from_email_address->as_string }}" }
+  ],
+  "validator": [
+    "Rx",
+    {
+      "schema": {
+        "type": "//rec",
+        "required": {
+          "consumer"                  : "/perl/obj",
+          "ledger"                    : "/perl/obj",
+          "old_expiration_date"       : "/perl/obj",
+          "new_expiration_date"       : "/perl/obj",
+          "charge_amount"             : "//num",
+          "quote_guid"                : "//str",
+          "subject"                   : "//str",
+          "to_addresses"              : { "type": "//arr", "contents": "//str" }
+        }
+      }
+    }
+  ],
+  "path": "body.mkdn"
+}

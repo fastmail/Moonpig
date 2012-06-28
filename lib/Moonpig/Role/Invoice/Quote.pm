@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice::Quote;
 
 use Carp qw(confess croak);
 use Moonpig;
-use Moonpig::Types qw(GUID Time);
+use Moonpig::Types qw(GUID Time XID);
 use Moonpig::Util qw(days);
 use Moose::Role;
 use Stick::Publisher;
@@ -49,6 +49,14 @@ has attachment_point_guid => (
   is => 'rw',
   isa => union([GUID, 'Undef']),
   traits => [ qw(SetOnce) ],
+);
+
+# If this quote is a psync quote, we record the XID of the service for
+# which it psyncs.
+has psync_for_xid => (
+  is => 'ro',
+  isa => XID,
+  predicate => 'is_psync_quote',
 );
 
 sub has_attachment_point { defined $_[0]->attachment_point_guid }
@@ -120,28 +128,32 @@ publish execute => { -http_method => 'post', -path => 'execute' } => sub {
       $self->guid, $self->abandoned_at->iso;
   }
 
-  my $first_consumer = $self->first_consumer;
-  my $xid = $first_consumer->xid;
+  # If there get to be too many of these conditionals, we should split
+  # psync functionality out of Quote.pm. -- 20120614 mjd
+  unless ($self->is_psync_quote) {
+    my $first_consumer = $self->first_consumer;
+    my $xid = $first_consumer->xid;
 
-  my $attachment_target = $self->target_consumer($xid);
+    my $attachment_target = $self->target_consumer($xid);
 
-  unless ($self->can_be_attached_to( $attachment_target ) ) {
-    Moonpig::X->throw(
-      "can't execute obsolete quote",
-      quote_guid => $self->guid,
-      xid => $xid,
-      expected_attachment_point => $self->attachment_point_guid,
-      active_attachment_point => $attachment_target && $attachment_target->guid
-    );
+    unless ($self->can_be_attached_to( $attachment_target ) ) {
+      Moonpig::X->throw(
+        "can't execute obsolete quote",
+        quote_guid => $self->guid,
+        xid => $xid,
+        expected_attachment_point => $self->attachment_point_guid,
+        active_attachment_point => $attachment_target && $attachment_target->guid
+       );
+    }
+
+    if ($attachment_target) {
+      $attachment_target->replacement($first_consumer);
+    } else {
+      $first_consumer->become_active;
+    }
   }
 
   $self->mark_executed;
-
-  if ($attachment_target) {
-    $attachment_target->replacement($first_consumer);
-  } else {
-    $first_consumer->become_active;
-  }
 
   return $self;
 };

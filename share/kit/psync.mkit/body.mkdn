@@ -1,0 +1,19 @@
+{{ $date_format = "%B %e, %Y";  # Jan  9, 2000.
+   $SHHH = "" }}
+
+You've recently updated your service {{ $consumer->xid }}.
+Due to those changes, your account price has changed.  Based on funds 
+on hand, service is now expected to continue until {{
+  $new_expiration_date->strftime($date_format) }}.
+
+If you would prefer, you can make a pro-rated payment to extend your service 
+to your previous expiration date.  The pro-rated charge to extend service to 
+{{ $old_expiration_date->strftime($date_format) }} is ${{ sprintf
+"%.2f", Moonpig::Util::to_dollars($charge_amount)}}
+
+To make payment online, or find instructions for alternate payment methods, 
+please go to [our pay page](https://www.pobox.com/pay?quote={{ $quote_guid }}).  If you wish to alter your account 
+services, please go to https://pobox.com/login/mason/edit/upgrade.mhtml or 
+contact us at [pobox@pobox.com](mailto:pobox@pobox.com).
+
+If no action is taken, service will continue through {{ $new_expiration_date->strftime($date_format) }}.

@@ -11,6 +11,7 @@ use MooseX::Types::Moose qw(ArrayRef Num);
 
 use Moonpig::Logger '$Logger';
 use Moonpig::Trait::Copy;
+use POSIX qw(ceil);
 
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
@@ -21,10 +22,22 @@ with(
   'Moonpig::Role::Consumer::InvoiceOnCreation',
   'Moonpig::Role::Consumer::MakesReplacement',
   'Moonpig::Role::Consumer::PredictsExpiration',
+  'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::StubBuild',
 );
 
 requires 'charge_pairs_on';
+
+use Moonpig::Behavior::EventHandlers;
+implicit_event_handlers {
+  return {
+    'heartbeat' => {
+      maybe_psync => Moonpig::Events::Handler::Method->new(
+        method_name => '_maybe_send_psync_quote',
+       ),
+    }
+  };
+};
 
 use Moonpig::Types qw(PositiveMillicents Time TimeInterval);
 
@@ -231,9 +244,15 @@ sub minimum_spare_change_amount {
 publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
   my ($self, $arg) = @_;
   my $interval = $arg->{interval};
-  my @pairs = $self->charge_pairs_on( Moonpig->env->now );
-  my $total = sum pair_rights @pairs;
-  return $total * ($interval / $self->cost_period);
+  if ($self->is_active) {
+    my @pairs = $self->charge_pairs_on( Moonpig->env->now );
+    my $total = sum pair_rights @pairs;
+    return $total * ($interval / $self->cost_period);
+  } else {
+    my @pairs = $self->initial_invoice_charge_pairs( );
+    my $total = sum pair_rights @pairs;
+    return $total * ($interval / $self->cost_period);
+  }
 };
 
 sub can_make_payment_on {
@@ -242,43 +261,64 @@ sub can_make_payment_on {
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
+sub want_to_live {
+  my ($self) = @_;
+  if ($self->is_active) {
+    return $self->proration_period
+             - ($self->next_charge_date - $self->activated_at);
+  } else {
+    return $self->proration_period;
+  }
+}
+
+# how much sooner will we run out of money than when we would have
+# expected to run out?  Might return a negative value if the consumer
+# has too much money. The caller of this function may therefore want
+# to clip negative values to 0. - 20120612 mjd
 sub _predicted_shortfall {
   my ($self) = @_;
 
   # First, figure out how much money we have and are due, and assume we're
   # going to get it all. -- rjbs, 2012-03-15
   my $guid = $self->guid;
-  my @charges = grep { ! $_->is_abandoned && $guid eq $_->owner_guid }
-                map  { $_->all_charges }
-                $self->ledger->payable_invoices;
-  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+
+  my $funds = $self->expected_funds({ include_unpaid_charges => 1 });
 
   # Next, figure out how long that money will last us.
   my $estimated_remaining_funded_lifetime =
       $self->_estimated_remaining_funded_lifetime({ amount => $funds,
-                                                   ignore_partial_charge_periods => 0,
+                                                    ignore_partial_charge_periods => 0,
                                                  });
 
   # Next, figure out long we think it *should* last us.
-  my $want_to_live;
-  if ($self->is_active) {
-    $want_to_live = $self->proration_period
-                  - ($self->next_charge_date - $self->activated_at);
-  } else {
-    $want_to_live = $self->proration_period;
-  }
+  my $want_to_live = $self->want_to_live;
 
-  return 0 if $estimated_remaining_funded_lifetime >= $want_to_live;
-
-  # If you're going to run out of funds your final charge period, we don't
-  # care.  In general, we plan to have charge_frequency stick with its default
-  # value always: days(1).  If you were to use a days(30) charge frequency,
-  # this could mean that someone could easily miss 29 days of service, which is
-  # potentially more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
   my $shortfall = $want_to_live - $estimated_remaining_funded_lifetime;
-  return 0 if $shortfall < $self->charge_frequency;
-
   return $shortfall;
+}
+
+# Not just the amount we have on hand, but the amount we expect to have, once
+# our paid charges are executed, and possibly also assuming that our unpaid
+# charges are paid and executed.
+sub expected_funds {
+  my ($self, $options) = @_;
+
+  defined($options->{include_unpaid_charges})
+    or confess "expected_funds missing required include_unpaid_charges option";
+
+  my $guid = $self->guid;
+
+  my @invoices = grep { ! $_->is_abandoned && $_->isnt_quote }
+    $self->ledger->invoices;
+  @invoices = grep { $_->is_paid } @invoices unless $options->{include_unpaid_charges};
+
+
+  my @charges = grep { ! $_->is_executed && # executed chgs will be counted in unapplied_amount
+                       ! $_->is_abandoned && $guid eq $_->owner_guid }
+                map  { $_->all_charges } @invoices;
+
+  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+  return $funds;
 }
 
 # Given an amount of money, estimate how long the money will last
@@ -287,11 +327,16 @@ sub _predicted_shortfall {
 # If the money will last for a fractional number of charge periods, you
 # might or might not want to count the final partial period.
 #
-sub _estimated_remaining_funded_lifetime {
-  my ($self, $args) = @_;
+# XXX 20120605 ignore_partial_charge_periods should have *three* options:
+#  1. include  2. round up  3. round down
+#  see long comment in PredictsExpiration.pm for why.
+around _estimated_remaining_funded_lifetime => sub {
+  my ($orig, $self, $args) = @_;
 
   confess "Missing amount argument to _estimated_remaining_funded_lifetime"
     unless defined $args->{amount};
+  Moonpig::X->throw("inactive consumer forbidden")
+      if $args->{must_be_active} && ! $self->is_active;
 
   my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now );
 
@@ -312,6 +357,76 @@ sub _estimated_remaining_funded_lifetime {
   $periods = int($periods) if $args->{ignore_partial_charge_periods};
 
   return $periods * $self->charge_frequency;
+};
+
+has last_psync_shortfall => (
+  is => 'rw',
+  isa => TimeInterval,
+  predicate => 'has_last_psync_shortfall',
+  traits => [ qw(Copy) ],
+);
+
+sub _maybe_send_psync_quote {
+  my ($self) = @_;
+  return unless $self->is_active;
+  return unless grep(! $_->is_abandoned, $self->all_charges) > 0;
+
+  my $shortfall = $self->_predicted_shortfall;
+  my $had_last_shortfall = $self->has_last_psync_shortfall;
+  my $last_shortfall = $self->last_psync_shortfall // 0;
+
+#  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
+
+  # If you're going to run out of funds during your final charge
+  # period, we don't care.  In general, we plan to have
+  # charge_frequency stick with its default value always: days(1).  If
+  # you were to use a days(30) charge frequency, this could mean that
+  # someone could easily miss 29 days of service, which is potentially
+  # more obnoxious than losing 23 hours. -- rjbs, 2012-03-16
+  return if abs($shortfall - $last_shortfall) < $self->charge_frequency;
+
+  $self->last_psync_shortfall($shortfall);
+  return if ! $had_last_shortfall && $shortfall <= 0;
+
+  my @old_quotes = $self->ledger->find_old_psync_quotes($self->xid);
+
+  # OLD date is the one we had before the service upgrade, which will be RESTORED
+  # if the user pays the invoice
+  my $old_exp_date =  Moonpig->env->now +
+    $self->want_to_live +
+    $self->replacement_chain_lifetime({ include_expected_funds => 1 });
+
+  my $notice_info = {
+
+    old_expiration_date => $old_exp_date,
+
+    # NEW date is the one caused by the service upgrade, which will
+    # PERSIST if the user DOES NOT pay the invoice
+    new_expiration_date => $old_exp_date - $shortfall,
+  };
+
+  if ($shortfall > 0) {
+    $self->ledger->start_quote({ psync_for_xid => $self->xid });
+    $self->_issue_psync_charges($shortfall);
+    $notice_info->{quote} = $self->ledger->end_quote($self);
+  }
+
+  $self->ledger->_send_psync_email($self, $notice_info);
+
+  $_->mark_abandoned() for @old_quotes;
+}
+
+sub _issue_psync_charges {
+  my ($self, $shortfall) = @_;
+  my $shortfall_days = ceil($shortfall / days(1));
+  my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
+  $self->charge_current_invoice({
+    extra_tags => [ 'moonpig.psync' ],
+    description => sprintf("Shortfall of $shortfall_days %s",
+                           $shortfall_days == 1 ? "day" : "days"),
+    amount => $amount,
+  }) if $amount > 0;
+  $self->replacement->_issue_psync_charges($shortfall) if $self->has_replacement;
 }
 
 1;

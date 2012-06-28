@@ -342,12 +342,13 @@ sub quote_for_extended_service {
 }
 
 sub start_quote {
-  my ($self) = @_;
+  my ($self, $quote_args) = @_;
+  $quote_args //= {};
   if ($self->has_current_invoice) {
     my $invoice = $self->current_invoice;
     $invoice->mark_closed; # XXX someone should garbage-collect chargeless invoices
   }
-  return $self->current_invoice(class("Invoice::Quote"));
+  return $self->current_invoice(class("Invoice::Quote"), $quote_args);
 }
 
 sub end_quote {
@@ -356,6 +357,14 @@ sub end_quote {
   $quote->record_first_consumer($first_consumer);
   $quote->mark_closed;
   return $quote;
+}
+
+sub find_old_psync_quotes {
+  my ($self, $xid) = @_;
+  my @q = grep { ! $_->is_abandoned && ! $_->is_executed &&
+                   $_->is_psync_quote && $_->psync_for_xid eq $xid }
+    $self->quotes;
+  return @q;
 }
 
 # Compile-time generation of accessors for invoice and journal subcomponents
@@ -391,7 +400,8 @@ sub _generate_chargecollection_methods {
     });
 
     my $_ensure_one_thing = sub {
-      my ($self, $class) = @_;
+      my ($self, $class, $args) = @_;
+      $args //= {};
 
       $class ||= $default_class;
       my $things = $self->$reader;
@@ -401,6 +411,7 @@ sub _generate_chargecollection_methods {
 
       my $thing = $class->new({
         ledger => $self,
+        %$args,
       });
 
       $self->$push($thing);
@@ -410,8 +421,8 @@ sub _generate_chargecollection_methods {
     Sub::Install::install_sub({
       as   => "current_$thing",
       code => sub {
-        my ($self, $class) = @_;
-        $self->$_ensure_one_thing($class);
+        my ($self, $class, $args) = @_;
+        $self->$_ensure_one_thing($class, $args);
         $self->$reader->[-1];
       }
     });

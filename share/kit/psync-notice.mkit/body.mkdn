@@ -1,0 +1,11 @@
+{{ $date_format = "%B %e, %Y";  # Jan  9, 2000.
+   $SHHH = "" }}
+
+You've recently updated your service {{ $consumer->xid }}.
+Due to those changes, your account price has decreased.
+
+Your account was due to expire after {{ $old_expiration_date->strftime($date_format) }}.  Because of the lower
+rate, it will now expire on {{ $new_expiration_date->strftime($date_format) }} instead.
+
+This message is for your information only. You need take no further
+action.

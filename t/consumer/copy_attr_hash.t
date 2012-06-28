@@ -52,6 +52,8 @@ test by_time => sub {
 
     my $h = $stuff->{consumer}->copy_attr_hash__();
     cmp_deeply([keys %$h],
+               # last_psync_shortfall is missing here because it won't have a value for
+               # these consumers
                bag(grep { 'last_charge_date' ne $_ } @basic, @makes_replacement,
                    qw(charge_description charge_frequency
                       charge_amount cost_period grace_period_duration
