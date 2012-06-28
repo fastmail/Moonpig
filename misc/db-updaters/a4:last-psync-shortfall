@@ -1,0 +1,19 @@
+use 5.14.1;
+
+# initialize the last_psync_shortfall in every ByTime consumer to 0
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    print "Ledger " . $ledger->ident . "\n";
+    for my $consumer ($ledger->consumers) {
+      next unless $consumer->does("Moonpig::Role::Consumer::ByTime");
+      print "  Consumer " . $consumer->ident . " " . $consumer->guid . "\n";
+      $consumer->{last_psync_shortfall} = 0;
+    }
+  }
+);
+
