@@ -126,10 +126,10 @@ test 'single consumer' => sub {
       like($body, qr/\S/, "psync mail body is not empty");
       like($body, qr/to make payment/i, "this is the request for payment");
       like($body, qr/\$10\.00/, "found correct charge amount");
-      my ($new_date) = $body =~ qr/expected to continue until\s+(\w+day, \w+ [\d ]\d, \d{4})/;
-      is ($new_date, "Monday, January 10, 2000", "new expiration date");
-      my ($old_date) = $body =~ qr/extend service to\s+(\w+day, \w+ [\d ]\d, \d{4})/;
-      is ($old_date, "Saturday, January 15, 2000", "old expiration date");
+      my ($new_date) = $body =~ qr/expected to continue until\s+(\w+ [\d ]\d, \d{4})/;
+      is ($new_date, "January 10, 2000", "new expiration date");
+      my ($old_date) = $body =~ qr/extend service to\s+(\w+ [\d ]\d, \d{4})/;
+      is ($old_date, "January 15, 2000", "old expiration date");
     };
     # We now have $8 and have used up 5 days
 
@@ -140,10 +140,10 @@ test 'single consumer' => sub {
       my ($delivery) = get_single_delivery("one email delivery (the psync notice)");
       my $body = body($delivery);
       like($body, qr/your account price has decreased/i, "this is the nonpayment notice");
-      my ($new_date) = $body =~ qr/will now expire on\s+(\w+day, (\w+) [\d ]\d, \d{4})/;
-      is ($new_date, "Sunday, January 22, 2000", "new expiration date");
-      my ($old_date) = $body =~ qr/was due to expire after\s+(\w+day, \w+ [\d ]\d, \d{4})/;
-      is ($old_date, "Saturday, January 15, 2000", "old expiration date");
+      my ($new_date) = $body =~ qr/will now expire on\s+(\w+ [\d ]\d, \d{4})/;
+      is ($new_date, "January 22, 2000", "new expiration date");
+      my ($old_date) = $body =~ qr/was due to expire after\s+(\w+ [\d ]\d, \d{4})/;
+      is ($old_date, "January 15, 2000", "old expiration date");
     };
 
   };

@@ -1,4 +1,4 @@
-{{ $date_format = "%A, %B %e, %Y";  # Sunday, Jan  9, 2000.
+{{ $date_format = "%B %e, %Y";  # Jan  9, 2000.
    $SHHH = "" }}
 
 You've recently updated your service {{ $consumer->xid }}.
