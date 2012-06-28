@@ -662,7 +662,8 @@ sub cashout_unapplied_amount {
   return unless $balance > 0;
 
   my @source_pairs = $self->effective_funding_pairs;
-  my @credits = map { $source_pairs[$_] } grep { ! $_ % 2 } keys @source_pairs;
+  my %source_hash  = map {; ref $_ ? $_->guid : $_ } @source_pairs;
+  my @credits = grep { ref } @source_pairs;
 
   # This is the order in which we will refund:  first, to non-refundable
   # credits (because we use up "real money" first); within those, to the
@@ -674,9 +675,9 @@ sub cashout_unapplied_amount {
   while ($balance and @credits) {
     my $next_credit = shift @credits;
 
-    my $to_xfer = $balance <= $next_credit->applied_amount
+    my $to_xfer = $balance <= $source_hash{ $next_credit->guid }
                 ? $balance
-                : $next_credit->applied_amount;
+                : $source_hash{ $next_credit->guid };
 
     $self->ledger->accountant->create_transfer({
       type   => 'cashout',
