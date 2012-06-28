@@ -130,6 +130,10 @@ test 'single consumer' => sub {
       is ($new_date, "January 10, 2000", "new expiration date");
       my ($old_date) = $body =~ qr/extend service to\s+(\w+ [\d ]\d, \d{4})/;
       is ($old_date, "January 15, 2000", "old expiration date");
+
+      my ($pay_page_url) = $body =~ m{(https://www.pobox.com/pay\?quote=[0-9A-F-]+)};
+      my ($q) = $ledger->quotes;
+      is($pay_page_url, "https://www.pobox.com/pay?quote=" . $q->guid, "pay url");
     };
     # We now have $8 and have used up 5 days
 

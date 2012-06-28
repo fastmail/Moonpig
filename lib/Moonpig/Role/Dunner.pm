@@ -199,6 +199,7 @@ sub _send_psync_email {
       old_expiration_date => $info->{old_expiration_date},
       new_expiration_date => $info->{new_expiration_date},
       $quote ? (charge_amount => $quote->total_amount) : (),
+      $quote ? (quote_guid => $quote->guid)            : (),
       ledger       => $self,
       consumer     => $consumer,
     },
