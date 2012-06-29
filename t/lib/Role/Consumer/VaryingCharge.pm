@@ -21,13 +21,16 @@ has charge_description => (
   traits => [ qw(Copy) ],
 );
 
-around initial_invoice_charge_pairs => sub {
+around initial_invoice_charge_structs => sub {
   my ($orig, $self, @args) = @_;
-  return $self->charge_pairs_on();
+  return $self->charge_structs_on();
 };
 
-sub charge_pairs_on {
-  return ($_[0]->charge_description => $_[0]->total_charge_amount);
+sub charge_structs_on {
+  return({
+    description => 'charge',
+    amount      => $_[0]->total_charge_amount,
+  });
 }
 
 1;
