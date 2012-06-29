@@ -28,8 +28,7 @@ publish replacement_chain_expiration_date => {
   $opts->{amount} //= $self->unapplied_amount;
   $opts->{ignore_partial_charge_periods} //= 1;
 
-  return(Moonpig->env->now +
-         $self->_estimated_remaining_funded_lifetime($opts) +
+  return($self->expiration_date +
          $self->replacement_chain_lifetime($opts));
 };
 
