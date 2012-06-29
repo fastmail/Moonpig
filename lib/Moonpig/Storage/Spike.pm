@@ -394,7 +394,7 @@ sub do_ro_with_ledgers {
     splice @_, 1, 0, {}; # $opts was omitted, so splice it in
   }
   my ($self, $opts, $guids, $code) = @_;
-  croak "ro option forbidden in do_rw_with_ledgers" if exists $opts->{ro};
+  croak "ro option forbidden in do_ro_with_ledgers" if exists $opts->{ro};
   $self->do_with_ledgers({ %$opts, ro => 1 }, $guids, $code);
 }
 
