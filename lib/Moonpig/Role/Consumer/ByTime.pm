@@ -31,11 +31,11 @@ requires 'charge_pairs_on';
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
-    'heartbeat' => {
-      maybe_psync => Moonpig::Events::Handler::Method->new(
-        method_name => '_maybe_send_psync_quote',
-       ),
-    }
+#    'heartbeat' => {
+#      maybe_psync => Moonpig::Events::Handler::Method->new(
+#        method_name => '_maybe_send_psync_quote',
+#       ),
+#    }
   };
 };
 
