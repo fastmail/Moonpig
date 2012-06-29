@@ -62,7 +62,7 @@ sub replacement_chain_lifetime {
 # Use an "around" modifier to override this if your consumer actually
 # needs to do it
 sub _estimated_remaining_funded_lifetime {
-  confess("Role::Consumer::ByUsage::_estimated_remaining_funded_lifetime unimplemented");
+  confess("_estimated_remaining_funded_lifetime unimplemented");
 }
 
 PARTIAL_PACK {
