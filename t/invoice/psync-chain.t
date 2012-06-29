@@ -146,8 +146,9 @@ test 'psync chains' => sub {
     subtest "psync email" => sub {
       Moonpig->env->process_email_queue;
       # throw away the invoice.
-      my @deliveries = grep {$_->{email}->header('Subject') ne "PAYMENT IS DUE"}
-        Moonpig->env->email_sender->deliveries;
+      my @deliveries = grep
+        {$_->{email}->header('Subject') ne "Your expiration date has changed"
+      } Moonpig->env->email_sender->deliveries;
       is(@deliveries, 1, "psync quote was emailed");
       Moonpig->env->email_sender->clear_deliveries;
     };

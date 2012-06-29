@@ -161,7 +161,7 @@ sub _send_invoice_email {
   $self->handle_event(event('send-mkit', {
     kit => 'invoice',
     arg => {
-      subject => "PAYMENT IS DUE",
+      subject => "Payment is due",
 
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
@@ -191,7 +191,7 @@ sub _send_psync_email {
   $self->handle_event(event('send-mkit', {
     kit => $quote ? 'psync' : 'psync-notice',
     arg => {
-      subject => "PAYMENT IS NOT DUE",
+      subject => "Your expiration date has changed",
 
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
