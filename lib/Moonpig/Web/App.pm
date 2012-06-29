@@ -80,6 +80,7 @@ sub app {
     my ($env) = @_;
 
     my $storage = Moonpig->env->storage;
+    $storage->reset_connection;
 
     my $req = Plack::Request->new($env);
     my @path = split q{/}, $req->path_info;
@@ -90,7 +91,7 @@ sub app {
                     ? 'do_ro'
                     : 'do_rw';
 
-      return Moonpig->env->storage->$do_method(sub {
+      return $storage->$do_method(sub {
         # XXX: IF WE ARE IN TESTING MODE -- rjbs, 2011-03-30
         if (1) {
           my $res = test_routes(\@path, $storage);

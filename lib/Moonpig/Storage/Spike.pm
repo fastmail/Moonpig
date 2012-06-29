@@ -55,7 +55,15 @@ has _conn => (
   init_arg => undef,
   handles  => [ qw(txn) ],
   builder  => '_new_connection',
+  clearer  => '_clear_connection',
 );
+
+sub reset_connection {
+  my ($self) = @_;
+  Moonpig::X->throw("can't reset connection during transaction")
+    if $self->_in_transaction;
+  $self->_clear_connection;
+}
 
 sub _new_connection {
   my ($self) = @_;
