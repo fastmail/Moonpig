@@ -1,5 +1,4 @@
 <!-- CONTENT -->
 
 -- 
-http://www.fauxbox.com/
-Copyright (C) IC Group, Inc. 1995-2008. All Rights Reserved.
+Copyright (C) IC Group, Inc. 1995-2012. All Rights Reserved.
