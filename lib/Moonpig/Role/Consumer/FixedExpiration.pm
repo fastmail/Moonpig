@@ -39,4 +39,12 @@ sub estimated_lifetime {
   return $self->expiration_date - $self->activated_at;
 }
 
+around _estimated_remaining_funded_lifetime => sub {
+  my ($orig, $self) = @_;
+
+  Moonpig::X->throw("inactive consumer forbidden") unless $self->is_active;
+
+  return $self->remaining_life;
+};
+
 1;
