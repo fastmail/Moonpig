@@ -113,14 +113,16 @@ test 'setup sanity checks' => sub {
 
 sub close_enough {
   my ($a, $b, $msg) = @_;
-  ok(abs($a - $b) < 1, $msg);
+  note "Is $a close to $b ?";
+  ok(abs($a - $b) <= 1, $msg);
 }
 
 test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
 
-    # At this point, 14 days and $14 remain
+    # At this point, 14 days and $14 remain on each of three consumers
+    # $14 = $196/42
 
     subtest "psync quote" => sub {
       $_->total_charge_amount(dollars(20)) for $c, $d, $e;
@@ -129,7 +131,7 @@ test 'psync chains' => sub {
       is($_->_predicted_shortfall, days(4.2), "extra charge -> shortfall 4.2 days")
         for $c, $d, $e;
       elapse($ledger, 2);
-      # At this point, 12 days and $548/14 ~=~ $40.57 remain
+      # At this point, 12 days and $156/14 ~=~ $11.14 remain on $c; $14 remains on $d and $e
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
@@ -161,7 +163,14 @@ test 'psync chains' => sub {
                    "active consumer still has a shortfall");
       is($_->_predicted_shortfall, days(0), "inactive consumers no longer have a shortfall")
         for $d, $e;
+
+      $c->_maybe_send_psync_quote();
+      my ($delivery) = get_single_delivery();
+      is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
+      is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
+      close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
     };
+
   };
 
 };

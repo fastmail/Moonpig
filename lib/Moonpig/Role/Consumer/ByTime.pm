@@ -418,6 +418,7 @@ sub _maybe_send_psync_quote {
 
 sub _issue_psync_charges {
   my ($self, $shortfall) = @_;
+  $shortfall //= $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
   my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
   $self->charge_current_invoice({
@@ -426,7 +427,7 @@ sub _issue_psync_charges {
                            $shortfall_days == 1 ? "day" : "days"),
     amount => $amount,
   }) if $amount > 0;
-  $self->replacement->_issue_psync_charges($shortfall) if $self->has_replacement;
+  $self->replacement->_issue_psync_charges() if $self->has_replacement;
 }
 
 1;
