@@ -165,7 +165,6 @@ test 'psync chains' => sub {
         for $d, $e;
 
       $c->_maybe_send_psync_quote();
-      my ($delivery) = get_single_delivery();
       is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
       is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
       close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
@@ -173,6 +172,27 @@ test 'psync chains' => sub {
 
   };
 
+};
+
+# This is analogous to what happens when a pobox-basic customer
+# ($20/yr) who has paid three years in advance upgrades their service
+# to mailstore ($50/yr) halfway through the first year.
+test 'mailstore sorta' => sub {
+  do_test {
+    my ($ledger, $c, $d, $e) = @_;
+    elapse($ledger, 7);
+    # $c now has 7 days and $7 left; $d and $e have 14 days and $14
+    $_->total_charge_amount(dollars(35)) for $c, $d, $e;
+    # Now using up $2.50 per day
+    #   $c's $7 will last 2.8 days for a shortfall of 4.2 days ($10.50 needed)
+    #   $d's $14 will last 5.6 days for a shortfall of 8.4 days ($21 needed)
+    #   $e is like $d
+    $c->_maybe_send_psync_quote();
+    is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+    is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
+    is($ch[0]->amount,  dollars(10.50), "active consumer charge amount");
+    is($ch[$_]->amount, dollars(21), "inactive consumer $_ charge amount") for 1, 2;
+  };
 };
 
 run_me;
