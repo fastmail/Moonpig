@@ -9,8 +9,6 @@ use Moonpig::Util qw(days dollars);
 use Stick::Util qw(ppack);
 use Scalar::Util qw(reftype);
 
-plan skip_all => "psyncing is disabled in this revision";
-
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',
