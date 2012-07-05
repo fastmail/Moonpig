@@ -590,8 +590,8 @@ sub amount_overearmarked {
 sub _send_mkit {
   my ($self, $event, $arg) = @_;
 
-  my $to   = [ $self->contact->email_addresses ];
-  my $from = Moonpig->env->from_email_address_mailbox;
+  my $to   = $event->payload->{envelope_recipients} // [ $self->contact->email_addresses ];
+  my $from = $event->payload->{envelope_sender} // Moonpig->env->from_email_address_mailbox;
 
   my $email = Moonpig->env->mkits->assemble_kit(
     $event->payload->{kit},
