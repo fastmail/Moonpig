@@ -313,7 +313,9 @@ sub __with_update_mode {
 
   if ($at_top and ! $self->_ledger_cache_is_empty) {
     my $error = "ledger cache not empty when beginning top-level xact";
-    Moonpig->env->send_exception_report($error);
+    Moonpig->env->report_exception(
+      [ [ exception => $error ] ]
+    );
     Moonpig::X->throw($error);
   }
 
@@ -860,14 +862,17 @@ sub _store_ledger {
     my $error = $_;
 
     Moonpig->env->report_exception(
-      Carp::longmess("error while saving ledger"),
-      {
-        ledger_guid => $ledger->guid,
-        error       => $error,
-        cache_keys  => [ keys %{ {$self->_ledger_cache_contents} } ],
-        xact_stack  => $self->_update_mode_stack,
-        active_xids => [ $ledger->active_xids ],
-      }
+      [
+        [ exception => Carp::longmess("error while saving ledger") ],
+        [ misc => {
+          ledger_guid => $ledger->guid,
+          error       => $error,
+          cache_keys  => [ keys %{ {$self->_ledger_cache_contents} } ],
+          xact_stack  => $self->_update_mode_stack,
+          active_xids => [ $ledger->active_xids ],
+        } ],
+      ],
+      { handled => 1 },
     );
 
     die $error;

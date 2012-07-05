@@ -64,7 +64,7 @@ test 'immediate cust srv req' => sub {
     });
 
     Moonpig->env->file_customer_service_request($ledger, {});
-    Moonpig->env->report_exception("ERROR!!");
+    Moonpig->env->report_exception([ [ error => "ERROR!!" ] ]);
 
     my @deliveries = Moonpig->env->email_sender->deliveries;
     is(@deliveries, 1, "we sent one email immediately");
