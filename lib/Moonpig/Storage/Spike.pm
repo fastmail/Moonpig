@@ -405,8 +405,10 @@ sub do_with_each_ledger {
     splice @_, 1, 0, {}; # $opts was omitted, so splice it in
   }
   my ($self, $opts, $code) = @_;
-  for my $guid ($self->ledger_guids) {
-    $self->do_with_ledgers($opts, [$guid], $code);
+  my @guids = $self->ledger_guids;
+  for my $i (0 .. $#guids) {
+    local ${^Progress} = [ $i, scalar(@guids) ]; # progress meter
+    $self->do_with_ledgers($opts, [ $guids[$i] ], $code);
   }
 }
 
