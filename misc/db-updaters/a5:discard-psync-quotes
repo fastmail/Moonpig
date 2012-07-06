@@ -1,0 +1,28 @@
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+use Moonpig::Types qw(GUID);
+
+$|=1;
+
+# Psync quotes are all erroneous. Destroy them all.
+
+my $I = 0;
+my $Q = 0;
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    my ($a, $b) = @{${^Progress}};
+    print "ledger " . $ledger->ident . "\n";
+    for my $quote ($ledger->quotes) {
+      $Q++;
+      next unless $quote->is_psync_quote;
+      print "Psync quote " . $quote->ident . "\n";
+      $quote->mark_abandoned;
+      $I++;
+    }
+    printf STDERR "%d/%d %.2f (%d/%d marked abandoned)\n", $a, $b, 100*$a/$b, $I, $Q;
+  }
+);
+
