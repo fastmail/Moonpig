@@ -402,7 +402,7 @@ sub _maybe_send_psync_quote {
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
-    new_expiration_date => $self->expiration_date,
+    new_expiration_date => $self->replacement_chain_expiration_date(),
   };
 
   if ($shortfall > 0) {
