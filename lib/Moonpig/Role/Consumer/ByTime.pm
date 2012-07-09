@@ -271,6 +271,11 @@ sub want_to_live {
   }
 }
 
+sub replacement_chain_want_to_live {
+  my ($self) = @_;
+  sumof { $_->want_to_live } $self->replacement_chain;
+}
+
 # how much sooner will we run out of money than when we would have
 # expected to run out?  Might return a negative value if the consumer
 # has too much money. The caller of this function may therefore want
@@ -394,7 +399,7 @@ sub _maybe_send_psync_quote {
   # if the user pays the invoice
   my $old_exp_date =  Moonpig->env->now +
     $self->want_to_live +
-    $self->replacement_chain_lifetime({ include_expected_funds => 1 });
+    $self->replacement_chain_want_to_live;
 
   my $notice_info = {
 
