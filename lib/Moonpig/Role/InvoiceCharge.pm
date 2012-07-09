@@ -6,6 +6,7 @@ with(
   'Moonpig::Role::Charge',
   'Moonpig::Role::ConsumerComponent',
   'Moonpig::Role::HandlesEvents',
+  'Moonpig::Role::Charge::RequiresPositiveAmount',
 );
 
 use namespace::autoclean;
