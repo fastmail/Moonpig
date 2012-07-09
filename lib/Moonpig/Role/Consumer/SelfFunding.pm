@@ -33,7 +33,7 @@ has self_funding_credit_roles => (
 );
 
 has self_funding_credit_amount => (
-  is  => 'ro',
+  is  => 'rw',
   isa => PositiveMillicents,
   lazy => 1,
   required => 1,
@@ -47,6 +47,11 @@ has self_funding_credit_amount => (
     return $amount;
   },
 );
+
+sub adjust_self_funding_credit_amount {
+  my ($self, $adjustment) = @_;
+  $self->self_funding_credit_amount($adjustment + $self->self_funding_credit_amount);
+}
 
 sub self_fund {
   my ($self) = @_;
