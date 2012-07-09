@@ -412,7 +412,8 @@ sub _maybe_send_psync_quote {
 
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
-    $self->_issue_psync_charges($shortfall);
+    $self->_issue_psync_charge($shortfall);
+    $_->_issue_psync_charge() for $self->replacement_chain;
     $notice_info->{quote} = $self->ledger->end_quote($self);
   }
 
@@ -421,7 +422,7 @@ sub _maybe_send_psync_quote {
   $_->mark_abandoned() for @old_quotes;
 }
 
-sub _issue_psync_charges {
+sub _issue_psync_charge {
   my ($self, $shortfall) = @_;
   $shortfall //= $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
@@ -432,7 +433,6 @@ sub _issue_psync_charges {
                            $shortfall_days == 1 ? "day" : "days"),
     amount => $amount,
   }) if $amount > 0;
-  $self->replacement->_issue_psync_charges() if $self->has_replacement;
 }
 
 1;
