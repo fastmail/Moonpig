@@ -10,6 +10,11 @@ use MooseX::Types::Moose qw(ArrayRef Str);
 use Moonpig::Behavior::Packable;
 
 use Moonpig::Behavior::EventHandlers;
+
+with(
+  'Moonpig::Role::Consumer',
+);
+
 implicit_event_handlers {
   return {
     'activated' => {
@@ -19,10 +24,6 @@ implicit_event_handlers {
     },
   }
 };
-
-with(
-  'Moonpig::Role::Consumer',
-);
 
 use namespace::autoclean;
 
