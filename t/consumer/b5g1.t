@@ -2,7 +2,7 @@ use 5.12.0;
 use warnings;
 
 use Carp qw(confess croak);
-use Moonpig::Util qw(class days dollars months sumof to_dollars years);
+use Moonpig::Util qw(class days dollars months sumof to_dollars);
 use Test::More;
 use Test::Routine;
 use Test::Routine::Util;
@@ -82,7 +82,7 @@ test 'signup for five, get one free' => sub {
       b5 => {
         xid      => $self->xid,
         template => 'b5g1_paid',
-        minimum_chain_duration => years(5),
+        minimum_chain_duration => days(50),
       },
     },
     sub {
@@ -118,7 +118,7 @@ test 'signup for one, buy five more, have one' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_duration => years(5) });
+             ->adjust_replacement_chain({ chain_duration => days(50) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(500));
@@ -150,7 +150,7 @@ test 'signup for one, buy six, get one free' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_duration => years(6) });
+             ->adjust_replacement_chain({ chain_duration => days(60) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(600));
@@ -181,7 +181,7 @@ test 'signup for one, buy eleven, get two free' => sub {
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
-             ->adjust_replacement_chain({ chain_duration => years(11) });
+             ->adjust_replacement_chain({ chain_duration => days(110) });
 
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(1100));
@@ -207,7 +207,7 @@ test 'signup for eleven, get two free' => sub {
       b5 => {
         xid      => $self->xid,
         template => 'b5g1_paid',
-        minimum_chain_duration => years(11),
+        minimum_chain_duration => days(110),
       },
     },
     sub {
@@ -245,7 +245,7 @@ test 'signup for one, quote five more, have one' => sub {
       $ledger->heartbeat;
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
-      my $quote = $ledger->quote_for_extended_service($self->xid, years(5));
+      my $quote = $ledger->quote_for_extended_service($self->xid, days(50));
 
       is(
         $ledger->active_consumer_for_xid($self->xid)->guid,
@@ -283,7 +283,7 @@ test 'already invoiced for 1, get quote for 4, get one free' => sub {
 
       is($ledger->amount_due, dollars(100), 'we owe $100 already');
 
-      my $quote = $ledger->quote_for_extended_service($self->xid, years(4));
+      my $quote = $ledger->quote_for_extended_service($self->xid, days(40));
 
       is(
         $ledger->active_consumer_for_xid($self->xid)->guid,
