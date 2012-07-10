@@ -102,6 +102,65 @@ test 'signup for five, get one free' => sub {
   );
 };
 
+test 'SelfFunding funds -initial- charge amount' => sub {
+  my ($self) = @_;
+
+  # local $ENV{MOONPIG_TRACE_EVENTS} = 1;
+
+  Moonpig->env->stop_clock;
+
+  do_with_fresh_ledger(
+    {
+      b5 => {
+        xid      => $self->xid,
+        template => 'b5g1_paid',
+        minimum_chain_duration => days(50),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      $ledger->heartbeat;
+      $self->pay_unpaid_invoices($ledger, dollars(500));
+
+      my $summ = $self->b5_summary($ledger);
+
+      is($summ->consumers, 6, "there are six consumers");
+
+      is($summ->paid_consumers, 5, "five are paid");
+      is($summ->free_consumers, 1, "one is free");
+      is_deeply([$summ->free_indexes], [5], "...and the free one is last");
+
+      $_->total_charge_amount(dollars(120)) for $summ->consumers;
+
+      my @current = ($summ->consumers)[0];
+      my ($free) = $summ->free_consumers;
+
+      my $xid = $free->xid;
+
+      while ($ledger->active_consumers) {
+        my $active = $ledger->active_consumer_for_xid($xid);
+        if ($active->guid ne $current[-1]->guid) {
+          push @current, $active;
+          my $dur = Moonpig->env->now - ($summ->consumers)[0]->activated_at;
+          note("failed $#current over after " . $dur/86400 . "days");
+        }
+
+        Moonpig->env->elapse_time(days(1));
+        $ledger->heartbeat;
+      }
+
+      my $dur = Moonpig->env->now - ($summ->consumers)[0]->activated_at;
+      note("chain expired after " . $dur/86400 . "days");
+
+      my @sf_credits = grep { $_->does('Moonpig::Role::Credit::Discount') }
+                       $ledger->credits;
+      is(@sf_credits, 1, "we made one self-funding credit");
+      is($sf_credits[0]->amount, dollars(100), "for the initial amount");
+    },
+  );
+};
+
 test 'signup for one, buy five more, have one' => sub {
   my ($self) = @_;
   do_with_fresh_ledger(
