@@ -30,12 +30,21 @@ test 'zero amounts' => sub {
       }, undef, "$method with zero amount");
     }
 
+    ok(class("LineItem")->new({ amount => dollars(0),
+                                description => "lineitem zero" }),
+       "zero-amount line item");
+
+    ok(class("LineItem")->new({ amount => dollars(-1),
+                                description => "lineitem zero" }),
+       "negative-amount line item");
+
     my $line_item = class("LineItem")->new({ amount => dollars(1),
                                              description => "lineitem" });
-    is($line_item->amount, 0, "LineItem amount overridden to zero");
+
     $ledger->current_invoice->add_charge($line_item);
     my @all_charges = $ledger->current_invoice->all_charges;
     is(@all_charges, 1, "added line item to current invoice");
+    is($ledger->current_invoice->total_amount, dollars(0), "Line item doesn't count");
   });
 };
 
