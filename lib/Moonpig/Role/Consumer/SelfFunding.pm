@@ -13,6 +13,7 @@ use Moonpig::Behavior::EventHandlers;
 
 with(
   'Moonpig::Role::Consumer',
+  'Moonpig::Role::StubBuild',
 );
 
 implicit_event_handlers {
@@ -49,6 +50,8 @@ has self_funding_credit_amount => (
     return $amount;
   },
 );
+
+after BUILD => sub { $_[0]->self_funding_credit_amount };
 
 sub self_fund {
   my ($self) = @_;
