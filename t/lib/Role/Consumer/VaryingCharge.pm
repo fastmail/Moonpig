@@ -14,13 +14,20 @@ with(
   'Moonpig::Role::Consumer::ByTime',
 );
 
+has charge_description => (
+  is => 'ro',
+  isa => 'Str',
+  default => 'charge',
+  traits => [ qw(Copy) ],
+);
+
 around initial_invoice_charge_pairs => sub {
   my ($orig, $self, @args) = @_;
   return $self->charge_pairs_on();
 };
 
 sub charge_pairs_on {
-  return ('charge' => $_[0]->total_charge_amount);
+  return ($_[0]->charge_description => $_[0]->total_charge_amount);
 }
 
 1;

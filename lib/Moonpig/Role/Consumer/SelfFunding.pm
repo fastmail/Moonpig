@@ -10,6 +10,12 @@ use MooseX::Types::Moose qw(ArrayRef Str);
 use Moonpig::Behavior::Packable;
 
 use Moonpig::Behavior::EventHandlers;
+
+with(
+  'Moonpig::Role::Consumer',
+  'Moonpig::Role::StubBuild',
+);
+
 implicit_event_handlers {
   return {
     'activated' => {
@@ -20,16 +26,13 @@ implicit_event_handlers {
   }
 };
 
-with(
-  'Moonpig::Role::Consumer',
-);
-
 use namespace::autoclean;
 
 has self_funding_credit_roles => (
-  is  => 'ro',
   isa => ArrayRef[ Str ],
+  traits  => [ 'Array' ],
   default => sub { [ 'Credit::Discount' ] },
+  handles => { self_funding_credit_roles => 'elements' },
 );
 
 has self_funding_credit_amount => (
@@ -48,6 +51,8 @@ has self_funding_credit_amount => (
   },
 );
 
+after BUILD => sub { $_[0]->self_funding_credit_amount };
+
 sub adjust_self_funding_credit_amount {
   my ($self, $adjustment) = @_;
   $self->self_funding_credit_amount($adjustment + $self->self_funding_credit_amount);
@@ -56,10 +61,10 @@ sub adjust_self_funding_credit_amount {
 sub self_fund {
   my ($self) = @_;
 
-  my $amount = $self->amount;
+  my $amount = $self->self_funding_credit_amount;
 
   my $credit = $self->ledger->add_credit(
-    class( $self->credit_roles ),
+    class( $self->self_funding_credit_roles ),
     { amount => $amount }
   );
 
