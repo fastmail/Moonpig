@@ -30,6 +30,12 @@ use Stick::Types qw(StickBool);
 
 use namespace::autoclean;
 
+sub accepts_charge {
+  my ($self, $charge) = @_;
+  $charge->does("Moonpig::Role::InvoiceCharge") ||
+  $charge->does("Moonpig::Role::LineItem");
+}
+
 has paid_at => (
   isa => Time,
   init_arg  => undef,

@@ -20,9 +20,11 @@ parameter charge_role => (
 role {
   my $p = shift;
 
+  requires 'accepts_charge';
+
   has charges => (
     is  => 'ro',
-    isa => ArrayRef[ "Moonpig::Types::" . $p->charge_role ],
+    isa => ArrayRef[ "Moonpig::Types::Charge" ],
     init_arg => undef,
     default  => sub {  []  },
     traits   => [ 'Array' ],
@@ -53,7 +55,7 @@ role {
     my $charge = $self->_objectify_charge( $charge_input );
 
     Moonpig::X->throw("bad charge type")
-      unless $charge->does( 'Moonpig::Role::' . $p->charge_role );
+      unless $self->accepts_charge($charge);
 
     $self->_add_charge($charge);
 

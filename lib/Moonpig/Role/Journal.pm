@@ -17,6 +17,10 @@ with(
 
 use namespace::autoclean;
 
+sub accepts_charge {
+  my ($self, $charge) = @_;
+  $charge->does("Moonpig::Role::JournalCharge");
+}
 
 # from: source of money transfer
 # to: destination of money transfer
