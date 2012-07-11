@@ -241,7 +241,7 @@ PARTIAL_PACK {
     paid_at      => $self->paid_at,
     closed_at    => $self->closed_at,
     created_at   => $self->date,
-    charges      => [ map {; ppack($_) } $self->all_charges ],
+    charges      => [ map {; ppack($_) } $self->all_items ],
     is_quote     => $self->is_quote,
     is_internal  => $self->is_internal,
     abandoned_at => $self->abandoned_at,

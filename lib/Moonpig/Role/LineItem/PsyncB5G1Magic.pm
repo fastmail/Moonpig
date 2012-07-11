@@ -4,6 +4,7 @@ use Moonpig;
 use Moonpig::Types qw(PositiveMillicents);
 
 use Moose::Role;
+use Moonpig::Behavior::Packable;
 with ('Moonpig::Role::LineItem',
       'Moonpig::Role::Charge::Active',
      );
@@ -18,5 +19,13 @@ sub when_paid {
   my ($self) = @_;
   $self->owner->adjust_self_funding_credit_amount($self->adjustment_amount);
 }
+
+sub line_item_type { "psync-b5g1-magic" }
+
+PARTIAL_PACK {
+  my ($self) = @_;
+  return { line_item_adjustment_amount => $self->line_item_adjustment_amount };
+};
+
 
 1;
