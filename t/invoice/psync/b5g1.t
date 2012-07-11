@@ -65,7 +65,7 @@ sub elapse {
 test 'setup sanity checks' => sub {
   do_test {
     my ($ledger, $c, $g) = @_;
-    ok($c);
+    ok($c, "consumer c");
     ok($c->does('Moonpig::Role::Consumer::ByTime'), "consumer c is ByTime");
     ok($c->does("t::lib::Role::Consumer::VaryingCharge"), "consumer c is VaryingCharge");
     { my @chain = ($c, $c->replacement_chain);
@@ -78,9 +78,19 @@ test 'setup sanity checks' => sub {
     ok($g, "consumer g");
     ok($g->does('Moonpig::Role::Consumer::ByTime'), "consumer g is ByTime");
     ok($g->does("Moonpig::Role::Consumer::SelfFunding"), "consumer g is self-funding");
+    is($g->self_funding_credit_amount, dollars(100), "self-funding credit amount is \$100");
 
     my @qu = $ledger->quotes;
     is(@qu, 0, "no quotes");
+  };
+};
+
+test 'build quote' => sub {
+  do_test {
+    my ($ledger, $c, $g) = @_;
+    $c->total_charge_amount(dollars(120));
+    $c->_maybe_send_psync_quote();
+    is(my ($q) = $ledger->quotes, 1, "now one quote");
   };
 };
 
