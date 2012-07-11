@@ -6,7 +6,7 @@ use Test::Fatal;
 use t::lib::TestEnv;
 use Stick::Util qw(ppack);
 
-use Moonpig::Util qw(class days dollars event sumof weeks years);
+use Moonpig::Util qw(class days dollars event sumof to_dollars weeks years);
 
 with(
   't::lib::Factory::EventHandler',
@@ -44,15 +44,7 @@ sub do_test (&) {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
-      my $total = sumof { $_->total_amount } $ledger->payable_invoices;
-      die unless $total == dollars(500);
-      my ($credit) = $ledger->credit_collection->add({
-        type => 'Simulated',
-        attributes => { amount => dollars(500) }
-       });
-      $ledger->name_component("credit", $credit);
-      $ledger->current_invoice->mark_closed;
-      $ledger->process_credits;
+      pay_unpaid_invoices($ledger, dollars(500));
 
       my ($c) = $ledger->get_component('b5');
       my @chain = $c->replacement_chain;
@@ -83,7 +75,7 @@ test 'setup sanity checks' => sub {
 
     is($c->unapplied_amount, dollars(100), "head consumer unapplied amount");
 
-    ok($g);
+    ok($g, "consumer g");
     ok($g->does('Moonpig::Role::Consumer::ByTime'), "consumer g is ByTime");
     ok($g->does("Moonpig::Role::Consumer::SelfFunding"), "consumer g is self-funding");
 
@@ -94,3 +86,20 @@ test 'setup sanity checks' => sub {
 
 run_me;
 done_testing;
+
+sub pay_unpaid_invoices {
+  my ($ledger, $expect) = @_;
+
+  my $total = sumof { $_->total_amount } $ledger->payable_invoices;
+  if (defined $expect) {
+    is(
+      $total,
+      $expect,
+      sprintf("invoices should total \$%.2f", to_dollars($expect)),
+    )
+  } else {
+    note sprintf("Total amount payable: \$%.2f", to_dollars($total));
+  }
+  $ledger->add_credit(class('Credit::Simulated'), { amount => $total });
+  $ledger->process_credits;
+}
