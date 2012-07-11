@@ -88,10 +88,25 @@ test 'setup sanity checks' => sub {
 test 'build quote' => sub {
   do_test {
     my ($ledger, $c, $g) = @_;
-    $c->total_charge_amount(dollars(120));
+    my @chain = ($c, $c->replacement_chain);
+    $_->total_charge_amount(dollars(120)) for @chain;
     $c->_maybe_send_psync_quote();
     is(my ($q) = $ledger->quotes, 1, "now one quote");
+    is(my @ch = $q->all_charges, 6, "it has six items");
+    is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"), @ch), 1,
+       "one special item");
+    ok($special->does("Moonpig::Role::LineItem::PsyncB5G1Magic"),
+       "special item does the right role");
+    is($special->adjustment_amount, dollars(20), "adjustment amount");
   };
+};
+
+test 'adjustment execution' => sub {
+  pass("todo");
+};
+
+test 'adjustment amounts' => sub {
+  pass("todo");
 };
 
 run_me;
