@@ -31,15 +31,21 @@ test 'zero amounts' => sub {
     }
 
     ok(class("LineItem")->new({ amount => dollars(0),
-                                description => "lineitem zero" }),
+                                description => "lineitem zero",
+                                consumer => $c,
+                              }),
        "zero-amount line item");
 
     ok(class("LineItem")->new({ amount => dollars(-1),
-                                description => "lineitem zero" }),
+                                description => "lineitem zero",
+                                consumer => $c,
+                              }),
        "negative-amount line item");
 
     my $line_item = class("LineItem")->new({ amount => dollars(1),
-                                             description => "lineitem" });
+                                             description => "lineitem",
+                                             consumer => $c,
+                                           });
 
     $ledger->current_invoice->add_charge($line_item);
     my @all_charges = $ledger->current_invoice->all_charges;
