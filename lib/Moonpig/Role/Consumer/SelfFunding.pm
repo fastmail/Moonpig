@@ -4,12 +4,10 @@ use Moose::Role;
 
 use Moonpig;
 use Moonpig::Types qw(Factory PositiveMillicents Time TimeInterval);
-use Moonpig::Util qw(class sum);
-use MooseX::Types::Moose qw(ArrayRef Str);
-
+use Moonpig::Util qw(class sum sumof);
 use Moonpig::Behavior::Packable;
-
 use Moonpig::Behavior::EventHandlers;
+use MooseX::Types::Moose qw(ArrayRef Str);
 
 with(
   'Moonpig::Role::Consumer',
@@ -103,9 +101,17 @@ around _issue_psync_charge => sub {
   return unless @ancestor_charges;
   my $average_charge_amount = (sumof { $_->amount } @ancestor_charges) / @ancestor_charges;
 
-  my $line_item = class("LineItem::PsyncB5G1Magic");
-  $self->charge_current_invoice($line_item);
+
+  $self->charge_current_invoice({ adjustment_amount => int($average_charge_amount),
+                                  description => "free consumer extension",
+                                  amount => 0,
+                                });
 };
+
+sub build_invoice_charge {
+  my ($self, $args) = @_;
+  class("LineItem::PsyncB5G1Magic")->new($args);
+}
 
 sub _previous_n_ancestors {
   my ($self, $n) = @_;
