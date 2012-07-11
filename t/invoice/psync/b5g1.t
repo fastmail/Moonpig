@@ -5,6 +5,7 @@ use Test::Fatal;
 
 use t::lib::TestEnv;
 use Stick::Util qw(ppack);
+use List::MoreUtils qw(all);
 
 use Moonpig::Util qw(class days dollars event sumof to_dollars weeks years);
 
@@ -102,7 +103,22 @@ test 'build quote' => sub {
 };
 
 test 'adjustment execution' => sub {
-  pass("todo");
+  do_test {
+    my ($ledger, $c, $g) = @_;
+    my @chain = ($c, $c->replacement_chain);
+    $_->total_charge_amount(dollars(120)) for @chain;
+    $c->_maybe_send_psync_quote();
+    is(my ($q) = $ledger->quotes, 1, "now one quote");
+    is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
+                            $q->all_items),
+       1,
+       "special item does the right role");
+    $q->execute;
+    pay_unpaid_invoices($ledger, dollars(100));
+    ok($q->is_paid, "quote is executed and paid");
+    is($g->self_funding_credit_amount, dollars(120),
+       "self-funding credit amount raised to \$120");
+  };
 };
 
 test 'adjustment amounts' => sub {

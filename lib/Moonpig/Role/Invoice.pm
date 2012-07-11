@@ -163,17 +163,17 @@ implicit_event_handlers {
 sub _pay_charges {
   my ($self, $event) = @_;
 
-  my @charges = grep { ! $_->is_abandoned } $self->all_charges;
+  # Include non-charge items, and charges that are not abandoned
+  my @items = grep { ! ($_->is_charge && $_->is_abandoned) } $self->all_items;
 
   my $collection = $self->ledger->consumer_collection;
-  my @guids     = uniq map { $_->owner_guid } @charges;
+  my @guids     = uniq map { $_->owner_guid } @items;
   my @consumers = grep { $_->is_active || $_->is_expired }
                   map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
 
   $_->acquire_funds for @consumers;
 
-  $_->handle_event($event) for @charges;
-
+  $_->handle_event($event) for @items;
 }
 
 sub __execute_charges_for {
