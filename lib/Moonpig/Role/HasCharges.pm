@@ -29,11 +29,20 @@ role {
     default  => sub {  []  },
     traits   => [ 'Array' ],
     handles  => {
-      all_charges => 'elements',
-      has_charges => 'count',
+      all_items => 'elements',
+      has_items => 'count',
       _add_charge => 'push',
+      _add_item => 'push',
     },
   );
+
+  method all_charges => sub {
+    return grep $_->is_charge, $_[0]->all_items;
+  };
+
+  method has_charges => sub {
+    return scalar($_[0]->all_charges);
+  };
 
   method total_amount => sub {
     my @charges = grep $_->counts_toward_total, $_[0]->all_charges;

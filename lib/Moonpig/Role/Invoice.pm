@@ -127,6 +127,7 @@ sub abandon_with_replacement {
       . $new_invoice->guid
         if $new_invoice->is_closed;
 
+    # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
     for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
       $new_invoice->_add_charge($charge);
     }
@@ -187,7 +188,7 @@ sub __execute_charges_for {
     unless $self->is_closed;
 
   my @charges =
-    grep { ! $_->is_executed }
+    grep { ! $_->is_executed && ! $_->is_abandoned }
     grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
 
   # Try to apply non-refundable credit first.  Within that, go for smaller

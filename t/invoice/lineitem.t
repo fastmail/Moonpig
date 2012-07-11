@@ -48,8 +48,8 @@ test 'zero amounts' => sub {
                                            });
 
     $ledger->current_invoice->add_charge($line_item);
-    my @all_charges = $ledger->current_invoice->all_charges;
-    is(@all_charges, 1, "added line item to current invoice");
+    my @all_items = $ledger->current_invoice->all_items;
+    is(@all_items, 1, "added line item to current invoice");
     is($ledger->current_invoice->total_amount, dollars(0), "Line item doesn't count");
   });
 };

@@ -24,6 +24,7 @@ has abandoned_at => (
 );
 
 sub counts_toward_total { ! $_[0]->is_abandoned }
+sub is_charge { 1 }
 
 sub mark_abandoned {
   my ($self) = @_;

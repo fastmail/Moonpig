@@ -97,7 +97,8 @@ around _issue_psync_charge => sub {
   my @ancestors = $self->_previous_n_ancestors(5);
   my %is_ancestor = map { $_->guid => 1 } @ancestors;
 
-  my @ancestor_charges = grep { $is_ancestor{$_->owner->guid} } $quote->all_charges;
+  my @ancestor_charges = grep { $is_ancestor{$_->owner->guid}
+                                  && ! $_->is_abandoned } $quote->all_charges;
   return unless @ancestor_charges;
   my $average_charge_amount = (sumof { $_->amount } @ancestor_charges) / @ancestor_charges;
 

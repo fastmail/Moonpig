@@ -92,7 +92,7 @@ test 'build quote' => sub {
     $_->total_charge_amount(dollars(120)) for @chain;
     $c->_maybe_send_psync_quote();
     is(my ($q) = $ledger->quotes, 1, "now one quote");
-    is(my @ch = $q->all_charges, 6, "it has six items");
+    is(my @ch = $q->all_items, 6, "it has six items");
     is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"), @ch), 1,
        "one special item");
     ok($special->does("Moonpig::Role::LineItem::PsyncB5G1Magic"),

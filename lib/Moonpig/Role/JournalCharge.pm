@@ -9,5 +9,6 @@ with(
 use namespace::autoclean;
 
 sub counts_toward_total { 1 }
+sub is_charge { 1 }
 
 1;

@@ -10,8 +10,9 @@ use Moonpig::Behavior::Packable;
 
 use namespace::autoclean;
 
-requires 'counts_toward_total';
 requires 'check_amount';
+requires 'counts_toward_total';
+requires 'is_charge'; # Is it a real charge, or something like an explanatory line item?
 
 with ('Moonpig::Role::HasTagset' => {});
 

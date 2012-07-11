@@ -9,5 +9,6 @@ with ('Moonpig::Role::Charge',
 sub check_amount { 1 }
 
 sub counts_toward_total { 0 }
+sub is_charge { 0 }
 
 1;
