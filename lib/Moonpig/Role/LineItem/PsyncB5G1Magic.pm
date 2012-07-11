@@ -5,7 +5,7 @@ use Moonpig::Types qw(PositiveMillicents);
 
 use Moose::Role;
 with ('Moonpig::Role::LineItem',
-      'Moonpig::Role::InvoiceCharge::Active',
+      'Moonpig::Role::Charge::Active',
      );
 
 has adjustment_amount => (

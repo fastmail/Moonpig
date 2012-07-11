@@ -1,8 +1,8 @@
-package Moonpig::Role::InvoiceCharge::Active;
+package Moonpig::Role::Charge::Active;
 use Moose::Role;
-# ABSTRACT: an invoice charge that does something extra when paid
+# ABSTRACT: a charge that does something extra when paid
 with(
-  'Moonpig::Role::InvoiceCharge',
+  'Moonpig::Role::Charge',
 );
 
 use namespace::autoclean;
