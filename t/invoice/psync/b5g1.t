@@ -102,6 +102,8 @@ test 'build quote' => sub {
        "one special item");
     ok($special->does("Moonpig::Role::LineItem::PsyncB5G1Magic"),
        "special item does the right role");
+    ok($special->has_tag("moonpig.psync.selffunding"),
+       "special item is properly tagged");
     is($special->adjustment_amount, dollars(20), "adjustment amount");
   };
 };

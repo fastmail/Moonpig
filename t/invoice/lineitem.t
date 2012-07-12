@@ -30,22 +30,22 @@ test 'zero amounts' => sub {
       }, undef, "$method with zero amount");
     }
 
-    ok(class("t::TestLineItem")->new({ amount => dollars(0),
-                                       description => "lineitem zero",
-                                       consumer => $c,
-                                     }),
+    ok(class("LineItem")->new({ amount => dollars(0),
+                                description => "lineitem zero",
+                                consumer => $c,
+                              }),
        "zero-amount line item");
 
-    ok(class("t::TestLineItem")->new({ amount => dollars(-1),
-                                       description => "lineitem zero",
-                                       consumer => $c,
-                                     }),
+    ok(class("LineItem")->new({ amount => dollars(-1),
+                                description => "lineitem zero",
+                                consumer => $c,
+                              }),
        "negative-amount line item");
 
-    my $line_item = class("t::TestLineItem")->new({ amount => dollars(1),
-                                                    description => "lineitem",
-                                                    consumer => $c,
-                                                  });
+    my $line_item = class("LineItem")->new({ amount => dollars(1),
+                                             description => "lineitem",
+                                             consumer => $c,
+                                           });
 
     $ledger->current_invoice->add_charge($line_item);
     my @all_items = $ledger->current_invoice->all_items;

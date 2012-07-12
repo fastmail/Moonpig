@@ -114,6 +114,8 @@ around _issue_psync_charge => sub {
 
 sub build_invoice_charge {
   my ($self, $args) = @_;
+  $args->{tags} //= [];
+  push @{$args->{tags}}, "moonpig.psync.selffunding";
   class("LineItem::PsyncB5G1Magic")->new($args);
 }
 
