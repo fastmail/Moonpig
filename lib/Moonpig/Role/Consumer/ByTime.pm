@@ -408,7 +408,7 @@ sub _maybe_send_psync_quote {
 
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
-    $self->_issue_psync_charge($shortfall);
+    $self->_issue_psync_charge();
     $_->_issue_psync_charge() for $self->replacement_chain;
     $notice_info->{quote} = $self->ledger->end_quote($self);
   }
@@ -419,8 +419,8 @@ sub _maybe_send_psync_quote {
 }
 
 sub _issue_psync_charge {
-  my ($self, $shortfall) = @_;
-  $shortfall //= $self->_predicted_shortfall;
+  my ($self) = @_;
+  my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
   my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
   $self->charge_current_invoice({
