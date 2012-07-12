@@ -371,6 +371,11 @@ has last_psync_shortfall => (
   traits => [ qw(Copy) ],
 );
 
+sub reset_last_psync_shortfall {
+  my ($self) = @_;
+  $self->last_psync_shortfall($self->_predicted_shortfall);
+}
+
 sub _maybe_send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
@@ -414,6 +419,12 @@ sub _maybe_send_psync_quote {
   }
 
   $self->ledger->_send_psync_email($self, $notice_info);
+
+  # Notify followers that we have already handled this shortfall
+  # so they don't send another notice on becoming active.
+  for my $c ($self->replacement_chain) {
+    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
+  }
 
   $_->mark_abandoned() for @old_quotes;
 }
