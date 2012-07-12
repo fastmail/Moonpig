@@ -380,8 +380,6 @@ sub _maybe_send_psync_quote {
   my $had_last_shortfall = $self->has_last_psync_shortfall;
   my $last_shortfall = $self->last_psync_shortfall // 0;
 
-#  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
-
   # If you're going to run out of funds during your final charge
   # period, we don't care.  In general, we plan to have
   # charge_frequency stick with its default value always: days(1).  If
@@ -395,15 +393,13 @@ sub _maybe_send_psync_quote {
 
   my @old_quotes = $self->ledger->find_old_psync_quotes($self->xid);
 
-  # OLD date is the one we had before the service upgrade, which will be RESTORED
-  # if the user pays the invoice
-  my $old_exp_date =  Moonpig->env->now +
-    $self->want_to_live +
-    $self->replacement_chain_want_to_live;
-
   my $notice_info = {
 
-    old_expiration_date => $old_exp_date,
+    # OLD date is the one we had before the service upgrade, which will be RESTORED
+    # if the user pays the invoice
+    old_expiration_date => Moonpig->env->now +
+      $self->want_to_live +
+      $self->replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
