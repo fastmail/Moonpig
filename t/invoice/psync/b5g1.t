@@ -126,7 +126,7 @@ test 'adjustment execution' => sub {
 };
 
 test 'adjustment amounts' => sub {
-  for my $days (5, 25, 45) {
+  for my $days (5, 25, 45, 55) {
     do_test {
       my ($ledger, $c_, $g) = @_;
 
@@ -137,13 +137,17 @@ test 'adjustment amounts' => sub {
       note "after $days days, replacement chain has " . @chain . " consumer(s)\n";
       $_->total_charge_amount(dollars(200)) for @chain;
       $c->_maybe_send_psync_quote();
-      is(my ($q) = $ledger->quotes, 1, "now one quote");
-      is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
-                              $q->all_items),
-         1,
-         "special item does the right role");
-      my $x_amount = dollars(100*(1 - $days/50));
-      is($special->adjustment_amount, $x_amount, "adjustment amount $x_amount");
+      if ($days < 50) {
+        is(my ($q) = $ledger->quotes, 1, "now one quote");
+        is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
+                                $q->all_items),
+           1,
+           "special item does the right role");
+        my $x_amount = dollars(100*(1 - $days/50));
+        is($special->adjustment_amount, $x_amount, "adjustment amount $x_amount");
+      } else {
+        is(my ($q) = $ledger->quotes, 0, "no quote generated");
+      }
     };
   }
 };
@@ -182,10 +186,6 @@ test long_chain => sub {
          "found special item");
       is($special->adjustment_amount, dollars(20), "adjustment amount is \$20");
     });
-};
-
-test no_chain => sub {
-  pass("todo");
 };
 
 run_me;
