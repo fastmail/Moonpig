@@ -21,18 +21,16 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
-my $xid;
-{
-  my $i = 0;
-  before run_test => sub {
-    $i++;
-    $xid = "consumer:b5g1:$i";
-    Moonpig->env->stop_clock_at($jan1);
-  };
-}
+before run_test => sub {
+  Moonpig->env->stop_clock_at($jan1);
+};
 
+my $i = 0;
 sub do_test (&) {
   my ($code) = @_;
+  $i++;
+  my $xid = "consumer:b5g1:$i";
+
   do_with_fresh_ledger(
     {
       b5 => {
@@ -122,7 +120,34 @@ test 'adjustment execution' => sub {
 };
 
 test 'adjustment amounts' => sub {
+  for my $days (5, 25, 45) {
+    do_test {
+      my ($ledger, $c_, $g) = @_;
+
+      my $c = $c_;
+      elapse($ledger, $days);
+      $c = $c->replacement until $c->is_active;
+      my @chain = ($c, $c->replacement_chain);
+      note "after $days days, replacement chain has " . @chain . " consumer(s)\n";
+      note "$c $c_";
+      $_->total_charge_amount(dollars(200)) for @chain;
+      $c->_maybe_send_psync_quote();
+      is(my ($q) = $ledger->quotes, 1, "now one quote");
+      is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
+                              $q->all_items),
+         1,
+         "special item does the right role");
+      my $x_amount = dollars(100*(1 - $days/50));
+      is($special->adjustment_amount, $x_amount, "adjustment amount $x_amount");
+    };
+  }
+};
+
+test long_chain => sub {
   pass("todo");
+  # make sure that if there is a long chain before the SelfFunding
+  # consumer, and more than 5 charges on the psync quote, it only averages
+  # the last *5* charges.
 };
 
 run_me;
