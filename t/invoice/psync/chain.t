@@ -195,5 +195,36 @@ test 'mailstore sorta' => sub {
   };
 };
 
+# If there's a shortfall in consumer A, and it's *not* paid for, there
+# should *not* be a second notice of the same shortfall when A fails
+# over to its successor.
+test 'repeat notices' => sub {
+  do_test {
+    my ($ledger, $c, $d, $e) = @_;
+    elapse($ledger, 2);
+    # At this point, $c has 12 days and $12 left
+    $_->total_charge_amount(dollars(20)) for $c, $d, $e;
+    # At this point, $c only has enough money to last 8.4 more days
+    $c->_maybe_send_psync_quote();
+    my @q1 = $ledger->quotes;
+    Moonpig->env->email_sender->clear_deliveries;
+
+    elapse($ledger, 10);
+    subtest "sanity check" => sub {
+      ok(! $c->is_active, "c is no longer active");
+      ok(  $d->is_active, "d is now active");
+      ok(! $d->in_grace_period, "d is out of its grace period");
+      is(@q1, 1, "there was 1 psync quote");
+    };
+
+    elapse($ledger, 1);
+    is(my (@q2) = $ledger->quotes, 1, "no new psync quote");
+
+    $_->total_charge_amount(dollars(30)) for $c, $d, $e;
+    elapse($ledger, 2);
+    is(my (@q3) = $ledger->quotes, 2, "new psync quote after fresh rate change");
+  };
+};
+
 run_me;
 done_testing;
