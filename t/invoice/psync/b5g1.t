@@ -160,14 +160,32 @@ test long_chain => sub {
       my ($ledger) = @_;
       my ($z) = my ($a) = $ledger->get_component('a');
       $z = $z->replacement while $z->has_replacement;
+      my ($sf, @before, @after);
       subtest "set up long chain" => sub {
         $z->_adjust_replacement_chain(days(60), 1);
         my (@chain) = ($a, $a->replacement_chain);
         is(@chain, 10, "chain of length 10");
         ok($chain[7]->does("Moonpig::Role::Consumer::SelfFunding"),
            "consumer #8 is self-funding");
-      }
+        $sf = $chain[7];
+        @before = @chain[0..6];
+        @after  = @chain[8..9];
+      };
+
+      $_->total_charge_amount(dollars(120)) for @before;
+      $_->total_charge_amount(dollars(150)) for @after;
+      $a->_maybe_send_psync_quote();
+      is(my ($q) = $ledger->quotes, 1, "now one quote");
+      is(my (@it) = $q->all_items, 10, "it has 10 items");
+      is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"), @it),
+         1,
+         "found special item");
+      is($special->adjustment_amount, dollars(20), "adjustment amount is \$20");
     });
+};
+
+test no_chain => sub {
+  pass("todo");
 };
 
 run_me;
