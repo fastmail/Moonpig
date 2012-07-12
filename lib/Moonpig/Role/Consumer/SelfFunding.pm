@@ -101,7 +101,6 @@ around _issue_psync_charge => sub {
   my @ancestor_charges = grep { $is_ancestor{$_->owner->guid}
                                   && ! $_->is_abandoned } $quote->all_charges;
   return unless @ancestor_charges;
-  warn "# I see ancestor charges of : " . join " ", map { $_->amount / 100000 } @ancestor_charges;
   # If fewer than 5 ancestors put charges on the quote, we act as if the others put on
   # charges of 0 for purpose of our adjustment amount
   my $n_charges = max(5, scalar(@ancestor_charges));

@@ -25,11 +25,17 @@ before run_test => sub {
   Moonpig->env->stop_clock_at($jan1);
 };
 
-my $i = 0;
+{
+  my $i = 0;
+  sub next_xid {
+    $i++;
+    "consumer:b5g1:$i";
+  }
+}
+
 sub do_test (&) {
   my ($code) = @_;
-  $i++;
-  my $xid = "consumer:b5g1:$i";
+  my $xid = next_xid();
 
   do_with_fresh_ledger(
     {
@@ -129,7 +135,6 @@ test 'adjustment amounts' => sub {
       $c = $c->replacement until $c->is_active;
       my @chain = ($c, $c->replacement_chain);
       note "after $days days, replacement chain has " . @chain . " consumer(s)\n";
-      note "$c $c_";
       $_->total_charge_amount(dollars(200)) for @chain;
       $c->_maybe_send_psync_quote();
       is(my ($q) = $ledger->quotes, 1, "now one quote");
@@ -144,10 +149,25 @@ test 'adjustment amounts' => sub {
 };
 
 test long_chain => sub {
-  pass("todo");
-  # make sure that if there is a long chain before the SelfFunding
-  # consumer, and more than 5 charges on the psync quote, it only averages
-  # the last *5* charges.
+  do_with_fresh_ledger(
+    {
+      a => {
+        xid      => next_xid(),
+        template => 'b5g1_paid',
+        minimum_chain_duration => days(30),
+      },
+    }, sub {
+      my ($ledger) = @_;
+      my ($z) = my ($a) = $ledger->get_component('a');
+      $z = $z->replacement while $z->has_replacement;
+      subtest "set up long chain" => sub {
+        $z->_adjust_replacement_chain(days(60), 1);
+        my (@chain) = ($a, $a->replacement_chain);
+        is(@chain, 10, "chain of length 10");
+        ok($chain[7]->does("Moonpig::Role::Consumer::SelfFunding"),
+           "consumer #8 is self-funding");
+      }
+    });
 };
 
 run_me;
