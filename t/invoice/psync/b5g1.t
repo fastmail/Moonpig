@@ -98,7 +98,7 @@ test 'build quote' => sub {
     $c->_maybe_send_psync_quote();
     is(my ($q) = $ledger->quotes, 1, "now one quote");
     is(my @ch = $q->all_items, 6, "it has six items");
-    is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"), @ch), 1,
+    is(my ($special) = grep($_->does("Moonpig::Role::ChargeLike::Active"), @ch), 1,
        "one special item");
     ok($special->does("Moonpig::Role::LineItem::PsyncB5G1Magic"),
        "special item does the right role");
@@ -113,7 +113,7 @@ test 'adjustment execution' => sub {
     $_->total_charge_amount(dollars(120)) for @chain;
     $c->_maybe_send_psync_quote();
     is(my ($q) = $ledger->quotes, 1, "now one quote");
-    is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
+    is(my ($special) = grep($_->does("Moonpig::Role::ChargeLike::Active"),
                             $q->all_items),
        1,
        "special item does the right role");
@@ -139,7 +139,7 @@ test 'adjustment amounts' => sub {
       $c->_maybe_send_psync_quote();
       if ($days < 50) {
         is(my ($q) = $ledger->quotes, 1, "now one quote");
-        is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"),
+        is(my ($special) = grep($_->does("Moonpig::Role::ChargeLike::Active"),
                                 $q->all_items),
            1,
            "special item does the right role");
@@ -181,7 +181,7 @@ test long_chain => sub {
       $a->_maybe_send_psync_quote();
       is(my ($q) = $ledger->quotes, 1, "now one quote");
       is(my (@it) = $q->all_items, 10, "it has 10 items");
-      is(my ($special) = grep($_->does("Moonpig::Role::Charge::Active"), @it),
+      is(my ($special) = grep($_->does("Moonpig::Role::ChargeLike::Active"), @it),
          1,
          "found special item");
       is($special->adjustment_amount, dollars(20), "adjustment amount is \$20");

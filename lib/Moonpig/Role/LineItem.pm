@@ -2,7 +2,7 @@ package Moonpig::Role::LineItem;
 # ABSTRACT: a non-charge line item on an invoice
 use Moose::Role;
 use Moonpig::Behavior::Packable;
-with ('Moonpig::Role::Charge',
+with ('Moonpig::Role::ChargeLike',
       'Moonpig::Role::ConsumerComponent',
       'Moonpig::Role::HandlesEvents',
      );

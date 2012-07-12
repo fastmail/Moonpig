@@ -22,9 +22,11 @@ role {
 
   requires 'accepts_charge';
 
+  # This is a misnomer, since it might not yield only charges, but anything chargelike.
+  # We did not want to have to modify the existing database. mjd 2012-07-12
   has charges => (
     is  => 'ro',
-    isa => ArrayRef[ "Moonpig::Types::Charge" ],
+    isa => ArrayRef[ "Moonpig::Types::ChargeLike" ],
     init_arg => undef,
     default  => sub {  []  },
     traits   => [ 'Array' ],

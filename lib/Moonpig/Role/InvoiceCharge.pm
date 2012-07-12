@@ -3,10 +3,10 @@ use Moose::Role;
 # ABSTRACT: a charge placed on an invoice
 
 with(
-  'Moonpig::Role::Charge',
+  'Moonpig::Role::ChargeLike',
   'Moonpig::Role::ConsumerComponent',
   'Moonpig::Role::HandlesEvents',
-  'Moonpig::Role::Charge::RequiresPositiveAmount',
+  'Moonpig::Role::ChargeLike::RequiresPositiveAmount',
 );
 
 use namespace::autoclean;

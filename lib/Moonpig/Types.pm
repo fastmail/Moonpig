@@ -7,7 +7,7 @@ use MooseX::Types -declare => [ qw(
 
   Credit
 
-  Charge
+  ChargeLike
   Invoice
   Journal
 
@@ -59,7 +59,7 @@ role_type Ledger, { role => 'Moonpig::Role::Ledger' };
 
 role_type Consumer, { role => 'Moonpig::Role::Consumer' };
 
-role_type Charge, { role => 'Moonpig::Role::Charge' };
+role_type ChargeLike, { role => 'Moonpig::Role::ChargeLike' };
 
 role_type Invoice, { role => 'Moonpig::Role::Invoice' };
 

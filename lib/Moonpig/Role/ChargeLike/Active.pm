@@ -1,8 +1,8 @@
-package Moonpig::Role::Charge::Active;
+package Moonpig::Role::ChargeLike::Active;
 use Moose::Role;
 # ABSTRACT: a charge that does something extra when paid
 with(
-  'Moonpig::Role::Charge',
+  'Moonpig::Role::ChargeLike',
 );
 
 use namespace::autoclean;

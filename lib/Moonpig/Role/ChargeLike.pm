@@ -1,5 +1,5 @@
-package Moonpig::Role::Charge;
-# ABSTRACT: a charge on an invoice or a journal
+package Moonpig::Role::ChargeLike;
+# ABSTRACT: something that can go in an invoice or a journal
 use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);

@@ -1,4 +1,4 @@
-package Moonpig::Role::Charge::RequiresPositiveAmount;
+package Moonpig::Role::ChargeLike::RequiresPositiveAmount;
 use Moose::Role;
 # ABSTRACT: a charge that requires that its amount is positive
 use Moonpig::Types qw(PositiveMillicents);
