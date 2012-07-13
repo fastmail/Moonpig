@@ -17,7 +17,7 @@ with(
 
 use namespace::autoclean;
 
-sub charge_role { 'InvoiceCharge' }
+sub charge_role { 'JournalCharge' }
 
 sub accepts_charge {
   my ($self, $charge) = @_;
