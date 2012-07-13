@@ -30,27 +30,38 @@ test 'zero amounts' => sub {
       }, undef, "$method with zero amount");
     }
 
-    ok(class("LineItem")->new({ amount => dollars(0),
-                                description => "lineitem zero",
-                                consumer => $c,
-                              }),
-       "zero-amount line item");
+    my $note = class("LineItem::Note")->new({
+      amount => dollars(0),
+      description => "lineitem zero",
+      consumer => $c,
+    });
 
-    ok(class("LineItem")->new({ amount => dollars(-1),
-                                description => "lineitem zero",
-                                consumer => $c,
-                              }),
-       "negative-amount line item");
+    ok($note, "zero-amount line item");
 
-    my $line_item = class("LineItem")->new({ amount => dollars(1),
-                                             description => "lineitem",
-                                             consumer => $c,
-                                           });
+    my $discount = class("LineItem::Discount")->new({
+      amount => -100000, # using dollars(-1) failed!!
+      description => "lineitem zero",
+      consumer => $c,
+    });
 
-    $ledger->current_invoice->add_charge($line_item);
+    ok($discount, "negative-amount line item");
+
+    my $charge = class("InvoiceCharge")->new({
+      amount => dollars(1),
+      description => "lineitem",
+      consumer => $c,
+    });
+
+    $ledger->current_invoice->add_charge($note);
+    $ledger->current_invoice->add_charge($discount);
+    $ledger->current_invoice->add_charge($charge);
+
     my @all_items = $ledger->current_invoice->all_items;
-    is(@all_items, 1, "added line item to current invoice");
-    is($ledger->current_invoice->total_amount, dollars(0), "Line item doesn't count");
+    is(@all_items, 3, "added 3 line items to current invoice");
+
+    my @unab_items = $ledger->current_invoice->unabandoned_items;
+    is(@unab_items, 3, "...none is abandoned");
+    is($ledger->current_invoice->total_amount, dollars(0), "the total is 0");
   });
 };
 

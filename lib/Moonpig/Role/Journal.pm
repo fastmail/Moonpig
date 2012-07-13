@@ -32,7 +32,7 @@ sub charge {
   my ($self, $args) = @_;
 
   { my $FAIL = "";
-    for my $reqd (qw(from to amount desc tags)) {
+    for my $reqd (qw(from to amount desc tags consumer)) {
       $FAIL .= __PACKAGE__ . "::charge missing required '$reqd' argument"
         unless $args->{$reqd};
     }
@@ -49,6 +49,7 @@ sub charge {
   });
 
   my $charge = $self->charge_factory->new({
+    consumer    => $args->{consumer},
     description => $args->{desc},
     amount => $args->{amount},
     date => $args->{when} || Moonpig->env->now(),

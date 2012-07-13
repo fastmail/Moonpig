@@ -515,6 +515,7 @@ sub charge_current_journal {
   $args->{extra_tags} ||= [];
   $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
+  $args->{consumer}   = $self;
 
   $self->apply_coupons_to_charge_args($args); # Could modify amount, desc., etc.
   return $self->ledger->current_journal->charge($args);

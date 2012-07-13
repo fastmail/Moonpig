@@ -10,7 +10,7 @@ use Moonpig::Types;
 use Moonpig::Util qw(class sumof);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
-use Moonpig::Types qw(Time);
+use Moonpig::Types qw(LineItem Time);
 
 parameter charge_role => (
   isa      => enum([qw(InvoiceCharge JournalCharge)]),
@@ -22,24 +22,25 @@ role {
 
   requires 'accepts_charge';
 
-  # This is a misnomer, since it might not yield only charges, but anything chargelike.
+  # This is a misnomer, since it might not yield only charges, but any line
+  # item.
   # We did not want to have to modify the existing database. mjd 2012-07-12
   has charges => (
     is  => 'ro',
-    isa => ArrayRef[ "Moonpig::Types::ChargeLike" ],
+    isa => ArrayRef[ LineItem ],
     init_arg => undef,
     default  => sub {  []  },
     traits   => [ 'Array' ],
     handles  => {
       all_items => 'elements',
       has_items => 'count',
-      _add_charge => 'push',
+      _add_item => 'push',
       _add_item => 'push',
     },
   );
 
   method all_charges => sub {
-    return grep $_->is_charge, $_[0]->all_items;
+    return $_[0]->all_items; # any reason at all to make this filter?
   };
 
   method has_charges => sub {
@@ -47,8 +48,16 @@ role {
   };
 
   method total_amount => sub {
-    my @charges = grep $_->counts_toward_total, $_[0]->all_charges;
-    sumof { $_->amount } @charges;
+    sumof { $_->amount } $_[0]->unabandoned_items;
+  };
+
+  method unabandoned_items => sub {
+    my @items = grep {
+      !    $_->does('Moonpig::Role::LineItem::Abandonable')
+      || ! $_->is_abandoned
+    } $_[0]->all_items;
+
+    return @items;
   };
 
   method _objectify_charge => sub {
@@ -68,7 +77,7 @@ role {
     Moonpig::X->throw("bad charge type")
       unless $self->accepts_charge($charge);
 
-    $self->_add_charge($charge);
+    $self->_add_item($charge);
 
     return $charge;
   };

@@ -129,7 +129,7 @@ sub abandon_with_replacement {
 
     # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
     for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
-      $new_invoice->_add_charge($charge);
+      $new_invoice->_add_item($charge);
     }
 
     $self->abandoned_in_favor_of($new_invoice->guid)
@@ -140,7 +140,7 @@ sub abandon_with_replacement {
   return $new_invoice;
 }
 
-sub add_line_item { $_[0]->_add_charge($_[1]) }
+sub add_line_item { $_[0]->_add_item($_[1]) }
 
 sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
 
@@ -164,7 +164,7 @@ sub _pay_charges {
   my ($self, $event) = @_;
 
   # Include non-charge items, and charges that are not abandoned
-  my @items = grep { ! ($_->is_charge && $_->is_abandoned) } $self->all_items;
+  my @items = $self->unabandoned_items;
 
   my $collection = $self->ledger->consumer_collection;
   my @guids     = uniq map { $_->owner_guid } @items;

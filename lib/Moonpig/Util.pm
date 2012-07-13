@@ -97,7 +97,8 @@ sub dollars {
   my ($dollars) = @_;
   my $millicents = $dollars * 100 * 1000;
 
-  return int ($millicents + 0.5);
+  $millicents += 0.5 if $millicents > 0;
+  return int $millicents;
 }
 
 # returns unrounded fractional dollars
