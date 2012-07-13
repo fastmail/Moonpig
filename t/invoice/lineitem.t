@@ -39,15 +39,15 @@ test 'zero amounts' => sub {
     ok($note, "zero-amount line item");
 
     my $discount = class("LineItem::Discount")->new({
-      amount => -100000, # using dollars(-1) failed!!
-      description => "lineitem zero",
+      amount => dollars(-18),
+      description => "lineitem discount",
       consumer => $c,
     });
 
     ok($discount, "negative-amount line item");
 
     my $charge = class("InvoiceCharge")->new({
-      amount => dollars(1),
+      amount => dollars(40),
       description => "lineitem",
       consumer => $c,
     });
@@ -61,7 +61,7 @@ test 'zero amounts' => sub {
 
     my @unab_items = $ledger->current_invoice->unabandoned_items;
     is(@unab_items, 3, "...none is abandoned");
-    is($ledger->current_invoice->total_amount, dollars(0), "the total is 0");
+    is($ledger->current_invoice->total_amount, dollars(22), "the total is 22");
   });
 };
 
