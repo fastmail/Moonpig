@@ -83,7 +83,7 @@ sub cents {
   my ($cents) = @_;
   my $millicents = $cents * 1000;
 
-  return int ($millicents + 0.5);
+  return sprintf '%.0f', $millicents;
 }
 
 # returns unrounded fractional cents
@@ -97,8 +97,7 @@ sub dollars {
   my ($dollars) = @_;
   my $millicents = $dollars * 100 * 1000;
 
-  $millicents += 0.5 if $millicents > 0;
-  return int $millicents;
+  return sprintf '%.0f', $millicents;
 }
 
 # returns unrounded fractional dollars
