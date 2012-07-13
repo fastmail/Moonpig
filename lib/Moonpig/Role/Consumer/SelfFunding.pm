@@ -116,7 +116,7 @@ sub build_invoice_charge {
   my ($self, $args) = @_;
   $args->{tags} //= [];
   push @{$args->{tags}}, "moonpig.psync.selffunding";
-  class("LineItem::PsyncB5G1Magic")->new($args);
+  class("LineItem::SelfFundingAdjustment")->new($args);
 }
 
 sub _previous_n_ancestors {

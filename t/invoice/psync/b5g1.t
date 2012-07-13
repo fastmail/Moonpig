@@ -100,7 +100,7 @@ test 'build quote' => sub {
     is(my @ch = $q->all_items, 6, "it has six items");
     is(my ($special) = grep($_->does("Moonpig::Role::LineItem::Active"), @ch), 1,
        "one special item");
-    ok($special->does("Moonpig::Role::LineItem::PsyncB5G1Magic"),
+    ok($special->does("Moonpig::Role::LineItem::SelfFundingAdjustment"),
        "special item does the right role");
     ok($special->has_tag("moonpig.psync.selffunding"),
        "special item is properly tagged");

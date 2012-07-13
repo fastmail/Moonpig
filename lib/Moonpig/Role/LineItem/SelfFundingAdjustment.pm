@@ -1,4 +1,4 @@
-package Moonpig::Role::LineItem::PsyncB5G1Magic;
+package Moonpig::Role::LineItem::SelfFundingAdjustment;
 # ABSTRACT: a magic line item that adjusts its owner's self_funding_credit_amount
 use Moonpig;
 use Moonpig::Types qw(PositiveMillicents);
