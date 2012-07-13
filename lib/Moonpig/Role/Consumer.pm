@@ -74,6 +74,11 @@ implicit_event_handlers {
   };
 };
 
+sub description {
+  my ($self) = @_;
+  return sprintf('service for %s', $self->xid);
+}
+
 requires 'charge';
 
 sub maybe_charge {
