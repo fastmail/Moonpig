@@ -1,5 +1,5 @@
-package Moonpig::Role::HasCharges;
-# ABSTRACT: something that has a set of charges associated with it
+package Moonpig::Role::HasLineItems;
+# ABSTRACT: something that has a set of line items associated with it
 use Moose::Role;
 
 use namespace::autoclean;
@@ -14,7 +14,7 @@ use Moonpig::Types qw(LineItem Time);
 
 requires 'charge_role';
 
-requires 'accepts_charge';
+requires 'accepts_line_item';
 
 # This is a misnomer, since it might not yield only charges, but any line
 # item.
@@ -61,7 +61,7 @@ sub add_charge {
   my $charge = $self->_objectify_charge( $charge_input );
 
   Moonpig::X->throw("bad charge type")
-    unless $self->accepts_charge($charge);
+    unless $self->accepts_line_item($charge);
 
   $self->_add_item($charge);
 

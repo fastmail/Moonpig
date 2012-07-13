@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::HasCharges',
+  'Moonpig::Role::HasLineItems',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -32,11 +32,11 @@ use namespace::autoclean;
 
 sub charge_role { 'InvoiceCharge' }
 
-sub accepts_charge {
-  my ($self, $charge) = @_;
-  $charge->does("Moonpig::Role::InvoiceCharge") ||
-  $charge->does("Moonpig::Role::LineItem::Discount") ||
-  $charge->does("Moonpig::Role::LineItem::Note");
+sub accepts_line_item {
+  my ($self, $line_item) = @_;
+  $line_item->does("Moonpig::Role::InvoiceCharge") ||
+  $line_item->does("Moonpig::Role::LineItem::Discount") ||
+  $line_item->does("Moonpig::Role::LineItem::Note");
 }
 
 has paid_at => (

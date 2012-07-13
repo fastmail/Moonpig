@@ -8,7 +8,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::HasCharges',
+  'Moonpig::Role::HasLineItems',
   'Moonpig::Role::CanTransfer' => { transferer_type => "journal" },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -19,9 +19,9 @@ use namespace::autoclean;
 
 sub charge_role { 'JournalCharge' }
 
-sub accepts_charge {
-  my ($self, $charge) = @_;
-  $charge->does("Moonpig::Role::JournalCharge");
+sub accepts_line_item {
+  my ($self, $line_item) = @_;
+  $line_item->does("Moonpig::Role::JournalCharge");
 }
 
 # from: source of money transfer
