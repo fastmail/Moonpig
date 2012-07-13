@@ -6,8 +6,8 @@ use Moonpig::Types qw(PositiveMillicents);
 use Moose::Role;
 use Moonpig::Behavior::Packable;
 with ('Moonpig::Role::LineItem',
+      'Moonpig::Role::LineItem::Note',
       'Moonpig::Role::LineItem::Active',
-      'Moonpig::Role::LineItem::RequiresZeroAmount',
      );
 
 has adjustment_amount => (

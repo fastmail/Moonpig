@@ -33,7 +33,8 @@ use namespace::autoclean;
 sub accepts_charge {
   my ($self, $charge) = @_;
   $charge->does("Moonpig::Role::InvoiceCharge") ||
-  $charge->does("Moonpig::Role::LineItem");
+  $charge->does("Moonpig::Role::LineItem::Discount") ||
+  $charge->does("Moonpig::Role::LineItem::Note");
 }
 
 has paid_at => (
