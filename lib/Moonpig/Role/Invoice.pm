@@ -132,7 +132,7 @@ sub abandon_with_replacement {
 
     # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
     for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
-      $new_invoice->_add_item($charge);
+      $new_invoice->add_charge($charge);
     }
 
     $self->abandoned_in_favor_of($new_invoice->guid)
