@@ -35,7 +35,6 @@ role {
       all_items => 'elements',
       has_items => 'count',
       _add_item => 'push',
-      _add_item => 'push',
     },
   );
 
@@ -53,8 +52,7 @@ role {
 
   method unabandoned_items => sub {
     my @items = grep {
-      !    $_->does('Moonpig::Role::LineItem::Abandonable')
-      || ! $_->is_abandoned
+      ! ($_->does('Moonpig::Role::LineItem::Abandonable') and $_->is_abandoned)
     } $_[0]->all_items;
 
     return @items;
