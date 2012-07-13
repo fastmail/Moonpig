@@ -1,6 +1,6 @@
 package Moonpig::Role::LineItem::Abandonable;
 use Moose::Role;
-# ABSTRACT: a charge placed on an invoice
+# ABSTRACT: a line item we might scratch out later
 
 with(
   'Moonpig::Role::LineItem',
