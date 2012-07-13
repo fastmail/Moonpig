@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::HasCharges' => { charge_role => 'InvoiceCharge' },
+  'Moonpig::Role::HasLineItems',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -29,6 +29,15 @@ use Stick::Util qw(ppack true false);
 use Stick::Types qw(StickBool);
 
 use namespace::autoclean;
+
+sub charge_role { 'InvoiceCharge' }
+
+sub accepts_line_item {
+  my ($self, $line_item) = @_;
+  $line_item->does("Moonpig::Role::InvoiceCharge") ||
+  $line_item->does("Moonpig::Role::LineItem::Discount") ||
+  $line_item->does("Moonpig::Role::LineItem::Note");
+}
 
 has paid_at => (
   isa => Time,
@@ -121,8 +130,9 @@ sub abandon_with_replacement {
       . $new_invoice->guid
         if $new_invoice->is_closed;
 
+    # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
     for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
-      $new_invoice->_add_charge($charge);
+      $new_invoice->add_charge($charge);
     }
 
     $self->abandoned_in_favor_of($new_invoice->guid)
@@ -133,7 +143,7 @@ sub abandon_with_replacement {
   return $new_invoice;
 }
 
-sub add_line_item { $_[0]->_add_charge($_[1]) }
+sub add_line_item { $_[0]->_add_item($_[1]) }
 
 sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
 
@@ -156,17 +166,17 @@ implicit_event_handlers {
 sub _pay_charges {
   my ($self, $event) = @_;
 
-  my @charges = grep { ! $_->is_abandoned } $self->all_charges;
+  # Include non-charge items, and charges that are not abandoned
+  my @items = $self->unabandoned_items;
 
   my $collection = $self->ledger->consumer_collection;
-  my @guids     = uniq map { $_->owner_guid } @charges;
+  my @guids     = uniq map { $_->owner_guid } @items;
   my @consumers = grep { $_->is_active || $_->is_expired }
                   map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
 
   $_->acquire_funds for @consumers;
 
-  $_->handle_event($event) for @charges;
-
+  $_->handle_event($event) for @items;
 }
 
 sub __execute_charges_for {
@@ -181,7 +191,7 @@ sub __execute_charges_for {
     unless $self->is_closed;
 
   my @charges =
-    grep { ! $_->is_executed }
+    grep { ! $_->is_executed && ! $_->is_abandoned }
     grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
 
   # Try to apply non-refundable credit first.  Within that, go for smaller
@@ -234,7 +244,7 @@ PARTIAL_PACK {
     paid_at      => $self->paid_at,
     closed_at    => $self->closed_at,
     created_at   => $self->date,
-    charges      => [ map {; ppack($_) } $self->all_charges ],
+    charges      => [ map {; ppack($_) } $self->all_items ],
     is_quote     => $self->is_quote,
     is_internal  => $self->is_internal,
     abandoned_at => $self->abandoned_at,

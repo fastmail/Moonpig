@@ -8,8 +8,6 @@ use Stick::Util qw(ppack);
 
 use Moonpig::Util qw(class days dollars event weeks years);
 
-plan skip_all => "psyncing is disabled in this revision";
-
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',

@@ -31,11 +31,11 @@ requires 'charge_pairs_on';
 use Moonpig::Behavior::EventHandlers;
 implicit_event_handlers {
   return {
-#    'heartbeat' => {
-#      maybe_psync => Moonpig::Events::Handler::Method->new(
-#        method_name => '_maybe_send_psync_quote',
-#       ),
-#    }
+    'heartbeat' => {
+      maybe_psync => Moonpig::Events::Handler::Method->new(
+        method_name => '_maybe_send_psync_quote',
+       ),
+    }
   };
 };
 
@@ -271,6 +271,11 @@ sub want_to_live {
   }
 }
 
+sub replacement_chain_want_to_live {
+  my ($self) = @_;
+  sumof { $_->want_to_live } $self->replacement_chain;
+}
+
 # how much sooner will we run out of money than when we would have
 # expected to run out?  Might return a negative value if the consumer
 # has too much money. The caller of this function may therefore want
@@ -366,6 +371,11 @@ has last_psync_shortfall => (
   traits => [ qw(Copy) ],
 );
 
+sub reset_last_psync_shortfall {
+  my ($self) = @_;
+  $self->last_psync_shortfall($self->_predicted_shortfall);
+}
+
 sub _maybe_send_psync_quote {
   my ($self) = @_;
   return unless $self->is_active;
@@ -374,8 +384,6 @@ sub _maybe_send_psync_quote {
   my $shortfall = $self->_predicted_shortfall;
   my $had_last_shortfall = $self->has_last_psync_shortfall;
   my $last_shortfall = $self->last_psync_shortfall // 0;
-
-#  warn sprintf "shortfall=%2.2f last_shortfall=%2.2f\n", $shortfall/86400, $last_shortfall/86400;
 
   # If you're going to run out of funds during your final charge
   # period, we don't care.  In general, we plan to have
@@ -390,34 +398,40 @@ sub _maybe_send_psync_quote {
 
   my @old_quotes = $self->ledger->find_old_psync_quotes($self->xid);
 
-  # OLD date is the one we had before the service upgrade, which will be RESTORED
-  # if the user pays the invoice
-  my $old_exp_date =  Moonpig->env->now +
-    $self->want_to_live +
-    $self->replacement_chain_lifetime({ include_expected_funds => 1 });
-
   my $notice_info = {
 
-    old_expiration_date => $old_exp_date,
+    # OLD date is the one we had before the service upgrade, which will be RESTORED
+    # if the user pays the invoice
+    old_expiration_date => Moonpig->env->now +
+      $self->want_to_live +
+      $self->replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
-    new_expiration_date => $old_exp_date - $shortfall,
+    new_expiration_date => $self->replacement_chain_expiration_date(),
   };
 
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
-    $self->_issue_psync_charges($shortfall);
+    $self->_issue_psync_charge();
+    $_->_issue_psync_charge() for $self->replacement_chain;
     $notice_info->{quote} = $self->ledger->end_quote($self);
   }
 
   $self->ledger->_send_psync_email($self, $notice_info);
 
+  # Notify followers that we have already handled this shortfall
+  # so they don't send another notice on becoming active.
+  for my $c ($self->replacement_chain) {
+    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
+  }
+
   $_->mark_abandoned() for @old_quotes;
 }
 
-sub _issue_psync_charges {
-  my ($self, $shortfall) = @_;
+sub _issue_psync_charge {
+  my ($self) = @_;
+  my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
   my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
   $self->charge_current_invoice({
@@ -426,7 +440,6 @@ sub _issue_psync_charges {
                            $shortfall_days == 1 ? "day" : "days"),
     amount => $amount,
   }) if $amount > 0;
-  $self->replacement->_issue_psync_charges($shortfall) if $self->has_replacement;
 }
 
 1;

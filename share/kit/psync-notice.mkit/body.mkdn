@@ -1,7 +1,7 @@
 {{ $date_format = "%B %e, %Y";  # Jan  9, 2000.
    $SHHH = "" }}
 
-You've recently updated your service {{ $consumer->xid }}.
+You've recently updated your {{ $consumer->description }}.
 Due to those changes, your account price has decreased.
 
 Your account was due to expire after {{ $old_expiration_date->strftime($date_format) }}.  Because of the lower

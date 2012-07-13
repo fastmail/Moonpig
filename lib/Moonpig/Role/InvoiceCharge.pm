@@ -3,8 +3,9 @@ use Moose::Role;
 # ABSTRACT: a charge placed on an invoice
 
 with(
-  'Moonpig::Role::Charge',
-  'Moonpig::Role::ConsumerComponent',
+  'Moonpig::Role::LineItem',
+  'Moonpig::Role::LineItem::Abandonable',
+  'Moonpig::Role::LineItem::RequiresPositiveAmount',
   'Moonpig::Role::HandlesEvents',
 );
 
@@ -13,22 +14,6 @@ use Moonpig::Behavior::EventHandlers;
 use Moonpig::Behavior::Packable;
 use Moonpig::Types qw(Time);
 use MooseX::SetOnce;
-
-has abandoned_at => (
-  is => 'ro',
-  isa => Time,
-  predicate => 'is_abandoned',
-  writer    => '__set_abandoned_at',
-  traits => [ qw(SetOnce) ],
-);
-
-sub counts_toward_total { ! $_[0]->is_abandoned }
-
-sub mark_abandoned {
-  my ($self) = @_;
-  Moonpig::X->throw("can't abandon an executed charge") if $self->is_executed;
-  $self->__set_abandoned_at( Moonpig->env->now );
-}
 
 has executed_at => (
   is  => 'ro',
@@ -52,7 +37,6 @@ PARTIAL_PACK {
   return {
     owner_guid   => $self->owner_guid,
     executed_at  => $self->executed_at,
-    abandoned_at => $self->abandoned_at,
   };
 };
 

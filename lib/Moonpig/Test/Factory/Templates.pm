@@ -57,13 +57,13 @@ sub templates {
 
       return {
         roles => [
-          'Consumer::ByTime::FixedAmountCharge',
+          't::Consumer::VaryingCharge',
           't::Consumer::FreeEveryFive',
         ],
         arg   => {
           xid           => $b5g1_xid,
-          charge_amount => dollars(100),
-          cost_period   => years(1),
+          total_charge_amount => dollars(100),
+          cost_period   => days(10),
           charge_description => 'b5g1 (paid)',
           replacement_plan   => [ get => "/consumer-template/b5g1_paid" ],
         },
@@ -74,13 +74,13 @@ sub templates {
 
       return {
         roles => [
-          'Consumer::ByTime::FixedAmountCharge',
+          't::Consumer::VaryingCharge',
           'Consumer::SelfFunding',
         ],
         arg   => {
           xid         => $b5g1_xid,
-          charge_amount => dollars(100),
-          cost_period   => years(1),
+          total_charge_amount => dollars(100),
+          cost_period   => days(10),
           charge_description => 'b5g1 (free)',
           replacement_plan   => [ get => "/consumer-template/b5g1_paid" ],
         },

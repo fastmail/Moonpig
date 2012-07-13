@@ -79,11 +79,15 @@ sub event {
   });
 }
 
+sub __round {
+  my ($x) = @_;
+  # The intention is to round halves towards infinity
+  int( $x + ($x >= 0 ? .5 : -.5));
+}
+
 sub cents {
   my ($cents) = @_;
-  my $millicents = $cents * 1000;
-
-  return int ($millicents + 0.5);
+  __round($cents * 1000);
 }
 
 # returns unrounded fractional cents
@@ -95,9 +99,7 @@ sub to_cents {
 
 sub dollars {
   my ($dollars) = @_;
-  my $millicents = $dollars * 100 * 1000;
-
-  return int ($millicents + 0.5);
+  __round($dollars * 100 * 1000);
 }
 
 # returns unrounded fractional dollars

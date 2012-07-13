@@ -8,7 +8,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::HasCharges' => { charge_role => 'JournalCharge' },
+  'Moonpig::Role::HasLineItems',
   'Moonpig::Role::CanTransfer' => { transferer_type => "journal" },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -17,6 +17,12 @@ with(
 
 use namespace::autoclean;
 
+sub charge_role { 'JournalCharge' }
+
+sub accepts_line_item {
+  my ($self, $line_item) = @_;
+  $line_item->does("Moonpig::Role::JournalCharge");
+}
 
 # from: source of money transfer
 # to: destination of money transfer
@@ -28,7 +34,7 @@ sub charge {
   my ($self, $args) = @_;
 
   { my $FAIL = "";
-    for my $reqd (qw(from to amount desc tags)) {
+    for my $reqd (qw(from to amount desc tags consumer)) {
       $FAIL .= __PACKAGE__ . "::charge missing required '$reqd' argument"
         unless $args->{$reqd};
     }
@@ -45,6 +51,7 @@ sub charge {
   });
 
   my $charge = $self->charge_factory->new({
+    consumer    => $args->{consumer},
     description => $args->{desc},
     amount => $args->{amount},
     date => $args->{when} || Moonpig->env->now(),

@@ -9,8 +9,6 @@ use Moonpig::Util qw(days dollars);
 use Stick::Util qw(ppack);
 use Scalar::Util qw(reftype);
 
-plan skip_all => "psyncing is disabled in this revision";
-
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',
@@ -151,8 +149,39 @@ test 'single consumer' => sub {
       my ($old_date) = $body =~ qr/was due to expire after\s+(\w+ [\d ]\d, \d{4})/;
       is ($old_date, "January 15, 2000", "old expiration date");
     };
-
   };
+};
+
+# This is analogous to what happens when a pobox-basic customer
+# ($20/yr) who has paid three years in advance upgrades their service
+# to mailstore ($50/yr) halfway through the first year.
+test 'mailstore sorta' => sub {
+  &do_test(days(28), sub {
+    my ($ledger, $c) = @_;
+    my $d = $c->replacement;
+    my $e = $d->replacement or die;
+    my ($credit) = $ledger->credit_collection->add({
+      type => 'Simulated',
+      attributes => { amount => dollars(28) }
+    });
+    my $sender = Moonpig->env->email_sender;
+    elapse($ledger, 7);
+    # $c now has 7 days and $7 left; $d and $e have 14 days and $14
+    $_->total_charge_amount(dollars(35)) for $c, $d, $e;
+    # Now using up $2.50 per day
+    #   $c's $7 will last 2.8 days for a shortfall of 4.2 days ($10.50 needed)
+    #   $d's $14 will last 5.6 days for a shortfall of 8.4 days ($21 needed)
+    #   $e is like $d
+    $c->_maybe_send_psync_quote();
+    is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+    is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
+    is($ch[0]->amount,  dollars(10.50), "active consumer charge amount");
+    is($ch[$_]->amount, dollars(21), "inactive consumer $_ charge amount") for 1, 2;
+    Moonpig->env->process_email_queue;
+    is(my (undef, $delivery) = $sender->deliveries, 2, "two deliveries");
+    $sender->clear_deliveries;
+    my $body = body($delivery);
+  });
 };
 
 run_me;

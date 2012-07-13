@@ -9,8 +9,6 @@ use Stick::Util qw(ppack);
 
 use Moonpig::Util qw(class days dollars event weeks years);
 
-plan skip_all => "psyncing is disabled in this revision";
-
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',
@@ -115,14 +113,16 @@ test 'setup sanity checks' => sub {
 
 sub close_enough {
   my ($a, $b, $msg) = @_;
-  ok(abs($a - $b) < 1, $msg);
+  note "Is $a close to $b ?";
+  ok(abs($a - $b) <= 1, $msg);
 }
 
 test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
 
-    # At this point, 14 days and $14 remain
+    # At this point, 14 days and $14 remain on each of three consumers
+    # $14 = $196/42
 
     subtest "psync quote" => sub {
       $_->total_charge_amount(dollars(20)) for $c, $d, $e;
@@ -131,7 +131,7 @@ test 'psync chains' => sub {
       is($_->_predicted_shortfall, days(4.2), "extra charge -> shortfall 4.2 days")
         for $c, $d, $e;
       elapse($ledger, 2);
-      # At this point, 12 days and $548/14 ~=~ $40.57 remain
+      # At this point, 12 days and $156/14 ~=~ $11.14 remain on $c; $14 remains on $d and $e
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
@@ -163,9 +163,67 @@ test 'psync chains' => sub {
                    "active consumer still has a shortfall");
       is($_->_predicted_shortfall, days(0), "inactive consumers no longer have a shortfall")
         for $d, $e;
+
+      $c->_maybe_send_psync_quote();
+      is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
+      is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
+      close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
     };
+
   };
 
+};
+
+# This is analogous to what happens when a pobox-basic customer
+# ($20/yr) who has paid three years in advance upgrades their service
+# to mailstore ($50/yr) halfway through the first year.
+test 'mailstore sorta' => sub {
+  do_test {
+    my ($ledger, $c, $d, $e) = @_;
+    elapse($ledger, 7);
+    # $c now has 7 days and $7 left; $d and $e have 14 days and $14
+    $_->total_charge_amount(dollars(35)) for $c, $d, $e;
+    # Now using up $2.50 per day
+    #   $c's $7 will last 2.8 days for a shortfall of 4.2 days ($10.50 needed)
+    #   $d's $14 will last 5.6 days for a shortfall of 8.4 days ($21 needed)
+    #   $e is like $d
+    $c->_maybe_send_psync_quote();
+    is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+    is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
+    is($ch[0]->amount,  dollars(10.50), "active consumer charge amount");
+    is($ch[$_]->amount, dollars(21), "inactive consumer $_ charge amount") for 1, 2;
+  };
+};
+
+# If there's a shortfall in consumer A, and it's *not* paid for, there
+# should *not* be a second notice of the same shortfall when A fails
+# over to its successor.
+test 'repeat notices' => sub {
+  do_test {
+    my ($ledger, $c, $d, $e) = @_;
+    elapse($ledger, 2);
+    # At this point, $c has 12 days and $12 left
+    $_->total_charge_amount(dollars(20)) for $c, $d, $e;
+    # At this point, $c only has enough money to last 8.4 more days
+    $c->_maybe_send_psync_quote();
+    my @q1 = $ledger->quotes;
+    Moonpig->env->email_sender->clear_deliveries;
+
+    elapse($ledger, 10);
+    subtest "sanity check" => sub {
+      ok(! $c->is_active, "c is no longer active");
+      ok(  $d->is_active, "d is now active");
+      ok(! $d->in_grace_period, "d is out of its grace period");
+      is(@q1, 1, "there was 1 psync quote");
+    };
+
+    elapse($ledger, 1);
+    is(my (@q2) = $ledger->quotes, 1, "no new psync quote");
+
+    $_->total_charge_amount(dollars(30)) for $c, $d, $e;
+    elapse($ledger, 2);
+    is(my (@q3) = $ledger->quotes, 2, "new psync quote after fresh rate change");
+  };
 };
 
 run_me;
