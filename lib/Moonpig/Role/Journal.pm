@@ -8,7 +8,7 @@ use Moose::Role;
 use Moonpig::Logger '$Logger';
 
 with(
-  'Moonpig::Role::HasCharges' => { charge_role => 'JournalCharge' },
+  'Moonpig::Role::HasCharges',
   'Moonpig::Role::CanTransfer' => { transferer_type => "journal" },
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -16,6 +16,8 @@ with(
 );
 
 use namespace::autoclean;
+
+sub charge_role { 'InvoiceCharge' }
 
 sub accepts_charge {
   my ($self, $charge) = @_;

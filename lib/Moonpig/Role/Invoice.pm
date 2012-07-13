@@ -3,7 +3,7 @@ package Moonpig::Role::Invoice;
 use Moose::Role;
 
 with(
-  'Moonpig::Role::HasCharges' => { charge_role => 'InvoiceCharge' },
+  'Moonpig::Role::HasCharges',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
@@ -29,6 +29,8 @@ use Stick::Util qw(ppack true false);
 use Stick::Types qw(StickBool);
 
 use namespace::autoclean;
+
+sub charge_role { 'InvoiceCharge' }
 
 sub accepts_charge {
   my ($self, $charge) = @_;

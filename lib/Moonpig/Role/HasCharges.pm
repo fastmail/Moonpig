@@ -1,6 +1,6 @@
 package Moonpig::Role::HasCharges;
 # ABSTRACT: something that has a set of charges associated with it
-use MooseX::Role::Parameterized;
+use Moose::Role;
 
 use namespace::autoclean;
 
@@ -12,91 +12,78 @@ use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(LineItem Time);
 
-parameter charge_role => (
-  isa      => enum([qw(InvoiceCharge JournalCharge)]),
-  required => 1,
+requires 'charge_role';
+
+requires 'accepts_charge';
+
+# This is a misnomer, since it might not yield only charges, but any line
+# item.
+# We did not want to have to modify the existing database. mjd 2012-07-12
+has charges => (
+  is  => 'ro',
+  isa => ArrayRef[ LineItem ],
+  init_arg => undef,
+  default  => sub {  []  },
+  traits   => [ 'Array' ],
+  handles  => {
+    all_items   => 'elements',
+    all_charges => 'elements',
+    has_items   => 'count',
+    has_charges => 'count',
+    _add_item   => 'push',
+  },
 );
 
-role {
-  my $p = shift;
+sub total_amount {
+  sumof { $_->amount } $_[0]->unabandoned_items;
+}
 
-  requires 'accepts_charge';
+sub unabandoned_items {
+  my @items = grep {
+    ! ($_->does('Moonpig::Role::LineItem::Abandonable') and $_->is_abandoned)
+  } $_[0]->all_items;
 
-  # This is a misnomer, since it might not yield only charges, but any line
-  # item.
-  # We did not want to have to modify the existing database. mjd 2012-07-12
-  has charges => (
-    is  => 'ro',
-    isa => ArrayRef[ LineItem ],
-    init_arg => undef,
-    default  => sub {  []  },
-    traits   => [ 'Array' ],
-    handles  => {
-      all_items => 'elements',
-      has_items => 'count',
-      _add_item => 'push',
-    },
-  );
+  return @items;
+}
 
-  method all_charges => sub {
-    return $_[0]->all_items; # any reason at all to make this filter?
-  };
+sub _objectify_charge {
+  my ($self, $input) = @_;
+  return $input if blessed $input;
 
-  method has_charges => sub {
-    return scalar($_[0]->all_charges);
-  };
+  my $class = class( $self->charge_role );
 
-  method total_amount => sub {
-    sumof { $_->amount } $_[0]->unabandoned_items;
-  };
+  $class->new($input);
+}
 
-  method unabandoned_items => sub {
-    my @items = grep {
-      ! ($_->does('Moonpig::Role::LineItem::Abandonable') and $_->is_abandoned)
-    } $_[0]->all_items;
+sub add_charge {
+  my ($self, $charge_input) = @_;
 
-    return @items;
-  };
+  my $charge = $self->_objectify_charge( $charge_input );
 
-  method _objectify_charge => sub {
-    my ($self, $input) = @_;
-    return $input if blessed $input;
+  Moonpig::X->throw("bad charge type")
+    unless $self->accepts_charge($charge);
 
-    my $class = class( $p->charge_role );
+  $self->_add_item($charge);
 
-    $class->new($input);
-  };
+  return $charge;
+}
 
-  method add_charge => sub {
-    my ($self, $charge_input) = @_;
+has closed_at => (
+  isa => Time,
+  init_arg  => undef,
+  reader    => 'closed_at',
+  predicate => 'is_closed',
+  writer    => '__set_closed_at',
+);
 
-    my $charge = $self->_objectify_charge( $charge_input );
+sub mark_closed { $_[0]->__set_closed_at( Moonpig->env->now ) };
+sub is_open { ! $_[0]->is_closed };
 
-    Moonpig::X->throw("bad charge type")
-      unless $self->accepts_charge($charge);
-
-    $self->_add_item($charge);
-
-    return $charge;
-  };
-
-  has closed_at => (
-    isa => Time,
-    init_arg  => undef,
-    reader    => 'closed_at',
-    predicate => 'is_closed',
-    writer    => '__set_closed_at',
-  );
-
-  method mark_closed => sub { $_[0]->__set_closed_at( Moonpig->env->now ) };
-  method is_open => sub { ! $_[0]->is_closed };
-
-  has date => (
-    is  => 'ro',
-    default => sub { Moonpig->env->now() },
-    init_arg => undef,
-    isa => 'DateTime',
-  );
-};
+has date => (
+  is  => 'ro',
+  default => sub { Moonpig->env->now() },
+  init_arg => undef,
+  isa => 'DateTime',
+);
 
 1;
