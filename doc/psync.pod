@@ -1,0 +1,181 @@
+REPLACEMENTS
+
+PN psync notice
+PQ psync quote
+LPS last psync shortfall
+PS psync shortfall
+
+=head1 Psync
+
+=head2 Overview
+
+A customer may at any time change the amount of service they are
+receiving from us.  For example, they can upgrade or downgrade their
+account, or add or remove aliases at any time. This changes the amount
+that they need to pay us for service.  This in turn changes the
+expiration date on their account.  Moonpig sends the user a "psync
+notice", informing them of the change, and, if the date has become
+earlier, offering them a chance to pay to have the old expiration date
+reinstated.
+
+=head2 Example
+
+Suppose on January 1 a user signs up for a Pobox Basic account,
+charged at $20 per year, and pays $20 for one year of service.  By
+July 1, they have consumed $10 worth of service and have $10 left
+unspent.
+
+At this point they upgrade their account to Pobox Plus, charged at $35
+per year.  Their remaining $10 is only enough to pay for $10/$35 = 29%
+of a year, instead of the 50% they had before. 29% of a year is 104
+days, so with the current funds, the account will last only another
+104 days, and will expire on October 13 instead of on the following
+January 1.
+
+The psync system will send a notice:
+
+        {{ $date_format = "%B %e, %Y";  # Jan  9, 2000.
+           $SHHH = "" }}
+
+        You've recently updated your service 'joe@pobox.com'.
+        Due to those changes, your account price has changed.  Based on funds 
+        on hand, service is now expected to continue until Oct 13, 2012.
+
+        If you would prefer, you can make a pro-rated payment to
+        extend your service to your previous expiration date.  The
+        pro-rated charge to extend service to Jan  1, 2013 is $7.50.
+
+        To make payment online...
+
+        If no action is taken, service will continue through Oct 13, 2012.
+
+The user has the option to pay and retain the old expiration date, or
+ignore the notice and accept the new expiration date.
+
+=head2 Implementation
+
+=head3 Overview 
+
+Pobox consumers track a "psync shortfall" duration.  This is the
+difference between the duration they expect to be able to live, and
+the duration they can live based on their current funds and current
+charging rate. A positive PS indicates a shortage of funds; a negative
+PS indicates a surplus.
+
+At heartbeat time, each active consumer calculates its PS and compares
+it with the saved LPS.  If they are the same, it does nothing.  If the
+shortfall has increased, the event handler constructs a special "PQ"
+for the amount to cover the change in shortfall and sends the customer
+a "PN" as described above in the L<Example> section.  If the shortfall
+has decreased, the handler sends a truncated notice with no quote and
+no request for funds.
+
+=head3 Psync quotes
+
+If a psync quote is required, the active consumer starts and finishes
+it, and asks itself and each of its inactive successors to place
+charges on it.
+
+A psync quote can be distinguished from a regular quote because it has
+a C<psync_for_xid> member that records the XID to which it pertains.
+When the active consumer finishes constructing a PQ, older PQs for the
+same XID are obsolete, and are abandoned.
+
+Unlike a regular quote, a PQ does not carry a chain of inactive
+consumers to attach to the current chain, and so doesn't care about a
+saved attachment point.
+
+=head3 Fine points of time and money calculations
+
+Everything in this section applies only to C<ByTime> consumers. At
+present, no other consumers participate in the psync process, except
+for C<SelfFunding>, which are detailed below.
+
+=head4 Expected lifetime
+
+An active consumer's want to live is its proration period, which is
+normally the same as its cost period (typically, one year), reduced by
+the interval it has already lived, as measured from its activation
+date to its next charge date.
+
+An active consumer's expected lifetime, based on funds on hand, is
+just its funds on hand, divided by its current charge rate.
+
+=head4 Funds on hand
+
+Funds on hand are a bit complicated.  This total is mainly the money
+that has already been transferred to the consumer's account. But it
+also includes funds from paid but unexecuted charges owned by the
+consumer, and it I<also> includes funds from I<unpaid> charges owned
+by the consumer, under the assumption that the customer will pay these
+charges eventually.
+
+=head4 Account expiration
+
+Account expiration dates mentioned in the PN are calculated similarly
+to the way the shortfall in the active consumer is calculated, but are
+added up for each consumer in the entire chain, including inactive
+successors.
+
+An inactive consumer's want-to-live is the same as its proration
+period, which is normally its cost period.  Its expected funded
+lifetime is the same as for an active consumer, but *not* including
+unpaid charges. (XXX Why not?)
+
+=head2 Psync and self-funding consumers (buy-five-get-one-free)
+
+The buy-five-get-one-free deal ("b5g1") is implemented by having each
+chain of five paid consumers capped with a C<SelfFunding> consumer
+which, when activated, immediately creates and takes possession of a
+credit that will pay for its lifetime.
+
+This self-funded credit is normally just enough to pay for one year of
+the same service as the five consumers that were paid for.
+
+If the customer pays for a service upgrade partway through the initial
+five-year period, their free year is upgraded also, by an amount that
+is pro-rated to match the amount the customer paid for the upgrade.
+
+For example, suppose the customer pays for five years of service at
+$20 per year. They will receive a self-funding consumer worth $20 of
+free service.  Now suppose that after 3 years, they upgrade their
+service to Pobox Plus, billed at $35 per year.  They will receive a PN
+warning them of a shortfall, and inviting them to pay $30 to upgrade
+the two remaining years of service to Pobox Plus.
+
+If the customer opts not to pay, their paid service will finish after
+20/35 of two years, which is 417 days instead of 730.  Then their free
+consumer, which is still worth $20, will activate and live for 20/35
+of one year, which is 209 days instead of 365.
+
+If the customer does pay the $30 PQ, however, their paid service will
+be will be extended back to its original lifetime of two years. The
+free consumer will be credited with an additional bonus: not a full
+$15 of free credit, but 2/5 of this amount, or $6, bringing its total
+to $26.  This will extend its shortened lifetime from 209 days to 271
+days.  This extra 62 days is 2/5 of the difference between the
+shortened lifetime of 209 days and the original lifetime of 365 days.
+
+=head2 Weird edge cases
+
+=head3 Long time elapses between change and invoice
+
+XXX Rik should write this up.
+
+=head3 Forward propagation of LPS
+
+When an active consumer issues a PN, it resets the LPS on all its
+successors, setting their LPS to whatever their current predicted
+shortfall is.  This is so that if the customer opts not to execute and
+pay the PQ, the successors won't repeat the same notice when they are
+activated in due course.  
+
+=head3 Small drifts in LPS
+
+If the LPS drifts by a small amount (typically, by less than a day),
+the notice is suppressed.  The recorded LPS is I<not> updated, so that
+a large drift that occurs a bit at a time will eventually trigger a
+PN.
+
+This could cause a user to get a fraction of a day of service more or
+less than they are really owed.
