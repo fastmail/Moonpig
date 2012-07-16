@@ -182,6 +182,19 @@ We can show the quote to the user, and later, if the user decides to
 accept the service offered, we can execute the quote, which turns it
 into a payable invoice.
 
+A quote records an "attachment point", the consumer to which its
+inactive consumer chain expects to be attached as a replacement chain.
+After a quote's attachment point has expired or has been superseded,
+the quote is obsolete, and attempts to execute it will fail.
+
+=head4 Psync quotes
+
+Some quotes are distinguished as "psync quotes".  These do not have a
+consumer chain or an attachment point.  They are generated
+automatically when a consumer chain detects that it does not have
+enough funds on hand to live out its expected lifetime.  For complete
+details, see the Psync document C<psync.pod>.
+
 =head2 Payment cycle
 
 Suppose a user requests a service.  The following sequence of events
