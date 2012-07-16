@@ -19,8 +19,8 @@ contact information for the account.
 =head3 Invoice
 
 An invoice represents list of unpaid charges that the owner of the
-account will be asked to pay.  Its implementation is as a charge container
-(HasCharges).
+account will be asked to pay.  Its implementation is as a line item
+container (HasLineItems).
 
 =head3 Journal
 
@@ -75,6 +75,16 @@ and are automatically filed by consumers, transferring funds from the consumer
 to the journal.  These are not sent to customers on invoices.  They are a
 purely internal means of accounting how the customer's payments were eventually
 converted into service.
+
+=head4 Line items
+
+Charges are actually a special case of a more general entity, the
+"line item"; journals and invoices are collections of line items, not
+charges, because it is sometimes convenient to be able to place an
+annotation or other object into an invoice that does not represent a
+charge.  A line item (and therefore a charge) has a description and an
+amount.  In a charge, the amount must be positive, but in a line item
+there is no such restriction.
 
 =head2 Subsidiary entities
 
