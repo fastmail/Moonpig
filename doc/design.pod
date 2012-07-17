@@ -19,62 +19,75 @@ contact information for the account.
 =head3 Invoice
 
 An invoice represents list of unpaid charges that the owner of the
-account will be asked to pay.  Its implementation is as a charge container
-(HasCharges).
+account will be asked to pay.  Its implementation is as a line item
+container (HasLineItems).
 
 =head3 Journal
 
-A journal represents a summary of spending by consumers over a span of time.
-It is represented as a charge container.  A journal can be marked as closed, at
-which time new transfers will be recorded on a new journal.  Money consumed by
-a consumer is transferred I<to> the journal.
+A journal represents a summary of spending by consumers over a span of
+time.  It is represented as a charge container.  A journal can be
+marked as closed, at which time new transfers will be recorded on a
+new journal.  Money consumed by a consumer is transferred I<to> the
+journal.
 
 =head3 Consumer
 
-A consumer represents a service for which a consumer pays.  At present there
-appear to be three sorts: periodically assessed services; pay-as-you-go
-services, and pay-once services.  Periodically, the service object will decide
-that it needs to make a charge.  Charges are added to the current journal, and
-a transfer is made from the consumer to the journal.  If the consumer
-has no funds, the consumer is responsible for issuing appropriate warnings to
-the user and eventually for cutting off service.
+A consumer represents a service for which a consumer pays.  At present
+there appear to be three sorts: periodically assessed services;
+pay-as-you-go services, and pay-once services.  Periodically, the
+service object will decide that it needs to make a charge.  Charges
+are added to the current journal, and a transfer is made from the
+consumer to the journal.  If the consumer has no funds, the consumer
+is responsible for issuing appropriate warnings to the user and
+eventually for cutting off service.
 
-A service such as Listbox posting can ask a consumer if it is sufficiently
-well-funded, and can deny service if not.
+A service such as Listbox posting can ask a consumer if it is
+sufficiently well-funded, and can deny service if not.
 
-Consumers will generally have an event handler that fires when they're first
-made.  This handler will make a request for payment by adding a new charge to
-an invoice.  The charge, when paid, will have its value transferred to the
-consumer that placed the charge.
+Consumers will generally have an event handler that fires when they're
+first made.  This handler will make a request for payment by adding a
+new charge to an invoice.  The charge, when paid, will have its value
+transferred to the consumer that placed the charge.
 
 =head3 Credit
 
-Credits result from customer payments or administrator forbearance.  The user
-can ask for their cash back, in the case of refundable credits, and receives a
-corresponding proration of service.  A non-refundable credit might result from
-a consolation prize given to the user for a service failure, or might represent
-a service that we refuse to prorate, or that we cannot prorate, such as domain
+Credits result from customer payments or administrator forbearance.
+The user can ask for their cash back, in the case of refundable
+credits, and receives a corresponding proration of service.  A
+non-refundable credit might result from a consolation prize given to
+the user for a service failure, or might represent a service that we
+refuse to prorate, or that we cannot prorate, such as domain
 registration.
 
 =head3 Charge
 
-A charge represents a request for funds to pay for service.  Charges are never
-used in the abstract, but rather always as either invoice charges or journal
-charges.
+A charge represents a request for funds to pay for service.  Charges
+are never used in the abstract, but rather always as either invoice
+charges or journal charges.
 
 =head4 Invoice Charges
 
-Invoice charges are filed by consumers, typically newly-created consumers, and
-will be send to the user as a request for payment, or will automatically be
-paid by credits on hand.
+Invoice charges are filed by consumers, typically newly-created
+consumers, and will be send to the user as a request for payment, or
+will automatically be paid by credits on hand.
 
 =head4 Journal Charges
 
-Journal charge represents a certain amount of service that we have provided,
-and are automatically filed by consumers, transferring funds from the consumer
-to the journal.  These are not sent to customers on invoices.  They are a
-purely internal means of accounting how the customer's payments were eventually
-converted into service.
+Journal charges represent a certain amount of service that we have
+provided, and are automatically filed by consumers, transferring funds
+from the consumer to the journal.  These are not sent to customers on
+invoices.  They are a purely internal means of accounting how the
+customer's payments were eventually converted into service.
+
+=head4 Line items
+
+Charges are actually a special case of a more general entity, the
+"line item"; journals and invoices are collections of line items, not
+charges, because it is sometimes convenient to be able to place an
+annotation or other object into an invoice that does not represent a
+charge.  A line item (and therefore a charge) has a description and an
+amount.  In a charge, the amount must be positive, but in a line item
+there is no such restriction.
 
 =head2 Subsidiary entities
 
@@ -95,11 +108,11 @@ credit, and for adding up the values of the transfers.
 
 =head3 Transfer
 
-Each transfer has a source object (typically a consumer), a target object
-(typically a consumer), a date, an amount of money transferred, and a
-type.  The type is a string the describes the function of the
-transfer.  For example, the normal transfer of money from a consumer to a
-journal that occurs when the consumer enters a charge is has type
+Each transfer has a source object (typically a consumer), a target
+object (typically a consumer), a date, an amount of money transferred,
+and a type.  The type is a string the describes the function of the
+transfer.  For example, the normal transfer of money from a consumer
+to a journal that occurs when the consumer enters a charge is has type
 "transfer".  But the transfer from a credit to an invoice that occurs
 when an invoice is paid has type "credit_application".  The accountant
 will refuse to make a transfer if the transfer type does not match the
@@ -111,12 +124,12 @@ contains related utility functions.
 When queried for transfers, accountants return TransferSets that
 represent collections of transfers.  These are supposed to be opaque
 objects, so please do not poke inside them.  They support methods for
-querying the collection and extracting subsets.
-C<< $transfer_set->all >>
+querying the collection and extracting subsets. C<< $transfer_set->all >>
 returns a list of the transfers the set contains.  But if you need to
 deal with transfers directly, consider adding a new TransferSet method
-that does what you want.  For example, instead of using C<< ->all >> and then
-looping over the transfers to calculate the total amount, there is a
+that does what you want.  For example, instead of using C<< ->all >>
+and then looping over the transfers to calculate the total amount,
+there is a
 C<< $transfer_set->total >> method that does this opaquely.
 
 =head4 Holds
@@ -147,6 +160,8 @@ can be transferred from a credit to a refund.
 
 =head3 Coupon
 
+XXX This section is obsolete
+
 Coupons are attached to consumers.  When ever the consumer is about to
 charge either the invoice or the ledger, it hands the charge arguments
 to the coupon first. The coupon has the option of modifying the
@@ -171,6 +186,19 @@ their charges onto a quote instead of onto a real invoice.
 We can show the quote to the user, and later, if the user decides to
 accept the service offered, we can execute the quote, which turns it
 into a payable invoice.
+
+A quote records an "attachment point", the consumer to which its
+inactive consumer chain expects to be attached as a replacement chain.
+After a quote's attachment point has expired or has been superseded,
+the quote is obsolete, and attempts to execute it will fail.
+
+=head4 Psync quotes
+
+Some quotes are distinguished as "psync quotes".  These do not have a
+consumer chain or an attachment point.  They are generated
+automatically when a consumer chain detects that it does not have
+enough funds on hand to live out its expected lifetime.  For complete
+details, see the Psync document C<psync.pod>.
 
 =head2 Payment cycle
 
@@ -219,8 +247,8 @@ invoice distributes this event to all of its subsidiary charges.
 
 =item 8.
 
-Because one of the invoice charges composes the "Bankable" role, its value is
-transferred from the invoice to the consumer.
+Because one of the invoice charges composes the "Bankable" role, its
+value is transferred from the invoice to the consumer.
 
 The consumer is now set up.
 
@@ -275,9 +303,10 @@ C<accept_payment> method on the ledger's credit collection.
 
 =item 1.
 
-The method first scans over all the consumers looking for "spare change":
-consumers with outstanding funds that are expired.  It transfers all the funds
-from these inactive consumers to a fresh credit.
+The method first scans over all the consumers looking for "spare
+change": consumers with outstanding funds that are expired.  It
+transfers all the funds from these inactive consumers to a fresh
+credit.
 
 =item 2.
 
@@ -386,8 +415,9 @@ as a $20/12 payment per month.  (Or possibly a $20/365 payment per
 year?)  Each day the consumer object will receive a heartbeat event.
 It will check if it has processed a charge yet this month.  If not, it
 will try to transfer funds to the journal.  If the consumer is
-sufficiently well-funded, that is all that is needed; the charge is now
-in the right cost tree and the later receipt will inform the customer.
+sufficiently well-funded, that is all that is needed; the charge is
+now in the right cost tree and the later receipt will inform the
+customer.
 
 TODO
 
@@ -468,7 +498,7 @@ in 365 daily increments of 5749 mc each, totalling $19.99 and 835mc.
 The customer gets about 1/6 of a cent for free.
 
 Unadorned numeric values are taken to be in millicents.
-C<Moonpig::Util> provides  C<dollars> and C<cents> functions to
+C<Moonpig::Util> provides C<dollars> and C<cents> functions to
 construct dollar and cent amounts.  For example, 150000,
 C<dollars(1.50)>, and C<cents(150)> are all the same amount of money.
 
