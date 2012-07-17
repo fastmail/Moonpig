@@ -115,8 +115,7 @@ including inactive successors.
 
 An inactive consumer's want-to-live is the same as its proration
 period, which is normally its cost period.  Its expected funded
-lifetime is the same as for an active consumer, but *not* including
-unpaid charges. (XXX Why not?)
+lifetime is the same as for an active consumer.
 
 =head2 Psync and self-funding consumers (buy-five-get-one-free)
 
