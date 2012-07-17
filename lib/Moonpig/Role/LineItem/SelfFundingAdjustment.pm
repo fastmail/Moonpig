@@ -23,7 +23,7 @@ sub when_paid {
 
 PARTIAL_PACK {
   my ($self) = @_;
-  return { line_item_adjustment_amount => $self->line_item_adjustment_amount };
+  return { line_item_adjustment_amount => $self->adjustment_amount };
 };
 
 
