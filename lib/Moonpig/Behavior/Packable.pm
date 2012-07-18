@@ -13,7 +13,6 @@ use MooseX::ComposedBehavior -compose => {
     my ($self, $results) = @_;
     my %composed;
 
-    # Each result is a HOH; first keys, event names; second keys, handler names
     for my $result (@$results) {
       for my $key (keys %$result) {
         if (exists $composed{ $key }) {
