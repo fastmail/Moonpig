@@ -1,0 +1,14 @@
+#!/usr/bin/env perl
+# -*- cperl -*-
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+
+Moonpig->env->storage->iterate_jobs(undef, sub {
+    my ($job) = @_;
+
+    my @p = map "$_ => $job->{$_}", sort grep !/^payloads$/, grep !/_callback$/, keys %$job;
+    print join(", ", @p), "\n";
+    $count++;
+  });
+
