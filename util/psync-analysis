@@ -1,0 +1,55 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+use Moonpig::Types qw(GUID XID);
+tie my %Days => 'Interpolate::Days';
+tie my %Dollars => 'Interpolate::Dollars';
+tie my %Date => 'Interpolate::Date';
+
+my $st = Moonpig->env->storage;
+my $in = shift || usage();
+my $adj = (shift // 0) * 10000;
+my $guid;
+
+if ($in =~ /^\d{8}$/) { $in = "pobox:bg:$in" }
+if (XID->check($in)) {
+  $st->do_ro(
+    sub {
+      my $ledger = $st->retrieve_ledger_unambiguous_for_xid($in)
+        or die "Couldn't find ledger for $in\n";
+      $guid = $ledger->guid;
+    });
+} else { usage() }
+
+$st->do_ro_with_ledger(
+  $guid,
+  sub {
+    my ($ledger) = @_;
+    my ($c) = grep { $_->xid eq $in } $ledger->consumers;
+    my @chain = $c->replacement_chain;
+    print "Ledger guid: http://moonpig.icgroup.com:3060/ledger/", $ledger->guid, "\n";
+    print "Chain length: ", 0 + @chain, "\n";
+    print "predicted shortfall: $Days{$c->_predicted_shortfall}\n";
+    print "want to live: $Days{$c->want_to_live}\n";
+    print "activation date: $Date{$c->activated_at}\n";
+    print "expected funds: $Dollars{my $amount = $c->expected_funds({ include_unpaid_charges => 1 })}\n";
+    print "charge per day: $Dollars{$c->calculate_total_charge_amount_on( Moonpig->env->now )}\n";
+    print "est. remaining funded lifetime: $Days{$c->_estimated_remaining_funded_lifetime({ amount => $amount })}\n";
+    print "  (adjusted) $Days{$c->_estimated_remaining_funded_lifetime({ amount => $amount, charge_adjustment => $adj / 365.25 })}\n" if $adj;
+});
+
+BEGIN { for my $x (qw(Days Dollars Date)) {
+    no strict 'refs';
+    *{"Interpolate::$x\::TIEHASH"} = sub { bless ["dummy"] => "Interpolate::$x" }
+        }}
+
+sub Interpolate::Days::FETCH { sprintf "%.0f day(s)", int($_[1] / 86400 + 0.5) }
+sub Interpolate::Dollars::FETCH { sprintf "\$%.2f", $_[1]/100000 }
+sub Interpolate::Date::FETCH { $_[1]->iso }
+
+sub usage {
+  print STDERR "psync-analysis XID [annual charge adjustment]\n";
+  exit 1;
+}

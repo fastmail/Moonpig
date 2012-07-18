@@ -338,12 +338,16 @@ sub expected_funds {
 around _estimated_remaining_funded_lifetime => sub {
   my ($orig, $self, $args) = @_;
 
+  # This is for asking what-if questions: what would the estimated remaining funded lifetime
+  # be *if* the daily charge were greater by this amount. Normally, of course, this is 0.
+  my $charge_adjustment = $args->{charge_adjustment} // 0;
+
   confess "Missing amount argument to _estimated_remaining_funded_lifetime"
     unless defined $args->{amount};
   Moonpig::X->throw("inactive consumer forbidden")
       if $args->{must_be_active} && ! $self->is_active;
 
-  my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now );
+  my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now ) + $charge_adjustment;
 
   Moonpig::X->throw("can't compute funded lifetime of negative-cost consumer")
     if $each_charge < 0;
