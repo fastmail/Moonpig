@@ -318,9 +318,12 @@ sub expected_funds {
   @invoices = grep { $_->is_paid } @invoices unless $options->{include_unpaid_charges};
 
 
-  my @charges = grep { ! $_->is_executed && # executed chgs will be counted in unapplied_amount
-                       ! $_->is_abandoned && $guid eq $_->owner_guid }
-                map  { $_->all_charges } @invoices;
+  my @charges = grep {
+    # executed chgs will be counted in unapplied_amount
+    $_->does("Moonpig::Role::InvoiceCharge") && ! $_->is_executed &&
+
+      ! $_->is_abandoned && $guid eq $_->owner_guid }
+    map  { $_->all_charges } @invoices;
 
   my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
   return $funds;
