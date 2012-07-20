@@ -1,0 +1,43 @@
+#!/usr/bin/env perl
+# -*- cperl -*-
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+$| = 1;
+
+my $guid = shift or usage();
+if ($guid =~ /:/) {
+  $guid = Moonpig->env->storage->do_ro(
+    sub {
+      my $ledger = Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($guid);
+      return $ledger->guid;
+    });
+}
+
+my $CANCELLED = 0;
+Moonpig->env->storage->do_rw_with_ledgers(
+  [$guid],
+  sub {
+     my ($ledger) = @_;
+     my $jobs = Moonpig->env->storage->undone_jobs_for_ledger($ledger);
+     unless (@$jobs) {
+       warn "No jobs for ledger $guid\n";
+       exit;
+     }
+     for my $job (@$jobs) {
+       printf "job %s:\n", $job->job_id;
+       my $payloads = $job->payloads;
+       for my $k (sort keys %$payloads) {
+         printf "  %-12s %s\n", $k, $payloads->{$k};
+       }
+       print "Type 'cancel' to cancel: ";
+       chomp(my $res = <>);
+       next unless $res eq "cancel";
+       $job->cancel;
+       $CANCELLED++;
+       print "Will cancel this job on successful exit.\n";
+     }
+  });
+
+my $jobs = $CANCELLED == 1 ? "job" : "jobs";
+print "$CANCELLED $jobs cancelled.\n" if $CANCELLED;
