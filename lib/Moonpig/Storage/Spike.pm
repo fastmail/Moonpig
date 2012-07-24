@@ -14,7 +14,8 @@ use Digest::MD5 qw(md5_hex);
 use DBI;
 use DBIx::Connector;
 use File::Spec;
-
+use IO::Compress::Gzip ();
+use IO::Uncompress::Gunzip ();
 use Moonpig::Job;
 use Moonpig::Logger '$Logger';
 use Moonpig::Storage::UpdateModeStack;
@@ -742,10 +743,12 @@ sub _store_ledger {
 
   Ledger->assert_valid($ledger);
 
+  my $guid = $ledger->guid;
+
   $Logger->log_debug([
     'storing %s under guid %s',
     $ledger->ident,
-    $ledger->guid,
+    $guid,
   ]);
 
   my $ident;
@@ -758,12 +761,20 @@ sub _store_ledger {
       my ($count) = $dbh->selectrow_array(
         q{SELECT COUNT(guid) FROM ledgers WHERE guid = ?},
         undef,
-        $ledger->guid,
+        $guid,
       );
 
       $_->_clear_event_handler_registry for ($ledger, $ledger->consumers);
 
       my $frozen_ledger  = nfreeze( $ledger );
+
+      {
+        my $buffer;
+        Carp::confess(
+          "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
+        ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$buffer);
+      }
+
       my $frozen_classes = nfreeze( class_roles );
 
       my $rv = $dbh->do(
@@ -775,7 +786,7 @@ sub _store_ledger {
         $frozen_ledger,
         $frozen_classes,
         guid_string(),
-        $ledger->guid,
+        $guid,
       );
 
       if ($rv and $rv == 0) {
@@ -808,7 +819,7 @@ sub _store_ledger {
                   VALUES (?, ?, 1, ?, ?, ?)
                 },
                 undef,
-                $ledger->guid,
+                $guid,
                 $ident,
                 $frozen_ledger,
                 $frozen_classes,
@@ -828,13 +839,13 @@ sub _store_ledger {
       $dbh->do(
         q{DELETE FROM xid_ledgers WHERE ledger_guid = ?},
         undef,
-        $ledger->guid,
+        $guid,
       );
 
       $dbh->do(
         q{DELETE FROM all_xid_ledgers WHERE ledger_guid = ?},
         undef,
-        $ledger->guid,
+        $guid,
       );
 
       my $xid_sth = $dbh->prepare(
@@ -842,7 +853,7 @@ sub _store_ledger {
       );
 
       for my $xid ($ledger->active_xids) {
-        $xid_sth->execute($xid, $ledger->guid);
+        $xid_sth->execute($xid, $guid);
       }
 
       my $all_xid_sth = $dbh->prepare(
@@ -852,7 +863,7 @@ sub _store_ledger {
       my %seen;
       for my $consumer ($ledger->consumers) {
         next if $seen{ $consumer->xid }++;
-        $all_xid_sth->execute($consumer->xid, $ledger->guid);
+        $all_xid_sth->execute($consumer->xid, $guid);
       }
 
       if ($self->_fail_next_save) {
@@ -867,7 +878,7 @@ sub _store_ledger {
       [
         [ exception => Carp::longmess("error while saving ledger") ],
         [ misc => {
-          ledger_guid => $ledger->guid,
+          ledger_guid => $guid,
           error       => $error,
           cache_keys  => [ keys %{ {$self->_ledger_cache_contents} } ],
           xact_stack  => $self->_update_mode_stack,
@@ -1046,6 +1057,16 @@ sub _retrieve_ledger_from_db {
     unless defined $class_blob and defined $ledger_blob;
 
   require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
+
+  if (substr($ledger_blob, 0, 2) eq "\x1F\x8B") {
+    # The gzip marker!
+    my $buffer;
+    Carp::confess(
+      "error gunzipping ledger $guid: $IO::Uncompress::Gunzip::GunzipError"
+    ) unless IO::Uncompress::Gunzip::gzunip(\$ledger_blob, \$buffer);
+
+    $ledger_blob = $buffer;
+  }
 
   my $class_map = thaw($class_blob);
   my $ledger    = thaw($ledger_blob);
