@@ -49,7 +49,13 @@ sub pay_invoices {
 sub pay_payable_invoices {
   my ($self, $ledger, $expect, $desc) = @_;
 
-  return unless $ledger->payable_invoices;
+  unless ($ledger->payable_invoices) {
+    if (defined $expect) {
+      is(0, $expect, $desc // "invoices payoff had expected cost");
+    }
+    return;
+  }
+
   # There are unpaid invoices!
   my @invoices = $ledger->last_dunned_invoices;
 
