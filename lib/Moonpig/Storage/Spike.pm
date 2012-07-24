@@ -734,6 +734,20 @@ sub _execute_saves {
   @{ $self->_ledger_queue } = ();
 }
 
+sub __nfreeze_and_gzip {
+  my ($self, $ledger) = @_;
+
+  my $frozen_ledger = nfreeze($ledger);
+  my $guid = $ledger->guid;
+
+  my $buffer;
+  Carp::confess(
+    "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
+  ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$buffer);
+
+  return $buffer
+}
+
 sub _store_ledger {
   my ($self, $ledger) = @_;
 
@@ -766,15 +780,7 @@ sub _store_ledger {
 
       $_->_clear_event_handler_registry for ($ledger, $ledger->consumers);
 
-      my $frozen_ledger  = nfreeze( $ledger );
-
-      {
-        my $buffer;
-        Carp::confess(
-          "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
-        ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$buffer);
-      }
-
+      my $frozen_ledger  = $self->__nfreeze_and_gzip( $ledger );
       my $frozen_classes = nfreeze( class_roles );
 
       my $rv = $dbh->do(
@@ -810,7 +816,7 @@ sub _store_ledger {
 
               $ledger->set_short_ident($ident) unless $existing_ident;
 
-              $frozen_ledger = nfreeze( $ledger );
+              $frozen_ledger = $self->__nfreeze_and_gzip( $ledger );
 
               $dbh->do(
                 q{
@@ -1063,7 +1069,7 @@ sub _retrieve_ledger_from_db {
     my $buffer;
     Carp::confess(
       "error gunzipping ledger $guid: $IO::Uncompress::Gunzip::GunzipError"
-    ) unless IO::Uncompress::Gunzip::gzunip(\$ledger_blob, \$buffer);
+    ) unless IO::Uncompress::Gunzip::gunzip(\$ledger_blob, \$buffer);
 
     $ledger_blob = $buffer;
   }
