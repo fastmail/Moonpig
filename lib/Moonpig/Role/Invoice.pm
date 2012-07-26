@@ -131,8 +131,11 @@ sub abandon_with_replacement {
   confess "Can't abandon already-paid invoice " . $self->guid
     unless $self->is_unpaid;
 
+  my @abandoned_items   = $self->abandoned_items;
+  my @unabandoned_items = $self->unabandoned_items;
+
   confess "Can't abandon invoice " . $self->guid . " with no abandoned charges"
-    unless grep $_->is_abandoned, $self->all_charges;
+    if $self->has_items and ! @abandoned_items;
 
   if ($new_invoice) {
     confess "Can't replace abandoned invoice with closed invoice"
@@ -140,7 +143,7 @@ sub abandon_with_replacement {
         if $new_invoice->is_closed;
 
     # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
-    for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
+    for my $charge (@unabandoned_items) {
       $new_invoice->add_charge($charge);
     }
 
