@@ -114,8 +114,10 @@ sub abandon {
 
 sub abandon_if_empty {
   my ($self) = @_;
-  return if $self->has_charges;
-  $self->abandoned_in_favor_of(undef);
+  return if $self->is_open;
+  return if $self->is_paid;
+  return if $self->unabandoned_items;
+  $self->abandon_without_replacement;
   $self->mark_abandoned;
 }
 
