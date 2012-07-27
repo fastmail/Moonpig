@@ -112,6 +112,15 @@ sub abandon {
   $self->ledger->abandon_invoice($self);
 }
 
+sub abandon_if_empty {
+  my ($self) = @_;
+  return if $self->is_open;
+  return if $self->is_paid;
+  return if $self->unabandoned_items;
+  $self->abandon_without_replacement;
+  $self->mark_abandoned;
+}
+
 # transfer non-abandoned charges to specified open invoice,
 # or just discard them if $new_invoice is omitted
 sub abandon_with_replacement {
@@ -122,8 +131,11 @@ sub abandon_with_replacement {
   confess "Can't abandon already-paid invoice " . $self->guid
     unless $self->is_unpaid;
 
+  my @abandoned_items   = $self->abandoned_items;
+  my @unabandoned_items = $self->unabandoned_items;
+
   confess "Can't abandon invoice " . $self->guid . " with no abandoned charges"
-    unless grep $_->is_abandoned, $self->all_charges;
+    if $self->has_items and ! @abandoned_items;
 
   if ($new_invoice) {
     confess "Can't replace abandoned invoice with closed invoice"
@@ -131,7 +143,7 @@ sub abandon_with_replacement {
         if $new_invoice->is_closed;
 
     # XXX This discards non-charge items. Is that correct? mjd 2012-07-11
-    for my $charge (grep ! $_->is_abandoned, $self->all_charges) {
+    for my $charge (@unabandoned_items) {
       $new_invoice->add_charge($charge);
     }
 

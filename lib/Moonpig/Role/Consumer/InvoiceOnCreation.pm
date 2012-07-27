@@ -42,4 +42,17 @@ sub _invoice {
   }
 }
 
+sub reinvoice_initial_charges {
+  my ($self) = @_;
+
+  Moonpig::X->throw("cannot reinvoice after funding")
+    if $self->was_ever_funded;
+
+  $self->abandon_all_unpaid_charges;
+  $self->_invoice;
+  if ($self->has_replacement) {
+    $self->replacement->reinvoice_initial_charges;
+  }
+}
+
 1;

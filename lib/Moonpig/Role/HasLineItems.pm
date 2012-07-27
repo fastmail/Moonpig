@@ -38,6 +38,14 @@ sub total_amount {
   sumof { $_->amount } $_[0]->unabandoned_items;
 }
 
+sub abandoned_items {
+  my @items = grep {
+    ($_->does('Moonpig::Role::LineItem::Abandonable') and $_->is_abandoned)
+  } $_[0]->all_items;
+
+  return @items;
+}
+
 sub unabandoned_items {
   my @items = grep {
     ! ($_->does('Moonpig::Role::LineItem::Abandonable') and $_->is_abandoned)

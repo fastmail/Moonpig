@@ -580,6 +580,7 @@ sub _abandon_charges_on_invoice {
   }
 
   $_->mark_abandoned for @charges;
+  $invoice->abandon_if_empty;
   return @charges;
 }
 
