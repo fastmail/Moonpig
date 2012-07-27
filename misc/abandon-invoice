@@ -15,17 +15,19 @@ use 5.14.1;
 use Moonpig;
 use Pobox::Moonpig::Env;
 
+my $guid = '20DDD266-9EA1-11E1-BC6D-510C77C542B6';
+my $xid  = 'pobox:bg:65650459';
+
 Moonpig->env->storage->do_rw_with_ledger(
-  'E6E6A5EA-8EFD-11E1-BCEF-B626466D128F',
+  $guid,
   sub {
     my ($ledger) = @_;
-    my (@consumers) = $ledger->consumers;
     say $ledger->amount_due;
-    $_->abandon_all_unpaid_charges for @consumers;
-    my ($invoice) = grep { $_->guid eq '5F1497B4-938D-11E1-A887-F5EA81BE021E' }
-                    $ledger->invoices;
-    $invoice->abandon_without_replacement;
+    my $consumer = $ledger->active_consumer_for_xid($xid);
+    $consumer->replacement->reinvoice_initial_charges;
+    $ledger->heartbeat;
     say $ledger->amount_due;
+    die "DO NOT COMMIT\n";
   }
 );
 
