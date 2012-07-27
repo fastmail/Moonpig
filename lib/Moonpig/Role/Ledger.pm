@@ -491,7 +491,11 @@ sub abandon_invoice {
 sub amount_earmarked {
   my ($self) = @_;
   my @invoices = grep { $_->is_paid } $self->invoices_without_quotes;
-  my @charges  = grep { ! $_->is_executed && ! $_->is_abandoned }
+  my @charges  = grep {
+                    ! ($_->does('Moonpig::Role::LineItem::Abandonable')
+                       && $_->is_abandoned)
+                   && ($_->can('is_executed') && ! $_->is_executed)
+                 }
                  map  { $_->all_charges } @invoices;
 
   return sumof { $_->amount } @charges;
