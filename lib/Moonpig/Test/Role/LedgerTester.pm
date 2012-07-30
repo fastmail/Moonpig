@@ -7,10 +7,16 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Util qw(class sum to_dollars);
+use Moonpig::Util qw(class datetime sum to_dollars);
 use Test::More;
 
 use namespace::clean;
+
+around run_test => sub {
+  my ($orig, $self, @rest) = @_;
+  Moonpig->env->stop_clock_at( datetime( jan => 1 ) );
+  $self->$orig(@rest);
+};
 
 sub heartbeat_and_send_mail {
   my $self   = shift;
