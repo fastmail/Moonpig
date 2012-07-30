@@ -98,6 +98,16 @@ test 'signup for five, get one free' => sub {
       is($summ->paid_consumers, 5, "five are paid");
       is($summ->free_consumers, 1, "one is free");
       is_deeply([$summ->free_indexes], [5], "...and the free one is last");
+
+      {
+        my ($head) = $ledger->active_consumers;
+        my $exp = $head->replacement_chain_expiration_date({
+          include_expected_funds => 0,
+        });
+
+        my $days = ($exp - $head->activated_at) / 86_400;
+        is($days, 60, "we expect to live for 60 days");
+      }
     },
   );
 };

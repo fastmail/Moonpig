@@ -131,12 +131,17 @@ sub _previous_n_ancestors {
   return @chain;
 }
 
+around expected_funds => sub {
+  my ($orig, $self, @rest) = @_;
+
+  my $subtotal = $self->$orig(@rest);
+  return $subtotal + $self->self_funding_credit_amount;
+};
+
 PARTIAL_PACK {
   return {
     self_funding_amount => $_[0]->self_funding_amount,
   };
 };
-
-
 
 1;
