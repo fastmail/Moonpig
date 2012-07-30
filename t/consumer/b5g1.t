@@ -11,7 +11,7 @@ use t::lib::TestEnv;
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-with ('Moonpig::Test::Role::UsesStorage');
+with ('Moonpig::Test::Role::LedgerTester');
 
 has xid => (
   isa => 'Str',
@@ -104,10 +104,6 @@ test 'signup for five, get one free' => sub {
 
 test 'SelfFunding funds -initial- charge amount' => sub {
   my ($self) = @_;
-
-  # local $ENV{MOONPIG_TRACE_EVENTS} = 1;
-
-  Moonpig->env->stop_clock;
 
   do_with_fresh_ledger(
     {
