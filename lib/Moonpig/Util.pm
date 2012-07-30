@@ -25,6 +25,7 @@ use Sub::Exporter -setup => [ qw(
 
   cents dollars to_cents to_dollars
 
+  datetime
   days weeks months years
   days_in_year
 
@@ -107,6 +108,26 @@ sub dollars {
 sub to_dollars {
   my ($millicents) = @_;
   return $millicents / (1000 * 100);
+}
+
+my %MONTH = (
+  jan => 1, feb => 2, mar => 3, apr => 4, may => 5, jun => 6,
+  jul => 7, aug => 8, sep => 9, oct =>10, nov =>11, dec =>12,
+);
+
+sub datetime {
+  my ($m, $d, $y, $H, $M, $S) = @_;
+  Carp::croak("no month given!") unless $m;
+  $m = $MONTH{$m} // Carp::croak("don't understand month <$m>")
+    unless $m =~ /\A[0-9]+\z/;
+  Moonpig::DateTime->new(
+    year   => $y // 2000,
+    month  => $m,
+    day    => $d // 1,
+    hour   => $H // 0,
+    minute => $M // 0,
+    second => $S // 0,
+  );
 }
 
 sub days { $_[0] * 86400 } # Ignores leap seconds and DST
