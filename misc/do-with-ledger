@@ -1,0 +1,24 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Moonpig::Util qw(dollars);
+use Pobox::Moonpig::Env;
+
+my $guid = 'D64B028E-9BA1-11E1-B122-36C176C542B6';
+# my $xid  = 'pobox:bg:65650459';
+
+Moonpig->env->storage->do_rw_with_ledger(
+  $guid,
+  sub {
+    my ($ledger) = @_;
+
+    my ($consumer) = grep { $_->does('Moonpig::Role::Consumer::SelfFunding') }
+                     $ledger->consumers;
+
+    warn $consumer->self_funding_credit_amount(dollars(35));
+
+    die "DO NOT COMMIT\n";
+  }
+);
+
