@@ -21,7 +21,8 @@ has abandoned_at => (
 
 sub mark_abandoned {
   my ($self) = @_;
-  Moonpig::X->throw("can't abandon an executed charge") if $self->is_executed;
+  Moonpig::X->throw("can't abandon an executed charge")
+    if $self->can('is_executed') && $self->is_executed;
   $self->__set_abandoned_at( Moonpig->env->now );
 }
 
