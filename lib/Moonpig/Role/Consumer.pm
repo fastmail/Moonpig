@@ -109,9 +109,7 @@ sub mark_superseded {
 
   $self->_superseded_at(Moonpig->env->now);
   $self->abandon_all_unpaid_charges;
-  for my $repl (@{$self->_replacement_history}) {
-    $repl->mark_superseded if $repl;
-  }
+  $self->replacement->mark_superseded if $self->replacement;
 }
 
 has _replacement_history => (
