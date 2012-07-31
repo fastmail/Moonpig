@@ -8,6 +8,7 @@ use Moonpig::Behavior::Packable;
 with ('Moonpig::Role::LineItem',
       'Moonpig::Role::LineItem::Note',
       'Moonpig::Role::LineItem::Active',
+      'Moonpig::Role::LineItem::Abandonable',
      );
 
 has adjustment_amount => (
