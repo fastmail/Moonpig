@@ -1,0 +1,19 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Moonpig::Util qw(to_dollars);
+use Pobox::Moonpig;
+
+my @credit;
+
+Moonpig->env->storage->do_with_each_ledger(
+  { ro => 1 },
+  sub {
+    my ($ledger) = @_;
+    my $invoice = $ledger->current_invoice;
+    next unless $invoice->is_quote && $invoice->is_open;
+    printf "%s %s\n", $ledger->guid, $invoice->created_at;
+  }
+);
+
