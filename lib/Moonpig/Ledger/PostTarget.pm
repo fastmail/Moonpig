@@ -76,6 +76,7 @@ sub resource_post {
         Moonpig::X->throw("xid in template_args differs from given key")
           unless $xid eq $template_args->{xid};
 
+        $template_args->{importing} = 1 if $arg{old_payment_info};
         $ledger->add_consumer_from_template(
           $this->{template},
           $template_args,

@@ -163,8 +163,9 @@ publish adjust_replacement_chain => {
 };
 
 sub _adjust_replacement_chain {
-  my ($self, $chain_duration, $depth) = @_;
+  my ($self, $chain_duration, $depth, $am_importing) = @_;
   $depth //= 0;
+  $am_importing //= 0;
 
   if ($chain_duration <= 0) {
     $self->replacement(undef) if $self->has_replacement;
@@ -179,12 +180,13 @@ sub _adjust_replacement_chain {
                  $chain_duration / 86400);
   }
 
-  $replacement = $replacement->_joined_chain_at_depth($depth+1)
+  $replacement = $replacement->_joined_chain_at_depth($depth+1, $am_importing)
     if $replacement->can('_joined_chain_at_depth');
 
   $replacement->_adjust_replacement_chain(
     $chain_duration - $replacement->estimated_lifetime,
     $depth + 1,
+    $am_importing,
   );
 
   return $replacement;
@@ -341,6 +343,8 @@ before expire => sub {
 after BUILD => sub {
   my ($self, $arg) = @_;
 
+  my $importing = delete $arg->{importing};
+
   if ( exists $arg->{minimum_chain_duration}
     && exists $arg->{replacement_chain_duration}
   ) {
@@ -350,13 +354,17 @@ after BUILD => sub {
   }
 
   if (exists $arg->{replacement_chain_duration}) {
-    $self->_adjust_replacement_chain(delete $arg->{replacement_chain_duration});
+    $self->_adjust_replacement_chain(
+      delete $arg->{replacement_chain_duration},
+      undef,
+      $importing,
+    );
   }
 
   if (exists $arg->{minimum_chain_duration}) {
     my $wanted    = delete $arg->{minimum_chain_duration};
     my $extend_by = max(0, $wanted - $self->estimated_lifetime);
-    $self->_adjust_replacement_chain($extend_by, 1);
+    $self->_adjust_replacement_chain($extend_by, 1, $importing);
   }
 
   if (exists $arg->{coupon_descs}) {

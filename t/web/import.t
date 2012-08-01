@@ -246,5 +246,68 @@ test "import a ledger, with proration, via the web" => sub {
   );
 };
 
+test "import a b5g1 ledger via the web, avoiding b5g1" => sub {
+  my ($self) = @_;
+
+  my $xid = 'test:xyz';
+
+  my $signup_info = {
+    contact => {
+      first_name => "Fred",
+      last_name  => "Flooney",
+      phone_book => { home => '12345678' },
+      email_addresses => [ 'textuser@example.com' ],
+      address_lines   => [ '1313 Mockingbird Ln.' ],
+      city            => 'Wagstaff',
+      country         => 'USA',
+    },
+    consumers => {
+      $xid => {
+        template      => 'b5g1_paid',
+        template_args => {
+          make_active => 1,
+          minimum_chain_duration => days(60),
+        },
+      },
+    },
+
+    old_payment_info   => { sample => [ { payment => 'money!' } ] },
+  };
+
+  my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
+
+  my $guid;
+
+  Moonpig->env->stop_clock_at( $jan1 );
+
+  my $replacement_date_str;
+  test_psgi(Moonpig::Web::App->app, sub {
+    my ($cb) = @_;
+
+    $ua->set_test_callback($cb);
+
+    my $result = $ua->mp_post('/ledgers', $signup_info);
+
+    $guid = $result->{guid};
+    ok($guid, "created ledger via post ($guid)");
+  });
+
+  Moonpig->env->storage->do_ro_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+
+      my ($head, $wtf) = $ledger->active_consumers;
+      ok(! $wtf, "we have one active consumer");
+
+      my @chain = ($head, $head->replacement_chain);
+      my @free  = grep {; $_->does('Moonpig::Role::Consumer::SelfFunding') }
+                  @chain;
+
+      is(@free, 0, "there's no self-funding consumer");
+    },
+  );
+};
+
 run_me;
 done_testing;
