@@ -841,6 +841,9 @@ sub job_array {
 sub prepare_to_be_saved {
   my ($self) = @_;
 
+  Moonpig::X->throw("can't save a ledger with open quote as current invoice")
+    if $self->has_current_invoice and $self->current_invoice->is_quote;
+
   $_->_clear_event_handler_registry for ($self, $self->consumers);
 }
 
