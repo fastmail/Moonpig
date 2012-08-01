@@ -778,7 +778,7 @@ sub _store_ledger {
         $guid,
       );
 
-      $_->_clear_event_handler_registry for ($ledger, $ledger->consumers);
+      $ledger->prepare_to_be_saved;
 
       my $frozen_ledger  = $self->__nfreeze_and_gzip( $ledger );
       my $frozen_classes = nfreeze( class_roles );

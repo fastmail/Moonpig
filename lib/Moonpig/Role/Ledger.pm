@@ -838,6 +838,12 @@ sub job_array {
   Moonpig->env->storage->undone_jobs_for_ledger($_[0]);
 }
 
+sub prepare_to_be_saved {
+  my ($self) = @_;
+
+  $_->_clear_event_handler_registry for ($self, $self->consumers);
+}
+
 sub save {
   my ($self) = @_;
   Moonpig->env->storage->save_ledger($self);
