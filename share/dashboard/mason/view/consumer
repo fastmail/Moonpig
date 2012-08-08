@@ -14,6 +14,12 @@ my $xid = $consumer->{xid};
 <&| /page/full, title => "Moonpig Consumer $consumer_guid" &>
   <div>Consumer for resource: <% $xid |h %></div>
 
+  <form method='post' action='/post/reinvoice-consumer'>
+    <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+    <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
+    <input type='submit' value='Reissue Initial Invoice (totally might fail)' />
+  </form>
+
   <form method='post' action='/post/cancel-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />

@@ -10,6 +10,9 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class);
 use MooseX::Types::Moose qw(ArrayRef);
 
+use Stick::Publisher;
+use Stick::Publisher::Publish;
+
 with(
   'Moonpig::Role::Consumer',
 );
@@ -42,7 +45,10 @@ sub _invoice {
   }
 }
 
-sub reinvoice_initial_charges {
+publish reinvoice_initial_charges => {
+  -path => 'reinvoice-initial-charges',
+  -http_method => 'post',
+} => sub {
   my ($self) = @_;
 
   Moonpig::X->throw("cannot reinvoice after funding")
@@ -53,6 +59,8 @@ sub reinvoice_initial_charges {
   if ($self->has_replacement) {
     $self->replacement->reinvoice_initial_charges;
   }
-}
+
+  return $self;
+};
 
 1;
