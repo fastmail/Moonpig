@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use Test::Routine;
 use Test::Routine::Util -all;
+use Test::Fatal qw(success);
 use Test::More;
 
 use t::lib::TestEnv;
@@ -177,6 +178,40 @@ test "job queue" => sub {
   });
 
   is_deeply(\@jobs_done, [ 1, 2 ], "completed jobs are completed");
+};
+
+test "multiple completion" => sub {
+  my ($self) = @_;
+
+  my $guid;
+
+  # Make the ledger exist.
+  do_with_fresh_ledger({}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+  });
+
+  Moonpig->env->storage->do_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+      $ledger->queue_job('test.job' => { foo => 1, bar => 'not saved' });
+    },
+  );
+
+  try {
+    Moonpig->env->storage->do_rw(sub {
+      Moonpig->env->storage->iterate_jobs('test.job' => sub {
+        my ($job) = @_;
+        $job->mark_complete;
+        $job->mark_complete;
+      });
+    });
+  } catch {
+    ok($_, "can't mark a job complete twice");
+  } success {
+    fail("we marked a job done twice");
+  };
 };
 
 test "jobs and xacts" => sub {

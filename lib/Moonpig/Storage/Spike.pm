@@ -160,6 +160,9 @@ schema:
           reference_table: jobs
           reference_fields: [ id ]
           on_delete: cascade
+        - type: UNIQUE
+          fields: [ job_id ]
+          name: job_receipts_job_id_unique_constraint
 
     job_documents:
       name: job_documents
