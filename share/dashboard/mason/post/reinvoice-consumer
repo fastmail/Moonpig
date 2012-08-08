@@ -9,5 +9,9 @@ $m->mp_request(
   POST => "/ledger/by-guid/$ledger_guid/consumers/guid/$consumer_guid/reinvoice-initial-charges",
   {}
 );
+$m->mp_request(
+  POST => "/ledger/by-guid/$ledger_guid/heartbeat",
+  {}
+);
 $m->redirect('/ledger/' . $ledger_guid);
 </%perl>
