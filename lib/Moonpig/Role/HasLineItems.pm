@@ -12,6 +12,8 @@ use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(LineItem Time);
 
+with 'Moonpig::Role::HasCreatedAt';
+
 requires 'charge_role';
 
 requires 'accepts_line_item';
@@ -87,11 +89,6 @@ has closed_at => (
 sub mark_closed { $_[0]->__set_closed_at( Moonpig->env->now ) };
 sub is_open { ! $_[0]->is_closed };
 
-has date => (
-  is  => 'ro',
-  default => sub { Moonpig->env->now() },
-  init_arg => undef,
-  isa => 'DateTime',
-);
+sub date { $_[0]->created_at }
 
 1;

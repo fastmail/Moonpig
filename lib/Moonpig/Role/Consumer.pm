@@ -752,6 +752,7 @@ PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,
     is_active => $_[0]->is_active,
+    activated_at => $_[0]->activated_at,
     unapplied_amount => $_[0]->unapplied_amount,
   };
 };

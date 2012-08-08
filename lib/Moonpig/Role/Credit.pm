@@ -153,7 +153,6 @@ PARTIAL_PACK {
 
   return {
     type   => $self->type,
-    created_at => $self->created_at,
     amount => $self->amount,
     unapplied_amount => $self->unapplied_amount,
   };
