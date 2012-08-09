@@ -555,6 +555,7 @@ implicit_event_handlers {
   return {
     'heartbeat' => {
       redistribute => Moonpig::Events::Handler::Method->new('_reheartbeat'),
+      spare_change => Moonpig::Events::Handler::Method->new('_collect_spare_change'),
     },
 
     'send-mkit' => {

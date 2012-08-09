@@ -377,7 +377,7 @@ test "spare change" => sub {
     cmp_ok($funds, '>', 0, "the consumer has some cash");
 
     $stuff->{consumer}->expire;
-    $ledger->_collect_spare_change;
+    $ledger->heartbeat;
 
     is($consumer->unapplied_amount, 0, "...the funds are gone from consumer");
     is($ledger->amount_available, $funds, "...the funds went to the ledger!");
