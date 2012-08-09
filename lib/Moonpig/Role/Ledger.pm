@@ -709,7 +709,7 @@ sub _collect_spare_change {
   my ($self) = @_;
 
   my @unexpired_consumers =
-    grep {; $_->does('Moonpig::Role::Consumer') && ! $_->is_expired }
+    grep {; ! $_->is_expired && ! $_->is_canceled }
     $self->consumers;
 
   my %consider  = map  {; $_->[0]->guid => $_ }
