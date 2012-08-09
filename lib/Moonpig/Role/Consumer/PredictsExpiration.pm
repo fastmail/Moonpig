@@ -68,6 +68,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return try {
+    return { } unless $self->is_active;
     my $exp_date = $self->replacement_chain_expiration_date({ include_expected_funds => 0 });
     return { replacement_chain_expiration_date => $exp_date };
   } catch {
