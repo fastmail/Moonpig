@@ -707,7 +707,7 @@ sub failover_active_consumer__ {
 sub _collect_spare_change {
   my ($self) = @_;
 
-  my @consumers =
+  my @unexpired_consumers =
     grep {; $_->does('Moonpig::Role::Consumer') && ! $_->is_expired }
     $self->consumers;
 
@@ -716,7 +716,7 @@ sub _collect_spare_change {
                   map  {; [ $_, $_->unapplied_amount ] }
                   $self->consumers;
 
-  delete $consider{ $_->guid } for @consumers;
+  delete $consider{ $_->guid } for @unexpired_consumers;
 
   my $min_to_collect = Moonpig->env->minimum_spare_change_amount;
   for my $pair (values %consider) {
