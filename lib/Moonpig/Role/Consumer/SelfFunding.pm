@@ -1,11 +1,11 @@
 package Moonpig::Role::Consumer::SelfFunding;
-# ABSTRACT: a coupon that pays its own pay
+# ABSTRACT: a consumer that pays its own initial charges
 use Moose::Role;
 
 use List::AllUtils qw(max);
 use Moonpig;
 use Moonpig::Types qw(Factory PositiveMillicents Time TimeInterval);
-use Moonpig::Util qw(class sum sumof);
+use Moonpig::Util qw(class sumof);
 use Moonpig::Behavior::Packable;
 use Moonpig::Behavior::EventHandlers;
 use MooseX::Types::Moose qw(ArrayRef Str);
@@ -42,10 +42,9 @@ has self_funding_credit_amount => (
   default  => sub {
     my ($self) = @_;
 
-    my @charge_pairs = $self->initial_invoice_charge_pairs;
-    my $amount       = sum map  { $charge_pairs[$_] }
-                           grep { $_ % 2 }
-                           keys @charge_pairs;
+    my @charge_structs = $self->initial_invoice_charge_structs;
+    my $amount         = sumof { $_->{amount} } @charge_structs;
+
     return $amount;
   },
 );

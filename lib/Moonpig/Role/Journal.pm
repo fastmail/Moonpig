@@ -27,14 +27,14 @@ sub accepts_line_item {
 # from: source of money transfer
 # to: destination of money transfer
 # amount: amount of transfer
-# desc: charge descriptiopn
+# description: charge descriptiopn
 # tags: what tags to put on the charge
 # when: when to record charge (optional)
 sub charge {
   my ($self, $args) = @_;
 
   { my $FAIL = "";
-    for my $reqd (qw(from to amount desc tags consumer)) {
+    for my $reqd (qw(from to amount description tags consumer)) {
       $FAIL .= __PACKAGE__ . "::charge missing required '$reqd' argument"
         unless $args->{$reqd};
     }
@@ -52,7 +52,7 @@ sub charge {
 
   my $charge = $self->charge_factory->new({
     consumer    => $args->{consumer},
-    description => $args->{desc},
+    description => $args->{description},
     amount => $args->{amount},
     date => $args->{when} || Moonpig->env->now(),
     tags => $args->{tags},

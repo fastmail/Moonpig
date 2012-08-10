@@ -367,11 +367,6 @@ after BUILD => sub {
     $self->_adjust_replacement_chain($extend_by, 1, $importing);
   }
 
-  if (exists $arg->{coupon_descs}) {
-    my $coupon_descs = delete($arg->{coupon_descs});
-    $self->add_coupon_from_desc($_) for @$coupon_descs;
-  }
-
   $self->become_active if delete $arg->{make_active};
 };
 
@@ -466,10 +461,10 @@ sub copy_balance_to__ {
     sub {
       my ($ledger, $new_ledger) = ($self->ledger, $new_consumer->ledger);
       $self->charge_current_journal({
-        desc        => sprintf("Transfer management of '%s' to ledger %s",
+        description => sprintf("Transfer management of '%s' to ledger %s",
                                $self->xid, $new_ledger->guid),
         amount      => $amount,
-        extra_tags  => [ "transient" ],
+        extra_tags  => [ "moonpig.transient" ],
       });
 
       my $credit = $new_ledger->add_credit(
@@ -524,11 +519,11 @@ sub charge_current_journal {
   $args->{from}       ||= $self;
   $args->{to}         ||= $self->ledger->current_journal;
   $args->{extra_tags} ||= [];
-  $args->{tags}       ||= [ @{$self->journal_charge_tags}, @extra_tags ];
+  $args->{tags}       ||= [ $self->journal_charge_tags, @extra_tags ];
   $args->{date}       ||= Moonpig->env->now;
   $args->{consumer}   = $self;
 
-  $self->apply_coupons_to_charge_args($args); # Could modify amount, desc., etc.
+  $self->apply_discounts_to_charge_args($args); # Could modify amount, desc., etc.
   return $self->ledger->current_journal->charge($args);
 }
 
@@ -536,19 +531,16 @@ sub journal_charge_tags { $_[0]->invoice_charge_tags }
 
 sub charge_current_invoice {
   my ($self, $args) = @_;
-  $self->charge_invoice($self->ledger->current_invoice, $args);
-}
-
-sub charge_invoice {
-  my ($self, $invoice, $args) = @_;
   $args = { %$args }; # Don't screw up caller's hash
+
+  my $invoice = $self->ledger->current_invoice;
 
   my @extra_tags = @{delete $args->{extra_tags} || [] };
   $args->{consumer}   ||= $self;
-  $args->{tags}       ||= [ @{$self->invoice_charge_tags}, @extra_tags ];
+  $args->{tags}       ||= [ $self->invoice_charge_tags, @extra_tags ];
 
   # Might modify $args
-  my @coupon_line_items = $self->apply_coupons_to_charge_args($args);
+  my @discount_line_items = $self->apply_discounts_to_charge_args($args);
 
   # If there's no ->build_invoice_charge method, let the Invoice
   # object build the charge from the arguments.
@@ -556,21 +548,22 @@ sub charge_invoice {
 
   my $charge = $invoice->add_charge($args);
 
-  $invoice->add_line_item($_) for @coupon_line_items;
+  $invoice->add_line_item($_) for @discount_line_items;
 
   return $charge;
 }
 
 has extra_charge_tags => (
-  is  => 'ro',
   isa => ArrayRef,
   default => sub { [] },
-  traits => [ qw(Copy) ],
+  traits  => [ qw(Array Copy) ],
+  handles => { extra_charge_tags => 'elements' },
+  reader  => '_extra_charge_tags', # needed for copy_attr_hash__
 );
 
 sub invoice_charge_tags {
   my ($self) = @_;
-  return [ $self->xid, @{$self->extra_charge_tags} ]
+  return($self->xid, $self->extra_charge_tags);
 }
 
 # and return a list (or count) of the abandoned charges
@@ -669,7 +662,8 @@ sub cashout_unapplied_amount {
   return unless $balance > 0;
 
   my @source_pairs = $self->effective_funding_pairs;
-  my @credits = map { $source_pairs[$_] } grep { ! $_ % 2 } keys @source_pairs;
+  my %source_hash  = map {; ref $_ ? $_->guid : $_ } @source_pairs;
+  my @credits = grep { ref } @source_pairs;
 
   # This is the order in which we will refund:  first, to non-refundable
   # credits (because we use up "real money" first); within those, to the
@@ -681,9 +675,9 @@ sub cashout_unapplied_amount {
   while ($balance and @credits) {
     my $next_credit = shift @credits;
 
-    my $to_xfer = $balance <= $next_credit->applied_amount
+    my $to_xfer = $balance <= $source_hash{ $next_credit->guid }
                 ? $balance
-                : $next_credit->applied_amount;
+                : $source_hash{ $next_credit->guid };
 
     $self->ledger->accountant->create_transfer({
       type   => 'cashout',
@@ -717,35 +711,14 @@ publish quote_for_extended_service => {
   return $quote;
 };
 
-has coupon_array => (
-  is => 'ro',
-  isa => ArrayRef[ role_type('Moonpig::Role::Coupon') ],
-  default  => sub { [] },
-  lazy => 1, # To preserve database compatibility
-  traits   => [ qw(Array) ],
-  handles => {
-    add_coupon => 'push',
-    coupons => 'elements',
-    has_coupons => 'count',
-  },
-);
-
-sub apply_coupons_to_charge_args {
+sub apply_discounts_to_charge_args {
   my ($self, $args) = @_;
-  my @coupon_line_items;
-  for my $coupon ($self->coupons) {
-    push @coupon_line_items, $coupon->adjust_charge_args($args)
-      if $coupon->applies_to_charge($args);
-  }
-  return @coupon_line_items;
-}
 
-sub add_coupon_from_desc {
-  my ($self, $desc) = @_;
-  my ($class, $args) = @$desc;
-  my $coupon = $class->new({ %$args, consumer => $self });
-  $self->add_coupon($coupon);
-  return $coupon;
+  my $combiner = class('DiscountCombiner')->new({ ledger => $self->ledger });
+
+  my @discount_line_items = $combiner->apply_discounts_to_charge_struct($args);
+
+  return @discount_line_items;
 }
 
 PARTIAL_PACK {

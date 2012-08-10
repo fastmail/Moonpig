@@ -12,7 +12,7 @@ with(
 
 sub as_string { "discount" }
 
-# There should be some member data here describing the coupon or discount that this
+# There should be some member data here describing the discount that this
 # represents
 
 1;

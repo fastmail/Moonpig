@@ -17,11 +17,13 @@ has charge_amounts => (
 );
 
 # Does not vary with time
-sub charge_pairs_on {
+sub charge_structs_on {
   my ($self) = @_;
-  my @charges = map {; ($self->charge_description, $_) }
-                @{ $self->charge_amounts };
-  return @charges;
+  my @structs = map {; {
+    description => $self->charge_description,
+    amount      => $_,
+  } } @{ $self->charge_amounts };
+  return @structs;
 }
 
 # Description for charge.  You will probably want to override this method

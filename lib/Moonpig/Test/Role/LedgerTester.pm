@@ -40,11 +40,12 @@ sub pay_invoices {
   return unless @$invoices;
 
   my $ledger = $invoices->[0]->ledger;
-  my $total = sum map { $_->total_amount } @$invoices;
+  my $total  = sum map { $_->total_amount } @$invoices;
+  my $to_pay = $total - $ledger->amount_available;
 
   my $credit = $ledger->add_credit(
     class(qw(Credit::Simulated)),
-    { amount => $total },
+    { amount => $to_pay },
   );
 
   $ledger->process_credits;

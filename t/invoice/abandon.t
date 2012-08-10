@@ -30,7 +30,7 @@ test carry_forth => sub {
 
     # record two charges, abandon one
     for my $charge (1, 2) {
-      my $ch = $c->charge_invoice($i1, {
+      my $ch = $c->charge_current_invoice({
         description => $charge == 1 ? "abandoned charge" : "retained charge",
         amount      => dollars($charge),
       });
@@ -138,13 +138,13 @@ test checks => sub {
 
       my $gen_invoice = sub {
         my ($do_not_abandon_charge) = @_;
-        my $i = class("Invoice")->new({ ledger => $ledger });
-        my $ch = $c->charge_invoice($i, {
+        $ledger->current_invoice->mark_closed;
+        my $ch = $c->charge_current_invoice({
           description => "some charge",
           amount => dollars(1),
         });
         $ch->mark_abandoned unless $do_not_abandon_charge;
-        return $i;
+        return $ledger->current_invoice;
       };
 
       # Abandoning an open invoice is forbidden

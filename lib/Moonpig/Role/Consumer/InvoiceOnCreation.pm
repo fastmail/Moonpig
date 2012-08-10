@@ -2,8 +2,6 @@ package Moonpig::Role::Consumer::InvoiceOnCreation;
 use Moose::Role;
 # ABSTRACT: a consumer that charges the invoice when it's created
 
-use List::MoreUtils qw(natatime);
-
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;
 use Moonpig::Logger '$Logger';
@@ -19,7 +17,7 @@ with(
 
 use Moonpig::Behavior::EventHandlers;
 
-requires 'initial_invoice_charge_pairs';
+requires 'initial_invoice_charge_structs';
 
 implicit_event_handlers {
   return {
@@ -34,14 +32,10 @@ implicit_event_handlers {
 sub _invoice {
   my ($self) = @_;
 
-  my $invoice = $self->ledger->current_invoice;
-
-  my @charge_pairs = $self->initial_invoice_charge_pairs;
-
-  my $iter = natatime 2, @charge_pairs;
-
-  while (my ($desc, $amt) = $iter->()) {
-    $self->charge_invoice($invoice, { description => $desc, amount => $amt });
+  for my $struct ($self->initial_invoice_charge_structs) {
+    $self->charge_current_invoice({
+      %$struct,
+    });
   }
 }
 
