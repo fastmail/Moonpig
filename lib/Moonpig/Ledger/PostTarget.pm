@@ -121,8 +121,14 @@ sub resource_post {
       # shouldn't hurt.  It could catch non-application, or second invoices,
       # or... who knows what. -- rjbs, 2012-04-18
       my @internal_invoices = grep { $_->is_internal } $ledger->invoices_without_quotes;
-      Moonpig::X->throw("internal invoice was created and not paid")
-        if @internal_invoices and grep { ! $_->is_paid } @internal_invoices;
+      if (@internal_invoices and grep { ! $_->is_paid } @internal_invoices) {
+        Moonpig::X->throw("internal invoice was created and not paid", {
+          total_amount_invoiced_internally =>
+            (sumof { $_->total_amount } @internal_invoices),
+          total_amount_on_import_credits =>
+            (sumof { $_->amount } $ledger->credits),
+        });
+      }
     }
   });
 
