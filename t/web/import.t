@@ -94,9 +94,9 @@ test "import a ledger via the web" => sub {
         $consumer_guid = $c->guid;
       }
 
-      # This is 6*52 weeks, not 6 years, because these consumers charge weekly, and so they
-      # run out of money after 52 such charges; the extra 1.25 days worth of money are
-      # absorbed. -- mjd, 2012-06-04
+      # This is 6*52 weeks, not 6 years, because these consumers charge weekly,
+      # and so they run out of money after 52 such charges; the extra 1.25 days
+      # worth of money are absorbed. -- mjd, 2012-06-04
       # XXX 20120605 mjd Actually it should be 6*53 weeks, because
       # each consumer fails over to the next only at the *end* of its
       # last incompletely funded charge period; fix this when we add
