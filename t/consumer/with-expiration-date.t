@@ -27,7 +27,7 @@ sub ledger_and_consumer {
   Moonpig->env->stop_clock_at(jan(1));
   my $stuff = build(
     consumer => {
-      class            => class('Consumer::FixedExpiration'),
+      class            => class('Consumer::FixedExpiration::Required'),
       expiration_date  => jan(3),
       replacement_plan => [ get => '/nothing' ],
       xid              => $XID

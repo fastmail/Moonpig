@@ -24,7 +24,7 @@ test "fixed-expiration consumer" => sub {
     my $expiration_date = Moonpig->env->now + days(30);
 
     my $c = $ledger->add_consumer(
-      class('Consumer::FixedExpiration'),
+      class('Consumer::FixedExpiration::Required'),
       {
         xid => "some:random:xid",
         make_active => 1,
@@ -33,7 +33,7 @@ test "fixed-expiration consumer" => sub {
       },
     );
 
-    isa_ok($c, class('Consumer::FixedExpiration'));
+    isa_ok($c, class('Consumer::FixedExpiration::Required'));
     is($c->remaining_life, days(30), "initial remaining life");
 
     $ledger->heartbeat;

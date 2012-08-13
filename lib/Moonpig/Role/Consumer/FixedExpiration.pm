@@ -14,13 +14,6 @@ use namespace::autoclean;
 
 use Moonpig::Behavior::EventHandlers;
 
-sub expiration_date;
-has expiration_date => (
-  is  => 'ro',
-  isa => Time,
-  required => 1,
-);
-
 sub charge {
   my ($self) = @_;
   return if $self->is_expired;
