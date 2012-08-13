@@ -30,6 +30,7 @@ around will_die_soon => sub {
 sub maybe_make_replacement {
   my ($self) = @_;
 
+  return unless $self->is_active;
   if ($self->needs_replacement) {
     $self->handle_event( event('consumer-create-replacement') );
   }
