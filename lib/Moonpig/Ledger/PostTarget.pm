@@ -122,6 +122,12 @@ sub resource_post {
       # or... who knows what. -- rjbs, 2012-04-18
       my @internal_invoices = grep { $_->is_internal }
                               $ledger->invoices_without_quotes;
+
+      my @charges = map {; $_->all_charges } @internal_invoices;
+      my @unabandoned_charges = grep {;
+        ! $_->can('is_abandoned') or ! $_->is_abandoned
+      } @charges;
+
       if (@internal_invoices and grep { ! $_->is_paid } @internal_invoices) {
         Moonpig::X->throw("internal invoice was created and not paid", {
           total_amount_invoiced_internally =>
@@ -131,6 +137,8 @@ sub resource_post {
 
           stringified_all_invoices      => join(q{ }, $ledger->invoices),
           stringified_internal_invoices => "@internal_invoices",
+          stringified_all_charges => "@charges",
+          stringified_unabandoned_charges => "@unabandoned_charges",
         });
       }
     }
