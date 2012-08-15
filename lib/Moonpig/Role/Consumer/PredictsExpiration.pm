@@ -24,13 +24,19 @@ publish replacement_chain_expiration_date => {
 } => sub {
   my ($self, $_opts) = @_;
   my $opts = { %$_opts };
+
+  return $self->_replacement_chain_expiration_date($opts);
+};
+
+sub _replacement_chain_expiration_date {
+  my ($self, $opts) = @_;
   $opts->{include_expected_funds} //= 0;
   $opts->{amount} //= $self->unapplied_amount;
   $opts->{ignore_partial_charge_periods} //= 1;
 
   return($self->expiration_date +
          $self->replacement_chain_lifetime($opts));
-};
+}
 
 sub replacement_chain_lifetime {
   my ($self, $_opts) = @_;
