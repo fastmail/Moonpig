@@ -35,7 +35,8 @@ sub estimated_lifetime {
 around _estimated_remaining_funded_lifetime => sub {
   my ($orig, $self) = @_;
 
-  Moonpig::X->throw("inactive consumer forbidden") unless $self->is_active;
+  Moonpig::X->throw("can't compute remaining lifetime on inactive consumer")
+    unless $self->is_active;
 
   return $self->remaining_life;
 };
