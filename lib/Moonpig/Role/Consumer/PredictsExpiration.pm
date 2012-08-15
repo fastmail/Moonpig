@@ -69,10 +69,14 @@ PARTIAL_PACK {
 
   return try {
     return { } unless $self->is_active;
-    my $exp_date = $self->replacement_chain_expiration_date({ include_expected_funds => 0 });
+    my $exp_date = $self->replacement_chain_expiration_date({
+      include_expected_funds => 0,
+    });
     return { replacement_chain_expiration_date => $exp_date };
   } catch {
-    die $_ unless try { $_->ident eq "can't compute funded lifetime of zero-cost consumer" };
+    die $_ unless try {
+      $_->ident eq "can't compute funded lifetime of zero-cost consumer"
+    };
     return { };
   };
 };

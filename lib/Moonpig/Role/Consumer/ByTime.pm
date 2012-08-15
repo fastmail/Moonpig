@@ -80,9 +80,10 @@ around copy_attr_hash__ => sub {
 sub _new_proration_period {
   my ($self) = @_;
   return $self->is_active
-    ? $self->_estimated_remaining_funded_lifetime({ amount => $self->unapplied_amount, # XXX ???
-                                                    ignore_partial_charge_periods => 0,
-                                                  })
+    ? $self->_estimated_remaining_funded_lifetime({
+        amount => $self->unapplied_amount, # XXX ???
+        ignore_partial_charge_periods => 0,
+      })
     : $self->proration_period;
 }
 
