@@ -50,7 +50,7 @@ sub _replacement_chain_expiration_date {
 
   my @chain = ($self, $self->replacement_chain);
 
-  my $exp_date = Moonpig::Env->now;
+  my $exp_date = Moonpig->env->now;
 
   CONSUMER: for my $i (0 .. $#chain) {
     my $this = $chain[$i];
@@ -71,6 +71,8 @@ sub _replacement_chain_expiration_date {
       if ($this_exp_date > $exp_date) {
         $exp_date = $this_exp_date;
       }
+
+      next CONSUMER;
     } elsif ($this->does('Moonpig::Role::Consumer::ByTime')) {
       my @tail = @chain[ $i .. $#chain ];
 
