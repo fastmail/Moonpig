@@ -38,14 +38,6 @@ sub _replacement_chain_expiration_date {
 
   my @chain = ($self, $self->replacement_chain);
 
-  unless ($arg->{include_expected_funds}) {
-    my $first_unpaid_i = first { ! $chain[ $_ ]->expected_funds({
-      include_unpaid_charges => $arg->{include_expected_funds}
-    }) } (0 .. $#chain);
-
-    $#chain = $first_unpaid_i;
-  }
-
   my $exp_date = Moonpig::Env->now;
 
   CONSUMER: for my $i (0 .. $#chain) {
