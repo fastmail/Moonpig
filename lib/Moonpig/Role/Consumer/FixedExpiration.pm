@@ -74,9 +74,9 @@ sub _replacement_chain_expiration_date {
         $exp_date = $this_exp_date;
       }
     } elsif ($this->does('Moonpig::Role::Consumer::ByTime')) {
-      my @rest_of_chain = @chain[ $i .. $#chain ];
+      my @tail = @chain[ $i .. $#chain ];
 
-      unless (all { $_->does('Moonpig::Role::Consumer::ByTime') } @rest_of_chain) {
+      unless (all { $_->does('Moonpig::Role::Consumer::ByTime') } @tail) {
         Moonpig::X->throw("replacement chain can't predict expiration date");
       }
 
@@ -87,7 +87,7 @@ sub _replacement_chain_expiration_date {
           }),
           ignore_partial_charge_periods => 1,
         })
-      } @rest_of_chain);
+      } @tail);
 
       last CONSUMER;
     }
