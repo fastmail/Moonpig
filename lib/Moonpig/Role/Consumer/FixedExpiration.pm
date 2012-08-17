@@ -33,6 +33,20 @@ sub estimated_lifetime {
   return $self->expiration_date - $self->activated_at;
 }
 
+sub _expected_funded_expiration_behavior   { $_[0]->expiration_date }
+sub _expected_unfunded_expiration_behavior { 0 }
+
+sub _has_unpaid_charges {
+  my ($self) = @_;
+
+  my @unpaid_charges = grep {
+    $_->is_unpaid &&
+    ! ($_->does('Moonpig::Role::LineItem::Abandonable') && $_->is_abandoned)
+  } $self->all_charges;
+
+  return !! @unpaid_charges;
+}
+
 sub _replacement_chain_expiration_date {
   my ($self, $arg) = @_;
 
@@ -44,7 +58,18 @@ sub _replacement_chain_expiration_date {
     my $this = $chain[$i];
 
     if ($this->does('Moonpig::Role::Consumer::FixedExpiration')) {
-      my $this_exp_date = $this->expiration_date;
+      my $behavior = $this->_has_unpaid_charges
+                   ? $this->_expected_unfunded_expiration_behavior
+                   : $this->_expected_funded_expiration_behavior;
+
+      my $this_exp_date;
+
+      if ( Time->check($behavior) ) {
+        $this_exp_date = $behavior;
+      } else {
+        $this_exp_date = $exp_date + $behavior;
+      }
+
       if ($this_exp_date > $exp_date) {
         $exp_date = $this_exp_date;
       }
