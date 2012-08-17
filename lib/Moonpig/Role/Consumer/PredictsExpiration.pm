@@ -25,50 +25,15 @@ publish replacement_chain_expiration_date => {
   my ($self, $_opts) = @_;
   my $opts = { %$_opts };
 
+  unless ($self->is_active) {
+    # being active is equivalent to being the chain head -- rjbs, 2012-08-17
+    Moonpig::X->throw("can't compute chain expiration date for non-head");
+  }
+
   return $self->_replacement_chain_expiration_date($opts);
 };
 
-sub _replacement_chain_expiration_date {
-  my ($self, $opts) = @_;
-  $opts->{include_expected_funds} //= 0;
-  $opts->{amount} //= $self->unapplied_amount;
-  $opts->{ignore_partial_charge_periods} //= 1;
-
-  return($self->expiration_date +
-         $self->replacement_chain_lifetime($opts));
-}
-
-sub replacement_chain_lifetime {
-  my ($self, $_opts) = @_;
-  my $opts = { %$_opts };
-  $opts->{include_expected_funds} //= 0;
-  $opts->{amount} //= $self->unapplied_amount;
-
-  my @chain = $self->replacement_chain;
-  if (any {! $_->does('Moonpig::Role::Consumer::PredictsExpiration')} @chain) {
-    Moonpig::X->throw("replacement in chain cannot predict expiration");
-  }
-
-  # XXX 20120605 mjd We shouldn't be ignoring the partial charge
-  # period here, which rounds down; we should be rounding UP to the
-  # nearest complete charge period, because we are calculating a total
-  # expiration date, and each consumer won't be activating its
-  # successor until it expires, which occurs at the *end* of the last
-  # paid charge period.
-  return (sumof {
-           $_->_estimated_remaining_funded_lifetime({
-             amount => $_->expected_funds(
-               { include_unpaid_charges =>
-                   $opts->{include_expected_funds} }),
-             ignore_partial_charge_periods => 1,
-           }) } @chain);
-};
-
-# Use an "around" modifier to override this if your consumer actually
-# needs to do it
-sub _estimated_remaining_funded_lifetime {
-  confess("_estimated_remaining_funded_lifetime unimplemented");
-}
+requires '_replacement_chain_expiration_date';
 
 PARTIAL_PACK {
   my ($self) = @_;

@@ -144,15 +144,19 @@ sub recent_usage {
     ->newer_than($max_age)->total;
 }
 
+my $USAGE_ESTIMATE_DAYS = 30;
+
 # based on the last $days days of transfers, how long might we expect
 # the current funds to last, in seconds?
 # If no estimate is possible, return 365d
 sub remaining_life {
   my ($self) = @_;
-  my $days = 30;
-  my $recent_daily_usage = $self->recent_usage($days * 86_400) / $days;
-  return 86_400 * 365 if $recent_daily_usage == 0;
-  return 86_400 * $self->unapplied_amount / $recent_daily_usage;
+
+  my $recent_daily_usage = $self->recent_usage( days($USAGE_ESTIMATE_DAYS) )
+                         / $USAGE_ESTIMATE_DAYS;
+
+  return days(365) if $recent_daily_usage == 0;
+  return days( $self->unapplied_amount / $recent_daily_usage );
 }
 
 sub estimated_lifetime {
@@ -163,6 +167,29 @@ sub estimated_lifetime {
 sub expiration_date {
   my ($self) = @_;
   return Moonpig->env->now + $self->remaining_life;
+}
+
+sub _replacement_chain_expiration_date {
+  my ($self, $opt) = @_;
+
+  my $recent_daily_usage = $self->recent_usage( days($USAGE_ESTIMATE_DAYS) )
+                         / $USAGE_ESTIMATE_DAYS;
+
+  return days(365) if $recent_daily_usage == 0;
+
+  my @chain = $self->replacement_chain;
+
+  unless (all { $_->does('Moonpig::Role::Consumer::ByUsage') } @chain) {
+    Moonpig::X->throw("replacement in chain cannot predict expiration");
+  }
+
+  my $amount = sumof {
+    $_->expected_funds({
+      include_unpaid_charges => $opt->{include_expected_funds}
+    });
+  } ($self, @chain);
+
+  return days( $self->unapplied_amount / $recent_daily_usage );
 }
 
 1;

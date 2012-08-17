@@ -2,6 +2,7 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
+use List::AllUtils qw(all);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Util qw(class days event sum sumof pair_rights);
@@ -300,32 +301,41 @@ sub _predicted_shortfall {
   return $shortfall;
 }
 
-# Not just the amount we have on hand, but the amount we expect to have, once
-# our paid charges are executed, and possibly also assuming that our unpaid
-# charges are paid and executed.
-sub expected_funds {
-  my ($self, $options) = @_;
+sub _replacement_chain_expiration_date {
+  my ($self, $opts) = @_;
+  $opts->{include_expected_funds} //= 0;
+  $opts->{ignore_partial_charge_periods} //= 1;
 
-  defined($options->{include_unpaid_charges})
-    or confess "expected_funds missing required include_unpaid_charges option";
-
-  my $guid = $self->guid;
-
-  my @invoices = grep { ! $_->is_abandoned && $_->isnt_quote }
-    $self->ledger->invoices;
-  @invoices = grep { $_->is_paid } @invoices unless $options->{include_unpaid_charges};
-
-
-  my @charges = grep {
-    # executed chgs will be counted in unapplied_amount
-    $_->does("Moonpig::Role::InvoiceCharge") && ! $_->is_executed &&
-
-      ! $_->is_abandoned && $guid eq $_->owner_guid }
-    map  { $_->all_charges } @invoices;
-
-  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
-  return $funds;
+  return($self->expiration_date +
+         $self->_replacement_chain_lifetime($opts));
 }
+
+sub _replacement_chain_lifetime {
+  my ($self, $_opts) = @_;
+  my $opts = { %$_opts };
+  $opts->{include_expected_funds} //= 0;
+
+  my @chain = $self->replacement_chain;
+
+  unless (all { $_->does('Moonpig::Role::Consumer::ByTime') } @chain) {
+    Moonpig::X->throw("replacement in chain cannot predict expiration");
+  }
+
+  # XXX 20120605 mjd We shouldn't be ignoring the partial charge
+  # period here, which rounds down; we should be rounding UP to the
+  # nearest complete charge period, because we are calculating a total
+  # expiration date, and each consumer won't be activating its
+  # successor until it expires, which occurs at the *end* of the last
+  # paid charge period.
+  return (sumof {
+           $_->_estimated_remaining_funded_lifetime({
+             amount => $_->expected_funds({
+               include_unpaid_charges => $opts->{include_expected_funds},
+              }),
+             ignore_partial_charge_periods => 1,
+           })
+         } @chain);
+};
 
 # Given an amount of money, estimate how long the money will last
 # at current rates of consumption.
@@ -336,11 +346,12 @@ sub expected_funds {
 # XXX 20120605 ignore_partial_charge_periods should have *three* options:
 #  1. include  2. round up  3. round down
 #  see long comment in PredictsExpiration.pm for why.
-around _estimated_remaining_funded_lifetime => sub {
-  my ($orig, $self, $args) = @_;
+sub _estimated_remaining_funded_lifetime {
+  my ($self, $args) = @_;
 
-  # This is for asking what-if questions: what would the estimated remaining funded lifetime
-  # be *if* the daily charge were greater by this amount. Normally, of course, this is 0.
+  # This is for asking what-if questions: what would the estimated remaining
+  # funded lifetime be *if* the daily charge were greater by this amount.
+  # Normally, of course, this is 0.
   my $charge_adjustment = $args->{charge_adjustment} // 0;
 
   confess "Missing amount argument to _estimated_remaining_funded_lifetime"
@@ -367,7 +378,7 @@ around _estimated_remaining_funded_lifetime => sub {
   $periods = int($periods) if $args->{ignore_partial_charge_periods};
 
   return $periods * $self->charge_frequency;
-};
+}
 
 has last_psync_shortfall => (
   is => 'rw',
@@ -405,15 +416,17 @@ sub _maybe_send_psync_quote {
 
   my $notice_info = {
 
-    # OLD date is the one we had before the service upgrade, which will be RESTORED
-    # if the user pays the invoice
+    # OLD date is the one we had before the service upgrade, which will be
+    # RESTORED if the user pays the invoice
     old_expiration_date => Moonpig->env->now +
       $self->want_to_live +
       $self->replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
-    new_expiration_date => $self->replacement_chain_expiration_date({ include_expected_funds => 1 }),
+    new_expiration_date => $self->replacement_chain_expiration_date({
+      include_expected_funds => 1,
+    }),
   };
 
   if ($shortfall > 0) {
