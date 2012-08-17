@@ -30,7 +30,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::SetOnce;
 use MooseX::Types::Moose qw(ArrayRef);
 use Moonpig::Types qw(Ledger Millicents Time TimeInterval XID ReplacementPlan);
-use Moonpig::Util qw(class event);
+use Moonpig::Util qw(class event sumof);
 
 use Moonpig::Logger '$Logger';
 use namespace::autoclean;
@@ -719,6 +719,34 @@ sub apply_discounts_to_charge_args {
   my @discount_line_items = $combiner->apply_discounts_to_charge_struct($args);
 
   return @discount_line_items;
+}
+
+# Not just the amount we have on hand, but the amount we expect to have, once
+# our paid charges are executed, and possibly also assuming that our unpaid
+# charges are paid and executed.
+sub expected_funds {
+  my ($self, $options) = @_;
+
+  defined($options->{include_unpaid_charges})
+    or confess "expected_funds missing required include_unpaid_charges option";
+
+  my $guid = $self->guid;
+
+  my @invoices = grep { ! $_->is_abandoned && $_->isnt_quote }
+    $self->ledger->invoices;
+
+  @invoices = grep { $_->is_paid } @invoices
+    unless $options->{include_unpaid_charges};
+
+  my @charges = grep {
+    # executed chgs will be counted in unapplied_amount
+    $_->does("Moonpig::Role::InvoiceCharge") && ! $_->is_executed &&
+
+      ! $_->is_abandoned && $guid eq $_->owner_guid }
+    map  { $_->all_charges } @invoices;
+
+  my $funds = $self->unapplied_amount + (sumof { $_->amount } @charges);
+  return $funds;
 }
 
 PARTIAL_PACK {
