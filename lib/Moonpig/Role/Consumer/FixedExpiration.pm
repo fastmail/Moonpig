@@ -39,12 +39,10 @@ sub _expected_unfunded_expiration_behavior { 0 }
 sub _has_unpaid_charges {
   my ($self) = @_;
 
-  my @unpaid_charges = grep {
-    $_->is_unpaid &&
-    ! ($_->does('Moonpig::Role::LineItem::Abandonable') && $_->is_abandoned)
-  } $self->all_charges;
+  my @unpaid_invoices = grep { $_->is_unpaid && ! $_->is_abandoned }
+                        $self->relevant_invoices;
 
-  return !! @unpaid_charges;
+  return !! @unpaid_invoices;
 }
 
 sub _replacement_chain_expiration_date {
