@@ -80,14 +80,19 @@ sub _replacement_chain_expiration_date {
         Moonpig::X->throw("replacement chain can't predict expiration date");
       }
 
-      $exp_date = $exp_date + (sumof {
-        $_->_estimated_remaining_funded_lifetime({
-          amount => $_->expected_funds({
-            include_unpaid_charges => $arg->{include_expected_funds},
-          }),
-          ignore_partial_charge_periods => 1,
-        })
-      } @tail);
+      # This had been done with a sumof, but I think there's a topic leak
+      # somewhere. -- rjbs, 2012-08-23
+      for my $consumer (@tail) {
+        $exp_date
+          = $exp_date + $consumer->_estimated_remaining_funded_lifetime(
+          {
+            amount => $consumer->expected_funds({
+              include_unpaid_charges => $arg->{include_expected_funds},
+            }),
+            ignore_partial_charge_periods => 1,
+          }
+          );
+      }
 
       last CONSUMER;
     }
