@@ -303,7 +303,7 @@ sub _predicted_shortfall {
 
 sub _replacement_chain_expiration_date {
   my ($self, $opts) = @_;
-  $opts->{include_expected_funds} //= 0;
+
   $opts->{ignore_partial_charge_periods} //= 1;
 
   return($self->expiration_date +

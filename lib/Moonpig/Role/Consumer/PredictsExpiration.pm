@@ -30,6 +30,8 @@ publish replacement_chain_expiration_date => {
     Moonpig::X->throw("can't compute chain expiration date for non-head");
   }
 
+  $opts->{include_expected_funds} //= 0;
+
   return $self->_replacement_chain_expiration_date($opts);
 };
 
