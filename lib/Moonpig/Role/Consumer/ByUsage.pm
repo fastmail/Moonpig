@@ -185,7 +185,7 @@ sub _replacement_chain_expiration_date {
 
   my $amount = sumof {
     $_->expected_funds({
-      include_unpaid_charges => $opt->{include_expected_funds}
+      include_unpaid_charges => $opt->{include_unpaid_charges}
     });
   } ($self, @chain);
 

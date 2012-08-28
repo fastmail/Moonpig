@@ -67,7 +67,7 @@ test "import a ledger via the web" => sub {
     ok($guid, "created ledger via post ($guid)");
 
     my $consumer_guid = $result->{active_xids}{$xid}{guid};
-    my $url = sprintf '/ledger/by-guid/%s/consumers/guid/%s/%s?include_expected_funds=0',
+    my $url = sprintf '/ledger/by-guid/%s/consumers/guid/%s/%s?include_unpaid_charges=0',
       $guid,
       $consumer_guid,
       'replacement_chain_expiration_date';
@@ -103,7 +103,7 @@ test "import a ledger via the web" => sub {
       # the round_up option to ignore_partial_charge_periods as per 20120605
       # comments elsewhere.
       my $exp_date = $consumers[0]->replacement_chain_expiration_date(
-        { include_expected_funds => 0 });
+        { include_unpaid_charges => 0 });
 
       cmp_ok(
         abs($exp_date - $expected_expiration_date), '<', 86_400,
@@ -131,7 +131,7 @@ test "import a ledger via the web" => sub {
     sub {
       my ($ledger) = @_;
       my $exp_date = ($ledger->active_consumers)[0]
-        ->replacement_chain_expiration_date({ include_expected_funds => 0 });
+        ->replacement_chain_expiration_date({ include_unpaid_charges => 0 });
       my $last = $ledger->consumer_collection->find_by_guid({ guid => $consumer_guid });
       $last = $last->replacement while $last->has_replacement;
 

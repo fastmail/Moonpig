@@ -102,7 +102,7 @@ test 'signup for five, get one free' => sub {
       {
         my ($head) = $ledger->active_consumers;
         my $exp = $head->replacement_chain_expiration_date({
-          include_expected_funds => 0,
+          include_unpaid_charges => 0,
         });
 
         my $days = ($exp - $head->activated_at) / 86_400;

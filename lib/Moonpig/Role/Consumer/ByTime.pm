@@ -313,7 +313,7 @@ sub _replacement_chain_expiration_date {
 sub _replacement_chain_lifetime {
   my ($self, $_opts) = @_;
   my $opts = { %$_opts };
-  $opts->{include_expected_funds} //= 0;
+  $opts->{include_unpaid_charges} //= 0;
 
   my @chain = $self->replacement_chain;
 
@@ -330,7 +330,7 @@ sub _replacement_chain_lifetime {
   return (sumof {
            $_->_estimated_remaining_funded_lifetime({
              amount => $_->expected_funds({
-               include_unpaid_charges => $opts->{include_expected_funds},
+               include_unpaid_charges => $opts->{include_unpaid_charges},
               }),
              ignore_partial_charge_periods => 1,
            })
@@ -425,7 +425,7 @@ sub _maybe_send_psync_quote {
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
     new_expiration_date => $self->replacement_chain_expiration_date({
-      include_expected_funds => 1,
+      include_unpaid_charges => 1,
     }),
   };
 

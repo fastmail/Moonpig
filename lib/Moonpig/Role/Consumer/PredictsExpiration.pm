@@ -20,7 +20,7 @@ requires 'expiration_date';    # Time, predicted exp date
 
 publish replacement_chain_expiration_date => {
   -http_method => 'get',
-  include_expected_funds => OptionalStickBool,
+  include_unpaid_charges => OptionalStickBool,
 } => sub {
   my ($self, $_opts) = @_;
   my $opts = { %$_opts };
@@ -30,7 +30,7 @@ publish replacement_chain_expiration_date => {
     Moonpig::X->throw("can't compute chain expiration date for non-head");
   }
 
-  $opts->{include_expected_funds} //= 0;
+  $opts->{include_unpaid_charges} //= 0;
 
   return $self->_replacement_chain_expiration_date($opts);
 };
@@ -43,7 +43,7 @@ PARTIAL_PACK {
   return try {
     return { } unless $self->is_active;
     my $exp_date = $self->replacement_chain_expiration_date({
-      include_expected_funds => 0,
+      include_unpaid_charges => 0,
     });
     return { replacement_chain_expiration_date => $exp_date };
   } catch {

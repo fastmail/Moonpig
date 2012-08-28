@@ -87,7 +87,7 @@ sub _replacement_chain_expiration_date {
           = $exp_date + $consumer->_estimated_remaining_funded_lifetime(
           {
             amount => $consumer->expected_funds({
-              include_unpaid_charges => $arg->{include_expected_funds},
+              include_unpaid_charges => $arg->{include_unpaid_charges},
             }),
             ignore_partial_charge_periods => 1,
           }
