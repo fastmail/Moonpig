@@ -289,15 +289,15 @@ sub _predicted_shortfall {
   my $funds = $self->expected_funds({ include_unpaid_charges => 1 });
 
   # Next, figure out how long that money will last us.
-  my $estimated_remaining_funded_lifetime =
-      $self->_estimated_remaining_funded_lifetime({ amount => $funds,
-                                                    ignore_partial_charge_periods => 0,
-                                                 });
+  my $erfl = $self->_estimated_remaining_funded_lifetime({
+    amount => $funds,
+    ignore_partial_charge_periods => 0,
+  });
 
   # Next, figure out long we think it *should* last us.
   my $want_to_live = $self->want_to_live;
 
-  my $shortfall = $want_to_live - $estimated_remaining_funded_lifetime;
+  my $shortfall = $want_to_live - $erfl;
   return $shortfall;
 }
 
@@ -359,7 +359,8 @@ sub _estimated_remaining_funded_lifetime {
   Moonpig::X->throw("can't compute remaining lifetime on inactive consumer")
       if $args->{must_be_active} && ! $self->is_active;
 
-  my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now ) + $charge_adjustment;
+  my $each_charge = $self->calculate_total_charge_amount_on( Moonpig->env->now )
+                  + $charge_adjustment;
 
   Moonpig::X->throw("can't compute funded lifetime of negative-cost consumer")
     if $each_charge < 0;
