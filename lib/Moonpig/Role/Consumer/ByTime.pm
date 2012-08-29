@@ -260,7 +260,7 @@ sub can_make_payment_on {
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
-sub want_to_live {
+sub _want_to_live {
   my ($self) = @_;
   if ($self->is_active) {
     return $self->proration_period
@@ -272,7 +272,7 @@ sub want_to_live {
 
 sub replacement_chain_want_to_live {
   my ($self) = @_;
-  sumof { $_->want_to_live } $self->replacement_chain;
+  sumof { $_->_want_to_live } $self->replacement_chain;
 }
 
 # how much sooner will we run out of money than when we would have
@@ -295,7 +295,7 @@ sub _predicted_shortfall {
   });
 
   # Next, figure out long we think it *should* last us.
-  my $want_to_live = $self->want_to_live;
+  my $want_to_live = $self->_want_to_live;
 
   my $shortfall = $want_to_live - $erfl;
   return $shortfall;
@@ -420,7 +420,7 @@ sub _maybe_send_psync_quote {
     # OLD date is the one we had before the service upgrade, which will be
     # RESTORED if the user pays the invoice
     old_expiration_date => Moonpig->env->now +
-      $self->want_to_live +
+      $self->_want_to_live +
       $self->replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will

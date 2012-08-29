@@ -32,7 +32,7 @@ $st->do_ro_with_ledger(
     print "Ledger guid: http://moonpig.icgroup.com:3060/ledger/", $ledger->guid, "\n";
     print "Chain length: ", 0 + @chain, "\n";
     print "predicted shortfall: $Days{$c->_predicted_shortfall}\n";
-    print "want to live: $Days{$c->want_to_live}\n";
+    print "want to live: $Days{$c->_want_to_live}\n";
     print "activation date: $Date{$c->activated_at}\n";
     print "expected funds: $Dollars{my $amount = $c->expected_funds({ include_unpaid_charges => 1 })}\n";
     print "charge per day: $Dollars{$c->calculate_total_charge_amount_on( Moonpig->env->now )}\n";
