@@ -435,6 +435,14 @@ sub _maybe_send_psync_quote {
     new_expiration_date => $self->replacement_chain_expiration_date,
   };
 
+  # Notify followers that we have already handled this shortfall
+  # so they don't send another notice on becoming active.
+  for my $c ($self->replacement_chain) {
+    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
+  }
+
+  $_->mark_abandoned() for @old_quotes;
+
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
     $self->_issue_psync_charge();
@@ -443,14 +451,6 @@ sub _maybe_send_psync_quote {
   }
 
   $self->ledger->_send_psync_email($self, $notice_info);
-
-  # Notify followers that we have already handled this shortfall
-  # so they don't send another notice on becoming active.
-  for my $c ($self->replacement_chain) {
-    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
-  }
-
-  $_->mark_abandoned() for @old_quotes;
 }
 
 sub _issue_psync_charge {
