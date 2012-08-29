@@ -270,9 +270,16 @@ sub _want_to_live {
   }
 }
 
-sub replacement_chain_want_to_live {
+sub _replacement_chain_want_to_live {
   my ($self) = @_;
-  sumof { $_->_want_to_live } $self->replacement_chain;
+
+  my $total = 0;
+  for my $entry ($self->replacement_chain) {
+    last if $entry->_has_unpaid_charges;
+    $total += $entry->_want_to_live;
+  }
+
+  return $total;
 }
 
 # how much sooner will we run out of money than when we would have
@@ -421,7 +428,7 @@ sub _maybe_send_psync_quote {
     # RESTORED if the user pays the invoice
     old_expiration_date => Moonpig->env->now +
       $self->_want_to_live +
-      $self->replacement_chain_want_to_live,
+      $self->_replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
