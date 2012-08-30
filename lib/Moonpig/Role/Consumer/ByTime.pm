@@ -462,6 +462,18 @@ sub _maybe_send_psync_quote {
   $self->ledger->_send_psync_email($self, $notice_info);
 }
 
+sub _abandon_unpaid_psync_charges {
+  my ($self) = @_;
+
+  my @charges =
+    grep {; $_->has_tag('moonpig.psync') }
+    map  {; $_->all_items }
+    grep {; ! $_->is_abandoned && ! $_->is_paid }
+    $self->relevant_invoices;
+
+  $_->mark_abandoned for @charges;
+}
+
 sub _issue_psync_charge {
   my ($self) = @_;
   my $shortfall = $self->_predicted_shortfall;
