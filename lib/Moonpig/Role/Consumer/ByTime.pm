@@ -443,11 +443,21 @@ sub _maybe_send_psync_quote {
 
   $_->mark_abandoned() for @old_quotes;
 
-  if ($shortfall > 0) {
-    $self->ledger->start_quote({ psync_for_xid => $self->xid });
-    $self->_issue_psync_charge();
-    $_->_issue_psync_charge() for $self->replacement_chain;
-    $notice_info->{quote} = $self->ledger->end_quote($self);
+  my @chain = ($self, $self->replacement_chain);
+
+  if (
+    (grep { $_->_has_unpaid_charges } ($self, $self->replacement_chain))
+    &&
+    $self->does('Moonpig::Role::Consumer::InvoiceOnCreation')
+  ) {
+    warn "not psyncing";
+  } else {
+    if ($shortfall > 0) {
+      $self->ledger->start_quote({ psync_for_xid => $self->xid });
+      $self->_issue_psync_charge();
+      $_->_issue_psync_charge() for $self->replacement_chain;
+      $notice_info->{quote} = $self->ledger->end_quote($self);
+    }
   }
 
   $self->ledger->_send_psync_email($self, $notice_info);
