@@ -230,6 +230,8 @@ test "paid and executed" => sub {
       class(qw(Credit::Simulated)),
       { amount => $qu->total_amount },
     );
+    $ledger->process_credits; # not cheating; the POSTable add does this
+
     elapse($ledger);
     ok($qu->is_paid, "quote is now paid");
     is($c->_predicted_shortfall, 0, "quote paid -> no shortfall");
