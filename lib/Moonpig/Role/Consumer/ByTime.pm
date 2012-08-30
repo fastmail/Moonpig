@@ -402,6 +402,7 @@ sub reset_last_psync_shortfall {
 
 sub _maybe_send_psync_quote {
   my ($self) = @_;
+
   return unless $self->is_active;
   return unless grep(! $_->is_abandoned, $self->all_charges) > 0;
 
