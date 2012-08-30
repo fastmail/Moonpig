@@ -449,7 +449,18 @@ sub _maybe_send_psync_quote {
   if (
     (grep { $_->_has_unpaid_charges } @chain)
   ) {
-    die "not psyncing with shortfall $last_shortfall -> $shortfall";
+    # This presumably means that we've already done this one and the charges
+    # are "real" charges, rather than on a quote, so we're counting them as
+    # gonna-pay and it seems like we're all balanced out. -- rjbs, 2012-08-30
+    return unless $shortfall;
+
+    $self->_abandon_unpaid_psync_charges;
+    $self->reinvoice_initial_charges;
+    if ($shortfall > 0) {
+      $self->_issue_psync_charge();
+      $_->_issue_psync_charge() for $self->replacement_chain;
+    }
+    $self->ledger->perform_dunning; # is this okay?
   }
 
   if ($shortfall > 0) {

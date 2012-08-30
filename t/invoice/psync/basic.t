@@ -238,5 +238,113 @@ test "paid and executed" => sub {
   };
 };
 
+test 'reinvoice' => sub {
+  my ($self) = @_;
+
+  do_with_fresh_ledger(
+    {
+      c => { template => 'psync' }
+    },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component("c");
+
+      my ($credit) = $ledger->credit_collection->add({
+        type => 'Simulated',
+        attributes => { amount => dollars(14) }
+      });
+
+      $ledger->heartbeat;
+
+      {
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 0, "we have no payable invoices");
+      }
+
+      my $d = $c->build_and_install_replacement;
+      $ledger->heartbeat;
+
+      my $old_invoice_guid;
+      {
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(14), "...for \$14");
+        $old_invoice_guid = $payable[0]->guid;
+      }
+
+      is($ledger->amount_due, dollars(14), 'we still owe $14');
+
+      my $second_invoice_guid;
+      for (1, 2) {
+        $c->total_charge_amount(dollars(16));
+        $d->total_charge_amount(dollars(16));
+
+        for (1, 2) {
+          # 2 shows that we only reinvoice ONCE not twice
+          $ledger->heartbeat;
+        }
+
+        $ledger->perform_dunning;
+
+        is($ledger->amount_due, dollars(18), 'we now owe $18');
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(18), "...for \$18");
+
+        if (defined $second_invoice_guid) {
+          is($payable[0]->guid, $second_invoice_guid, "we didn't re-reinvoice");
+        } else {
+          $second_invoice_guid = $payable[0]->guid;
+          # seems impossible:
+          isnt(
+            $second_invoice_guid,
+            $old_invoice_guid,
+            "...it isn't the initial invoice",
+          );
+        }
+      }
+
+      {
+        $c->total_charge_amount(dollars(20));
+        $d->total_charge_amount(dollars(20));
+        $ledger->heartbeat;
+
+        is($ledger->amount_due, dollars(26), 'we now owe $26');
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(26), "...for \$26");
+      }
+
+      {
+        $c->total_charge_amount(dollars(12));
+        $d->total_charge_amount(dollars(12));
+        $ledger->heartbeat;
+
+        is($ledger->amount_due, dollars(12), 'we now owe $12');
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(12), '...for $12');
+      }
+
+      {
+        my ($credit) = $ledger->add_credit(
+          class(qw(Credit::Simulated)),
+          { amount => dollars(12) },
+        );
+        $ledger->process_credits;
+        $ledger->heartbeat;
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 0, "paid off the invoice, it didn't respawn");
+      }
+    },
+  );
+
+  pass;
+};
+
 run_me;
 done_testing;
