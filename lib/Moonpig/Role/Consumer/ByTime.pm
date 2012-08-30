@@ -446,7 +446,7 @@ sub _maybe_send_psync_quote {
   my @chain = ($self, $self->replacement_chain);
 
   if (
-    (grep { $_->_has_unpaid_charges } ($self, $self->replacement_chain))
+    (grep { $_->_has_unpaid_charges } @chain)
     &&
     $self->does('Moonpig::Role::Consumer::InvoiceOnCreation')
   ) {
