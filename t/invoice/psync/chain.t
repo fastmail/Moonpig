@@ -34,6 +34,7 @@ sub do_test (&) {
       class(qw(Credit::Simulated)),
       { amount => dollars(42) },
     );
+
     $ledger->name_component("credit", $credit);
     my $d = $c->replacement;
     $ledger->name_component("d", $d);
@@ -120,6 +121,8 @@ sub close_enough {
 test 'psync chains' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
+
+    $ledger->perform_dunning; # close the invoice and process the credit
 
     # At this point, 14 days and $14 remain on each of three consumers
     # $14 = $196/42
