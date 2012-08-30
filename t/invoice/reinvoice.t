@@ -228,5 +228,49 @@ test 'keep original open for some charges, rest onto new' => sub {
   );
 };
 
+test 'try to reissue paid invoice with unexecuted charges' => sub {
+  my ($self) = @_;
+
+  do_with_fresh_ledger(
+    {
+      c => {
+        # psync because it's VaryingCharge, nothing more -- rjbs, 2012-07-26
+        template => 'psync',
+        grace_period_duration => days(3),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component('c');
+
+      my $d = $c->build_and_install_replacement;
+
+      Moonpig->env->elapse_time(days(1));
+      $ledger->heartbeat;
+
+      {
+        my @invoices = $ledger->payable_invoices;
+        is(@invoices, 1, "there's one invoice");
+      }
+
+      $self->pay_payable_invoices($ledger, dollars(28));
+
+      {
+        my @invoices = $ledger->payable_invoices;
+        is(@invoices, 0, "and now there's no payable invoice");
+      }
+
+      $c->reinvoice_initial_charges;
+      $ledger->heartbeat; # to close invoice
+
+      {
+        my @invoices = $ledger->payable_invoices;
+
+        is(@invoices, 0, "after reinvoicing, still no payable invoice");
+      }
+    },
+  );
+};
+
 run_me;
 done_testing;
