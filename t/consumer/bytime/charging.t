@@ -211,6 +211,17 @@ test "proration" => sub {
   use Moonpig::Util qw(dollars);
   use Moonpig::Types qw(PositiveMillicents);
 
+  around initial_invoice_charge_structs => sub {
+    my ($orig, $self) = @_;
+    my @structs = $self->$orig;
+    push @structs, {
+      description => 'extra starting funds',
+      amount      => dollars(100),
+    };
+
+    return @structs;
+  };
+
   sub charge_structs_on {
     my ($self, $date) = @_;
 
@@ -242,7 +253,6 @@ test "variable charge" => sub {
       $stuff = build(
         consumer => {
           class => class('Consumer::ByTime', '=ChargeTodaysDate'),
-          bank  => dollars(500),
           extra_charge_tags => ["test"],
           replacement_lead_time     => years(1000),
           cost_period               => days(1),
@@ -250,6 +260,14 @@ test "variable charge" => sub {
           xid                       => xid(),
         }
       );
+
+      my $credit = $stuff->{ledger}->add_credit(
+        class('Credit::Simulated'),
+        { amount => dollars(101) },
+      );
+
+      $stuff->{ledger}->perform_dunning;
+
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 
@@ -267,7 +285,7 @@ test "variable charge" => sub {
 
     # We should be charging across five days, no matter the pattern, starting
     # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
-    is($stuff->{consumer}->unapplied_amount, dollars(485),
+    is($stuff->{consumer}->unapplied_amount, dollars(86),
        '$15 charged by charging the date');
   }
 };
