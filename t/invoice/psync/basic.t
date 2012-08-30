@@ -236,31 +236,5 @@ test "paid and executed" => sub {
   };
 };
 
-test 'regression' => sub {
-  my ($self) = @_;
-
-  do_with_fresh_ledger(
-    {
-      c => {
-        template => 'demo-service',
-        minimum_chain_duration => years(6),
-      },
-    }, sub {
-      my ($ledger) = @_;
-
-      my $invoice = $ledger->current_invoice;
-      $ledger->name_component("initial invoice", $invoice);
-      $ledger->heartbeat;
-
-      my $n_invoices = () = $ledger->invoices;
-      note "$n_invoices invoice(s)";
-      my @quotes = $ledger->quotes;
-      note @quotes + 0, " quote(s)";
-
-      pass();
-    },
-  );
-};
-
 run_me;
 done_testing;
