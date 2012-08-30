@@ -466,7 +466,10 @@ sub _issue_psync_charge {
   my ($self) = @_;
   my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
-  my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
+  my $amount = int $self->estimate_cost_for_interval({
+    interval => $shortfall
+  });
+
   $self->charge_current_invoice({
     extra_tags => [ 'moonpig.psync' ],
     description => sprintf("Shortfall of $shortfall_days %s",
