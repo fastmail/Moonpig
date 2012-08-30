@@ -31,7 +31,6 @@ sub templates {
       return {
         roles => [ 'Consumer::ByTime::FixedAmountCharge' ],
         arg => {
-          replacement_lead_time     => years(1000),
           charge_amount => dollars(100),
           cost_period => days(2),
           charge_description => 'quick consumer',

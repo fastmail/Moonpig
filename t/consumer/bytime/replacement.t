@@ -53,7 +53,6 @@ test "with_successor" => sub {
         initial => {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(31),
-          replacement_lead_time            => years(1000),
           charge_description => "test charge",
           charge_amount        => dollars(1),
           cost_period        => days(1),
@@ -63,7 +62,6 @@ test "with_successor" => sub {
         },
         replacement => {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
-          replacement_lead_time            => years(1000),
           charge_description => "test charge",
           charge_amount        => dollars(1),
           cost_period        => days(1),

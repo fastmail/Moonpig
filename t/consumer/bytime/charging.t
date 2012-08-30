@@ -46,7 +46,6 @@ test "charge" => sub {
           replacement_plan   => [ get => '/nothing' ],
           charge_description => "test charge",
           xid                => xid(),
-          replacement_lead_time => years(1000),
         }
       );
 
@@ -90,7 +89,6 @@ test "top up" => sub {
         replacement_plan   => [ get => '/nothing' ],
         charge_description => "test charge",
         xid                => xid(),
-        replacement_lead_time => years(1000),
       }
     );
 
@@ -254,7 +252,6 @@ test "variable charge" => sub {
         consumer => {
           class => class('Consumer::ByTime', '=ChargeTodaysDate'),
           extra_charge_tags => ["test"],
-          replacement_lead_time     => years(1000),
           cost_period               => days(1),
           replacement_plan          => [ get => '/nothing' ],
           xid                       => xid(),
@@ -380,7 +377,6 @@ test "spare change" => sub {
         replacement_plan   => [ get => '/nothing' ],
         charge_description => "test charge",
         xid                => xid(),
-        replacement_lead_time => years(1000),
       }
     );
 
@@ -419,7 +415,6 @@ test "almost no spare change" => sub {
         replacement_plan   => [ get => '/nothing' ],
         charge_description => "test charge",
         xid                => xid(),
-        replacement_lead_time => years(1000),
       }
     );
 
