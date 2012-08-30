@@ -224,8 +224,6 @@ test "proration" => sub {
 test "variable charge" => sub {
   my ($self) = @_;
 
-  my @eq;
-
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
@@ -246,7 +244,7 @@ test "variable charge" => sub {
           class => class('Consumer::ByTime', '=ChargeTodaysDate'),
           bank  => dollars(500),
           extra_charge_tags => ["test"],
-          replacement_lead_time                   => years(1000),
+          replacement_lead_time     => years(1000),
           cost_period               => days(1),
           replacement_plan          => [ get => '/nothing' ],
           xid                       => xid(),
@@ -265,7 +263,6 @@ test "variable charge" => sub {
       Moonpig->env->stop_clock_at($tick_time);
 
       $self->heartbeat_and_send_mail($stuff->{ledger});
-
     }
 
     # We should be charging across five days, no matter the pattern, starting
