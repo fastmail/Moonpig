@@ -447,8 +447,6 @@ sub _maybe_send_psync_quote {
 
   if (
     (grep { $_->_has_unpaid_charges } @chain)
-    &&
-    $self->does('Moonpig::Role::Consumer::InvoiceOnCreation')
   ) {
     die "not psyncing with shortfall $last_shortfall -> $shortfall";
   }
