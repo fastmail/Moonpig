@@ -178,6 +178,9 @@ test long_chain => sub {
         @after  = @chain[8..9];
       };
 
+      $ledger->heartbeat;
+      pay_unpaid_invoices($ledger, dollars(900)); # 10 - (1 self funding)
+
       $_->total_charge_amount(dollars(120)) for @before;
       $_->total_charge_amount(dollars(150)) for @after;
       $a->_maybe_send_psync_quote();
