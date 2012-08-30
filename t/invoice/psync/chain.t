@@ -128,10 +128,19 @@ test 'psync chains' => sub {
       $_->total_charge_amount(dollars(20)) for $c, $d, $e;
       # At $20/14 per day, the $14 remaining will be used up in 196/20 days,
       # leaving a shortfall of 14 - 196/20 = 42/10 days.
-      is($_->_predicted_shortfall, days(4.2), "extra charge -> shortfall 4.2 days")
-        for $c, $d, $e;
+
+      for ($c, $d, $e) {
+        is(
+          $_->_predicted_shortfall,
+          days(4.2),
+          "extra charge -> shortfall 4.2 days"
+        );
+      }
+
       elapse($ledger, 2);
-      # At this point, 12 days and $156/14 ~=~ $11.14 remain on $c; $14 remains on $d and $e
+
+      # At this point, 12 days and $156/14 ~=~ $11.14 remain on $c; $14 remains
+      # on $d and $e
 
       is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
       ok($qu->is_closed, "quote is closed");
