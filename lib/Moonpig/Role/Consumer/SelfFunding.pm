@@ -91,8 +91,9 @@ around _issue_psync_charge => sub {
   return if $self->is_active;
 
   my $quote = $self->ledger->current_invoice;
-  $quote->is_quote && $quote->is_psync_quote
-    or die "Current journal is not a psync quote!";
+
+  # $quote->is_quote && $quote->is_psync_quote
+  #   or die "Current journal is not a psync quote!";
 
   my @ancestors = $self->_previous_n_ancestors(5);
   my %is_ancestor = map { $_->guid => 1 } @ancestors;
