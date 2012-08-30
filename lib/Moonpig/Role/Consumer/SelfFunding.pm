@@ -109,6 +109,7 @@ around _issue_psync_charge => sub {
                             / $n_charges;
 
   $self->charge_current_invoice({
+    extra_tags => [ 'moonpig.psync' ],
     adjustment_amount => int($average_charge_amount),
     description => "free consumer extension",
     amount => 0,
