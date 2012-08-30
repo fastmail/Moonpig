@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use List::AllUtils qw(all);
 use Moonpig;
 use Moonpig::DateTime;
-use Moonpig::Util qw(class days event sum sumof pair_rights);
+use Moonpig::Util qw(class days event sum sumof);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
