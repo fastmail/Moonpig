@@ -249,63 +249,80 @@ test 'reinvoice' => sub {
       my ($ledger) = @_;
       my $c = $ledger->get_component("c");
 
-      my ($credit) = $ledger->credit_collection->add({
+      $ledger->credit_collection->add({
         type => 'Simulated',
         attributes => { amount => dollars(14) }
       });
 
       $ledger->heartbeat;
 
-      {
+      subtest "initial state" => sub {
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+
         my @payable = $ledger->payable_invoices;
         is(@payable, 0, "we have no payable invoices");
-      }
+
+        is($ledger->amount_due, 0, 'we owe nothing');
+      };
 
       my $d = $c->build_and_install_replacement;
       $ledger->heartbeat;
 
       my $old_invoice_guid;
-      {
+      subtest "invoice for first replacement" => sub {
         my @payable = $ledger->payable_invoices;
         is(@payable, 1, "we have one payable invoice");
         is($payable[0]->total_amount, dollars(14), "...for \$14");
         $old_invoice_guid = $payable[0]->guid;
-      }
 
-      is($ledger->amount_due, dollars(14), 'we still owe $14');
+        is($ledger->amount_due, dollars(14), 'we owe $14');
 
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+      };
+
+      subtest 'first increase in charge amount' => sub {
       my $second_invoice_guid;
-      for (1, 2) {
-        $c->total_charge_amount(dollars(16));
-        $d->total_charge_amount(dollars(16));
-
         for (1, 2) {
-          # 2 shows that we only reinvoice ONCE not twice
-          $ledger->heartbeat;
+          $c->total_charge_amount(dollars(16));
+          $d->total_charge_amount(dollars(16));
+
+          for (1, 2) {
+            # 2 shows that we only reinvoice ONCE not twice
+            $ledger->heartbeat;
+          }
+
+          $ledger->perform_dunning;
+
+          is($ledger->amount_due, dollars(18), 'we now owe $18');
+
+          my @payable = $ledger->payable_invoices;
+          is(@payable, 1, "we have one payable invoice");
+          is($payable[0]->total_amount, dollars(18), "...for \$18");
+
+          if (defined $second_invoice_guid) {
+            is(
+              $payable[0]->guid,
+              $second_invoice_guid,
+              "we didn't re-reinvoice",
+            );
+          } else {
+            $second_invoice_guid = $payable[0]->guid;
+            # seems impossible:
+            isnt(
+              $second_invoice_guid,
+              $old_invoice_guid,
+              "...it isn't the initial invoice",
+            );
+          }
+
+          my @quotes = $ledger->quotes;
+          is(@quotes, 0, "no quotes so far");
         }
+      };
 
-        $ledger->perform_dunning;
-
-        is($ledger->amount_due, dollars(18), 'we now owe $18');
-
-        my @payable = $ledger->payable_invoices;
-        is(@payable, 1, "we have one payable invoice");
-        is($payable[0]->total_amount, dollars(18), "...for \$18");
-
-        if (defined $second_invoice_guid) {
-          is($payable[0]->guid, $second_invoice_guid, "we didn't re-reinvoice");
-        } else {
-          $second_invoice_guid = $payable[0]->guid;
-          # seems impossible:
-          isnt(
-            $second_invoice_guid,
-            $old_invoice_guid,
-            "...it isn't the initial invoice",
-          );
-        }
-      }
-
-      {
+      subtest "second increase in charge amount" => sub {
         $c->total_charge_amount(dollars(20));
         $d->total_charge_amount(dollars(20));
         $ledger->heartbeat;
@@ -315,9 +332,12 @@ test 'reinvoice' => sub {
         my @payable = $ledger->payable_invoices;
         is(@payable, 1, "we have one payable invoice");
         is($payable[0]->total_amount, dollars(26), "...for \$26");
-      }
 
-      {
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+      };
+
+      subtest "decrease in charge amount" => sub {
         $c->total_charge_amount(dollars(12));
         $d->total_charge_amount(dollars(12));
         $ledger->heartbeat;
@@ -327,10 +347,13 @@ test 'reinvoice' => sub {
         my @payable = $ledger->payable_invoices;
         is(@payable, 1, "we have one payable invoice");
         is($payable[0]->total_amount, dollars(12), '...for $12');
-      }
 
-      {
-        my ($credit) = $ledger->add_credit(
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+      };
+
+      subtest "paying off the new invoice" => sub {
+        $ledger->add_credit(
           class(qw(Credit::Simulated)),
           { amount => dollars(12) },
         );
@@ -339,7 +362,7 @@ test 'reinvoice' => sub {
 
         my @payable = $ledger->payable_invoices;
         is(@payable, 0, "paid off the invoice, it didn't respawn");
-      }
+      };
     },
   );
 
