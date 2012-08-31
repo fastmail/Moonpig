@@ -275,7 +275,10 @@ sub _replacement_chain_want_to_live {
 
   my $total = 0;
   for my $entry ($self->replacement_chain) {
-    last if $entry->_has_unpaid_charges;
+    last if grep { ! $_->has_tag('moonpig.psync') }
+            grep {; $_->owner_guid eq $self->guid }
+            map  {; $_->all_items }
+            $entry->_unpaid_charges;
     $total += $entry->_want_to_live;
   }
 
@@ -447,7 +450,7 @@ sub _maybe_send_psync_quote {
   my @chain = ($self, $self->replacement_chain);
 
   if (
-    (grep { $_->_has_unpaid_charges } @chain)
+    (grep { $_->_unpaid_charges } @chain)
   ) {
     # This presumably means that we've already done this one and the charges
     # are "real" charges, rather than on a quote, so we're counting them as

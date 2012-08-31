@@ -47,7 +47,7 @@ sub _replacement_chain_expiration_date {
     my $this = $chain[$i];
 
     if ($this->does('Moonpig::Role::Consumer::FixedExpiration')) {
-      my $behavior = $this->_has_unpaid_charges
+      my $behavior = $this->_unpaid_charges
                    ? $this->_expected_unfunded_expiration_behavior
                    : $this->_expected_funded_expiration_behavior;
 

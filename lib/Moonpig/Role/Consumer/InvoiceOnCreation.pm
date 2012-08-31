@@ -45,7 +45,7 @@ publish reinvoice_initial_charges => {
 } => sub {
   my ($self) = @_;
 
-  if ($self->_has_unpaid_charges && ! $self->was_ever_funded) {
+  if ($self->_unpaid_charges && ! $self->was_ever_funded) {
     $self->abandon_all_unpaid_charges;
     $self->_invoice;
   }
