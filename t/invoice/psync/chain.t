@@ -19,11 +19,6 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-  Moonpig->env->stop_clock_at($jan1);
-};
-
 sub do_test (&) {
   my ($code) = @_;
   do_with_fresh_ledger({ c => { template => 'psync' } }, sub {
@@ -45,16 +40,6 @@ sub do_test (&) {
   });
 }
 
-sub get_single_delivery {
-  my ($msg) = @_;
-  $msg //= "exactly one delivery";
-  Moonpig->env->process_email_queue;
-  my $sender = Moonpig->env->email_sender;
-  is(my ($delivery) = $sender->deliveries, 1, $msg);
-  $sender->clear_deliveries;
-  return $delivery;
-}
-
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
@@ -65,6 +50,8 @@ sub elapse {
 }
 
 test 'setup sanity checks' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c, $d, $e) = @_;
     ok($c);
@@ -100,11 +87,7 @@ test 'setup sanity checks' => sub {
     ok($inv[0]->is_closed, "the invoice is closed");
     ok($inv[0]->is_paid, "the invoice is paid");
 
-    { Moonpig->env->process_email_queue;
-      my ($delivery) = get_single_delivery("discarding initial invoice");
-      Moonpig->env->email_sender->clear_deliveries;
-      (() = Moonpig->env->email_sender->deliveries) == 0 or die;
-    }
+    $self->assert_n_deliveries(1, "initial invoice");
 
     my @qu = $ledger->quotes;
     is(@qu, 0, "no quotes");
@@ -119,6 +102,8 @@ sub close_enough {
 }
 
 test 'psync chains' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c, $d, $e) = @_;
 
@@ -158,13 +143,11 @@ test 'psync chains' => sub {
     };
 
     subtest "psync email" => sub {
-      Moonpig->env->process_email_queue;
       # throw away the invoice.
       my @deliveries = grep
         {$_->{email}->header('Subject') ne "Your expiration date has changed"
-      } Moonpig->env->email_sender->deliveries;
+      } $self->get_and_clear_deliveries;
       is(@deliveries, 1, "psync quote was emailed");
-      Moonpig->env->email_sender->clear_deliveries;
     };
 
     subtest "psync quote amounts after some charging" => sub {
@@ -190,6 +173,8 @@ test 'psync chains' => sub {
 # ($20/yr) who has paid three years in advance upgrades their service
 # to mailstore ($50/yr) halfway through the first year.
 test 'mailstore sorta' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c, $d, $e) = @_;
     elapse($ledger, 7);
@@ -211,6 +196,8 @@ test 'mailstore sorta' => sub {
 # should *not* be a second notice of the same shortfall when A fails
 # over to its successor.
 test 'repeat notices' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c, $d, $e) = @_;
     elapse($ledger, 2);
@@ -219,7 +206,6 @@ test 'repeat notices' => sub {
     # At this point, $c only has enough money to last 8.4 more days
     $c->_maybe_send_psync_quote();
     my @q1 = $ledger->quotes;
-    Moonpig->env->email_sender->clear_deliveries;
 
     elapse($ledger, 10);
     subtest "sanity check" => sub {

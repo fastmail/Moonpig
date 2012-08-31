@@ -19,11 +19,6 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-  Moonpig->env->stop_clock_at($jan1);
-};
-
 sub do_test (&) {
   my ($code) = @_;
   do_with_fresh_ledger({ c => { template => 'psync',
@@ -41,16 +36,6 @@ sub do_test (&) {
   });
 }
 
-sub get_single_delivery {
-  my ($msg) = @_;
-  $msg //= "exactly one delivery";
-  Moonpig->env->process_email_queue;
-  my $sender = Moonpig->env->email_sender;
-  is(my ($delivery) = $sender->deliveries, 1, $msg);
-  $sender->clear_deliveries;
-  return $delivery;
-}
-
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
@@ -61,6 +46,8 @@ sub elapse {
 }
 
 test 'setup sanity checks' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     ok($c);
@@ -94,6 +81,8 @@ test 'setup sanity checks' => sub {
 };
 
 test 'quote' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
@@ -105,8 +94,7 @@ test 'quote' => sub {
       elapse($ledger);
       is(scalar($ledger->quotes), 0, "no quotes yet");
 
-      Moonpig->env->process_email_queue;
-      get_single_delivery("one email delivery (the invoice)");
+      $self->assert_n_deliveries(1, "the invoice");
     };
     # At this point, 12 days and $12 remain
 
@@ -135,7 +123,7 @@ test 'quote' => sub {
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
-      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
+      my ($delivery) = $self->assert_n_deliveries(1, "the psync quote");
     };
 
     subtest "do not generate further quotes or send further email" => sub {
@@ -149,6 +137,8 @@ test 'quote' => sub {
 };
 
 test 'varying charges' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
@@ -156,13 +146,14 @@ test 'varying charges' => sub {
 
     subtest "rate goes up to 28" => sub {
       elapse($ledger, 3);
+      $self->assert_n_deliveries(1, "initial invoice");
       $c->total_charge_amount(dollars(28));
       elapse($ledger);
       # At this point, 10 days and $9 remain
       is(($q1) = $ledger->quotes, 1, "first psync quote generated");
       is($q1->total_amount, dollars(11), "psync quote amount");
-      Moonpig->env->process_email_queue;
-      Moonpig->env->email_sender->clear_deliveries;
+
+      $self->assert_n_deliveries(1, "first quote");
     };
     # At this point, 10 days and $9 remain
 
@@ -174,7 +165,7 @@ test 'varying charges' => sub {
       $q2 = $q[1];
       ok($q1->is_abandoned, "first quote was automatically abandoned");
       is($q2->total_amount, dollars(6), "new quote amount");
-      my $d = get_single_delivery();
+      $self->assert_n_deliveries(1, "second quote");
     };
     # At this point, 9 days and $7.5 remain
 
@@ -186,7 +177,7 @@ test 'varying charges' => sub {
       $q3 = $q[2];
       ok($q2->is_abandoned, "second quote was automatically abandoned");
       is($q3->total_amount, dollars(10.5), "new quote amount");
-      my $d = get_single_delivery();
+      $self->assert_n_deliveries(1, "third quote");
     };
     # At this point, 8 days and $5.5 remain
 
@@ -199,7 +190,8 @@ test 'varying charges' => sub {
       # At this point, 7 days and $4.8125 remain
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       ok($q3->is_abandoned, "third quote was automatically abandoned");
-      my $d = get_single_delivery();
+
+      $self->assert_n_deliveries(1, "psync notice");
     };
     # At this point, 7 days and $4.8125 remain
 
@@ -207,12 +199,15 @@ test 'varying charges' => sub {
       $c->total_charge_amount(dollars(0.01));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
-      my $d = get_single_delivery();
+
+      $self->assert_n_deliveries(1, "psync notice");
     }
   };
 };
 
 test "paid and executed" => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     elapse($ledger, 3) ;

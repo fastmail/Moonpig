@@ -95,6 +95,8 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
 
       $self->heartbeat_and_send_mail($ledger);
 
+      my ($delivery) = $self->assert_n_deliveries(1, "initial invoice");
+
       my $x = $ledger->get_component('x');
 
       is($ledger->amount_due, dollars(500), 'we owe $500');
@@ -161,12 +163,10 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
     sub {
       my ($ledger) = @_;
 
-      Moonpig->env->email_sender->clear_deliveries;
       $self->heartbeat_and_send_mail($ledger);
 
-      my @deliveries = Moonpig->env->email_sender->deliveries;
-      is(@deliveries, 1, "...(there was one email)...");
-      my $email = $deliveries[0]->{email};
+      my ($delivery) = $self->assert_n_deliveries(1);
+      my $email = $delivery->{email};
       like($email->header('subject'), qr{payment is due}i, "...(invoice)...");
 
       {

@@ -45,8 +45,8 @@ test pay_and_get_refund => sub {
 
   $self->heartbeat_and_send_mail($ledger_guid);
 
-  my @deliveries = Moonpig->env->email_sender->deliveries;
-  my $data = JSON->new->decode( $deliveries[0]->{email}->body_str );
+  my ($delivery) = $self->assert_n_deliveries(1, "refund request");
+  my $data = JSON->new->decode( $delivery->{email}->body_str );
 
   is($data->{ledger}, $ledger_guid, "refund email refers to right ledger");
   is(

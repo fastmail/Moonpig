@@ -119,8 +119,7 @@ test "import a ledger via the web" => sub {
     sub {
       my ($ledger) = @_;
       $self->heartbeat_and_send_mail($ledger);
-      my @deliveries = Moonpig->env->email_sender->deliveries;
-      is(@deliveries, 0, "we didn't email any invoices, they're internal");
+      $self->assert_n_deliveries(0, "all invoices were internal");
     },
   );
 
@@ -233,8 +232,7 @@ test "import a ledger, with proration, via the web" => sub {
       my ($ledger) = @_;
 
       $self->heartbeat_and_send_mail($ledger);
-      my @deliveries = Moonpig->env->email_sender->deliveries;
-      is(@deliveries, 0, "we didn't email any invoices, they're internal");
+      $self->assert_n_deliveries(0, "all invoices were internal");
 
       my $c_guid = $ledger->active_consumer_for_xid($xid)->guid;
 

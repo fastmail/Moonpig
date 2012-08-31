@@ -17,13 +17,6 @@ with(
 use t::lib::ConsumerTemplateSet::Test;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
-
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-  Moonpig->env->stop_clock_at($jan1);
-};
-
 sub do_test (&) {
   my ($chain_length, $code) = @_;
   ($chain_length, $code) = (0, $chain_length) if ref $chain_length;
@@ -41,16 +34,6 @@ sub do_test (&) {
 
     $code->($ledger, $c);
   });
-}
-
-sub get_single_delivery {
-  my ($msg) = @_;
-  $msg //= "exactly one delivery";
-  Moonpig->env->process_email_queue;
-  my $sender = Moonpig->env->email_sender;
-  is(my ($delivery) = $sender->deliveries, 1, $msg);
-  $sender->clear_deliveries;
-  return $delivery;
 }
 
 sub body {
@@ -71,6 +54,8 @@ sub elapse {
 }
 
 test 'setup sanity checks' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     ok($c);
@@ -103,13 +88,15 @@ test 'setup sanity checks' => sub {
 };
 
 test 'single consumer' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
 
     subtest "psync quote when rate changes" => sub {
       elapse($ledger,4);
-      get_single_delivery("one email delivery (the invoice)");
+      $self->assert_n_deliveries(1, "the invoice");
       # Have $14-$4 = $10 after 4 days;
       # now spending $2/day => remaining lifetime = 5d
       # remaining lifetime should have been 10d
@@ -119,9 +106,8 @@ test 'single consumer' => sub {
       elapse($ledger) until $ledger->quotes;
       # We now have $8 and have used up 5 days
 
-      Moonpig->env->process_email_queue;
-      my $sender = Moonpig->env->email_sender;
-      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
+      my ($delivery) = $self->assert_n_deliveries(1, "the psync quote");
+
       my $body = body($delivery);
       like($body, qr/\S/, "psync mail body is not empty");
       like($body, qr/to make payment/i, "this is the request for payment");
@@ -141,7 +127,7 @@ test 'single consumer' => sub {
       $c->total_charge_amount(dollars(7)); # $.50 per day
       elapse($ledger);
       # We now have $7.50 and have used up 6 days
-      my ($delivery) = get_single_delivery("one email delivery (the psync notice)");
+      my ($delivery) = $self->assert_n_deliveries(1, "the psync notice");
       my $body = body($delivery);
       like($body, qr/your account price has decreased/i, "this is the nonpayment notice");
       my ($new_date) = $body =~ qr/will now expire on\s+(\w+ [\d ]\d, \d{4})/;
@@ -156,6 +142,8 @@ test 'single consumer' => sub {
 # ($20/yr) who has paid three years in advance upgrades their service
 # to mailstore ($50/yr) halfway through the first year.
 test 'mailstore sorta' => sub {
+  my ($self) = @_;
+
   &do_test(days(28), sub {
     my ($ledger, $c) = @_;
     my $d = $c->replacement;
@@ -164,7 +152,7 @@ test 'mailstore sorta' => sub {
       type => 'Simulated',
       attributes => { amount => dollars(28) }
     });
-    my $sender = Moonpig->env->email_sender;
+
     elapse($ledger, 7);
     # $c now has 7 days and $7 left; $d and $e have 14 days and $14
     $_->total_charge_amount(dollars(35)) for $c, $d, $e;
@@ -177,9 +165,8 @@ test 'mailstore sorta' => sub {
     is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
     is($ch[0]->amount,  dollars(10.50), "active consumer charge amount");
     is($ch[$_]->amount, dollars(21), "inactive consumer $_ charge amount") for 1, 2;
-    Moonpig->env->process_email_queue;
-    is(my (undef, $delivery) = $sender->deliveries, 2, "two deliveries");
-    $sender->clear_deliveries;
+
+    my (undef, $delivery) = $self->assert_n_deliveries(2);
     my $body = body($delivery);
   });
 };

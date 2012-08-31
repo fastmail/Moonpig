@@ -21,10 +21,6 @@ with(
   'Moonpig::Test::Role::LedgerTester',
 );
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-};
-
 sub queue_handler {
   my ($name, $queue) = @_;
   $queue ||= [];
@@ -38,7 +34,7 @@ test "with_successor" => sub {
 
   for my $test (
     [ 'double', [ map( ($_,$_), 1 .. 31) ] ], # each one delivered twice
-    [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 warning delivered on 29th
+    [ 'missed', [ 29, 30, 31 ], 2 ], # Jan 24 message delivered on 29th
     [ 'normal', [ 1 .. 31 ] ],  # one per day like it should be
   ) {
 
@@ -54,7 +50,7 @@ test "with_successor" => sub {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
           bank               => dollars(31),
           charge_description => "test charge",
-          charge_amount        => dollars(1),
+          charge_amount      => dollars(1),
           cost_period        => days(1),
           replacement        => 'replacement',
           replacement_plan   => [ get => '/nothing' ],
@@ -63,7 +59,7 @@ test "with_successor" => sub {
         replacement => {
           class              => class('Consumer::ByTime::FixedAmountCharge'),
           charge_description => "test charge",
-          charge_amount        => dollars(1),
+          charge_amount      => dollars(1),
           cost_period        => days(1),
           replacement_plan   => [ get => '/nothing' ],
           xid                => $xid,
@@ -72,23 +68,23 @@ test "with_successor" => sub {
       Moonpig->env->save_ledger($stuff->{ledger});
     });
 
-    my ($name, $schedule, $n_warnings) = @$test;
+    my ($name, $schedule, $n_messages) = @$test;
 
     # ATTENTION: THIS WILL CHANGE AS DUNNING / GRACE BEHAVIOR IS REFINED
     # Normally we get 8 requests for payment:
     #  * 1 when the consumer is first created
     #  * 1 every 4 days thereafter: the 4th, 8th, 12th, 16th, 20th, 24th, 28th
-    $n_warnings = 8 unless defined $n_warnings;
+    $n_messages //= 8;
 
     {
-      my @deliveries = Moonpig->env->email_sender->deliveries;
+      my @deliveries = $self->get_and_clear_deliveries;
       is(@deliveries, 0, "no notices sent yet");
     }
 
     $self->heartbeat_and_send_mail($stuff->{ledger});
 
     {
-      my @deliveries = Moonpig->env->email_sender->deliveries;
+      my @deliveries = $self->get_and_clear_deliveries;
       is(@deliveries, 1, "initial invoice sent");
     }
 
@@ -101,10 +97,9 @@ test "with_successor" => sub {
       $self->heartbeat_and_send_mail($stuff->{ledger});
     }
 
-    my @deliveries = Moonpig->env->email_sender->deliveries;
-    is(@deliveries, $n_warnings,
-       "received $n_warnings warnings (schedule '$name')");
-    Moonpig->env->email_sender->clear_deliveries;
+    my @deliveries = $self->get_and_clear_deliveries;
+    is(1+@deliveries, $n_messages,
+       "received $n_messages messages (schedule '$name')");
   }
 };
 
