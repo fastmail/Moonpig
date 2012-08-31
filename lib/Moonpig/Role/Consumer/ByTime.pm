@@ -461,6 +461,8 @@ sub _maybe_send_psync_quote {
       $_->_issue_psync_charge() for $self->replacement_chain;
     }
     $self->ledger->perform_dunning; # is this okay?
+
+    return;
   }
 
   if ($shortfall > 0) {
