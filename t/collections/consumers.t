@@ -7,7 +7,7 @@ use Moonpig::Util qw(class dollars);
 use Scalar::Util qw(refaddr);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::ConsumerTemplateSet::Test;

@@ -12,7 +12,7 @@ use Test::More;
 use Test::Routine::Util;
 use Try::Tiny;
 
-with ('Moonpig::Test::Role::UsesStorage');
+with ('Moonpig::Test::Role::LedgerTester');
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 test "fixed-expiration consumer" => sub {

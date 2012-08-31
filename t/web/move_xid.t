@@ -17,7 +17,7 @@ use Fauxbox::Moonpig::TemplateSet;
 
 use strict;
 
-with ('Moonpig::Test::Role::UsesStorage');
+with ('Moonpig::Test::Role::LedgerTester');
 
 my $ua  = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $app = Moonpig::Web::App->app;

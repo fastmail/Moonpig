@@ -7,7 +7,7 @@ use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars event years);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
   't::lib::Routine::XferChain',
 );
 

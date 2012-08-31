@@ -9,7 +9,7 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-with 'Moonpig::Test::Role::UsesStorage';
+with 'Moonpig::Test::Role::LedgerTester';
 
 my $XID = "narf";
 

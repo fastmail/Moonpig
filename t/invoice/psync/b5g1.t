@@ -12,7 +12,6 @@ use Moonpig::Util qw(class days dollars event sumof to_dollars weeks years);
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',
-#  'Moonpig::Test::Role::UsesStorage',
 );
 
 use t::lib::ConsumerTemplateSet::Demo;

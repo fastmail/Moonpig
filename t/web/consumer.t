@@ -14,7 +14,7 @@ use Test::More;
 use lib 'eg/fauxbox/lib';
 use Fauxbox::Moonpig::TemplateSet;
 
-with ('Moonpig::Test::Role::UsesStorage');
+with ('Moonpig::Test::Role::LedgerTester');
 
 my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $json = JSON->new;

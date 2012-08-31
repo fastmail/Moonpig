@@ -7,7 +7,7 @@ use t::lib::TestEnv;
 use t::lib::ConsumerTemplateSet::Test;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::Logger '$Logger';
