@@ -19,6 +19,13 @@ around run_test => sub {
   Moonpig->env->stop_clock_at( datetime( jan => 1 ) );
 
   $self->$orig(@rest);
+
+};
+
+around _last_chance_before_test_ends => sub {
+  my ($orig, $self) = @_;
+  $self->assert_n_deliveries(0, "no unexpected mail");
+  $self->$orig;
 };
 
 sub heartbeat_and_send_mail {
