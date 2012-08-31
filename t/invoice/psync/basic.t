@@ -251,6 +251,8 @@ test 'reinvoice' => sub {
 
       $ledger->heartbeat;
 
+      $self->assert_n_deliveries(1, "initial invoice (paid)");
+
       subtest "initial state" => sub {
         my @quotes = $ledger->quotes;
         is(@quotes, 0, "no quotes so far");
@@ -275,6 +277,8 @@ test 'reinvoice' => sub {
 
         my @quotes = $ledger->quotes;
         is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "first invoice for replacement");
       };
 
       subtest 'first increase in charge amount' => sub {
@@ -302,6 +306,8 @@ test 'reinvoice' => sub {
               $second_invoice_guid,
               "we didn't re-reinvoice",
             );
+
+            $self->assert_n_deliveries(0, "...or send mail");
           } else {
             $second_invoice_guid = $payable[0]->guid;
             # seems impossible:
@@ -310,6 +316,8 @@ test 'reinvoice' => sub {
               $old_invoice_guid,
               "...it isn't the initial invoice",
             );
+
+            $self->assert_n_deliveries(1, "second invoice for replacement");
           }
 
           my @quotes = $ledger->quotes;
@@ -330,6 +338,8 @@ test 'reinvoice' => sub {
 
         my @quotes = $ledger->quotes;
         is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "third invoice for replacement");
       };
 
       subtest "decrease in charge amount" => sub {
@@ -345,6 +355,8 @@ test 'reinvoice' => sub {
 
         my @quotes = $ledger->quotes;
         is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "fourth invoice for replacement");
       };
 
       subtest "paying off the new invoice" => sub {
@@ -357,6 +369,11 @@ test 'reinvoice' => sub {
 
         my @payable = $ledger->payable_invoices;
         is(@payable, 0, "paid off the invoice, it didn't respawn");
+
+        # I'm not really sure I like that we send this message.  I'm pretty
+        # sure it's happening because $c will now live $2-worth longer because
+        # we "have to" charge at least $14 for it. -- rjbs, 2012-08-31
+        $self->assert_n_deliveries(1, "psync down notice");
       };
     },
   );
