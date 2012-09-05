@@ -9,6 +9,7 @@ use Test::More;
 use Test::Routine;
 use Test::Routine::Util '-all';
 
+# I had some trouble switching this to LedgerTester -- rjbs, 2012-08-31
 with ('Moonpig::Test::Role::UsesStorage');
 around run_test => sub {
   my ($orig) = shift;

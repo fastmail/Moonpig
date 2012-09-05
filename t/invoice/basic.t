@@ -15,10 +15,6 @@ with(
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-};
-
 test 'zero charge dunning' => sub {
   my ($self) = @_;
   my $guid;
@@ -94,9 +90,8 @@ test 'charge close and send' => sub {
     $self->heartbeat_and_send_mail($ledger);
   });
 
-  my @deliveries = Moonpig->env->email_sender->deliveries;
-  is(@deliveries, 1, "we sent the invoice to the customer");
-  my $email = $deliveries[0]->{email};
+  my ($delivery) = $self->assert_n_deliveries(1, "the invoice");
+  my $email = $delivery->{email};
   like(
     $email->header('subject'),
     qr{payment is due}i,
@@ -172,9 +167,8 @@ test 'send with balance on hand' => sub {
     $self->heartbeat_and_send_mail($ledger);
   });
 
-  my @deliveries = Moonpig->env->email_sender->deliveries;
-  is(@deliveries, 1, "we sent the invoice to the customer");
-  my $email = $deliveries[0]->{email};
+  my ($delivery) = $self->assert_n_deliveries(1, "the invoice");
+  my $email = $delivery->{email};
   like(
     $email->header('subject'),
     qr{payment is due}i,

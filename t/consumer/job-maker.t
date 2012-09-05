@@ -11,7 +11,7 @@ use t::lib::Logger;
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-with 'Moonpig::Test::Role::UsesStorage';
+with 'Moonpig::Test::Role::LedgerTester';
 
 test "job-making invoice charge" => sub {
   do_with_fresh_ledger(

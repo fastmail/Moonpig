@@ -15,10 +15,6 @@ with(
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-};
-
 test 'basic' => sub {
   my ($self) = @_;
   do_with_fresh_ledger({},
@@ -69,8 +65,7 @@ test execute_and_pay => sub {
       ok($q->first_consumer->is_active, "chain was activated");
 
       $self->heartbeat_and_send_mail($ledger);
-      my @deliveries = Moonpig->env->email_sender->deliveries;
-      is(@deliveries, 1, "we sent the invoice to the customer");
+      my @deliveries = $self->assert_n_deliveries(1, "invoice");
       my $email = $deliveries[0]->{email};
       like(
         $email->header('subject'),

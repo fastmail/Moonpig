@@ -91,8 +91,9 @@ around _issue_psync_charge => sub {
   return if $self->is_active;
 
   my $quote = $self->ledger->current_invoice;
-  $quote->is_quote && $quote->is_psync_quote
-    or die "Current journal is not a psync quote!";
+
+  # $quote->is_quote && $quote->is_psync_quote
+  #   or die "Current journal is not a psync quote!";
 
   my @ancestors = $self->_previous_n_ancestors(5);
   my %is_ancestor = map { $_->guid => 1 } @ancestors;
@@ -100,15 +101,19 @@ around _issue_psync_charge => sub {
   my @ancestor_charges = grep { $is_ancestor{$_->owner->guid}
                                   && ! $_->is_abandoned } $quote->all_charges;
   return unless @ancestor_charges;
-  # If fewer than 5 ancestors put charges on the quote, we act as if the others put on
-  # charges of 0 for purpose of our adjustment amount
-  my $n_charges = max(5, scalar(@ancestor_charges));
-  my $average_charge_amount = (sumof { $_->amount } @ancestor_charges) / $n_charges;
 
-  $self->charge_current_invoice({ adjustment_amount => int($average_charge_amount),
-                                  description => "free consumer extension",
-                                  amount => 0,
-                                });
+  # If fewer than 5 ancestors put charges on the quote, we act as if the others
+  # put on charges of 0 for purpose of our adjustment amount
+  my $n_charges = max(5, scalar(@ancestor_charges));
+  my $average_charge_amount = (sumof { $_->amount } @ancestor_charges)
+                            / $n_charges;
+
+  $self->charge_current_invoice({
+    extra_tags => [ 'moonpig.psync' ],
+    adjustment_amount => int($average_charge_amount),
+    description => "free consumer extension",
+    amount => 0,
+  });
 };
 
 sub build_invoice_charge {

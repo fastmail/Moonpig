@@ -14,7 +14,10 @@ use namespace::clean;
 
 around run_test => sub {
   my ($orig, $self, @rest) = @_;
+
+  Moonpig->env->email_sender->clear_deliveries;
   Moonpig->env->stop_clock_at( datetime( jan => 1 ) );
+
   $self->$orig(@rest);
 };
 
@@ -32,6 +35,26 @@ sub heartbeat_and_send_mail {
   }
 
   Moonpig->env->process_email_queue;
+}
+
+sub get_and_clear_deliveries {
+  my ($self) = @_;
+
+  Moonpig->env->process_email_queue;
+  my @deliveries = Moonpig->env->email_sender->deliveries;
+  Moonpig->env->email_sender->clear_deliveries;
+  return @deliveries;
+}
+
+sub assert_n_deliveries {
+  my ($self, $n, $msg) = @_;
+  my @deliveries = $self->get_and_clear_deliveries;
+
+  my $desc = "delivery count $n";
+  $desc .= ": $msg" if defined $msg;
+
+  is(@deliveries, $n, $desc);
+  return @deliveries;
 }
 
 sub pay_invoices {

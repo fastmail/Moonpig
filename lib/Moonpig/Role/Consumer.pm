@@ -749,6 +749,15 @@ sub expected_funds {
   return $funds;
 }
 
+sub _unpaid_charges {
+  my ($self) = @_;
+
+  my @unpaid_invoices = grep { $_->is_unpaid && ! $_->is_abandoned }
+                        $self->relevant_invoices;
+
+  return @unpaid_invoices;
+}
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,

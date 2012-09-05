@@ -6,7 +6,7 @@ use Test::Fatal;
 use t::lib::TestEnv;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 

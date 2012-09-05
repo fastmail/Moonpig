@@ -8,7 +8,7 @@ use Test::More;
 use t::lib::TestEnv;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::Logger '$Logger';

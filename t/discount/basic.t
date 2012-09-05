@@ -11,7 +11,7 @@ use t::lib::TestEnv;
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
-with ('Moonpig::Test::Role::UsesStorage');
+with ('Moonpig::Test::Role::LedgerTester');
 
 Moonpig->env->stop_clock;
 

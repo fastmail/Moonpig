@@ -12,7 +12,6 @@ use Moonpig::Util qw(class days dollars event sumof to_dollars weeks years);
 with(
   't::lib::Factory::EventHandler',
   'Moonpig::Test::Role::LedgerTester',
-#  'Moonpig::Test::Role::UsesStorage',
 );
 
 use t::lib::ConsumerTemplateSet::Demo;
@@ -177,6 +176,9 @@ test long_chain => sub {
         @before = @chain[0..6];
         @after  = @chain[8..9];
       };
+
+      $ledger->heartbeat;
+      pay_unpaid_invoices($ledger, dollars(900)); # 10 - (1 self funding)
 
       $_->total_charge_amount(dollars(120)) for @before;
       $_->total_charge_amount(dollars(150)) for @after;

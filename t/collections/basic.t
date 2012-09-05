@@ -9,37 +9,31 @@ use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars);
 
 use Moonpig::Test::Factory qw(build_ledger);
-with ('Moonpig::Test::Role::UsesStorage');
-
-my $Ledger;
-before run_test => sub {
-  $Ledger = build_ledger();
-};
-
-sub refund {
-  my ($self) = @_;
-  class("Debit::Refund")->new({
-    ledger => $Ledger,
-  });
-}
+with ('Moonpig::Test::Role::LedgerTester');
 
 test "accessor" => sub {
   my ($self) = @_;
 
-  my $r = $self->refund();
+  my $ledger = build_ledger();
 
-  my @refunds = $Ledger->debits();
+  my $r = class("Debit::Refund")->new({
+    ledger => $ledger,
+  });
+
+  my @refunds = $ledger->debits();
   is(@refunds, 0, "before list");
-  is_deeply(\@refunds, $Ledger->debit_array, "before array");
-  $Ledger->add_debit($r);
-  @refunds = $Ledger->debits();
+  is_deeply(\@refunds, $ledger->debit_array, "before array");
+  $ledger->add_debit($r);
+  @refunds = $ledger->debits();
   is(@refunds, 1, "after list");
-  is_deeply(\@refunds, $Ledger->debit_array, "after array");
+  is_deeply(\@refunds, $ledger->debit_array, "after array");
 };
 
 test "constructor" => sub {
   my ($self) = @_;
-  my $c = $Ledger->debit_collection;
+  my $ledger = build_ledger();
+
+  my $c = $ledger->debit_collection;
   ok($c->does("Stick::Role::Collection"));
 };
 
@@ -49,24 +43,26 @@ sub refund_amounts {
 
 test "collection object" => sub {
   my ($self) = @_;
-  my $credit = $Ledger->add_credit(
+  my $ledger = build_ledger();
+
+  my $credit = $ledger->add_credit(
     class('Credit::Simulated', 't::Refundable::Test'),
     { amount => dollars(5_000) },
   );
 
-  my $c = $Ledger->debit_collection();
+  my $c = $ledger->debit_collection();
   ok($c);
   ok($c->does("Stick::Role::Collection"));
 
   my @r;
 
   for (0..2) {
-    $c = $Ledger->debit_collection();
+    $c = $ledger->debit_collection();
     is($c->count, @r, "collection contains $_ refund(s)" );
     is(refund_amounts($c->all), refund_amounts(@r), "amounts are correct");
     last if $_ == 2;
-    push @r, my $next_refund = $Ledger->add_debit(class('Debit::Refund'));
-    $Ledger->create_transfer({
+    push @r, my $next_refund = $ledger->add_debit(class('Debit::Refund'));
+    $ledger->create_transfer({
       type => 'debit',
       from => $credit,
       to   => $next_refund,
@@ -77,8 +73,9 @@ test "collection object" => sub {
 
 test "ledger gc" => sub {
   my ($self) = @_;
-  my $rc = $Ledger->debit_collection();
-  undef $Ledger;
+  my $ledger = build_ledger();
+
+  my $rc = $ledger->debit_collection();
   ok($rc->owner, "was ledger prematurely garbage-collected?");
 };
 

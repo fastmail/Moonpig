@@ -104,6 +104,7 @@ sub mark_internal {
 
 after mark_closed => sub {
   $_[0]->_set_is_internal(false) unless $_[0]->_has_is_internal;
+  $_[0]->abandon_if_empty;
 };
 
 # transfer non-abandoned charges to ledger's current open invoice

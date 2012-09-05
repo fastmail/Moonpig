@@ -6,7 +6,7 @@ use t::lib::TestEnv;
 use Moonpig::Util qw(class dollars);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 use Moonpig::Test::Factory qw(build_ledger do_with_fresh_ledger);
 

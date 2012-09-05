@@ -19,11 +19,6 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-  Moonpig->env->stop_clock_at($jan1);
-};
-
 sub do_test (&) {
   my ($code) = @_;
   do_with_fresh_ledger({ c => { template => 'psync',
@@ -41,16 +36,6 @@ sub do_test (&) {
   });
 }
 
-sub get_single_delivery {
-  my ($msg) = @_;
-  $msg //= "exactly one delivery";
-  Moonpig->env->process_email_queue;
-  my $sender = Moonpig->env->email_sender;
-  is(my ($delivery) = $sender->deliveries, 1, $msg);
-  $sender->clear_deliveries;
-  return $delivery;
-}
-
 sub elapse {
   my ($ledger, $days) = @_;
   $days //= 1;
@@ -61,6 +46,8 @@ sub elapse {
 }
 
 test 'setup sanity checks' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     ok($c);
@@ -94,6 +81,8 @@ test 'setup sanity checks' => sub {
 };
 
 test 'quote' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
@@ -105,8 +94,7 @@ test 'quote' => sub {
       elapse($ledger);
       is(scalar($ledger->quotes), 0, "no quotes yet");
 
-      Moonpig->env->process_email_queue;
-      get_single_delivery("one email delivery (the invoice)");
+      $self->assert_n_deliveries(1, "the invoice");
     };
     # At this point, 12 days and $12 remain
 
@@ -135,7 +123,7 @@ test 'quote' => sub {
 
       Moonpig->env->process_email_queue;
       my $sender = Moonpig->env->email_sender;
-      my ($delivery) = get_single_delivery("one email delivery (the psync quote)");
+      my ($delivery) = $self->assert_n_deliveries(1, "the psync quote");
     };
 
     subtest "do not generate further quotes or send further email" => sub {
@@ -149,6 +137,8 @@ test 'quote' => sub {
 };
 
 test 'varying charges' => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     my $sender = Moonpig->env->email_sender;
@@ -156,13 +146,14 @@ test 'varying charges' => sub {
 
     subtest "rate goes up to 28" => sub {
       elapse($ledger, 3);
+      $self->assert_n_deliveries(1, "initial invoice");
       $c->total_charge_amount(dollars(28));
       elapse($ledger);
       # At this point, 10 days and $9 remain
       is(($q1) = $ledger->quotes, 1, "first psync quote generated");
       is($q1->total_amount, dollars(11), "psync quote amount");
-      Moonpig->env->process_email_queue;
-      Moonpig->env->email_sender->clear_deliveries;
+
+      $self->assert_n_deliveries(1, "first quote");
     };
     # At this point, 10 days and $9 remain
 
@@ -174,7 +165,7 @@ test 'varying charges' => sub {
       $q2 = $q[1];
       ok($q1->is_abandoned, "first quote was automatically abandoned");
       is($q2->total_amount, dollars(6), "new quote amount");
-      my $d = get_single_delivery();
+      $self->assert_n_deliveries(1, "second quote");
     };
     # At this point, 9 days and $7.5 remain
 
@@ -186,7 +177,7 @@ test 'varying charges' => sub {
       $q3 = $q[2];
       ok($q2->is_abandoned, "second quote was automatically abandoned");
       is($q3->total_amount, dollars(10.5), "new quote amount");
-      my $d = get_single_delivery();
+      $self->assert_n_deliveries(1, "third quote");
     };
     # At this point, 8 days and $5.5 remain
 
@@ -199,7 +190,8 @@ test 'varying charges' => sub {
       # At this point, 7 days and $4.8125 remain
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
       ok($q3->is_abandoned, "third quote was automatically abandoned");
-      my $d = get_single_delivery();
+
+      $self->assert_n_deliveries(1, "psync notice");
     };
     # At this point, 7 days and $4.8125 remain
 
@@ -207,12 +199,15 @@ test 'varying charges' => sub {
       $c->total_charge_amount(dollars(0.01));
       elapse($ledger);
       is(my (@q) = $ledger->quotes, 3, "no fourth psync quote generated");
-      my $d = get_single_delivery();
+
+      $self->assert_n_deliveries(1, "psync notice");
     }
   };
 };
 
 test "paid and executed" => sub {
+  my ($self) = @_;
+
   do_test {
     my ($ledger, $c) = @_;
     elapse($ledger, 3) ;
@@ -230,35 +225,160 @@ test "paid and executed" => sub {
       class(qw(Credit::Simulated)),
       { amount => $qu->total_amount },
     );
+    $ledger->process_credits; # not cheating; the POSTable add does this
+
     elapse($ledger);
     ok($qu->is_paid, "quote is now paid");
     is($c->_predicted_shortfall, 0, "quote paid -> no shortfall");
   };
 };
 
-test 'regression' => sub {
+test 'reinvoice' => sub {
   my ($self) = @_;
 
-  do_with_fresh_ledger({ c => { template => 'demo-service',
-				minimum_chain_duration => years(6),
-			      }}, sub {
-    my ($ledger) = @_;
+  do_with_fresh_ledger(
+    {
+      c => { template => 'psync' }
+    },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component("c");
 
-    my $invoice = $ledger->current_invoice;
-    $ledger->name_component("initial invoice", $invoice);
-    $ledger->heartbeat;
+      $ledger->credit_collection->add({
+        type => 'Simulated',
+        attributes => { amount => dollars(14) }
+      });
 
-    my $n_invoices = () = $ledger->invoices;
-    note "$n_invoices invoice(s)";
-    my @quotes = $ledger->quotes;
-    note @quotes + 0, " quote(s)";
+      $ledger->heartbeat;
 
-#    require Data::Dumper;
-#    print Data::Dumper::Dumper(ppack($invoice)), "\n";;
+      $self->assert_n_deliveries(1, "initial invoice (paid)");
 
-    pass();
-  });
+      subtest "initial state" => sub {
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
 
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 0, "we have no payable invoices");
+
+        is($ledger->amount_due, 0, 'we owe nothing');
+      };
+
+      my $d = $c->build_and_install_replacement;
+      $ledger->heartbeat;
+
+      my $old_invoice_guid;
+      subtest "invoice for first replacement" => sub {
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(14), "...for \$14");
+        $old_invoice_guid = $payable[0]->guid;
+
+        is($ledger->amount_due, dollars(14), 'we owe $14');
+
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "first invoice for replacement");
+      };
+
+      subtest 'first increase in charge amount' => sub {
+      my $second_invoice_guid;
+        for (1, 2) {
+          $c->total_charge_amount(dollars(16));
+          $d->total_charge_amount(dollars(16));
+
+          for (1, 2) {
+            # 2 shows that we only reinvoice ONCE not twice
+            $ledger->heartbeat;
+          }
+
+          $ledger->perform_dunning;
+
+          is($ledger->amount_due, dollars(18), 'we now owe $18');
+
+          my @payable = $ledger->payable_invoices;
+          is(@payable, 1, "we have one payable invoice");
+          is($payable[0]->total_amount, dollars(18), "...for \$18");
+
+          if (defined $second_invoice_guid) {
+            is(
+              $payable[0]->guid,
+              $second_invoice_guid,
+              "we didn't re-reinvoice",
+            );
+
+            $self->assert_n_deliveries(0, "...or send mail");
+          } else {
+            $second_invoice_guid = $payable[0]->guid;
+            # seems impossible:
+            isnt(
+              $second_invoice_guid,
+              $old_invoice_guid,
+              "...it isn't the initial invoice",
+            );
+
+            $self->assert_n_deliveries(1, "second invoice for replacement");
+          }
+
+          my @quotes = $ledger->quotes;
+          is(@quotes, 0, "no quotes so far");
+        }
+      };
+
+      subtest "second increase in charge amount" => sub {
+        $c->total_charge_amount(dollars(20));
+        $d->total_charge_amount(dollars(20));
+        $ledger->heartbeat;
+
+        is($ledger->amount_due, dollars(26), 'we now owe $26');
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(26), "...for \$26");
+
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "third invoice for replacement");
+      };
+
+      subtest "decrease in charge amount" => sub {
+        $c->total_charge_amount(dollars(12));
+        $d->total_charge_amount(dollars(12));
+        $ledger->heartbeat;
+
+        is($ledger->amount_due, dollars(12), 'we now owe $12');
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 1, "we have one payable invoice");
+        is($payable[0]->total_amount, dollars(12), '...for $12');
+
+        my @quotes = $ledger->quotes;
+        is(@quotes, 0, "no quotes so far");
+
+        $self->assert_n_deliveries(1, "fourth invoice for replacement");
+      };
+
+      subtest "paying off the new invoice" => sub {
+        $ledger->add_credit(
+          class(qw(Credit::Simulated)),
+          { amount => dollars(12) },
+        );
+        $ledger->process_credits;
+        $ledger->heartbeat;
+
+        my @payable = $ledger->payable_invoices;
+        is(@payable, 0, "paid off the invoice, it didn't respawn");
+
+        # I'm not really sure I like that we send this message.  I'm pretty
+        # sure it's happening because $c will now live $2-worth longer because
+        # we "have to" charge at least $14 for it. -- rjbs, 2012-08-31
+        $self->assert_n_deliveries(1, "psync down notice");
+      };
+    },
+  );
+
+  pass;
 };
 
 run_me;

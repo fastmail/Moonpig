@@ -5,7 +5,7 @@ use Carp qw(confess croak);
 use List::AllUtils qw(all);
 use Moonpig;
 use Moonpig::DateTime;
-use Moonpig::Util qw(class days event sum sumof pair_rights);
+use Moonpig::Util qw(class days event sum sumof);
 use Moose::Role;
 use MooseX::Types::Moose qw(ArrayRef Num);
 
@@ -260,7 +260,7 @@ sub can_make_payment_on {
     $self->unapplied_amount >= $self->calculate_total_charge_amount_on($date);
 }
 
-sub want_to_live {
+sub _want_to_live {
   my ($self) = @_;
   if ($self->is_active) {
     return $self->proration_period
@@ -270,9 +270,19 @@ sub want_to_live {
   }
 }
 
-sub replacement_chain_want_to_live {
+sub _replacement_chain_want_to_live {
   my ($self) = @_;
-  sumof { $_->want_to_live } $self->replacement_chain;
+
+  my $total = 0;
+  for my $entry ($self->replacement_chain) {
+    last if grep { ! $_->has_tag('moonpig.psync') }
+            grep {; $_->owner_guid eq $self->guid }
+            map  {; $_->all_items }
+            $entry->_unpaid_charges;
+    $total += $entry->_want_to_live;
+  }
+
+  return $total;
 }
 
 # how much sooner will we run out of money than when we would have
@@ -295,7 +305,7 @@ sub _predicted_shortfall {
   });
 
   # Next, figure out long we think it *should* last us.
-  my $want_to_live = $self->want_to_live;
+  my $want_to_live = $self->_want_to_live;
 
   my $shortfall = $want_to_live - $erfl;
   return $shortfall;
@@ -395,6 +405,7 @@ sub reset_last_psync_shortfall {
 
 sub _maybe_send_psync_quote {
   my ($self) = @_;
+
   return unless $self->is_active;
   return unless grep(! $_->is_abandoned, $self->all_charges) > 0;
 
@@ -420,15 +431,42 @@ sub _maybe_send_psync_quote {
     # OLD date is the one we had before the service upgrade, which will be
     # RESTORED if the user pays the invoice
     old_expiration_date => Moonpig->env->now +
-      $self->want_to_live +
-      $self->replacement_chain_want_to_live,
+      $self->_want_to_live +
+      $self->_replacement_chain_want_to_live,
 
     # NEW date is the one caused by the service upgrade, which will
     # PERSIST if the user DOES NOT pay the invoice
-    new_expiration_date => $self->replacement_chain_expiration_date({
-      include_unpaid_charges => 1,
-    }),
+    new_expiration_date => $self->replacement_chain_expiration_date,
   };
+
+  # Notify followers that we have already handled this shortfall
+  # so they don't send another notice on becoming active.
+  for my $c ($self->replacement_chain) {
+    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
+  }
+
+  $_->mark_abandoned() for @old_quotes;
+
+  my @chain = ($self, $self->replacement_chain);
+
+  if (
+    (grep { $_->_unpaid_charges } @chain)
+  ) {
+    # This presumably means that we've already done this one and the charges
+    # are "real" charges, rather than on a quote, so we're counting them as
+    # gonna-pay and it seems like we're all balanced out. -- rjbs, 2012-08-30
+    return unless $shortfall;
+
+    $self->_abandon_unpaid_psync_charges;
+    $self->reinvoice_initial_charges;
+    if ($shortfall > 0) {
+      $self->_issue_psync_charge();
+      $_->_issue_psync_charge() for $self->replacement_chain;
+    }
+    $self->ledger->perform_dunning; # is this okay?
+
+    return;
+  }
 
   if ($shortfall > 0) {
     $self->ledger->start_quote({ psync_for_xid => $self->xid });
@@ -438,21 +476,28 @@ sub _maybe_send_psync_quote {
   }
 
   $self->ledger->_send_psync_email($self, $notice_info);
+}
 
-  # Notify followers that we have already handled this shortfall
-  # so they don't send another notice on becoming active.
-  for my $c ($self->replacement_chain) {
-    $c->reset_last_psync_shortfall if $c->can('reset_last_psync_shortfall');
-  }
+sub _abandon_unpaid_psync_charges {
+  my ($self) = @_;
 
-  $_->mark_abandoned() for @old_quotes;
+  my @charges =
+    grep {; $_->has_tag('moonpig.psync') }
+    map  {; $_->all_items }
+    grep {; ! $_->is_abandoned && ! $_->is_paid }
+    $self->relevant_invoices;
+
+  $_->mark_abandoned for @charges;
 }
 
 sub _issue_psync_charge {
   my ($self) = @_;
   my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
-  my $amount = $self->estimate_cost_for_interval({ interval => $shortfall });
+  my $amount = int $self->estimate_cost_for_interval({
+    interval => $shortfall
+  });
+
   $self->charge_current_invoice({
     extra_tags => [ 'moonpig.psync' ],
     description => sprintf("Shortfall of $shortfall_days %s",

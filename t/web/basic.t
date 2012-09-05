@@ -11,7 +11,7 @@ use t::lib::TestEnv;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use namespace::autoclean;

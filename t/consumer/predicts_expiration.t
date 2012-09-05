@@ -8,7 +8,7 @@ use Test::Routine::Util;
 
 use t::lib::TestEnv;
 
-with 'Moonpig::Test::Role::UsesStorage';
+with 'Moonpig::Test::Role::LedgerTester';
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 

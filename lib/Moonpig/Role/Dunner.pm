@@ -188,6 +188,14 @@ sub _send_psync_email {
     $self->ident,
   ]);
 
+  # use Moonpig::Util qw(to_dollars);
+  # warn sprintf "\n# <%s> <expected: %s> <predicting: %s> <%s>\n",
+  #   $what,
+  #   $info->{old_expiration_date},
+  #   $info->{new_expiration_date},
+  #   to_dollars($quote ? $quote->total_amount : 0),
+  # ;
+
   $self->handle_event(event('send-mkit', {
     kit => $quote ? 'psync' : 'psync-notice',
     arg => {

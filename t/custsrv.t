@@ -5,15 +5,11 @@ use Test::Routine::Util;
 use t::lib::TestEnv;
 
 with(
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::Logger;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
-
-before run_test => sub {
-  Moonpig->env->email_sender->clear_deliveries;
-};
 
 test 'customer service request' => sub {
   my ($self) = @_;
@@ -32,10 +28,9 @@ test 'customer service request' => sub {
 
   Moonpig->env->process_email_queue;
 
-  my @deliveries = Moonpig->env->email_sender->deliveries;
-  is(@deliveries, 1, "we sent one email");
+  my ($delivery) = $self->assert_n_deliveries(1);
 
-  my $data = JSON->new->decode( $deliveries[0]->{email}->body_str );
+  my $data = JSON->new->decode( $delivery->{email}->body_str );
   is_deeply(
     $data,
     { ledger => $guid, payload => $payload },
@@ -66,6 +61,8 @@ test 'immediate cust srv req' => sub {
     Moonpig->env->file_customer_service_request($ledger, {});
     Moonpig->env->report_exception([ [ error => "ERROR!!" ] ]);
 
+    # We don't use assert_n_deliveries because we don't want to process the
+    # not-yet-committed job queue. -- rjbs, 2012-08-31
     my @deliveries = Moonpig->env->email_sender->deliveries;
     is(@deliveries, 1, "we sent one email immediately");
   });

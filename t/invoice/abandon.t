@@ -9,7 +9,7 @@ use Moonpig::Util qw(class days dollars event);
 
 with(
   't::lib::Factory::EventHandler',
-  'Moonpig::Test::Role::UsesStorage',
+  'Moonpig::Test::Role::LedgerTester',
 );
 
 use t::lib::Logger;
