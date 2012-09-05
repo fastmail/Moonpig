@@ -13,7 +13,7 @@ to your previous expiration date.  The pro-rated charge to extend service to
 
 To make payment online, or find instructions for alternate payment methods,
 please go to [our pay page](https://www.pobox.com/pay?quote={{ $quote_guid }}).  If you wish to alter your account 
-services, please go to [the upgrade page](https://pobox.com/login/mason/edit/upgrade.mhtml) or
+services, please go to [the upgrade page](https://pobox.com/home/upgrade) or
 contact us at [pobox@pobox.com](mailto:pobox@pobox.com).
 
 If no action is taken, service will continue through {{ $new_expiration_date->strftime($date_format) }}.
