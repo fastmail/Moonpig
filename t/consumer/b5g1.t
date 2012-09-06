@@ -89,6 +89,7 @@ test 'signup for five, get one free' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(500));
 
       my $summ = $self->b5_summary($ledger);
@@ -127,6 +128,7 @@ test 'SelfFunding funds -initial- charge amount' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(500));
 
       my $summ = $self->b5_summary($ledger);
@@ -138,6 +140,9 @@ test 'SelfFunding funds -initial- charge amount' => sub {
       is_deeply([$summ->free_indexes], [5], "...and the free one is last");
 
       $_->total_charge_amount(dollars(120)) for $summ->consumers;
+
+      $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "exp. date changed");
 
       my @current = ($summ->consumers)[0];
       my ($free) = $summ->free_consumers;
