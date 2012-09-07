@@ -65,12 +65,14 @@ test 'immediate cust srv req' => sub {
     # not-yet-committed job queue. -- rjbs, 2012-08-31
     my @deliveries = Moonpig->env->email_sender->deliveries;
     is(@deliveries, 1, "we sent one email immediately");
+    Moonpig->env->email_sender->clear_deliveries;
   });
 
   Moonpig->env->process_email_queue;
 
   my @deliveries = Moonpig->env->email_sender->deliveries;
-  is(@deliveries, 2, "we sent another mail later");
+  is(@deliveries, 1, "we sent another mail later");
+  Moonpig->env->email_sender->clear_deliveries;
 
   my $seen = 0;
   Moonpig->env->storage->iterate_jobs((undef) => sub {

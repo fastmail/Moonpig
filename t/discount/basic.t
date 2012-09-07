@@ -97,7 +97,6 @@ test "consumer journal charging" => sub {
   my ($self) = @_;
   do_with_fresh_ledger({ n => { template => "yearly",
                                 xid => "test:B",
-                                bank => dollars(100),
                                 charge_description => "without discount",
                                 make_active => 1,
                                 grace_period_duration => 0,
@@ -105,12 +104,18 @@ test "consumer journal charging" => sub {
                         },
     sub {
       my ($ledger) = @_;
+
+      $ledger->perform_dunning;
+      $self->pay_payable_invoices($ledger, dollars(100));
+      $self->assert_n_deliveries(1, "first invoice");
+
       my ($without) = $ledger->get_component("n");
       die unless $without->is_funded;
       my ($with) = $self->set_up_consumer($ledger);
       die unless $with->is_funded;
       Moonpig->env->elapse_time( days(1/2) );
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "second invoice");
       my @j_charges = sort { $a->amount <=> $b->amount }
                       $ledger->current_journal->all_charges;
       is(@j_charges, 2, "two journal charges");

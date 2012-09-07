@@ -57,6 +57,7 @@ test 'shuffle some credit around, then dissolve it' => sub {
 
       my $invoice = $ledger->current_invoice;
       $credit_a->dissolve;
+      $self->assert_n_deliveries(1, "re-dunned invoice"); # dissolve dunns
 
       my ($writeoff) = grep { $_->does('Moonpig::Role::Debit::WriteOff') }
                        $ledger->debits;
