@@ -69,14 +69,12 @@ test "consumer journal charging" => sub {
         C0 => {
           template    => "yearly",
           xid         => "C0",
-          bank        => dollars(100),
           make_active => 1,
           grace_period_duration => 0,
         },
         C1 => {
           template    => "yearly",
           xid         => "C1",
-          bank        => dollars(100),
           make_active => 1,
           grace_period_duration => 0,
           extra_charge_tags     => [ qw( big-spender pathetic-loser ) ],
@@ -84,7 +82,6 @@ test "consumer journal charging" => sub {
         C2 => {
           template    => "yearly",
           xid         => "C2",
-          bank        => dollars(100),
           make_active => 1,
           grace_period_duration => 0,
           extra_charge_tags     => [ qw( big-spender pathetic-loser family ) ],
@@ -92,12 +89,15 @@ test "consumer journal charging" => sub {
         C3 => {
           template    => "yearly",
           xid         => "C3",
-          bank        => dollars(100),
           make_active => 1,
           grace_period_duration => 0,
           extra_charge_tags     => [ qw( big-spender family ) ],
         },
       });
+
+      $ledger->perform_dunning;
+      $self->pay_payable_invoices($ledger);
+      $self->assert_n_deliveries(1);
 
       Moonpig->env->elapse_time( days(1/2) );
       $ledger->heartbeat;
@@ -110,7 +110,7 @@ test "consumer journal charging" => sub {
       my @j_charges = $ledger->current_journal->all_charges;
       is(@j_charges, 4, "we charged the journal 4x");
 
-      my @i_charges = ($ledger->payable_invoices)[0]->all_charges;
+      my @i_charges = ($ledger->invoices)[0]->all_charges;
       is(@i_charges, 4, "we charged the invoice 4x");
 
       for my $test (
