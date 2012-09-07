@@ -24,7 +24,11 @@ around run_test => sub {
 
 around _last_chance_before_test_ends => sub {
   my ($orig, $self) = @_;
-  $self->assert_n_deliveries(0, "no unexpected mail");
+  my @deliveries = $self->assert_n_deliveries(0, "no unexpected mail");
+  for (map {; $_->{email} } @deliveries) {
+    diag "-- Date: " . $_->header('Date');
+    diag "   Subj: " . $_->header('Subject');
+  }
   $self->$orig;
 };
 
