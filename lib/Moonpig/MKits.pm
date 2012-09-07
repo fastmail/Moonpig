@@ -3,6 +3,7 @@ use Moose;
 # ABSTRACT: the access point for Moonpig's message kits
 
 use Carp ();
+use Email::Date::Format qw(email_gmdate);
 use File::ShareDir;
 use File::Spec;
 use Email::MIME::Kit 2;
@@ -73,7 +74,13 @@ sub assemble_kit {
   my ($self, $kitname, $arg) = @_;
 
   my $kit = $self->_kit_for($kitname, $arg);
-  return $kit->assemble($arg);
+  my $email = $kit->assemble($arg);
+
+  if ( Moonpig->env->does('Moonpig::Role::Env::WithMockedTime') ) {
+    $email->header_set(Date => email_gmdate( Moonpig->env->now->epoch ) );
+  }
+
+  return $email;
 }
 
 1;
