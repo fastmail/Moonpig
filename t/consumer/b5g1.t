@@ -185,12 +185,14 @@ test 'signup for one, buy five more, have one' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
              ->adjust_replacement_chain({ chain_duration => days(50) });
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(500));
 
       my $summ = $self->b5_summary($ledger);
@@ -217,12 +219,14 @@ test 'signup for one, buy six, get one free' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
              ->adjust_replacement_chain({ chain_duration => days(60) });
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(600));
 
       my $summary = $self->b5_summary($ledger);
@@ -248,12 +252,14 @@ test 'signup for one, buy eleven, get two free' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       $ledger->active_consumer_for_xid($self->xid)
              ->adjust_replacement_chain({ chain_duration => days(110) });
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(1100));
 
       my $summary = $self->b5_summary($ledger);
@@ -284,6 +290,7 @@ test 'signup for eleven, get two free' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(1100));
 
       my $summary = $self->b5_summary($ledger);
@@ -313,6 +320,7 @@ test 'signup for one, quote five more, have one' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       $self->pay_unpaid_invoices($ledger, dollars(100));
 
       my $quote = $ledger->quote_for_extended_service($self->xid, days(50));
@@ -350,6 +358,7 @@ test 'already invoiced for 1, get quote for 4, get one free' => sub {
       my ($ledger) = @_;
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
 
       is($ledger->amount_due, dollars(100), 'we owe $100 already');
 
