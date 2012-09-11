@@ -59,6 +59,7 @@ around pay_payable_invoices => sub {
 
 after pay_invoices => sub {
   my ($self, $invoices) = @_;
+  $self->assert_n_deliveries(1, "invoice (just paid)");
   $self->dec_invoices_to_pay for @$invoices;
 };
 
