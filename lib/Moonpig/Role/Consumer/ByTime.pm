@@ -232,7 +232,16 @@ sub calculate_charge_structs_on {
 sub calculate_total_charge_amount_on {
   my ($self, $date) = @_;
   my @charge_structs = $self->calculate_charge_structs_on( $date );
-  my $total_charge_amount = sumof { $_ ->{amount} } @charge_structs;
+
+  $_->{tags} = [ @{ $_->{tags} || [] }, $self->invoice_charge_tags ]
+    for @charge_structs;
+
+  my @line_items =
+    map {; $self->apply_discounts_to_charge_args($_) }
+    @charge_structs;
+
+  my $total_charge_amount = sumof { $_ ->{amount} }
+                            (@charge_structs, @line_items);
 
   return $total_charge_amount;
 }
