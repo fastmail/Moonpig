@@ -33,7 +33,7 @@ package
   use Try::Tiny;
 
   sub send_email {
-    my ($email, $env) = @_;
+    my ($self, $email, $env) = @_;
     try   { Moonpig->env->send_email($email, $env); }
     catch { $Logger->log("error sending exception report: $_") };
   }
