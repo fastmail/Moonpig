@@ -99,6 +99,21 @@ test "consumer journal charging" => sub {
       $self->pay_payable_invoices($ledger);
       $self->assert_n_deliveries(1);
 
+      for (0..3) {
+        my $c = $ledger->get_component("C$_");
+        note "Consumer C$_: " . $c->activated_at . ' -> ' . $c->expiration_date;
+
+        my $remaining = $c->unapplied_amount;
+
+        my $lifetime  = $c->_estimated_remaining_funded_lifetime({
+          amount => $remaining,
+        });
+
+        my $diff = $lifetime / years(1) - 1;
+
+        cmp_ok(abs($diff), '<=', 0.001, 'estimated lifetime remaining: 1 yr');
+      }
+
       Moonpig->env->elapse_time( days(1/2) );
       $ledger->heartbeat;
 
