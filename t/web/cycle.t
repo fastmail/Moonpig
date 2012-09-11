@@ -100,6 +100,7 @@ sub setup_account {
       };
 
       $self->elapse(1);
+      $self->assert_n_deliveries(1, "invoice");
 
       my $invoices = $ua->mp_get("$ledger_path/invoices/payable")->{items};
 

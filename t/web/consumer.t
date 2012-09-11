@@ -80,12 +80,18 @@ sub setup_account {
 
         my $result = $ua->mp_post("$ledger_path/consumers",
                                   $account_info);
-        cmp_deeply($result, superhashof({ guid => $guid_re }), "ledger has one consumer");
+        cmp_deeply(
+          $result,
+          superhashof({ guid => $guid_re }),
+          "ledger has one consumer",
+        );
 
         $result;
       };
 
       $self->elapse(0.5);
+
+      $self->assert_n_deliveries(1, "invoice");
 
       my $invoices = $ua->mp_get("$ledger_path/invoices/payable")->{items};
 
@@ -137,6 +143,7 @@ test clobber_replacement => sub {
     },
   );
   $self->elapse(3);
+  $self->assert_n_deliveries(1, "invoice");
 
   my $consumer_guid;
 

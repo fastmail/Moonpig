@@ -41,7 +41,7 @@ test "import a ledger via the web" => sub {
         template      => 'demo-service',
         template_args => {
           make_active => 1,
-          minimum_chain_duration => years(6),
+          minimum_chain_duration => years(2),
         },
       },
     },
@@ -78,7 +78,7 @@ test "import a ledger via the web" => sub {
   });
 
   my $consumer_guid;
-  my $expected_expiration_date = $jan1 + weeks(6*52);
+  my $expected_expiration_date = $jan1 + weeks(2*52);
   Moonpig->env->storage->do_ro_with_ledger(
     $guid,
     sub {
@@ -94,16 +94,9 @@ test "import a ledger via the web" => sub {
         $consumer_guid = $c->guid;
       }
 
-      # This is 6*52 weeks, not 6 years, because these consumers charge weekly,
-      # and so they run out of money after 52 such charges; the extra 1.25 days
-      # worth of money are absorbed. -- mjd, 2012-06-04
-      # XXX 20120605 mjd Actually it should be 6*53 weeks, because
-      # each consumer fails over to the next only at the *end* of its
-      # last incompletely funded charge period; fix this when we add
-      # the round_up option to ignore_partial_charge_periods as per 20120605
-      # comments elsewhere.
       my $exp_date = $consumers[0]->replacement_chain_expiration_date(
-        { include_unpaid_charges => 0 });
+        { include_unpaid_charges => 0 }
+      );
 
       cmp_ok(
         abs($exp_date - $expected_expiration_date), '<', 86_400,
@@ -135,12 +128,23 @@ test "import a ledger via the web" => sub {
       $last = $last->replacement while $last->has_replacement;
 
       my $last_unexpired_date;
+
       until ($last->is_expired) {
         $last_unexpired_date = Moonpig->env->now;
         $ledger->heartbeat;
         Moonpig->env->elapse_time(86_400);
       }
-      is ($last_unexpired_date->iso, $exp_date->iso, "predicted chain expiration date was correct");
+
+      my $expected_dunnings
+        = int( $last->replacement_lead_time / $ledger->dunning_frequency) - 1;
+
+      $self->assert_n_deliveries($expected_dunnings, "dunning");
+
+      is(
+        $last_unexpired_date->iso,
+        $exp_date->iso,
+        "predicted chain expiration date was correct",
+      );
     });
 
 };
@@ -240,6 +244,8 @@ test "import a ledger, with proration, via the web" => sub {
       $ledger->heartbeat;
       my $repl_guid = $ledger->active_consumer_for_xid($xid)->guid;
       isnt($repl_guid, $c_guid, 'after grace period, we get a replacement');
+
+      $self->assert_n_deliveries(1, "invoice for replacement");
     },
   );
 };
