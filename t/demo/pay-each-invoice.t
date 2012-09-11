@@ -44,6 +44,9 @@ after process_daily_assertions => sub {
 
   is(@consumers, 3, "by day 740, we have created a third consumer");
   ok( ! $active,    "...and they are all inactive");
+
+  # XXX how can we compute this 10? -- rjbs, 2012-09-11
+  $self->assert_n_deliveries(10, "final invoices; not sure why 9");
 };
 
 run_me({ invoices_to_pay => 2 });
