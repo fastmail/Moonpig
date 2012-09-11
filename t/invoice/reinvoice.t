@@ -43,6 +43,7 @@ test 'reissue unpaid invoice' => sub {
 
       Moonpig->env->elapse_time(days(1));
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "first invoice");
 
       {
         my @invoices = $ledger->invoices;
@@ -56,6 +57,7 @@ test 'reissue unpaid invoice' => sub {
       # 2012-07-26
       $c->reinvoice_initial_charges;
       $ledger->heartbeat; # to close invoice
+      $self->assert_n_deliveries(1, "new invoice");
 
       {
         my @invoices = $ledger->invoices;
@@ -73,6 +75,7 @@ test 'reissue unpaid invoice' => sub {
       $_->total_charge_amount(dollars(10)) for ($c, $c->replacement_chain);
       $c->reinvoice_initial_charges;
       $ledger->heartbeat; # to close invoice
+      $self->assert_n_deliveries(1, "third invoice");
 
       {
         my @invoices = $ledger->invoices;
@@ -160,6 +163,7 @@ test 'reissue unpaid invoice charges onto open invoice' => sub {
       $_->total_charge_amount(dollars(12)) for ($c, $c->replacement_chain);
       $c->reinvoice_initial_charges;
       $ledger->heartbeat; # we're done here!
+      $self->assert_n_deliveries(1, "the invoice, finally");
 
       {
         my @invoices = $ledger->invoices;
@@ -197,6 +201,7 @@ test 'keep original open for some charges, rest onto new' => sub {
       my $c1 = $ledger->get_component('c1');
       $c1->handle_event( event('consumer-create-replacement') );
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
 
       {
         my @invoices = $ledger->invoices;
@@ -211,6 +216,7 @@ test 'keep original open for some charges, rest onto new' => sub {
       $_->total_charge_amount(dollars(10)) for ($c1, $c1->replacement_chain);
       $c1->reinvoice_initial_charges;
       $ledger->heartbeat; # to close new invoice
+      $self->assert_n_deliveries(1, "new invoice");
 
       {
         my @invoices = $ledger->invoices;
@@ -247,6 +253,7 @@ test 'try to reissue paid invoice with unexecuted charges' => sub {
 
       Moonpig->env->elapse_time(days(1));
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
 
       {
         my @invoices = $ledger->payable_invoices;

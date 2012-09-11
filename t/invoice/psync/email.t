@@ -69,6 +69,7 @@ test 'setup sanity checks' => sub {
       "est lifetime 14d");
 
     $ledger->perform_dunning; # close the invoice and process the credit
+    $self->assert_n_deliveries(1, "invoice");
 
     is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");

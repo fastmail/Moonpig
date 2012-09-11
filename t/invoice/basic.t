@@ -46,6 +46,7 @@ test 'zero charge dunning' => sub {
     );
 
     $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
 
     my @charges = $ledger->get_component('c')->all_charges;
     is(@charges, 1, "consumer c has one charge, anyway");
@@ -226,6 +227,7 @@ test underpayment => sub {
     is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
     $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
 
     my $credit = $ledger->add_credit(
       class(qw(Credit::Simulated)),
@@ -270,6 +272,7 @@ test overpayment  => sub {
     is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
     $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
 
     my $credit = $ledger->add_credit(
       class(qw(Credit::Simulated)),
@@ -315,6 +318,7 @@ test 'get paid on payment' => sub {
     $invoice->add_charge($charge);
 
     $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
 
     my $credit = $ledger->add_credit(
       class(qw(Credit::Simulated)),
@@ -355,6 +359,7 @@ test 'payment by two credits' => sub {
     is($invoice->total_amount, dollars(10), "invoice line items tally up");
 
     $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
 
     my @credits = map {;
       $ledger->add_credit(
@@ -405,6 +410,7 @@ test 'quote-related' => sub {
       $self->assert_current_invoice_is_not_quote($ledger);
 
       $ledger->perform_dunning;
+      $self->assert_n_deliveries(1, "invoice");
 
       is($ledger->amount_due, dollars(100), 'we owe $100 (inv, not quote)');
 
