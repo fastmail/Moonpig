@@ -163,6 +163,7 @@ test 'psync chains' => sub {
       is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
       is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
       close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
+      $self->assert_n_deliveries(1, "psync quote");
     };
 
   };
@@ -178,6 +179,7 @@ test 'mailstore sorta' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
     elapse($ledger, 7);
+    $self->assert_n_deliveries(1, "initial invoice");
     # $c now has 7 days and $7 left; $d and $e have 14 days and $14
     $_->total_charge_amount(dollars(35)) for $c, $d, $e;
     # Now using up $2.50 per day
@@ -185,6 +187,7 @@ test 'mailstore sorta' => sub {
     #   $d's $14 will last 5.6 days for a shortfall of 8.4 days ($21 needed)
     #   $e is like $d
     $c->_maybe_send_psync_quote();
+    $self->assert_n_deliveries(1, "psync quote");
     is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
     is (my (@ch) = $qu->all_charges, 3, "three charges on psync quote");
     is($ch[0]->amount,  dollars(10.50), "active consumer charge amount");
@@ -201,6 +204,7 @@ test 'repeat notices' => sub {
   do_test {
     my ($ledger, $c, $d, $e) = @_;
     elapse($ledger, 2);
+    $self->assert_n_deliveries(1, "initial invoice");
     # At this point, $c has 12 days and $12 left
     $_->total_charge_amount(dollars(20)) for $c, $d, $e;
     # At this point, $c only has enough money to last 8.4 more days
@@ -213,14 +217,17 @@ test 'repeat notices' => sub {
       ok(  $d->is_active, "d is now active");
       ok(! $d->in_grace_period, "d is out of its grace period");
       is(@q1, 1, "there was 1 psync quote");
+      $self->assert_n_deliveries(1, "psync quote");
     };
 
     elapse($ledger, 1);
     is(my (@q2) = $ledger->quotes, 1, "no new psync quote");
+    $self->assert_n_deliveries(0, "no psync quote");
 
     $_->total_charge_amount(dollars(30)) for $c, $d, $e;
     elapse($ledger, 2);
     is(my (@q3) = $ledger->quotes, 2, "new psync quote after fresh rate change");
+    $self->assert_n_deliveries(1, "psync quote");
   };
 };
 

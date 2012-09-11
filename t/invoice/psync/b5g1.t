@@ -32,8 +32,8 @@ before run_test => sub {
   }
 }
 
-sub do_test (&) {
-  my ($code) = @_;
+sub _do_test {
+  my ($self, $code) = @_;
   my $xid = next_xid();
 
   do_with_fresh_ledger(
@@ -49,6 +49,7 @@ sub do_test (&) {
 
       $ledger->heartbeat;
       pay_unpaid_invoices($ledger, dollars(500));
+      $self->assert_n_deliveries(1, "invoice");
 
       my ($c) = $ledger->get_component('b5');
       my @chain = $c->replacement_chain;
@@ -67,7 +68,8 @@ sub elapse {
 }
 
 test 'setup sanity checks' => sub {
-  do_test {
+  my ($self) = @_;
+  $self->_do_test(sub {
     my ($ledger, $c, $g) = @_;
     ok($c, "consumer c");
     ok($c->does('Moonpig::Role::Consumer::ByTime'), "consumer c is ByTime");
@@ -86,15 +88,17 @@ test 'setup sanity checks' => sub {
 
     my @qu = $ledger->quotes;
     is(@qu, 0, "no quotes");
-  };
+  });
 };
 
 test 'build quote' => sub {
-  do_test {
+  my ($self) = @_;
+  $self->_do_test(sub {
     my ($ledger, $c, $g) = @_;
     my @chain = ($c, $c->replacement_chain);
     $_->total_charge_amount(dollars(120)) for @chain;
     $c->_maybe_send_psync_quote();
+    $self->assert_n_deliveries(1, "psync quote");
     is(my ($q) = $ledger->quotes, 1, "now one quote");
     is(my @ch = $q->all_items, 6, "it has six items");
     is(my ($special) = grep($_->does("Moonpig::Role::LineItem::Active"), @ch), 1,
@@ -104,15 +108,17 @@ test 'build quote' => sub {
     ok($special->has_tag("moonpig.psync.selffunding"),
        "special item is properly tagged");
     is($special->adjustment_amount, dollars(20), "adjustment amount");
-  };
+  });
 };
 
 test 'adjustment execution' => sub {
-  do_test {
+  my ($self) = @_;
+  $self->_do_test(sub {
     my ($ledger, $c, $g) = @_;
     my @chain = ($c, $c->replacement_chain);
     $_->total_charge_amount(dollars(120)) for @chain;
     $c->_maybe_send_psync_quote();
+    $self->assert_n_deliveries(1, "psync quote");
     is(my ($q) = $ledger->quotes, 1, "now one quote");
     is(my ($special) = grep($_->does("Moonpig::Role::LineItem::Active"),
                             $q->all_items),
@@ -123,12 +129,13 @@ test 'adjustment execution' => sub {
     ok($q->is_paid, "quote is executed and paid");
     is($g->self_funding_credit_amount, dollars(120),
        "self-funding credit amount raised to \$120");
-  };
+  });
 };
 
 test 'adjustment amounts' => sub {
+  my ($self) = @_;
   for my $days (5, 25, 45, 55) {
-    do_test {
+    $self->_do_test(sub {
       my ($ledger, $c_, $g) = @_;
 
       my $c = $c_;
@@ -140,6 +147,7 @@ test 'adjustment amounts' => sub {
       $c->_maybe_send_psync_quote();
       if ($days < 50) {
         is(my ($q) = $ledger->quotes, 1, "now one quote");
+        $self->assert_n_deliveries(1, "psync quote");
         is(my ($special) = grep($_->does("Moonpig::Role::LineItem::Active"),
                                 $q->all_items),
            1,
@@ -149,11 +157,12 @@ test 'adjustment amounts' => sub {
       } else {
         is(my ($q) = $ledger->quotes, 0, "no quote generated");
       }
-    };
+    });
   }
 };
 
-test long_chain => sub {
+test 'long chain' => sub {
+  my ($self) = @_;
   do_with_fresh_ledger(
     {
       a => {
@@ -178,11 +187,13 @@ test long_chain => sub {
       };
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "initial invoice");
       pay_unpaid_invoices($ledger, dollars(900)); # 10 - (1 self funding)
 
       $_->total_charge_amount(dollars(120)) for @before;
       $_->total_charge_amount(dollars(150)) for @after;
       $a->_maybe_send_psync_quote();
+      $self->assert_n_deliveries(1, "psync quote");
       is(my ($q) = $ledger->quotes, 1, "now one quote");
       is(my (@it) = $q->all_items, 10, "it has 10 items");
       is(my ($special) = grep($_->does("Moonpig::Role::LineItem::Active"), @it),

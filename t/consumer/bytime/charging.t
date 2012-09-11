@@ -6,6 +6,7 @@ use Data::GUID qw(guid_string);
 use Moonpig;
 use t::lib::TestEnv;
 use t::lib::ConsumerTemplateSet::Test;
+use List::AllUtils qw(uniq);
 use Moonpig::Util -all;
 use Test::More;
 use Test::Routine::Util;
@@ -21,50 +22,59 @@ with(
 test "charge" => sub {
   my ($self) = @_;
 
-  plan tests => (4 + 5 + 2);
+  my @tests = (
+    [ 'normal', [ 1, 2, 3, 4 ], ],
+    [ 'double', [ 1, 1, 2, 2, 3 ], ],
+    [ 'missed', [ 2, 5 ], ],
+  );
+
+  plan tests => 0+@tests;
 
   # Pretend today is 2000-01-01 for convenience
   my $jan1 = Moonpig::DateTime->new( year => 2000, month => 1, day => 1 );
 
-  for my $test (
-    [ 'normal', [ 1, 2, 3, 4 ], ],
-    [ 'double', [ 1, 1, 2, 2, 3 ], ],
-    [ 'missed', [ 2, 5 ], ],
-  ) {
+  for my $test (@tests) {
     Moonpig->env->stop_clock_at($jan1);
     my ($name, $schedule) = @$test;
-    note("testing with heartbeat schedule '$name'");
+    subtest "heartbeat schedule: $name" => sub {
+      plan tests => 1 + @$schedule;
+      my $stuff;
+      Moonpig->env->storage->do_rw(sub {
+        $stuff = build(
+          consumer => {
+            class              => class('Consumer::ByTime::FixedAmountCharge'),
+            bank               => dollars(10),
+            charge_amount      => dollars(1),
+            cost_period        => days(1),
+            replacement_plan   => [ get => '/nothing' ],
+            charge_description => "test charge",
+            xid                => xid(),
+          }
+        );
 
-    my $stuff;
-    Moonpig->env->storage->do_rw(sub {
-      $stuff = build(
-        consumer => {
-          class              => class('Consumer::ByTime::FixedAmountCharge'),
-          bank               => dollars(10),
-          charge_amount      => dollars(1),
-          cost_period        => days(1),
-          replacement_plan   => [ get => '/nothing' ],
-          charge_description => "test charge",
-          xid                => xid(),
-        }
-      );
+        Moonpig->env->save_ledger($stuff->{ledger});
+      });
 
-      Moonpig->env->save_ledger($stuff->{ledger});
-    });
+      $stuff->{consumer}->clear_grace_until;
 
-    $stuff->{consumer}->clear_grace_until;
+      for my $day (@$schedule) {
+        my $tick_time = Moonpig::DateTime->new(
+          year => 2000, month => 1, day => $day
+        );
 
-    for my $day (@$schedule) {
-      my $tick_time = Moonpig::DateTime->new(
-        year => 2000, month => 1, day => $day
-      );
+        Moonpig->env->stop_clock_at($tick_time);
 
-      Moonpig->env->stop_clock_at($tick_time);
+        $self->heartbeat_and_send_mail($stuff->{ledger});
 
-      $self->heartbeat_and_send_mail($stuff->{ledger});
+        is(
+          $stuff->{consumer}->unapplied_amount,
+          dollars(10 - $day),
+          sprintf('$%s remain', 10 - $day),
+        );
+      }
 
-      is($stuff->{consumer}->unapplied_amount, dollars(10 - $day));
-    }
+      $self->assert_n_deliveries(1, "invoice");
+    };
   }
 };
 
@@ -189,6 +199,7 @@ test "proration" => sub {
   });
 
   $self->heartbeat_and_send_mail($stuff->{ledger});
+  $self->assert_n_deliveries(1, "invoice");
 
   my @invoices = $stuff->{ledger}->payable_invoices;
   is(@invoices, 1, "we got a single invoice for our prorated consumer");
@@ -244,46 +255,54 @@ test "variable charge" => sub {
   ) {
     Moonpig->env->stop_clock_at($jan1);
     my ($name, $schedule) = @$test;
-    note("testing with heartbeat schedule '$name'");
+    my $days = uniq @$schedule;
 
-    my $stuff;
-    Moonpig->env->storage->do_rw(sub {
-      $stuff = build(
-        consumer => {
-          class => class('Consumer::ByTime', '=ChargeTodaysDate'),
-          extra_charge_tags => ["test"],
-          cost_period               => days(1),
-          replacement_plan          => [ get => '/nothing' ],
-          xid                       => xid(),
-        }
-      );
+    subtest "heartbeat schedule: $name" => sub {
+      my $stuff;
+      Moonpig->env->storage->do_rw(sub {
+        $stuff = build(
+          consumer => {
+            class => class('Consumer::ByTime', '=ChargeTodaysDate'),
+            extra_charge_tags => ["test"],
+            cost_period               => days(1),
+            replacement_plan          => [ get => '/nothing' ],
+            xid                       => xid(),
+          }
+        );
 
-      my $credit = $stuff->{ledger}->add_credit(
-        class('Credit::Simulated'),
-        { amount => dollars(101) },
-      );
+        my $credit = $stuff->{ledger}->add_credit(
+          class('Credit::Simulated'),
+          { amount => dollars(101) },
+        );
 
-      $stuff->{ledger}->perform_dunning;
+        $stuff->{ledger}->perform_dunning;
 
-      Moonpig->env->save_ledger($stuff->{ledger});
-    });
+        Moonpig->env->save_ledger($stuff->{ledger});
+      });
 
-    $stuff->{consumer}->clear_grace_until;
+      $stuff->{consumer}->clear_grace_until;
 
-    for my $day (@$schedule) {
-      my $tick_time = Moonpig::DateTime->new(
-        year => 2000, month => 1, day => $day
-      );
+      for my $day (@$schedule) {
+        my $tick_time = Moonpig::DateTime->new(
+          year => 2000, month => 1, day => $day
+        );
 
-      Moonpig->env->stop_clock_at($tick_time);
+        Moonpig->env->stop_clock_at($tick_time);
 
-      $self->heartbeat_and_send_mail($stuff->{ledger});
-    }
+        $self->heartbeat_and_send_mail($stuff->{ledger});
+      }
 
-    # We should be charging across five days, no matter the pattern, starting
-    # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
-    is($stuff->{consumer}->unapplied_amount, dollars(86),
-       '$15 charged by charging the date');
+      # We should be charging across five days, no matter the pattern, starting
+      # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
+      is($stuff->{consumer}->unapplied_amount, dollars(86),
+         '$15 charged by charging the date');
+
+      # Right now, we send psync notices.  We'd like to separate psync from
+      # ByTime, but it's not trivial to do just this minute, so we'll make the
+      # tests account for the psync notices. -- rjbs, 2012-09-07
+      my $psyncs = $days - 1;
+      $self->assert_n_deliveries(1 + $psyncs, "one invoice, $psyncs psyncs");
+    };
   }
 };
 
@@ -352,6 +371,10 @@ test grace_period => sub {
         $self->heartbeat_and_send_mail($stuff->{ledger});
       }
 
+      $self->assert_n_deliveries(
+        $until ? (1, "the invoice") : (0, "expired before invoicing")
+      );
+
       ok(
         $c->is_expired,
         sprintf("as of %s, consumer is expired", q{} . Moonpig->env->now),
@@ -385,6 +408,7 @@ test "spare change" => sub {
 
     Moonpig->env->elapse_time(86_400 * 10);
     $ledger->heartbeat;
+    $self->assert_n_deliveries(1, "invoice");
 
     is($ledger->amount_available, 0, "we have no free cash on the ledger");
     my $funds = $consumer->unapplied_amount;
@@ -423,6 +447,7 @@ test "almost no spare change" => sub {
 
     Moonpig->env->elapse_time(86_400);
     $ledger->heartbeat;
+    $self->assert_n_deliveries(1, "invoice");
 
     is($ledger->amount_available, 0, "we have no free cash on the ledger");
     my $funds = $consumer->unapplied_amount;
@@ -449,6 +474,7 @@ test "abandon unfunded charges" => sub {
       my ($c) = $ledger->get_component("c");
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
       is($ledger->amount_due, dollars(100), '$100 due to start');
 
       Moonpig->env->elapse_time(86_400 * 40);

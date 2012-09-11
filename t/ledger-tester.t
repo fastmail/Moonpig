@@ -21,6 +21,7 @@ test 'pay payable invoices' => sub {
     my ($ledger) = @_;
 
     $ledger->heartbeat;
+    $self->assert_n_deliveries(1, "invoice");
 
     my $amount = dollars(75);
     my $cred = $ledger->add_credit(class('Credit::Simulated'),

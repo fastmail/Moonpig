@@ -13,7 +13,7 @@ with(
 
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class days);
+use Moonpig::Util qw(class days dollars);
 
 use t::lib::ConsumerTemplateSet::Demo;
 
@@ -32,14 +32,14 @@ test "check amounts" => sub {
       }}, sub {
     my ($ledger) = @_;
 
-    my $inv;
-    do {
-        $ledger->heartbeat;
-        Moonpig->env->elapse_time(days(1));
-    } until $inv = $self->payable_invoice($ledger);
+    Moonpig->env->elapse_time(days(1));
+    $ledger->heartbeat;
+    $self->assert_n_deliveries(1, "invoice");
+
+    my ($inv) = $ledger->payable_invoices;
 
     my $amount = $inv->total_amount;
-    note "Found invoice for amount $amount; paying\n";
+    is($amount, dollars(50), "charge for the right amount");
 
     $ledger->add_credit(
       class(qw(Credit::Simulated)),
@@ -56,12 +56,6 @@ test "check amounts" => sub {
     );
   });
 };
-
-sub payable_invoice {
-  my ($self, $ledger) = @_;
-  my ($inv) = $ledger->payable_invoices;
-  return $inv;
-}
 
 run_me;
 done_testing;

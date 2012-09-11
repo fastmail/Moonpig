@@ -19,6 +19,17 @@ around run_test => sub {
   Moonpig->env->stop_clock_at( datetime( jan => 1 ) );
 
   $self->$orig(@rest);
+
+};
+
+around _last_chance_before_test_ends => sub {
+  my ($orig, $self) = @_;
+  my @deliveries = $self->assert_n_deliveries(0, "no unexpected mail");
+  for (map {; $_->{email} } @deliveries) {
+    diag "-- Date: " . $_->header('Date');
+    diag "   Subj: " . $_->header('Subject');
+  }
+  $self->$orig;
 };
 
 sub heartbeat_and_send_mail {
@@ -53,6 +64,7 @@ sub assert_n_deliveries {
   my $desc = "delivery count $n";
   $desc .= ": $msg" if defined $msg;
 
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
   is(@deliveries, $n, $desc);
   return @deliveries;
 }

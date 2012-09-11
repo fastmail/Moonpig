@@ -61,6 +61,7 @@ test 'setup sanity checks' => sub {
       "est lifetime 14d");
 
     $ledger->perform_dunning; # close the invoice and process the credit
+    $self->assert_n_deliveries(1, "invoice");
 
     is($c->expected_funds({ include_unpaid_charges => 1 }), dollars(14),
        "expected funds incl unpaid");
@@ -210,9 +211,11 @@ test "paid and executed" => sub {
 
   do_test {
     my ($ledger, $c) = @_;
-    elapse($ledger, 3) ;
+    elapse($ledger, 3);
+    $self->assert_n_deliveries(1, "invoice");
     $c->total_charge_amount(dollars(28));
-    elapse($ledger, 1) ;
+    elapse($ledger, 1);
+    $self->assert_n_deliveries(1, "psync notice");
     # At this point, 10 days and $9 remain
 
     my ($qu) = $ledger->quotes;
@@ -228,6 +231,7 @@ test "paid and executed" => sub {
     $ledger->process_credits; # not cheating; the POSTable add does this
 
     elapse($ledger);
+    $self->assert_n_deliveries(1, "psync notice (back to zero)");
     ok($qu->is_paid, "quote is now paid");
     is($c->_predicted_shortfall, 0, "quote paid -> no shortfall");
   };

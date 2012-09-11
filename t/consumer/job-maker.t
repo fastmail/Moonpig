@@ -14,6 +14,8 @@ use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 with 'Moonpig::Test::Role::LedgerTester';
 
 test "job-making invoice charge" => sub {
+  my ($self) = @_;
+
   do_with_fresh_ledger(
     {
       consumer => {
@@ -33,6 +35,7 @@ test "job-making invoice charge" => sub {
       ok(! $consumer->unapplied_amount, "still has no funds for now");
 
       $ledger->heartbeat;
+      $self->assert_n_deliveries(1, "invoice");
 
       {
         my $jobs = Moonpig->env->storage->undone_jobs_for_ledger($ledger);

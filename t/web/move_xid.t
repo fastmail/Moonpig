@@ -70,6 +70,8 @@ sub setup_account {
 
       $rv{ledger_path} = sprintf "/ledger/by-guid/%s", $rv{ledger_guid};
 
+      $self->assert_n_deliveries(0);
+
       $rv{account} = do {
         my $account_info = {
           template      => 'fauxboxtest',
@@ -101,6 +103,8 @@ sub setup_account {
 
       $ua->mp_post("$rv{ledger_path}/heartbeat", {});
       $rv{invoices} = $ua->mp_get("$rv{ledger_path}/invoices");
+
+      $self->assert_n_deliveries(1, "invoice");
 
       $ua->mp_post("$rv{ledger_path}/heartbeat", {});
     };
