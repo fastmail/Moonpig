@@ -64,6 +64,7 @@ sub assert_n_deliveries {
   my $desc = "delivery count $n";
   $desc .= ": $msg" if defined $msg;
 
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
   is(@deliveries, $n, $desc);
   return @deliveries;
 }
