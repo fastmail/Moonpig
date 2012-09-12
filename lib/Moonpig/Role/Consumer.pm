@@ -610,7 +610,7 @@ sub all_charges {
 }
 
 sub all_charges_by_invoice {
-  my ($self) = @_;
+  my ($self, $arg) = @_;
 
   # If the invoice was closed before we were created, we can't be on it!
   # -- rjbs, 2012-03-06
@@ -621,8 +621,16 @@ sub all_charges_by_invoice {
     grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
     $self->ledger->invoices_without_quotes
   ) {
+    next if $arg->{invoice_filter} && ! do {
+      local $_ = $invoice;
+      $arg->{invoice_filter}->();
+    };
+
     next unless my @charges = grep { $_->owner_guid eq $guid }
                               $invoice->all_charges;
+
+    @charges = grep { $arg->{charge_filter}->($_) } @charges
+      if $arg->{charge_filter};
 
     push @data, [ $invoice, \@charges ];
   }
@@ -778,8 +786,17 @@ publish _replacement_chain_summary => {
   my @hunks;
   for my $consumer ($self, $self->replacement_chain) {
     push @hunks, Stick::Util->ppack($consumer);
+
+    my $invoice_pairs = $self->all_charges_by_invoice({
+      invoice_filter => sub { ! $_->is_abandoned },
+      charge_filter  => sub { ! $_->does('Moonpig::Role::LineItem::Abandonable')
+                           || ! $_->is_abandoned },
+    });
+
+    $hunks[-1]{charges} = $invoice_pairs;
   }
 
+  return \@hunks;
 };
 
 PARTIAL_PACK {
