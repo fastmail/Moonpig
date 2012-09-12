@@ -605,27 +605,35 @@ sub abandon_all_unpaid_charges {
 sub all_charges {
   my ($self) = @_;
 
-  # If the invoice was closed before we were created, we can't be on it!
-  # -- rjbs, 2012-03-06
-  my $guid = $self->guid;
-  my @charges = grep { $_->owner_guid eq $guid }
-                map  { $_->all_charges }
-                grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
-                $self->ledger->invoices_without_quotes;
-
-  return @charges;
+  my @invoices = map {; @{ $_->[1] } } @{ $self->all_charges_by_invoice };
+  return @invoices;
 }
 
-sub relevant_invoices {
+sub all_charges_by_invoice {
   my ($self) = @_;
 
   # If the invoice was closed before we were created, we can't be on it!
   # -- rjbs, 2012-03-06
   my $guid = $self->guid;
-  my @invoices = grep { (! $_->is_closed || $_->closed_at >= $self->created_at)
-                        && any { $_->owner_guid eq $guid } $_->all_charges
-                      } $self->ledger->invoices_without_quotes;
 
+  my @data;
+  for my $invoice (
+    grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
+    $self->ledger->invoices_without_quotes
+  ) {
+    next unless my @charges = grep { $_->owner_guid eq $guid }
+                              $invoice->all_charges;
+
+    push @data, [ $invoice, \@charges ];
+  }
+
+  return \@data;
+}
+
+sub relevant_invoices {
+  my ($self) = @_;
+
+  my @invoices = map {; $_->[0] } @{ $self->all_charges_by_invoice };
   return @invoices;
 }
 
