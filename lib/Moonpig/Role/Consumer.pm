@@ -766,6 +766,22 @@ sub _unpaid_charges {
   return @unpaid_invoices;
 }
 
+publish _replacement_chain_summary => {
+  '-http_method' => 'get',
+  '-path'        => 'replacement-chain-summary',
+} => sub {
+  my ($self, $arg) = @_;
+
+  Moonpig::X->throw("can't get replacement chain summary of inactive consumer")
+    unless $self->is_active;
+
+  my @hunks;
+  for my $consumer ($self, $self->replacement_chain) {
+    push @hunks, Stick::Util->ppack($consumer);
+  }
+
+};
+
 PARTIAL_PACK {
   return {
     xid       => $_[0]->xid,
