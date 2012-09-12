@@ -150,9 +150,9 @@ sub replacement_chain_end {
 # The chain length here is a TimeInterval that says how long the chain
 # should last for. The created chain will be at least that long.
 publish adjust_replacement_chain => {
-   '-http_method' => 'post',
-   '-path'        => 'create-replacements',
-   chain_duration   => TimeInterval,
+  '-http_method' => 'post',
+  '-path'        => 'create-replacements',
+  chain_duration   => TimeInterval,
 } => sub {
   my ($self, $arg) = @_;
   my $chain_duration = $arg->{chain_duration};
