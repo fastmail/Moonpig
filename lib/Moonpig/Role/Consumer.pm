@@ -787,7 +787,7 @@ publish _replacement_chain_summary => {
   for my $consumer ($self, $self->replacement_chain) {
     push @hunks, Stick::Util->ppack($consumer);
 
-    my $invoice_pairs = $self->all_charges_by_invoice({
+    my $invoice_pairs = $consumer->all_charges_by_invoice({
       invoice_filter => sub { ! $_->is_abandoned },
       charge_filter  => sub { ! $_->does('Moonpig::Role::LineItem::Abandonable')
                            || ! $_->is_abandoned },
