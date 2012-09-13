@@ -137,11 +137,13 @@ test clobber_replacement => sub {
     "$ledger_path/credits",
     {
       type => 'Simulated',
+      send_receipt => 1,
       attributes => {
         amount => $price,
       },
     },
   );
+  $self->assert_n_deliveries(1, "receipt");
   $self->elapse(3);
   $self->assert_n_deliveries(1, "invoice");
 
@@ -203,10 +205,12 @@ test cancel_early => sub {
     "$ledger_path/credits",
     {
       type => 'Simulated',
+      send_receipt => 1,
       attributes => {
         amount => $price,
       },
     });
+  $self->assert_n_deliveries(1, "receipt");
   $self->elapse(1);
 
   Moonpig->env->storage->do_rw(sub {
