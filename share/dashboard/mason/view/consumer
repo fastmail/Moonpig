@@ -33,4 +33,42 @@ my $xid = $consumer->{xid};
   </form>
 
   <& /widget/dump, dump => $consumer, what => 'Consumer' &>
+
+  <& SELF:chain, xid => $xid, guid => $consumer_guid &>
 </&>
+
+<%method chain>
+<%args>
+$xid
+$guid
+</%args>
+% my $chain = $m->mp_request(
+%   GET => $m->mp_ledger_path($xid)
+%        .  "/consumers/guid/$guid/replacement-chain-summary",
+% );
+% for my $consumer (@$chain) {
+  <div>
+    <h3>consumer <% $consumer->{guid} |h %></h3>
+    <table>
+      <tr><th>Created:  </th><td><% $consumer->{created_at} |h %></td></tr>
+%   if ($consumer->{activated_at}) {
+      <tr><th>Activated:</th><td><% $consumer->{activated_at} |h %></td></tr>
+%   }
+      <tr><th>Funds:    </th><td><% mc($consumer->{unapplied_amount}//0) |h %></td></tr>
+%   for my $inv (@{ $consumer->{charges} }) {
+      <tr><th colspan='2'>Invoice <% $inv->{invoice} %></th></tr>
+%     for my $chg (@{ $inv->{charges} }) {
+        <tr><th colspan='2'>-- <% $chg->{description} |h %></th></tr>
+        <tr><th>Amount:</th><td><% mc($chg->{amount}) %></td></tr>
+        <tr><th>Executed:</th><td><% $chg->{executed_at} // 'never' |h %></td></tr>
+%     }
+%   }
+    </table>
+
+% }
+
+  <& /widget/dump,
+    dump => $chain,
+    what => 'Consumer Chain',
+  &>
+</%method>

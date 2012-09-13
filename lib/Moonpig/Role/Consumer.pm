@@ -793,7 +793,9 @@ publish _replacement_chain_summary => {
                            || ! $_->is_abandoned },
     });
 
-    $hunks[-1]{charges} = $invoice_pairs;
+    $hunks[-1]{charges} =[ map {;
+      { invoice => $_->[0]->guid, charges => $_->[1] }
+    } @$invoice_pairs ];
   }
 
   return \@hunks;
