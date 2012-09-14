@@ -1,3 +1,9 @@
 
-We recently received and processed your payment of {{
-sprintf '$%0.2f', Moonpig::Util::to_dollars($credit->amount); }}.  Thanks!
+We recently received and processed your payment of {{ sprintf
+'$%0.2f', Moonpig::Util::to_dollars($credit->amount); }}.  Thank you
+for submitting payment.
+
+For details on the invoices where your payment was applied, please see
+your invoice history at <https://www.pobox.com/invoice>.
+
+Thank you for using Pobox!
