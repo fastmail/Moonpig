@@ -1,0 +1,3 @@
+
+We recently received and processed your payment of {{
+sprintf '$%0.2f', Moonpig::Util::to_dollars($credit->amount); }}.  Thanks!
