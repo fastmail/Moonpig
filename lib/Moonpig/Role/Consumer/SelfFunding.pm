@@ -144,7 +144,7 @@ around expected_funds => sub {
 
 PARTIAL_PACK {
   return {
-    self_funding_amount => $_[0]->self_funding_amount,
+    self_funding_credit_amount => $_[0]->self_funding_credit_amount,
   };
 };
 
