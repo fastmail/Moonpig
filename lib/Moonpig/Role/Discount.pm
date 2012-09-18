@@ -13,6 +13,8 @@ with(
   'Moonpig::Role::LedgerComponent',
 );
 
+use Moonpig::Behavior::Packable;
+
 use namespace::autoclean;
 
 has description => (
@@ -37,6 +39,12 @@ around instruction_for_charge => sub {
   return unless $self->applies_to_charge($struct);
   push @{$struct->{tags}}, $self->taglist;
   return $self->$orig($struct);
+};
+
+PARTIAL_PACK {
+  return {
+    description => $_[0]->description,
+  };
 };
 
 1;

@@ -886,6 +886,7 @@ PARTIAL_PACK {
 
     amount_due => $self->amount_due,
     unpaid_invoices => ppack($self->invoice_collection->payable),
+    discounts => ppack($self->discount_collection),
 
     active_xids => {
       map {;

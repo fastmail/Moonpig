@@ -24,6 +24,15 @@ $ledger
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
 <hr>
 <div class="row-fluid">
+<div class="span6">
+ <& SELF:discounts, ledger => $ledger &>
+</div>
+<div class="span6">
+  &nbsp; <!-- this space for future expansion -->
+</div>
+</div>
+<hr>
+<div class="row-fluid">
 <div class="span12">
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 </div>
@@ -193,6 +202,26 @@ $ledger
       view all invoices
     </a>
   </div>
+</%method>
+
+<%method discounts>
+<%args>
+$ledger
+</%args>
+  <h2>Discounts</h2>
+% my $discounts = $ledger->{discounts}{items};
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Discount</th>
+      </tr>
+    </thead>
+% for my $discount (@$discounts) {
+    <tr>
+      <td><% $discount->{description} |h %></td>
+    </tr>
+% }
+  </table>
 </%method>
 
 <%method quotes>
