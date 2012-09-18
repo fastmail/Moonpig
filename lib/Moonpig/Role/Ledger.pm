@@ -60,7 +60,10 @@ with(
   },
   'Stick::Role::HasCollection' => {
     item => 'discount',
-    collection_roles => [ 'Stick::Role::Collection::Mutable' ],
+    collection_roles => [
+      'Moonpig::Role::Collection::DiscountExtras',
+      'Stick::Role::Collection::Mutable',
+    ],
   },
   'Stick::Role::HasCollection' => {
     item => 'journal',
