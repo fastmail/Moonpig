@@ -15,6 +15,7 @@ my $credit = $m->mp_request(
   {
     type       => $credit_arg->{type},
     attributes => $credit_arg->{attributes},
+    send_receipt => ($credit_arg->{send_receipt} ? 1 : 0),
   },
 );
 $m->redirect('/ledger/' . $ledger_guid);

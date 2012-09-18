@@ -62,6 +62,7 @@ $ledger
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
+    <input type='hidden' name='credit.send_receipt' value='1' />
   </form>
 </div>
 <div class="span6">
@@ -73,6 +74,7 @@ $ledger
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='PayPal' />
+    <input type='hidden' name='credit.send_receipt' value='1' />
   </form>
 </div>
 </div>
@@ -85,6 +87,7 @@ $ledger
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='CreditCard' />
+    <input type='hidden' name='credit.send_receipt' value='1' />
   </form>
 </div>
 <div class="span6">
@@ -96,6 +99,7 @@ $ledger
     <input type='submit' class="btn" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Courtesy' />
+    <input type='hidden' name='credit.send_receipt' value='0' />
   </form>
 </div>
 </div>
