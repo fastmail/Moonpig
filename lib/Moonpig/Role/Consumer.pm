@@ -314,6 +314,7 @@ sub handle_cancel {
 
   $self->replacement(undef) if $self->has_replacement;
   $self->replacement_plan([ get => '/nothing' ]);
+  $self->abandon_unpaid_funding_charges;
 
   return;
 }
