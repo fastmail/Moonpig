@@ -10,6 +10,7 @@ use Encode qw(encode_utf8);
 use File::ShareDir qw(dist_dir);
 use File::Spec;
 use HTML::Mason::Interp;
+use MasonX::Resolver::AutoInherit;
 use Path::Class;
 use Plack::App::Proxy;
 use Plack::Builder;
@@ -81,9 +82,16 @@ for my $route ($router->ordered_routes) {
   warn sprintf "/%-50s -> %s\n", $route->path, $route->target;
 }
 
+my $root_depth = 0; # SORRY -- rjbs, 2012-09-20
 my $interp = HTML::Mason::Interp->new(
-  comp_root     => $root->subdir('mason')->stringify,
+  comp_root     => '/-',
   request_class => 'Moonpig::Dashboard::Request',
+  resolver      => MasonX::Resolver::AutoInherit->new({
+    resolver_roots => [
+      map {; [ $root_depth++ => dir($_)->subdir(qw(dashboard mason)) ] }
+      Moonpig->env->share_roots,
+    ],
+  }),
   allow_globals => [ '$r' ],
 );
 
