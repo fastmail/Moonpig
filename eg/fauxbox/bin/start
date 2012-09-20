@@ -42,7 +42,7 @@ $d_pid or do {
   my $dir = dir('share')->absolute->stringify;
   my $use = qq[use Test::File::ShareDir 0.003001 -share => { -dist => { q{Moonpig} => q{$dir} } };];
 
-  exec "plackup -I lib -p 5002 -e '$use' share/dashboard/dashboard.psgi $colorize green";
+  exec "plackup -I lib -I eg/fauxbox/lib -p 5002 -MFauxbox::Moonpig::Env -e '$use' share/dashboard/dashboard.psgi $colorize green";
 };
 
 $SIG{INT} = sub { kill 0, 2 };
