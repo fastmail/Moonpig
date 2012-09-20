@@ -25,13 +25,13 @@ my $colorize = "2>&1 | $ENV{FAUXBOX_ROOT}/bin/color";
 
 my $mp_pid = fork;
 $mp_pid or do {
-  exec "plackup -p 5001 $ENV{FAUXBOX_ROOT}/bin/moonpig.psgi $colorize cyan"
+  exec "plackup -I lib -p 5001 $ENV{FAUXBOX_ROOT}/bin/moonpig.psgi $colorize cyan"
 };
 
 my $ul_pid = fork;
 $ul_pid or do {
   $ENV{FAUXBOX_MOONPIG_URI} = 'http://localhost:5001';
-  exec "plackup -p 5000 $ENV{FAUXBOX_ROOT}/bin/fauxbox.psgi $colorize yellow";
+  exec "plackup -I lib -p 5000 $ENV{FAUXBOX_ROOT}/bin/fauxbox.psgi $colorize yellow";
 };
 
 my $d_pid = fork;
@@ -42,7 +42,7 @@ $d_pid or do {
   my $dir = dir('share')->absolute->stringify;
   my $use = qq[use Test::File::ShareDir 0.003001 -share => { -dist => { q{Moonpig} => q{$dir} } };];
 
-  exec "plackup -p 5002 -e '$use' share/dashboard/dashboard.psgi $colorize green";
+  exec "plackup -I lib -p 5002 -e '$use' share/dashboard/dashboard.psgi $colorize green";
 };
 
 $SIG{INT} = sub { kill 0, 2 };
