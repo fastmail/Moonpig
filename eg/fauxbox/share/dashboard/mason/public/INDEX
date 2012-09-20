@@ -1,0 +1,8 @@
+<%method search-boxes>
+<& PARENT:search-boxes &>
+<& /widget/search-box,
+  id    => 'ledger',
+  label => 'Ledger by Foo',
+  action => '#',
+&>
+</%method>
