@@ -52,30 +52,37 @@ package HTML::Mason::Commands {
 
 my $router = Router::Dumb->new;
 
-my $root   = dir( dist_dir('Moonpig') )->subdir(qw(dashboard));
+my $core_root = dir( dist_dir('Moonpig') )->subdir(qw(dashboard));
 
-# GET targets
-Router::Dumb::Helper::FileMapper->new({
-  root          => $root->subdir(qw(mason public))->stringify,
-  target_munger => sub {
-    my ($self, $filename) = @_;
-    dir('public')->file( file($filename)->relative($self->root) )->stringify;
-  },
-})->add_routes_to($router);
+for my $root (
+  map {; dir($_)->subdir(qw(dashboard)) } Moonpig->env->share_roots
+) {
+  # GET targets
+  Router::Dumb::Helper::FileMapper->new({
+    root          => $root->subdir(qw(mason public))->stringify,
+    target_munger => sub {
+      my ($self, $filename) = @_;
+      dir('public')->file( file($filename)->relative($self->root) )->stringify;
+    },
+  })->add_routes_to($router, { ignore_conflicts => 1 });
 
-# POST targets
-Router::Dumb::Helper::FileMapper->new({
-  root          => $root->subdir(qw(mason post))->stringify,
-  parts_munger  => sub { unshift @{ $_[1] }, 'post'; $_[1] },
-  target_munger => sub {
-    my ($self, $filename) = @_;
-    dir('post')->file( file($filename)->relative($self->root) )->stringify;
-  },
-})->add_routes_to($router);
+  # POST targets
+  Router::Dumb::Helper::FileMapper->new({
+    root          => $root->subdir(qw(mason post))->stringify,
+    parts_munger  => sub { unshift @{ $_[1] }, 'post'; $_[1] },
+    target_munger => sub {
+      my ($self, $filename) = @_;
+      dir('post')->file( file($filename)->relative($self->root) )->stringify;
+    },
+  })->add_routes_to($router, { ignore_conflicts => 1 });
 
-Router::Dumb::Helper::RouteFile
-  ->new({ filename => $root->file('routes')->stringify })
-  ->add_routes_to($router);
+  # Intentionally does not ignore conflicts -- rjbs, 2012-09-21
+  if (-e (my $file = $root->file('routes')->stringify)) {
+    Router::Dumb::Helper::RouteFile
+      ->new({ filename => $file })
+      ->add_routes_to($router);
+  }
+}
 
 warn "ROUTING TABLE: \n";
 for my $route ($router->ordered_routes) {
@@ -136,10 +143,13 @@ my $app = sub {
 
 builder {
   # enable 'Debug';
+
+  # It isn't trivial to have this scan all the roots without thinking about it,
+  # so I'm going to not think about it right now.  -- rjbs, 2012-09-21
   enable(
     "Plack::Middleware::Static",
     path => qr{^/(images|js|css)/},
-    root => $root->subdir(qw(static)),
+    root => $core_root->subdir(qw(static)),
   );
 
   mount "/moonpig" => Plack::App::Proxy->new(

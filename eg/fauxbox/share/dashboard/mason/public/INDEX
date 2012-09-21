@@ -3,6 +3,6 @@
 <& /widget/search-box,
   id    => 'ledger',
   label => 'Ledger by Foo',
-  action => '#',
+  action => '/post/ledger-by-foo',
 &>
 </%method>
