@@ -1,11 +1,16 @@
+%# vim:set ft=mason:
+<%shared>
+# is shared right, here?  I always forget. will find out later -- rjbs,
+# 2012-09-24
+my $i = 0;
+</%shared>
+
+<%method main>
 <%args>
 $label
 $action => '#'
 $id     => undef
 </%args>
-<%init>
-my $i = 0;
-</%init>
 % my $search_id = $id || ("search-" . $i++);
 % my $field_id  = "$search_id.search";
 % my $method    = $action eq '#' ? 'get' : 'post';
@@ -14,3 +19,4 @@ my $i = 0;
   <input id='<%  $field_id |h %>' type='text' name='search' />
   <input type='submit' class="btn" value='Go!' />
 </form>
+</%method>

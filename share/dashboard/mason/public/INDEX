@@ -1,6 +1,9 @@
+%# vim:set ft=mason:
+<%method main>
 <&| /page/full, title => 'Moonpig Dashboard' &>
 <& SELF:search-boxes &>
 </&>
+</%method>
 <%method search-boxes>
 <& /widget/search-box,
   id    => 'ledger',

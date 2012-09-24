@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $ledger_id
 $consumer_guid
@@ -36,6 +37,7 @@ my $xid = $consumer->{xid};
 
   <& SELF:chain, xid => $xid, guid => $consumer_guid &>
 </&>
+</%method>
 
 <%method chain>
 <%args>

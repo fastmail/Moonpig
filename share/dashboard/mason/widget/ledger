@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $ledger
 </%args>
@@ -43,6 +44,7 @@ $ledger
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
 </div>
 </div>
+</%method>
 
 <%method credits>
 <%args>

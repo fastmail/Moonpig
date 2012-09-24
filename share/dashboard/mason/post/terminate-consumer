@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $consumer_guid
 $ledger_guid
@@ -10,3 +11,4 @@ $m->mp_request(
 );
 $m->redirect('/ledger/' . $ledger_guid);
 </%perl>
+</%method>

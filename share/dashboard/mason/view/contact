@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $ledger_id
 </%args>
@@ -44,3 +45,4 @@ $ledger_id
   <input type='submit' value='Save Contact Info' />
 </form>
 </&>
+</%method>

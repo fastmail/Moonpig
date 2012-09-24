@@ -1,3 +1,5 @@
+%# vim:set ft=mason:
+<%method main>
 <%args>
 $title
 </%args>
@@ -61,3 +63,4 @@ $(function () {
 </div>
 </body>
 </html>
+</%method>

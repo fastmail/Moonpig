@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $job_id
 $ledger_guid
@@ -17,3 +18,4 @@ $m->mp_request(
 
 $m->redirect('/ledger/' . $ledger_guid);
 </%perl>
+</%method>

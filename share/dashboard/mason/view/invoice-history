@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method mian>
 <%args>
 $ledger_id
 </%args>
@@ -12,5 +13,5 @@ $ledger_id
 %   $invoice = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice->{guid}");
   <& /widget/invoice, invoice => $invoice &>
 % }
-
 </&>
+</%method>

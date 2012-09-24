@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $dump
 $id   => undef
@@ -19,3 +20,4 @@ unless (defined $what) {
 <% Moonpig::App::Ob::Dumper::Dump($dump) |h %>
 </div>
 </&>
+</%method>

@@ -1,3 +1,5 @@
+%# vim:set ft=mason:
+<%method main>
 <%args>
 $contact
 $ledger
@@ -35,3 +37,4 @@ $ledger
   </table>
   <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn">edit contact</a>
 </div>
+</%method>

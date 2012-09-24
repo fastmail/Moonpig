@@ -1,4 +1,5 @@
 %# vim:set ft=mason:
+<%method main>
 <%args>
 $ledger_id
 $invoice_guid
@@ -14,3 +15,4 @@ $m->redirect('/') unless $invoice;
 
   <& /widget/dump, dump => $invoice, what => 'Invoice' &>
 </&>
+</%method>

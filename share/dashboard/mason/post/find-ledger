@@ -1,3 +1,5 @@
+%# vim:set ft=mason:
+<%method main>
 <%args>
 $search
 </%args>
@@ -17,3 +19,4 @@ $m->redirect('/') unless $ledger;
 
 $m->redirect("/ledger/$ledger->{guid}");
 </%perl>
+</%method>
