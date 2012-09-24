@@ -10,7 +10,9 @@ use Encode qw(encode_utf8);
 use File::ShareDir qw(dist_dir);
 use File::Spec;
 use HTML::Mason::Interp;
-use MasonX::Resolver::AutoInherit;
+use HTML::MasonX::Free::Compiler;
+use HTML::MasonX::Free::Component;
+use HTML::MasonX::Free::Resolver;
 use Path::Class;
 use Plack::App::Proxy;
 use Plack::Builder;
@@ -93,13 +95,19 @@ my $root_depth = 0; # SORRY -- rjbs, 2012-09-20
 my $interp = HTML::Mason::Interp->new(
   comp_root     => '/-',
   request_class => 'Moonpig::Dashboard::Request',
-  resolver      => MasonX::Resolver::AutoInherit->new({
+  compiler      => HTML::MasonX::Free::Compiler->new(
+    allow_globals       => [ '$r' ],
+    allow_stray_content => 0,
+    default_method_to_call => 'main',
+  ),
+  resolver      => HTML::MasonX::Free::Resolver->new({
+    comp_class     => 'HTML::MasonX::Free::Component',
+    add_next_call  => 0,
     resolver_roots => [
       map {; [ $root_depth++ => dir($_)->subdir(qw(dashboard mason)) ] }
       Moonpig->env->share_roots,
     ],
   }),
-  allow_globals => [ '$r' ],
 );
 
 my $app = sub {
