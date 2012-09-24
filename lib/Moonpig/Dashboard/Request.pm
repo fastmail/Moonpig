@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::Dashboard::Request;
-use base 'HTML::Mason::Request';
+use base 'HTML::MasonX::Free::Request';
 # ABSTRACT: the Mason request subclass for the Moonpig dashboard
 
 # use HTML::Widget::Factory;
