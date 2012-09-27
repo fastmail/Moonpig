@@ -238,6 +238,16 @@ sub ident {
   $_[0]->ledger->_invoice_ident_registry->{ $_[0]->guid } // $_[0]->guid;
 }
 
+sub unique_ident {
+  my ($self) = @_;
+  my $ident = $self->ident;
+  return $ident if $ident eq $self->guid;
+
+  my $ledger_ident = $self->ledger->ident =~ s/\AL-//r;
+  $ident =~ s/\AI-/I-$ledger_ident-/;
+  return $ident;
+}
+
 sub is_quote {
   my ($self) = @_;
   return (
