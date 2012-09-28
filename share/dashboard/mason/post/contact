@@ -17,6 +17,6 @@ my $contact = $m->mp_request(
   { attributes => $contact_arg },
 );
 
-$m->redirect('/ledger/' . $ledger_guid);
+$m->redirect('/ledger/' . $ledger_guid . '?result=contact-updated');
 </%perl>
 </%method>

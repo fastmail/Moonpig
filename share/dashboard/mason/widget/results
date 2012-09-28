@@ -1,0 +1,13 @@
+<%method main>
+<%args>
+$results  => {}
+$selector => undef
+</%args>
+% return unless my $result = $r->parameters->{result};
+% my ($key, $result_selector)  = split m</>, $result;
+% if ($result_selector) {
+%   return if ! defined $selector;
+%   return if $selector ne $result_selector;
+% }
+<div class='result'><% $results->{$key} || 'unexpected result code' %></div>
+</%method>

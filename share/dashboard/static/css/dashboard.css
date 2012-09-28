@@ -25,3 +25,11 @@
 .invoice.internal {
   background-color: #ddd;
 }
+
+.result {
+  border: black 1px solid;
+  background-color: #ddd;
+  padding: .5em;
+  margin-top: .5em;
+  margin-bottom: .5em;
+}

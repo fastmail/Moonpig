@@ -15,7 +15,7 @@ my $by = $find_by =~ /\AL-/ ? 'by-ident'
 
 my $ledger = $m->mp_request(GET => "/ledger/$by/$find_by");
 
-$m->redirect('/') unless $ledger;
+$m->redirect('/?result=404') unless $ledger;
 
 $m->redirect("/ledger/$ledger->{guid}");
 </%perl>

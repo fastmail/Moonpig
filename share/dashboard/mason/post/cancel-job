@@ -16,6 +16,6 @@ $m->mp_request(
 # overhaul of 2011-08 is complete. -- rjbs, 2011-08-04
 # $m->redirect('/ledger/' . $ledger_guid . '/job/' . $job_id);
 
-$m->redirect('/ledger/' . $ledger_guid);
+$m->redirect('/ledger/' . $ledger_guid . '?result=job-canceled');
 </%perl>
 </%method>

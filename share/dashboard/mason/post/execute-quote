@@ -13,6 +13,9 @@ my $credit = $m->mp_request(
   ),
   {},
 );
-$m->redirect('/ledger/' . $ledger_guid . '/invoice/' . $quote_guid);
+$m->redirect(
+  '/ledger/' . $ledger_guid . '/invoice/' . $quote_guid
+  . "?result=quote-executed/$quote_guid"
+);
 </%perl>
 </%method>

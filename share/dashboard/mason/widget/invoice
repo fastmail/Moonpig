@@ -5,6 +5,13 @@ $invoice
 </%args>
 <div class='invoice<% $invoice->{is_internal} ? ' internal' : '' %>' style='border:thin black solid'>
   <h3<% $invoice->{abandoned_at} ? " class='abandoned'" : '' %>>Invoice <% $invoice->{ident} %><% $invoice->{is_internal} ? ' (internal)' : '' %><% $invoice->{abandoned_at} ? ' (abandoned)' : '' %></h3>
+% if ($invoice->{paid_at}) {
+  <h4>PAID</h4>
+% }
+<& /widget/results,
+  results  => { 'quote-executed' => "Couldn't find that ledger!", },
+  selector => $invoice->{guid},
+&>
 
 % if ($invoice->{is_quote}) {
   <p><strong>This invoice is actually a quote.</strong></p>

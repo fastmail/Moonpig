@@ -6,7 +6,14 @@ $ledger_id
 % my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 % $m->redirect('/') unless $ledger;
 <&| /page/full, title => "Moonpig Ledger " . $ledger->{ident} &>
-
+<& /widget/results, results => {
+  'consumer-canceled'   => "Consumer canceled!",
+  'consumer-reinvoiced' => "Consumer reinvoiced!",
+  'consumer-terminated' => "Consumer terminated!",
+  'contact-updated'     => "Contact updated!",
+  'credit-added'        => "Credit added!",
+  'job-canceled'        => "Job canceled!",
+} &>
 <& /widget/ledger, ledger => $ledger &>
 </&>
 </%method>

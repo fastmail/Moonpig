@@ -19,6 +19,6 @@ my $credit = $m->mp_request(
     send_receipt => ($credit_arg->{send_receipt} ? 1 : 0),
   },
 );
-$m->redirect('/ledger/' . $ledger_guid);
+$m->redirect('/ledger/' . $ledger_guid . '?result=credit-added');
 </%perl>
 </%method>
