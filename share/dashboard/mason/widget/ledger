@@ -133,8 +133,8 @@ $ledger
   </tbody>
   </table>
 
-  <div><b>Refundable funds:<% mc($ledger->{amount_available}) %></b></div>
-  <div><b>Amount due:<% mc($ledger->{amount_due}) %></b></div>
+  <div><b>Refundable funds: <% mc($ledger->{amount_available}) %></b></div>
+  <div><b>Amount due: <% mc($ledger->{amount_due}) %></b></div>
 </div>
 </div>
 </%method>
