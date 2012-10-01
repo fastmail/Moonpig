@@ -6,7 +6,8 @@ $invoice_guid
 </%args>
 <%perl>
 my $invoice = $m->mp_request(
-  GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice_guid");
+  GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice_guid"
+);
 $m->redirect('/') unless $invoice;
 </%perl>
 <&| /page/full, title => "Moonpig Invoice $invoice_guid" &>

@@ -1,0 +1,25 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_guid
+$credit_guid
+</%args>
+<%perl>
+my $credit = $m->mp_request(
+  POST => sprintf(
+    '/ledger/by-guid/%s/credits/guid/%s/refund',
+    $ledger_guid,
+    $credit_guid,
+  ),
+  {
+  },
+);
+$m->redirect(
+  '/ledger/'
+  . $ledger_guid
+  . '/credit/'
+  . $credit_guid
+  . '?result=credit-refunded'
+);
+</%perl>
+</%method>

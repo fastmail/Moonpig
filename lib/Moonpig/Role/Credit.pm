@@ -5,6 +5,8 @@ use Moose::Role;
 with(
   'Stick::Role::PublicResource',
   'Stick::Role::PublicResource::GetSelf',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::HasGuid',
   'Moonpig::Role::LedgerComponent',
@@ -19,6 +21,10 @@ use Moonpig::Behavior::Packable;
 use List::AllUtils qw(min natatime);
 use Moonpig::Types qw(PositiveMillicents);
 use Moonpig::Util qw(class days pair_lefts);
+use Stick::Publisher 0.307;
+use Stick::Publisher::Publish 0.307;
+require Stick::Role::Routable::AutoInstance;
+Stick::Role::Routable::AutoInstance->VERSION(0.307);
 
 use namespace::autoclean;
 
@@ -96,7 +102,9 @@ sub is_refundable {
   $_[0]->does("Moonpig::Role::Credit::Refundable") ? 1 : 0;
 }
 
-sub dissolve {
+publish dissolve => {
+  -http_method => 'post',
+} => sub {
   my ($self) = @_;
 
   my $ledger = $self->ledger;
@@ -143,7 +151,24 @@ sub dissolve {
   });
 
   $ledger->perform_dunning; # this implies ->process_credits
-}
+};
+
+sub _class_subroute { ... }
+
+publish _extended_info => {
+  -path        => 'extended-info',
+  -http_method => 'get',
+} => sub {
+  my ($self) = @_;
+
+  my $pack = $self->STICK_PACK;
+  $pack->{refundable_amount} = min(
+    $self->unapplied_amount,
+    $self->ledger->amount_available,
+  );
+
+  return $pack;
+};
 
 PARTIAL_PACK {
   my ($self) = @_;

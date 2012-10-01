@@ -6,10 +6,39 @@ $credit_guid
 </%args>
 <%perl>
 my $credit = $m->mp_request(
-  GET => $m->mp_ledger_path($ledger_id) . "/credits/guid/$credit_guid");
+  GET => $m->mp_ledger_path($ledger_id) .  "/credits/guid/$credit_guid/extended-info");
 $m->redirect('/') unless $credit;
 </%perl>
 <&| /page/full, title => "Moonpig Credit $credit_guid" &>
+This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
+mc($credit->{amount}) |h %>
+
+% if ($credit->{refundable_amount}) {
+  <p><strong>You can refund some of this credit.</strong></p>
+  <form action='/post/credit-refund' method='post'>
+    <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
+    <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
+    <input type='submit' value='Refund <% mc($credit->{refundable_amount}) |h %>' />
+  </form>
+% }
+
+<p><strong>In case of emergency</strong>, you can drain a credit of all its
+value.  The customer will be charged again.  <strong>Consider talking to
+R&amp;D first!</strong></p>
+<form action='/post/credit-dissolve' method='post'>
+  <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
+  <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
+  <input type='submit' value='Dissolve Quote' style='background-color: red' />
+</form>
+
+<table>
+  <tr><th>GUID</th>             <td><% $credit->{guid} |h %></td></tr>
+  <tr><th>Type</th>             <td><% $credit->{type} |h %></td></tr>
+  <tr><th>Created at</th>       <td><% $credit->{created_at} |h %></td></tr>
+  <tr><th>Total amount</th>     <td><% mc($credit->{amount}) |h %></td></tr>
+  <tr><th>Unapplied amount</th> <td><% mc($credit->{unapplied_amount}) |h %></td></tr>
+  <tr><th>Refundable amount</th><td><% mc($credit->{refundable_amount}) |h %></td></tr>
+</table>
 
   <& /widget/dump, dump => $credit, what => 'Credit' &>
 </&>

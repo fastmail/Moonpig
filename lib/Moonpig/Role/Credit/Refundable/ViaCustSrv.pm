@@ -9,12 +9,13 @@ with(
 );
 
 sub issue_refund {
-  my ($self) = @_;
+  my ($self, $amount) = @_;
 
   Moonpig->env->file_customer_service_request(
     $self->ledger,
     {
       request => "issue refund",
+      amount  => $amount,
       credit  => ppack($self),
     },
   );
