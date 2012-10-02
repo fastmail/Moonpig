@@ -27,8 +27,8 @@ test 'pay payable invoices' => sub {
     my $cred = $ledger->add_credit(class('Credit::Simulated'),
                                    { amount => $amount });
 
-    my $credit = $self->pay_payable_invoices($ledger);
-    is($credit->amount, dollars(25));
+    my $paid_amount = $self->pay_amount_due($ledger);
+    is($paid_amount, dollars(25));
   });
 };
 

@@ -7,7 +7,7 @@ with(
 );
 
 use t::lib::Logger '$Logger';
-use Moonpig::Util qw(class datetime sum to_dollars);
+use Moonpig::Util qw(class datetime sum sumof to_dollars);
 use Test::More;
 
 use namespace::clean;
@@ -78,9 +78,15 @@ sub pay_invoices {
   my $total  = sum map { $_->total_amount } @$invoices;
   my $to_pay = $total - $ledger->amount_available;
 
+  return $self->_pay_amount($ledger, $to_pay);
+}
+
+sub _pay_amount {
+  my ($self, $ledger, $amount) = @_;
+
   my $credit = $ledger->add_credit(
     class(qw(Credit::Simulated)),
-    { amount => $to_pay },
+    { amount => $amount },
   );
 
   $ledger->process_credits;
@@ -88,33 +94,43 @@ sub pay_invoices {
   return $credit;
 }
 
-sub pay_payable_invoices {
+sub pay_amount_due {
   my ($self, $ledger, $expect, $desc) = @_;
 
-  unless ($ledger->payable_invoices) {
+  unless ($ledger->amount_due) {
     if (defined $expect) {
-      is(0, $expect, $desc // "invoices payoff had expected cost");
+      is(0, $expect, $desc // "ledger payoff had expected cost");
     }
     return;
   }
 
-  # There are unpaid invoices!
-  my @invoices = $ledger->last_dunned_invoices;
+  my %credit;
 
-  # 4. pay and apply payment to invoice
-  my $credit = $self->pay_invoices(\@invoices);
+  my @invoices = $ledger->payable_invoices;
+  if (@invoices) {
+    $credit{invoice} = $self->pay_invoices(\@invoices);
+  }
+
+  my $extra;
+  if ($ledger->amount_due) {
+    $extra = 1;
+    $credit{rest} = $self->_pay_amount($ledger, $ledger->amount_due);
+  }
+
+  my $total = sumof { $_->amount } values %credit;
 
   if (defined $expect) {
-    is($credit->amount, $expect, $desc // "invoices payoff had expected cost");
+    is($total, $expect, $desc // "ledger payoff had expected cost");
   }
 
   $Logger->log([
-    'LedgerTester just paid %s invoice(s) totalling $%0.2f',
+    'LedgerTester just paid %s invoice(s)%stotalling $%0.2f',
     0+@invoices,
-    to_dollars($credit->amount),
+    ($extra ? ' (and more) ' : ' '),
+    to_dollars($total),
   ]);
 
-  return $credit;
+  return $total;
 }
 
 1;

@@ -96,7 +96,7 @@ test "consumer journal charging" => sub {
       });
 
       $ledger->perform_dunning;
-      $self->pay_payable_invoices($ledger);
+      $self->pay_amount_due($ledger);
       $self->assert_n_deliveries(1);
 
       for (0..3) {

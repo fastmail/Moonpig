@@ -150,7 +150,7 @@ test "without_successor" => sub {
 
           $self->heartbeat_and_send_mail($ledger);
           $self->assert_n_deliveries(1, "invoice");
-          $self->pay_payable_invoices($ledger, dollars(31));
+          $self->pay_amount_due($ledger, dollars(31));
 
           for my $day (@$schedule) {
             my $tick_time = Moonpig::DateTime->new(
@@ -207,7 +207,7 @@ test "irreplaceable" => sub {
 
         $self->heartbeat_and_send_mail($ledger);
         $self->assert_n_deliveries(1, "invoice");
-        $self->pay_payable_invoices($ledger, dollars(10));
+        $self->pay_amount_due($ledger, dollars(10));
 
         for my $day (@$schedule) {
           my $tick_time = Moonpig::DateTime->new(

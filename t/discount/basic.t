@@ -106,7 +106,7 @@ test "consumer journal charging" => sub {
       my ($ledger) = @_;
 
       $ledger->perform_dunning;
-      $self->pay_payable_invoices($ledger, dollars(100));
+      $self->pay_amount_due($ledger, dollars(100));
       $self->assert_n_deliveries(1, "first invoice");
 
       my ($without) = $ledger->get_component("n");

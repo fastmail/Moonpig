@@ -260,7 +260,7 @@ test 'try to reissue paid invoice with unexecuted charges' => sub {
         is(@invoices, 1, "there's one invoice");
       }
 
-      $self->pay_payable_invoices($ledger, dollars(28));
+      $self->pay_amount_due($ledger, dollars(28));
 
       {
         my @invoices = $ledger->payable_invoices;

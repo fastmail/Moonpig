@@ -50,7 +50,7 @@ sub active_consumer {
   $self->ledger->active_consumer_for_xid( $self->xid );
 }
 
-around pay_payable_invoices => sub {
+around pay_amount_due => sub {
   my ($orig, $self, $ledger, @rest) = @_;
 
   return unless $self->invoices_to_pay;
@@ -136,7 +136,7 @@ test "end to end demo" => sub {
       # Just a little more noise, to see how things are going.
       $self->log_current_balance if $day % 30 == 0;
 
-      $self->pay_payable_invoices($ledger);
+      $self->pay_amount_due($ledger);
 
       Moonpig->env->elapse_time(86400);
     }
