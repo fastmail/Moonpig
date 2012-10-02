@@ -101,12 +101,19 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
       my $x = $ledger->get_component('x');
 
       is($ledger->amount_due, dollars(500), 'we owe $500');
-      ok(
-        ! $ledger->amount_overearmarked,
+      is(
+        $ledger->amount_overearmarked,
+        0,
         "...but that doesn't mean we are over-earmarked",
       );
 
-      my $credit = $self->pay_payable_invoices($ledger, dollars(500));
+      my @credits = $ledger->credits;
+      is(@credits, 0, "no credits yet");
+      $self->pay_amount_due($ledger, dollars(500));
+
+      @credits = $ledger->credits;
+      is(@credits, 1, "created a credit");
+      my $credit = $credits[0];
       $credit_guid = $credit->guid;
 
       is_deeply(
@@ -127,58 +134,82 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
     },
   );
 
-  Moonpig->env->storage->do_with_ledger(
-    $ledger_guid,
-    sub {
-      my ($ledger) = @_;
-      my ($credit) = grep { $_->guid eq $credit_guid } $ledger->credits;
+  subtest "dissolve the credit" => sub {
+    Moonpig->env->storage->do_with_ledger(
+      $ledger_guid,
+      sub {
+        my ($ledger) = @_;
+        my ($credit) = grep { $_->guid eq $credit_guid } $ledger->credits;
 
-      {
-        my @payable = $ledger->payable_invoices;
-        is(@payable, 0, "no payable invoices before credit dissolution");
+        {
+          my @payable = $ledger->payable_invoices;
+          is(@payable, 0, "no payable invoices before credit dissolution");
+        }
+
+        $credit->dissolve;
+
+        is($credit->unapplied_amount,       dollars(0), '...credit is spent');
+        is($ledger->amount_earmarked,     dollars(400), '...$400 earmarked');
+        is($ledger->amount_due,           dollars(500), '...$500 is due');
+        is($ledger->amount_available,       dollars(0), '$0 is available');
+        is($ledger->amount_overearmarked, dollars(400), '...$400 overearmarked');
+        {
+          my @payable = $ledger->payable_invoices;
+          is(@payable, 1, "one payable invoice after dissolution");
+        }
+
+        my @invoices = $ledger->last_dunned_invoices;
+        is(@invoices, 1, "dissolving the credit caused 1 invoice to be dunned");
+
+        my $total = sumof { $_->amount } map {; $_->all_charges } @invoices;
+        is($total, dollars(100), 'the invoice charges only total $100...');
+      },
+    );
+  };
+
+  subtest "new invoice mail" => sub {
+    Moonpig->env->storage->do_with_ledger(
+      $ledger_guid,
+      sub {
+        my ($ledger) = @_;
+
+        $self->heartbeat_and_send_mail($ledger);
+
+        my @invoices = $ledger->payable_invoices;
+        diag $_->total_amount for @invoices;
+
+        my ($delivery) = $self->assert_n_deliveries(1);
+        my $email = $delivery->{email};
+        like($email->header('subject'), qr{payment is due}i, "...(invoice)...");
+
+        {
+          my ($part) = grep { $_->content_type =~ m{text/plain} }
+                       $email->subparts;
+          my $text = $part->body_str;
+          my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
+          is($due, '$500.00', '...and it asks for the total $500');
+        }
       }
+    );
+  };
 
-      $credit->dissolve;
+  subtest "pay off the new invoice" => sub {
+    Moonpig->env->storage->do_with_ledger(
+      $ledger_guid,
+      sub {
+        my ($ledger) = @_;
 
-      is($credit->unapplied_amount,       dollars(0), '...credit is spent');
-      is($ledger->amount_earmarked,     dollars(400), '...$400 earmarked');
-      is($ledger->amount_due,           dollars(500), '...$500 is due');
-      is($ledger->amount_available,       dollars(0), '$0 is available');
-      is($ledger->amount_overearmarked, dollars(400), '...$400 overearmarked');
+        $self->pay_amount_due($ledger, dollars(500));
 
-      {
-        my @payable = $ledger->payable_invoices;
-        is(@payable, 1, "one payable invoice after dissolution");
+        is($ledger->amount_earmarked,   dollars(400), '...which is earmarked');
+        is($ledger->amount_due,           dollars(0), 'nothing is due');
+        is($ledger->amount_available,     dollars(0), 'nothing is available');
+        is($ledger->amount_overearmarked, dollars(0), 'not overearmarked');
+
+        is_deeply([ $ledger->payable_invoices ], [], "no invoices to pay");
       }
-
-      my @invoices = $ledger->last_dunned_invoices;
-      is(@invoices, 1, "dissolving the credit caused 1 invoice to be dunned");
-
-      my $total = sumof { $_->amount } map {; $_->all_charges } @invoices;
-      is($total, dollars(100), 'the invoice charges only total $100...');
-    },
-  );
-
-  Moonpig->env->storage->do_with_ledger(
-    $ledger_guid,
-    sub {
-      my ($ledger) = @_;
-
-      $self->heartbeat_and_send_mail($ledger);
-
-      my ($delivery) = $self->assert_n_deliveries(1);
-      my $email = $delivery->{email};
-      like($email->header('subject'), qr{payment is due}i, "...(invoice)...");
-
-      {
-        my ($part) = grep { $_->content_type =~ m{text/plain} }
-                     $email->subparts;
-        my $text = $part->body_str;
-        my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
-        is($due, '$500.00', '...and it asks for the total $500');
-      }
-    }
-  );
+    );
+  };
 };
 
 run_me;
