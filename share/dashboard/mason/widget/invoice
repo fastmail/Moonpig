@@ -15,11 +15,13 @@ $invoice
 
 % if ($invoice->{is_quote}) {
   <p><strong>This invoice is actually a quote.</strong></p>
+%   unless ($invoice->{abandoned_at}) {
   <form action='/post/execute-quote' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
     <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
     <input type='submit' value='Execute Quote' />
   </form>
+%   }
 % }
 
   <p><strong>GUID:        </strong>
