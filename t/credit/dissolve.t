@@ -176,7 +176,6 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
         $self->heartbeat_and_send_mail($ledger);
 
         my @invoices = $ledger->payable_invoices;
-        diag $_->total_amount for @invoices;
 
         my ($delivery) = $self->assert_n_deliveries(1);
         my $email = $delivery->{email};
