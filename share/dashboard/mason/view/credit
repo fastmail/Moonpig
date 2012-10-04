@@ -9,6 +9,14 @@ my $credit = $m->mp_request(
   GET => $m->mp_ledger_path($ledger_id) .  "/credits/guid/$credit_guid/extended-info");
 $m->redirect('/') unless $credit;
 </%perl>
+
+<& /widget/results,
+  results  => {
+    'credit-dissolved' => "Credit dissolved!",
+  },
+  selector => $invoice->{guid},
+&>
+
 <&| /page/full, title => "Moonpig Credit $credit_guid" &>
 This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
 mc($credit->{amount}) |h %>
