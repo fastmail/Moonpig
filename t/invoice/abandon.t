@@ -38,7 +38,11 @@ test carry_forth => sub {
     }
     $i1->mark_closed;
 
-    $i1->abandon;
+    # We do this weird thing because $invoice->abandon used to mean it, which
+    # is really bizarre.  It's not the common case.  I've eliminated ->abandon,
+    # for now, but if I re-added it these days, it would mean
+    # _without_replacement. -- rjbs, 2012-10-04
+    $i1->abandon_with_replacement( $ledger->current_invoice );
     my $i2 = $ledger->current_invoice;
 
     ok($i1->is_abandoned, "original invoice was abandoned");
@@ -86,7 +90,7 @@ test service_extended => sub {
       my @invoices = $c1->abandon_all_unpaid_charges or fail();
       is_deeply(\@invoices, [$i1], "abandoned charges on expected invoice");
 
-      $i1->abandon;
+      $i1->abandon_with_replacement($ledger->current_invoice);
 
       # Use case 2. Consumer charges for service we don't want; reissue
       # invoice without it. Have charges from multiple consumers.
@@ -148,9 +152,14 @@ test checks => sub {
       };
 
       # Abandoning an open invoice is forbidden
-      like( exception { $gen_invoice->()->abandon },
-            qr/Can't abandon open invoice/,
-            "Can't abandon open invoice" );
+      like(
+        exception {
+          my $invoice = $gen_invoice->();
+          $invoice->abandon_with_replacement($invoice->ledger->current_invoice);
+        },
+        qr/Can't abandon open invoice/,
+        "Can't abandon open invoice",
+      );
 
       # Replacing an abandoned invoice with a closed invoice is forbidden
       like( exception {
@@ -174,7 +183,7 @@ test checks => sub {
       like( exception {
         my $a = $gen_invoice->("don't abandon");
         $a->mark_closed;
-        $a->abandon;
+        $a->abandon_with_replacement( $a->ledger->current_invoice );
       }, qr/Can't.*with no abandoned charges/,
             "Can't replace invoice with no abandoned charges");
     });

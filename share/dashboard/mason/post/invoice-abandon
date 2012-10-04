@@ -1,0 +1,21 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_guid
+$invoice_guid
+</%args>
+<%perl>
+my $credit = $m->mp_request(
+  POST => sprintf(
+    '/ledger/by-guid/%s/invoices/guid/%s/abandon-without-replacement',
+    $ledger_guid,
+    $invoice_guid,
+  ),
+  {},
+);
+$m->redirect(
+  '/ledger/' . $ledger_guid . '/invoice/' . $invoice_guid
+  . "?result=invoice-abandoned/$invoice_guid"
+);
+</%perl>
+</%method>

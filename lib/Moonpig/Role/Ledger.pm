@@ -489,12 +489,6 @@ sub quotes {
   grep {; $_->is_quote } $self->invoices;
 }
 
-sub abandon_invoice {
-  my ($self, $invoice) = @_;
-
-  return $invoice->abandon_with_replacement($self->current_invoice);
-}
-
 sub amount_earmarked {
   my ($self) = @_;
   my @invoices = grep { $_->is_paid } $self->invoices_without_quotes;

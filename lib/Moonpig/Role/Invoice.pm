@@ -25,6 +25,8 @@ use Moonpig::Util qw(class event sumof);
 use Moonpig::X;
 use MooseX::SetOnce;
 
+use Stick::Publisher 0.307;
+use Stick::Publisher::Publish 0.307;
 use Stick::Util qw(ppack true false);
 use Stick::Types qw(StickBool);
 
@@ -107,12 +109,6 @@ after mark_closed => sub {
   $_[0]->abandon_if_empty;
 };
 
-# transfer non-abandoned charges to ledger's current open invoice
-sub abandon {
-  my ($self) = @_;
-  $self->ledger->abandon_invoice($self);
-}
-
 sub abandon_if_empty {
   my ($self) = @_;
   return if $self->is_open;
@@ -159,6 +155,13 @@ sub abandon_with_replacement {
 sub add_line_item { $_[0]->_add_item($_[1]) }
 
 sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
+
+publish _abandon_without_replacement => {
+  -http_method => 'post',
+  -path        => 'abandon-without-replacement',
+} => sub {
+  $_[0]->abandon_without_replacement;
+};
 
 # use this when we're sure we'll never be paid for this invoice
 # abandon all charges and then the invoice itself.

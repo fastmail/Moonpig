@@ -9,7 +9,10 @@ $invoice
   <h4>PAID</h4>
 % }
 <& /widget/results,
-  results  => { 'quote-executed' => "Couldn't find that ledger!", },
+  results  => {
+    'quote-executed'    => "Couldn't find that ledger!",
+    'invoice-abandoned' => "Invoice abandoned!",
+  },
   selector => $invoice->{guid},
 &>
 
@@ -22,6 +25,14 @@ $invoice
     <input type='submit' value='Execute Quote' />
   </form>
 %   }
+% }
+
+% if (! $invoice->{is_quote} and ! $invoice->{abandoned_at} and ! $invoice->{is_paid}) {
+  <form action='/post/invoice-abandon' method='post'>
+    <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
+    <input type='hidden' name='invoice_guid' value='<% $invoice->{guid}|h %>' />
+    <input type='submit' value='Abandon Invoice' />
+  </form>
 % }
 
   <p><strong>GUID:        </strong>
