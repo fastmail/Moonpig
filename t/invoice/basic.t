@@ -425,14 +425,17 @@ test 'non-ASCII content in email' => sub {
   my ($self) = @_;
   my $guid;
 
+  my $first = 'Günter';
+  my $last  = 'Møppmann';
+
   do_with_fresh_ledger(
     {
       c => { template => 'dummy' },
 
       ledger => {
         contact => class('Contact')->new({
-          first_name      => 'Günter',
-          last_name       => 'Møppmann',
+          first_name      => $first,
+          last_name       => $last,
           phone_book      => { home => 1234567890 },
           email_addresses => [ 'gm@example.com' ],
           address_lines   => [ '123 E. ﾻ Straße.' ],
@@ -481,7 +484,8 @@ test 'non-ASCII content in email' => sub {
     my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
     is($due, '$10.00', "it shows the right total due");
 
-    diag $text;
+    like($text, qr/\Q$first/, "body contains first name correctly");
+    like($text, qr/\Q$last/,  "body contains last name correctly");
   }
 
   pass("everything ran to completion without dying");
