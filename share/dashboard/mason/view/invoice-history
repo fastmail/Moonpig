@@ -9,6 +9,10 @@ $ledger_id
 
 <& /widget/last-response, label => 'HTTP Response for Invoices Collection' &>
 
+<p>
+  <a href='./invoice-events'>View invoice/credit event history</a>
+</p>
+
 % for my $invoice (@{ $invoices->{items} }) {
 %   $invoice = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice->{guid}");
   <& /widget/invoice, invoice => $invoice &>
