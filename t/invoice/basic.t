@@ -3,6 +3,7 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Fatal;
 
+use utf8;
 use t::lib::TestEnv;
 
 use Moonpig::Util qw(class dollars event years);
@@ -418,6 +419,72 @@ test 'quote-related' => sub {
       is(@invoices, 1, "we have one payable invoice");
     },
   );
+};
+
+test 'non-ASCII content in email' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger(
+    {
+      c => { template => 'dummy' },
+
+      ledger => {
+        contact => class('Contact')->new({
+          first_name      => 'Günter',
+          last_name       => 'Møppmann',
+          phone_book      => { home => 1234567890 },
+          email_addresses => [ 'gm@example.com' ],
+          address_lines   => [ '123 E. ﾻ Straße.' ],
+          city            => 'Townville',
+          country         => 'USÃ',
+        }),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+
+      my $invoice = $ledger->current_invoice;
+
+      $invoice->add_charge(
+        class(qw(InvoiceCharge))->new({
+          description => 'test charge (setup)',
+          amount      => dollars(10),
+          consumer    => $ledger->get_component('c'),
+        }),
+       );
+
+      $self->heartbeat_and_send_mail($ledger);
+
+      $guid = $ledger->guid;
+    }
+  );
+
+  my ($delivery) = $self->assert_n_deliveries(1, "the invoice");
+  my $email = $delivery->{email};
+  like(
+    $email->header('subject'),
+    qr{payment is due}i,
+    "the email we went is an invoice email",
+   );
+
+  {
+    my $msg_id = $email->header('Message-ID') =~ s/\A<|>\z//gr;
+    my ($local, $domain) = split /\@/, $msg_id;
+    my ($ident) = split /\./, $local;
+    is($ident, $guid, "the message id refers to the ledger");
+  }
+
+  {
+    my ($part) = grep { $_->content_type =~ m{text/plain} } $email->subparts;
+    my $text = $part->body_str;
+    my ($due) = $text =~ /^TOTAL DUE:\s*(\S+)/m;
+    is($due, '$10.00', "it shows the right total due");
+
+    diag $text;
+  }
+
+  pass("everything ran to completion without dying");
 };
 
 run_me;
