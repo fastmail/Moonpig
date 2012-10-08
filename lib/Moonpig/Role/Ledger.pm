@@ -7,6 +7,7 @@ use Carp qw(confess croak);
 use Moose::Role;
 
 use Email::MessageID;
+use Sort::ByExample ();
 use Sys::Hostname::Long;
 
 use Stick::Publisher 0.307;
@@ -889,7 +890,7 @@ publish invoice_history_events => {
     if ($invoice->is_paid) {
       push @events, {
         event => 'invoice.paid',
-        date  => $invoice->closed_at,
+        date  => $invoice->paid_at,
         guid  => $invoice->guid,
         ident => $invoice->ident,
       };
@@ -909,8 +910,11 @@ publish invoice_history_events => {
   # the cmp fallback gets credits before invoice payment, which will make
   # better display sense, even if the two things are within 1 second and 1
   # transaction -- rjbs, 2012-10-08
-  @events = sort { $a->{date} <=> $b->{date} || $a->{event} cmp $b->{event} }
-            @events;
+  state $cmp = Sort::ByExample->cmp([
+    qw(invoice.invoiced credit.paid invoice.paid)
+  ]);
+  @events = sort { $a->{date} <=> $b->{date}
+                || $cmp->($a->{event}, $b->{event}) } @events;
 
   return {
     items => \@events
