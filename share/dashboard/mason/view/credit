@@ -14,7 +14,7 @@ $m->redirect('/') unless $credit;
   results  => {
     'credit-dissolved' => "Credit dissolved!",
   },
-  selector => $invoice->{guid},
+  selector => $credit->{guid},
 &>
 
 <&| /page/full, title => "Moonpig Credit $credit_guid" &>
