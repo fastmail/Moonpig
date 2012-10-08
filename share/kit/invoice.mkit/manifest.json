@@ -1,11 +1,5 @@
 {
   "kit_reader": "=Moonpig::EMKit::KitReader::SWAK",
-  "renderer"  : [
-    "Text::Template",
-    {
-      "template_args": { "DELIMITERS": [ "{{", "}}" ] }
-    }
-  ],
   "assembler" : [
     "Markdown",
     {
