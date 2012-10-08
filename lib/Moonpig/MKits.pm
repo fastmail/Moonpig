@@ -6,7 +6,7 @@ use Carp ();
 use Email::Date::Format qw(email_gmdate);
 use File::ShareDir;
 use File::Spec;
-use Email::MIME::Kit 2;
+use Moonpig::Email::MIME::Kit;
 
 use namespace::autoclean;
 
@@ -64,7 +64,7 @@ sub _kit_for {
   for my $root (@path) {
     my $kit = File::Spec->catdir($root, $kitname);
     next unless -d $kit;
-    return Email::MIME::Kit->new({ source => $kit });
+    return Moonpig::Email::MIME::Kit->new({ source => $kit });
   }
 
   Carp::confess "unknown mkit <$kitname>";
