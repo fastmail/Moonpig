@@ -911,7 +911,9 @@ publish invoice_history_events => {
   @events = sort { $a->{date} <=> $b->{date} || $a->{event} cmp $b->{event} }
             @events;
 
-  return \@events;
+  return {
+    items => \@events
+  };
 };
 
 PARTIAL_PACK {

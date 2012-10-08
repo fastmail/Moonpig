@@ -1,0 +1,31 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_id
+</%args>
+% my $event_collection = $m->mp_request(
+%   GET => $m->mp_ledger_path($ledger_id) . "/invoice-history-events"
+% );
+% $m->redirect('/') unless $event_collection;
+<&| /page/full, title => "Moonpig Ledger Invoice Events" &>
+
+% for my $event (@{ $event_collection->{items} }) {
+  <div>
+    <strong><% $event->{date} |h %></strong>:
+    <% $event->{event} |h %>;
+%   if ($event->{event} =~ /^invoice/) {
+    Invoice <a href='./invoice/<% $event->{guid} %>'><% $event->{ident} %></a>
+%     if ($event->{event} eq 'invoice.invoiced') {
+    for <% mc($event->{amount}) %>
+%     }
+%   } elsif ($event->{event} =~ /^credit/) {
+    Credit <a href='./credit/<% $event->{guid} %>'><% $event->{guid} %></a>
+    for <% mc($event->{amount}) %>
+%   } else {
+      !!! unknown event type !!!
+%   }
+% }
+
+<& /widget/last-response, label => 'HTTP Response for Invoices History Events' &>
+</&>
+</%method>
