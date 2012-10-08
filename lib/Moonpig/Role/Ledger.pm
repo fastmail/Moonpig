@@ -869,6 +869,51 @@ publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
       grep $_->is_active, $self->consumer_collection->all;
 };
 
+publish invoice_history_events => {
+  -path => 'invoice-history-events',
+} => sub {
+  my ($self) = @_;
+
+  my @events;
+  for my $invoice (
+    grep {; $_->is_closed && ! $_->is_abandoned } $self->invoices
+  ) {
+    push @events, {
+      event  => 'invoice.invoiced',
+      date   => $invoice->closed_at,
+      guid   => $invoice->guid,
+      ident  => $invoice->ident,
+      amount => $invoice->total_amount,
+    };
+
+    if ($invoice->is_paid) {
+      push @events, {
+        event => 'invoice.paid',
+        date  => $invoice->closed_at,
+        guid  => $invoice->guid,
+        ident => $invoice->ident,
+      };
+    }
+  }
+
+  for my $credit ($self->credits) {
+    push @events, {
+      event  => 'credit.paid',
+      date   => $credit->created_at,
+      guid   => $credit->guid,
+      amount => $credit->amount,
+    };
+  }
+
+  # the cmp fallback gets credits before invoice payment, which will make
+  # better display sense, even if the two things are within 1 second and 1
+  # transaction -- rjbs, 2012-10-08
+  @events = sort { $a->{date} <=> $b->{date} || $a->{event} cmp $b->{event} }
+            @events;
+
+  return \@events;
+};
+
 PARTIAL_PACK {
   my ($self) = @_;
 
