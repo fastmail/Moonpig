@@ -7,7 +7,7 @@ $invoice_guid
 <%perl>
 my $credit = $m->mp_request(
   POST => sprintf(
-    '/ledger/by-guid/%s/invoices/guid/%s/abandon-without-replacement',
+    '/ledger/by-guid/%s/invoices/guid/%s/cancel',
     $ledger_guid,
     $invoice_guid,
   ),

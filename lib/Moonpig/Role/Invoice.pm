@@ -156,20 +156,15 @@ sub add_line_item { $_[0]->_add_item($_[1]) }
 
 sub abandon_without_replacement { $_[0]->abandon_with_replacement(undef) }
 
-publish _abandon_without_replacement => {
-  -http_method => 'post',
-  -path        => 'abandon-without-replacement',
-} => sub {
-  $_[0]->abandon_without_replacement;
-};
-
 # use this when we're sure we'll never be paid for this invoice
 # abandon all charges and then the invoice itself.
-sub cancel {
+publish cancel => {
+  -http_method => 'post',
+} => sub {
   my ($self) = @_;
   $_->mark_abandoned for $self->all_charges;
   $self->abandon_without_replacement();
-}
+};
 
 implicit_event_handlers {
   return {
