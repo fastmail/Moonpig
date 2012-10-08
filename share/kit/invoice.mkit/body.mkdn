@@ -1,5 +1,13 @@
 REQUEST ID: ...
 
+INVOICE FOR:
+
+{{
+  my $contact = $ledger->contact;
+  $OUT .= $contact->first_name . ' ' . $contact->last_name . "\n";
+  "";
+}}
+
 TOTAL DUE:  {{
   require List::Util;
   my $due = $ledger->amount_due;
