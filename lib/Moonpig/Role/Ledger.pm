@@ -902,6 +902,7 @@ publish invoice_history_events => {
       date   => $credit->created_at,
       guid   => $credit->guid,
       amount => $credit->amount,
+      credit_type => $credit->type,
     };
   }
 
