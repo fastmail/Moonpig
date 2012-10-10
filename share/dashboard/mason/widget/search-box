@@ -10,6 +10,7 @@ my $i = 0;
 $label
 $action => '#'
 $id     => undef
+$extra  => {}
 </%args>
 % my $search_id = $id || ("search-" . $i++);
 % my $field_id  = "$search_id.search";
@@ -17,6 +18,9 @@ $id     => undef
 <form id='<% $search_id |h %>' action="<% $action |h %>" method="<% $method |h %>">
   <label for='<% $field_id |h %>'><% $label |h %></label>
   <input id='<%  $field_id |h %>' type='text' name='search' />
+% for my $key (%$extra) {
+  <input type='hidden' name='<% $key |h %>' value='<% $extra->{$key} |h %>' />
+% }
   <input type='submit' class="btn" value='Go!' />
 </form>
 </%method>
