@@ -525,6 +525,7 @@ sub charge_current_journal {
   $args->{consumer}   = $self;
 
   $self->apply_discounts_to_charge_args($args); # Could modify amount, desc., etc.
+
   return $self->ledger->current_journal->charge($args);
 }
 

@@ -465,6 +465,7 @@ sub _maybe_send_psync_quote {
     # are "real" charges, rather than on a quote, so we're counting them as
     # gonna-pay and it seems like we're all balanced out. -- rjbs, 2012-08-30
     return unless $shortfall;
+    return if $self->_no_reinvoicing_by_psync;
 
     $self->_abandon_unpaid_psync_charges;
     $self->reinvoice_initial_charges;
@@ -486,6 +487,8 @@ sub _maybe_send_psync_quote {
 
   $self->ledger->_send_psync_email($self, $notice_info);
 }
+
+sub _no_reinvoicing_by_psync { 0 }
 
 sub _abandon_unpaid_psync_charges {
   my ($self) = @_;
