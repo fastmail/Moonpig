@@ -1,6 +1,7 @@
 /ledger/:ledger_id                         => /view/ledger
 
 /ledger/:ledger_id/contact                 => /view/contact
+/ledger/:ledger_id/journal-activity        => /view/journal
 /ledger/:ledger_id/invoices                => /view/invoice-history
 /ledger/:ledger_id/invoice-events          => /view/invoice-events
 /ledger/:ledger_id/invoice/:invoice_guid   => /view/invoice

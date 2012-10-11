@@ -92,7 +92,7 @@ publish _recent_activity => {
         date   => $_->date,
         amount => $_->amount,
         description => $_->description,
-      } } @items
+      } } reverse @items
     ],
   };
 };
