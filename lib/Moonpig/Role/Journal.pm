@@ -13,7 +13,14 @@ with(
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::HandlesEvents',
   'Moonpig::Role::HasGuid',
+  'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
+
+use Stick::Publisher 0.307;
+use Stick::Publisher::Publish 0.307;
 
 use namespace::autoclean;
 
@@ -68,6 +75,29 @@ sub charge {
 
   return $charge;
 }
+
+publish _recent_activity => {
+  -path => 'recent-activity',
+  -http_method => 'get',
+} => sub {
+  my ($self) = @_;
+  my @items = $self->all_items;
+  # fencepost? maybe.  just want to get something working atm -- rjbs,
+  # 2012-10-10
+  splice @items, 0, (@items - 200) if @items > 200;
+
+  return {
+    items => [
+      map {; {
+        date   => $_->date,
+        amount => $_->amount,
+        description => $_->description,
+      } } @items
+    ],
+  };
+};
+
+sub _class_subroute { return }
 
 sub charge_factory {
   class('JournalCharge');

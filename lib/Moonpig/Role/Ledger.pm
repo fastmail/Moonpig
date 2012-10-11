@@ -69,6 +69,9 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'journal',
     is => 'ro',
+    collection_roles => [
+      'Stick::Role::Collection::Sortable',
+    ],
   },
   'Stick::Role::HasCollection' => {
     item => 'job',
