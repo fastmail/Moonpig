@@ -135,6 +135,7 @@ $ledger
 
   <div><b>Refundable funds: <% mc($ledger->{amount_available}) %></b></div>
   <div><b>Amount due: <% mc($ledger->{amount_due}) %></b></div>
+  <div><a href='/ledger/<% $ledger->{guid} %>/journal-activity'>View Journal Activity</a></div>
 </div>
 </div>
 </%method>
