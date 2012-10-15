@@ -146,11 +146,16 @@ sub _invoice_xid_summary {
     next if $seen_guid{ $charge->owner_guid };
     my $xid = $self->consumer_collection->find_by_guid({
       guid => $charge->owner_guid,
-    });
+    })->xid;
+
+    my $active = $self->active_consumer_for_xid($xid);
+
     $xid_info{ $xid } = {
-      expiration_date => scalar try {
-        $self->active_consumer_for_xid($xid)->replacement_chain_expiration_date
-      },
+      expiration_date => (
+        $active && $active->can('replacement_chain_expiration_date')
+        ? $active->replacement_chain_expiration_date
+        : undef
+      ),
     };
   }
 
