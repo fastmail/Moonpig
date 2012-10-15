@@ -28,7 +28,7 @@ has _dunning_history => (
 
 sub _last_dunning_time {
   return unless $_[0]->has_ever_dunned;
-  $_[0]->_last_dunning->{time};
+  $_[0]->_last_dunning->{dunned_at};
 }
 
 sub _last_dunned_invoice_guids {
@@ -187,7 +187,7 @@ sub _send_invoice_email {
   my $dunning_guid = guid_string;
 
   $self->_record_last_dunning({
-    time          => Moonpig->env->now,
+    dunned_at     => Moonpig->env->now,
     dunning_guid  => $dunning_guid,
     invoice_guids => [ map {; $_->guid } @invoices ],
     xid_info      => $xid_info,

@@ -6,7 +6,7 @@ use Test::Fatal;
 use utf8;
 use t::lib::TestEnv;
 
-use Moonpig::Util qw(class dollars event years);
+use Moonpig::Util qw(class days dollars event years);
 
 with(
   't::lib::Factory::EventHandler',
@@ -417,6 +417,43 @@ test 'quote-related' => sub {
 
       my @invoices = $ledger->payable_invoices;
       is(@invoices, 1, "we have one payable invoice");
+    },
+  );
+};
+
+test 'record all dunning attempts' => sub {
+  my ($self) = @_;
+
+  do_with_fresh_ledger(
+    {
+      c => { template => 'yearly', grace_period_duration => days (14) },
+    },
+    sub {
+      my ($ledger) = @_;
+      $self->heartbeat_and_send_mail($ledger);
+      Moonpig->env->elapse_time( days(9) );
+      $self->heartbeat_and_send_mail($ledger);
+
+      my @dunnings = @{ $ledger->_dunning_history };
+
+      $self->assert_n_deliveries(2, "we dunned twice");
+      is(@dunnings, 2, "we stored two dunning attempts");
+      isnt(
+        $dunnings[0]{xid_info}{'test:consumer:c'}{expiration_date},
+        undef,
+        "we have an exp. date for the test consumer in the dunning",
+      );
+      is(
+        $dunnings[0]{xid_info}{'test:consumer:c'}{expiration_date},
+        $dunnings[1]{xid_info}{'test:consumer:c'}{expiration_date},
+        "...and it's the same for both attempts",
+      );
+
+      isnt(
+        $dunnings[0]{dunned_at},
+        $dunnings[1]{dunned_at},
+        "dunning times are distinct",
+      );
     },
   );
 };
