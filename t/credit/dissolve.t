@@ -158,8 +158,16 @@ test 'dissolve a credit that is earmarked but not fully applied' => sub {
           is(@payable, 1, "one payable invoice after dissolution");
         }
 
-        my @invoices = $ledger->last_dunned_invoices;
-        is(@invoices, 1, "dissolving the credit caused 1 invoice to be dunned");
+        my @invoice_guids = $ledger->_last_dunned_invoice_guids;
+        is(
+          @invoice_guids,
+          1,
+          "dissolving the credit caused 1 invoice to be dunned",
+        );
+
+        my @invoices = map {;
+          $ledger->invoice_collection->find_by_guid({ guid => $_ });
+        } @invoice_guids;
 
         my $total = sumof { $_->amount } map {; $_->all_charges } @invoices;
         is($total, dollars(100), 'the invoice charges only total $100...');

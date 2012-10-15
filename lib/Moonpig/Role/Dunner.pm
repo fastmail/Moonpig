@@ -8,30 +8,26 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
+use Try::Tiny;
 
 use namespace::autoclean;
 
 has _last_dunning => (
-  is  => 'rw',
+  is  => 'ro',
   isa => 'HashRef',
   init_arg => undef,
   traits => [ 'Hash' ],
   predicate => 'has_ever_dunned',
+  writer    => '_record_last_dunning',
   handles   => {
     last_dunning_time    => [ get => 'time' ],
   },
 );
 
-sub last_dunned_invoices {
+sub _last_dunned_invoice_guids {
   my ($self) = @_;
   return unless $self->has_ever_dunned;
-  return @{ $self->_last_dunning->{invoices} };
-}
-
-sub last_dunned_invoice {
-  my ($self) = @_;
-  return unless $self->has_ever_dunned;
-  return $self->_last_dunning->{invoices}->[0];
+  return @{ $self->_last_dunning->{invoice_guids} };
 }
 
 has custom_dunning_frequency => (
@@ -70,11 +66,11 @@ sub _should_dunn_again {
   return 1 if $since > $self->dunning_frequency;
 
   # (b) something changed!
-  return 1 if $self->_last_dunning->{overearmarked} != $overearmarked;
+  return 1 if $self->_last_dunning->{amount_overearmarked} != $overearmarked;
 
-  my @last_invoices = $self->last_dunned_invoices;
-  return 1 unless @$invoices &&  @last_invoices == @$invoices;
-  return 1 if $invoices->[0]->guid ne $last_invoices[0]->guid;
+  my @last_invoice_guids = $self->_last_dunned_invoice_guids;
+  return 1 unless @$invoices &&  @last_invoice_guids == @$invoices;
+  return 1 if $invoices->[0]->guid ne $last_invoice_guids[0];
 
   # Nope, nothing new.
   return;
@@ -132,6 +128,28 @@ sub _charge_for_autopay {
   return;
 }
 
+sub _invoice_xid_summary {
+  my ($self, $invoices) = @_;
+  return unless @$invoices;
+
+  my %xid_info;
+  my %seen_guid;
+
+  for my $charge (map {; $_->all_charges } @$invoices) {
+    next if $seen_guid{ $charge->owner_guid };
+    my $xid = $self->consumer_collection->find_by_guid({
+      guid => $charge->owner_guid,
+    });
+    $xid_info{ $xid } = {
+      expiration_date => scalar try {
+        $self->active_consumer_for_xid($xid)->replacement_chain_expiration_date
+      },
+    };
+  }
+
+  return \%xid_info;
+}
+
 sub _send_invoice_email {
   my ($self, $invoices_ref) = @_;
 
@@ -152,10 +170,14 @@ sub _send_invoice_email {
     $self->ident,
   ]);
 
-  $self->_last_dunning({
+  my $xid_info = $self->_invoice_xid_summary(\@invoices);
+
+  $self->_record_last_dunning({
     time     => Moonpig->env->now,
-    invoices => \@invoices,
-    overearmarked => $self->amount_overearmarked,
+    invoice_guids => [ map {; $_->guid } @invoices ],
+    xid_info      => $xid_info,
+    amount_overearmarked => $self->amount_overearmarked,
+    amount_due           => $self->amount_due,
   });
 
   $self->handle_event(event('send-mkit', {
@@ -168,6 +190,7 @@ sub _send_invoice_email {
       to_addresses => [ $self->contact->email_addresses ],
       invoices     => \@invoices,
       ledger       => $self,
+      xid_info     => $xid_info,
     },
   }));
 }
