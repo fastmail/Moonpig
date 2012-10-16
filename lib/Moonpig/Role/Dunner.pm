@@ -2,36 +2,39 @@ package Moonpig::Role::Dunner;
 # ABSTRACT: something that performs dunning of invoices
 use Moose::Role;
 
+use Data::GUID qw(guid_string);
 use List::AllUtils 'any';
 use Moonpig;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
+use Try::Tiny;
 
 use namespace::autoclean;
 
-has _last_dunning => (
-  is  => 'rw',
-  isa => 'HashRef',
+has _dunning_history => (
+  is  => 'ro',
+  isa => 'ArrayRef[HashRef]',
   init_arg => undef,
-  traits => [ 'Hash' ],
-  predicate => 'has_ever_dunned',
-  handles   => {
-    last_dunning_time    => [ get => 'time' ],
+  traits   => [ 'Array' ],
+  default  => sub {  []  },
+  handles  => {
+    _last_dunning        => [ get => -1 ],
+    _record_last_dunning => 'push',
+    has_ever_dunned      => 'count',
   },
 );
 
-sub last_dunned_invoices {
-  my ($self) = @_;
-  return unless $self->has_ever_dunned;
-  return @{ $self->_last_dunning->{invoices} };
+sub _last_dunning_time {
+  return unless $_[0]->has_ever_dunned;
+  $_[0]->_last_dunning->{dunned_at};
 }
 
-sub last_dunned_invoice {
+sub _last_dunned_invoice_guids {
   my ($self) = @_;
   return unless $self->has_ever_dunned;
-  return $self->_last_dunning->{invoices}->[0];
+  return @{ $self->_last_dunning->{invoice_guids} };
 }
 
 has custom_dunning_frequency => (
@@ -64,17 +67,17 @@ sub _should_dunn_again {
   # Now things get more complicated.  We dunned once.  Do we want to dunn
   # again?  Only if (a) it's been a while or (b) the situation has changed.
   # -- rjbs, 2012-03-26
-  my $since = Moonpig->env->now - $self->last_dunning_time;
+  my $since = Moonpig->env->now - $self->_last_dunning_time;
 
   # (a) it's been a while!
   return 1 if $since > $self->dunning_frequency;
 
   # (b) something changed!
-  return 1 if $self->_last_dunning->{overearmarked} != $overearmarked;
+  return 1 if $self->_last_dunning->{amount_overearmarked} != $overearmarked;
 
-  my @last_invoices = $self->last_dunned_invoices;
-  return 1 unless @$invoices &&  @last_invoices == @$invoices;
-  return 1 if $invoices->[0]->guid ne $last_invoices[0]->guid;
+  my @last_invoice_guids = $self->_last_dunned_invoice_guids;
+  return 1 unless @$invoices &&  @last_invoice_guids == @$invoices;
+  return 1 if $invoices->[0]->guid ne $last_invoice_guids[0];
 
   # Nope, nothing new.
   return;
@@ -132,6 +135,33 @@ sub _charge_for_autopay {
   return;
 }
 
+sub _invoice_xid_summary {
+  my ($self, $invoices) = @_;
+  return unless @$invoices;
+
+  my %xid_info;
+  my %seen_guid;
+
+  for my $charge (map {; $_->all_charges } @$invoices) {
+    next if $seen_guid{ $charge->owner_guid };
+    my $xid = $self->consumer_collection->find_by_guid({
+      guid => $charge->owner_guid,
+    })->xid;
+
+    my $active = $self->active_consumer_for_xid($xid);
+
+    $xid_info{ $xid } = {
+      expiration_date => (
+        $active && $active->can('replacement_chain_expiration_date')
+        ? $active->replacement_chain_expiration_date
+        : undef
+      ),
+    };
+  }
+
+  return \%xid_info;
+}
+
 sub _send_invoice_email {
   my ($self, $invoices_ref) = @_;
 
@@ -152,10 +182,17 @@ sub _send_invoice_email {
     $self->ident,
   ]);
 
-  $self->_last_dunning({
-    time     => Moonpig->env->now,
-    invoices => \@invoices,
-    overearmarked => $self->amount_overearmarked,
+  my $xid_info = $self->_invoice_xid_summary(\@invoices);
+
+  my $dunning_guid = guid_string;
+
+  $self->_record_last_dunning({
+    dunned_at     => Moonpig->env->now,
+    dunning_guid  => $dunning_guid,
+    invoice_guids => [ map {; $_->guid } @invoices ],
+    xid_info      => $xid_info,
+    amount_overearmarked => $self->amount_overearmarked,
+    amount_due           => $self->amount_due,
   });
 
   $self->handle_event(event('send-mkit', {
@@ -166,8 +203,11 @@ sub _send_invoice_email {
       # This should get names with addresses, unlike the contact-humans
       # handler, which wants envelope recipients.
       to_addresses => [ $self->contact->email_addresses ],
+
+      dunning_guid => $dunning_guid,
       invoices     => \@invoices,
       ledger       => $self,
+      xid_info     => $xid_info,
     },
   }));
 }

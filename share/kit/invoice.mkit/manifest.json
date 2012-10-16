@@ -20,8 +20,10 @@
         "required": {
           "subject"     : "//str",
           "ledger"      : "/perl/obj",
+          "dunning_guid": "//str",
           "invoices"    : { "type": "//arr", "contents": "/perl/obj" },
-          "to_addresses": { "type": "//arr", "contents": "//str" }
+          "to_addresses": { "type": "//arr", "contents": "//str" },
+          "xid_info"    : { "type": "//map", "values": "//any" }
         }
       }
     }
