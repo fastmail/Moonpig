@@ -910,11 +910,21 @@ publish invoice_history_events => {
     };
   }
 
+  # XXX: A bit gross: -- rjbs, 2012-10-16
+  for my $dunning (@{ $self->_dunning_history }) {
+    push @events, {
+      event  => 'dunning',
+      date   => $dunning->{dunned_at},
+      guid   => $dunning->{dunning_guid},
+      amount => $dunning->{amount_due},
+    };
+  }
+
   # the cmp fallback gets credits before invoice payment, which will make
   # better display sense, even if the two things are within 1 second and 1
   # transaction -- rjbs, 2012-10-08
   state $cmp = Sort::ByExample->cmp([
-    qw(invoice.invoiced credit.paid invoice.paid)
+    qw(invoice.invoiced dunning credit.paid invoice.paid)
   ]);
   @events = sort { $a->{date} <=> $b->{date}
                 || $cmp->($a->{event}, $b->{event}) } @events;

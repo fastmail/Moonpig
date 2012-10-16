@@ -46,7 +46,7 @@ has custom_dunning_frequency => (
   clearer   => 'clear_custom_dunning_frequency',
 );
 
-publish _dunning_history => { -path => 'dunning-history' } => sub {
+publish _published_dunning_history => { -path => 'dunning-history' } => sub {
   my ($self) = @_;
   my $history = $self->_dunning_history;
   return {
