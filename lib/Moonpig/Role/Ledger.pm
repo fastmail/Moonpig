@@ -917,6 +917,8 @@ publish invoice_history_events => {
       date   => $dunning->{dunned_at},
       guid   => $dunning->{dunning_guid},
       amount => $dunning->{amount_due},
+      xid_info => $dunning->{xid_info},
+      invoice_guids => $dunning->{invoice_guids},
     };
   }
 

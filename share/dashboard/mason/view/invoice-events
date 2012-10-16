@@ -9,25 +9,42 @@ $ledger_id
 % $m->redirect('/') unless $event_collection;
 <&| /page/full, title => "Moonpig Ledger Invoice Events" &>
 
+<table>
 % for my $event (@{ $event_collection->{items} }) {
-  <div>
-    <strong><% $event->{date} |h %></strong>:
-    <% $event->{event} |h %>;
+  <tr>
+    <th><% $event->{date} |h %></th>
+    <td>
+      <strong><% $event->{event} |h %></strong>
 %   if ($event->{event} =~ /^invoice/) {
-    Invoice <a href='./invoice/<% $event->{guid} %>'><% $event->{ident} %></a>
+      Invoice <a href='./invoice/<% $event->{guid} %>'><% $event->{ident} %></a>
 %     if ($event->{event} eq 'invoice.invoiced') {
-    for <% mc($event->{amount}) %>
+      for <% mc($event->{amount}) %>
 %     }
 %   } elsif ($event->{event} eq 'credit.paid') {
-    <% $event->{credit_type} |h %> Credit
-    <a href='./credit/<% $event->{guid} %>'><% $event->{guid} %></a>
-    for <% mc($event->{amount}) %>
+      <% $event->{credit_type} |h %> Credit
+      <a href='./credit/<% $event->{guid} %>'><% $event->{guid} %></a>
+      for <% mc($event->{amount}) %>
 %   } elsif ($event->{event} eq 'dunning') {
-    Sent email requesting payment of <% mc($event->{amount}) %>.
+      Sent email requesting payment of <% mc($event->{amount}) %>. For invoices:
+      <ul>
+%     for my $invoice_guid (@{ $event->{invoice_guids} }) {
+        <li><a href='./invoice/<% $invoice_guid |h %>'><% $invoice_guid |h %></a></li>
+%     }
+      </ul>
+      Listed expiration dates:
+      <table>
+%    for my $xid (sort keys %{ $event->{xid_info} }) {
+        <tr><th><% $xid |h %></th>
+            <td><% $event->{xid_info}{$xid}{expiration_date} |h %></td></tr>
+%    }
+      </table>
 %   } else {
       !!! unknown event type !!!
 %   }
+    </td>
+  </tr>
 % }
+</table>
 
 <& /widget/last-response, label => 'HTTP Response for Invoices History Events' &>
 </&>
