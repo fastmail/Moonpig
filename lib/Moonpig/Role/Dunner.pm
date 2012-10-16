@@ -9,6 +9,8 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
+use Stick::Publisher 0.307;
+use Stick::Publisher::Publish 0.307;
 use Try::Tiny;
 
 use namespace::autoclean;
@@ -43,6 +45,14 @@ has custom_dunning_frequency => (
   predicate => 'has_custom_dunning_frequency',
   clearer   => 'clear_custom_dunning_frequency',
 );
+
+publish _dunning_history => { -path => 'dunning-history' } => sub {
+  my ($self) = @_;
+  my $history = $self->_dunning_history;
+  return {
+    items => $history,
+  };
+};
 
 sub dunning_frequency {
   my ($self) = @_;
