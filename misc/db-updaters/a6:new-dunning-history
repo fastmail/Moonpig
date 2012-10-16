@@ -1,0 +1,38 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Pobox::Moonpig::Env;
+use Moonpig::Types qw(GUID);
+use Data::GUID qw(guid_string);
+
+$|=1;
+
+# dunning history *was*:
+# { invoices => [...], time => ..., overearmarked => ... }
+#
+# dunning history *is now*
+# [ { dunned_at => ..., dunning_guid => ..., invoice_guids => [ ... ],
+#   xid_info => {...}, amount_overearmarked => ..., amount_due => ... }, ... ]
+
+Moonpig->env->storage->do_with_each_ledger(
+  sub {
+    my ($ledger) = @_;
+    my ($a, $b) = @{${^Progress}};
+
+    print "ledger " . $ledger->ident . "\n";
+
+    if (my $ld = $ledger->{_last_dunning}) {
+      $ledger->{_dunning_history} = [ {
+        dunning_at    => $ld->{time},
+        dunning_guid  => guid_string,
+        invoice_guids => [ map {; $_->guid } @{ $ld->{invoices} } ],
+        xid_info      => {},
+        amount_overearmarked => $ld->{overearmarked},
+      } ];
+    }
+
+    printf STDERR "%d/%d\n", $a, $b;
+  }
+);
+
