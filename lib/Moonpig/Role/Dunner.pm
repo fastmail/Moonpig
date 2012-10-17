@@ -18,6 +18,7 @@ use namespace::autoclean;
 has _dunning_history => (
   is  => 'ro',
   isa => 'ArrayRef[HashRef]',
+  lazy     => 1,
   init_arg => undef,
   traits   => [ 'Array' ],
   default  => sub {  []  },
