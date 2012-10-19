@@ -332,11 +332,15 @@ before expire => sub {
   Moonpig::X->throw("can't expire an inactive consumer")
     unless $self->is_active;
 
-  $self->handle_event(
-    $self->has_replacement
-    ? event('fail-over')
-    : event('terminate')
-  );
+  my $event_name = $self->has_replacement ? 'fail-over' : 'terminate';
+
+  $Logger->log([
+    'sending %s event to consumer %s',
+    $event_name,
+    $self->guid,
+  ]);
+
+  $self->handle_event( event($event_name) );
 
   $self->abandon_unpaid_funding_charges;
 };

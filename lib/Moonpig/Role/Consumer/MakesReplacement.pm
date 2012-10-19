@@ -1,6 +1,7 @@
 package Moonpig::Role::Consumer::MakesReplacement;
 # ABSTRACT: a consumer that makes a replacement for itself after a while
 use Moose::Role;
+use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(event);
 
@@ -32,6 +33,10 @@ sub maybe_make_replacement {
 
   return unless $self->is_active;
   if ($self->needs_replacement) {
+    $Logger->log([
+      'creating replacement for consumer %s',
+      $self->guid,
+    ]);
     $self->handle_event( event('consumer-create-replacement') );
   }
 }

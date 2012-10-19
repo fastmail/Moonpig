@@ -209,6 +209,10 @@ around charge_one_day => sub {
   }
 
   unless ($self->can_make_payment_on( $self->next_charge_date )) {
+    $Logger->log([
+      'expiring consumer %s due to insufficient funds',
+      $self->guid,
+    ]);
     $self->expire;
     return;
   }
