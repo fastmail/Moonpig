@@ -6,7 +6,7 @@ with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
-use t::lib::Logger '$Logger';
+use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class datetime sum sumof to_dollars);
 use Test::More;
 
