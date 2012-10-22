@@ -7,5 +7,10 @@ Due to those changes, your account price has decreased.
 Your account was due to expire after {{ $old_expiration_date->strftime($date_format) }}.  Because of the lower
 rate, it will now expire on {{ $new_expiration_date->strftime($date_format) }} instead.
 
+If you did not recently change anything on your account, you may be 
+receiving a credit due to a recent policy change on addresses. Please
+see http://blog.pobox.com/2012/10/get-more-from-pobox-with-personal.html
+for more information.
+
 This message is for your information only. You need take no further
 action.
