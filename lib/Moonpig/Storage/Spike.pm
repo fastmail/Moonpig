@@ -543,7 +543,7 @@ sub __job_callbacks {
         );
       });
     },
-    done_callback => sub {
+    mark_complete_callback => sub {
       my ($self) = @_;
       $spike->_conn->run(sub {
         my $dbh = $_;

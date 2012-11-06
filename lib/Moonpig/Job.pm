@@ -12,22 +12,20 @@ use Moose::Util::TypeConstraints qw(enum);
 
 use namespace::autoclean;
 
-my %callback = (
-  log      => [ ],
-  get_logs => [ ],
-  done     => [ qw(mark_complete) ],
-  cancel   => [ ],
+my @callbacks = qw(
+  log
+  get_logs
+  mark_complete
+  cancel
 );
 
-for my $key (keys %callback) {
-  has "$key\_callback" => (
+for my $cb (@callbacks) {
+  has "$cb\_callback" => (
     is  => 'ro',
     isa => 'CodeRef',
     required => 1,
     traits   => [ 'Code' ],
-    handles  => {
-      map {; $_ => 'execute_method' } ($key, @{ $callback{ $key } })
-    },
+    handles  => { $cb => 'execute_method' },
   );
 }
 
