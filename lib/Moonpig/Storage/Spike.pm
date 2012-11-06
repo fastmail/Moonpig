@@ -543,6 +543,15 @@ sub __job_callbacks {
         );
       });
     },
+    delete_callback => sub {
+      my ($self) = @_;
+      Moonpig::X->throw("can't delete an incomplete job")
+        if $self->status eq 'incomplete';
+      $spike->_conn->run(sub {
+        my $dbh = $_;
+        $dbh->do("DELETE FROM jobs WHERE job_id = ?", undef, $job_row->{id});
+      });
+    },
     mark_complete_callback => sub {
       my ($self) = @_;
       $spike->_conn->run(sub {

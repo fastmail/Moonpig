@@ -17,6 +17,7 @@ my @callbacks = qw(
   get_logs
   mark_complete
   cancel
+  delete
 );
 
 for my $cb (@callbacks) {
