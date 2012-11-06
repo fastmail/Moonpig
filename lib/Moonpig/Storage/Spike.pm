@@ -531,12 +531,12 @@ sub __job_callbacks {
       my ($self) = @_;
       $spike->_conn->run(sub {
         my $dbh = $_;
-        $_->do(
+        $dbh->do(
           "INSERT INTO job_logs (job_id, logged_at, message)
           VALUES (?, ?, ?)",
           undef, $job_row->{id}, Moonpig->env->now->epoch, 'job canceled',
         );
-        $_->do(
+        $dbh->do(
           "INSERT INTO job_receipts (job_id, terminated_at, termination_state)
           VALUES (?, ?, ?)",
           undef, $job_row->{id}, Moonpig->env->now->epoch, 'canceled',
@@ -547,12 +547,12 @@ sub __job_callbacks {
       my ($self) = @_;
       $spike->_conn->run(sub {
         my $dbh = $_;
-        $_->do(
+        $dbh->do(
           "INSERT INTO job_logs (job_id, logged_at, message)
           VALUES (?, ?, ?)",
           undef, $job_row->{id}, Moonpig->env->now->epoch, 'job complete',
         );
-        $_->do(
+        $dbh->do(
           "INSERT INTO job_receipts (job_id, terminated_at, termination_state)
           VALUES (?, ?, ?)",
           undef, $job_row->{id}, Moonpig->env->now->epoch, 'complete',
