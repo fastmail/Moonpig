@@ -13,10 +13,10 @@ use Moose::Util::TypeConstraints qw(enum);
 use namespace::autoclean;
 
 my %callback = (
-  log      => [ qw(log)              ],
-  get_logs => [ qw(get_logs)         ],
-  done     => [ qw(mark_complete)    ],
-  cancel   => [ qw(mark_canceled)    ],
+  log      => [ ],
+  get_logs => [ ],
+  done     => [ qw(mark_complete) ],
+  cancel   => [ ],
 );
 
 for my $key (keys %callback) {
