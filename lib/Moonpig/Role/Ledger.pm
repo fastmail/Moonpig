@@ -334,19 +334,27 @@ sub quote_for_extended_service {
 
   my $end_consumer = $active_consumer->replacement_chain_end;
 
-  # If the endpoint has not been paid-for yet, then it's part of the 5 you have
-  # to buy start counting with it.  -- rjbs, 2012-06-20
-  my $start_depth = 0;
-  $start_depth++ unless grep {; $_->is_paid } $end_consumer->relevant_invoices;
+  my $chain_head;
 
-  Moonpig::X->throw("consumer for '$xid' could not build a replacement")
-    unless my $chain_head = $end_consumer->build_replacement();
+  if ($end_consumer->can('_custom_quote_for_extended_service')) {
+    $chain_head = $end_consumer->_custom_quote_for_extended_service(
+      $chain_duration
+    );
+  } else {
+    # If the endpoint has not been paid-for yet, then it's part of the 5 you
+    # have to buy start counting with it.  -- rjbs, 2012-06-20
+    my $start_depth = 0;
+    $start_depth++ if ! grep {; $_->is_paid } $end_consumer->relevant_invoices;
 
-  $chain_duration -= $chain_head->estimated_lifetime;
-  my @chain = $chain_head->_adjust_replacement_chain(
-    $chain_duration,
-    $start_depth + 1, # +1 because we made the $chain_head by hand; count it!
-  );
+    Moonpig::X->throw("consumer for '$xid' could not build a replacement")
+      unless $chain_head = $end_consumer->build_replacement();
+
+    $chain_duration -= $chain_head->estimated_lifetime;
+    my @chain = $chain_head->_adjust_replacement_chain(
+      $chain_duration,
+      $start_depth + 1, # +1 because we made the $chain_head by hand; count it!
+    );
+  }
 
   my $quote = $self->end_quote($chain_head);
   return $quote;
