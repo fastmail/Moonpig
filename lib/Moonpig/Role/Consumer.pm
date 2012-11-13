@@ -47,7 +47,7 @@ implicit_event_handlers {
     },
     'consumer-create-replacement' => {
       create_replacement => Moonpig::Events::Handler::Method->new(
-        method_name => 'build_and_install_replacement',
+        method_name => '_handle_consumer_create_replacement',
       ),
     },
     'fail-over' => {
@@ -246,10 +246,12 @@ has replacement_plan => (
 );
 
 sub build_replacement {
-  my ($self) = @_;
+  my ($self, $replacement_extra_args) = @_;
 
   Moonpig::X->throw("can't build replacement: one exists")
     if $self->has_replacement;
+
+  $replacement_extra_args //= {};
 
   $Logger->log([ "trying to set up replacement for %s", $self->TO_JSON ]);
 
@@ -261,15 +263,23 @@ sub build_replacement {
 
   my $replacement = $self->ledger->add_consumer_from_template(
     $replacement_template,
-    { xid => $self->xid, $self->_replacement_extra_args },
+    {
+      $self->_replacement_extra_args,
+      %$replacement_extra_args,
+      xid => $self->xid,
+    },
   );
 
   return $replacement;
 }
 
+sub _handle_consumer_create_replacement {
+  $_[0]->build_and_install_replacement;
+}
+
 sub build_and_install_replacement {
-  my ($self) = @_;
-  my $replacement = $self->build_replacement();
+  my ($self, $replacement_extra_args) = @_;
+  my $replacement = $self->build_replacement($replacement_extra_args);
   $self->replacement($replacement);
   return $replacement;
 }
