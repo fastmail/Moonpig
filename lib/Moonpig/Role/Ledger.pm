@@ -323,7 +323,7 @@ sub quote_for_new_service {
   # Couldn't that leave the ledger with an open quote?
   my @chain = $self->_add_consumer_chain($kind, $arg, $chain_duration);
   my $quote = $self->end_quote($chain[0]);
-  return wantarray() ? ($quote, @chain) : $quote;
+  return $quote;
 }
 
 sub quote_for_extended_service {
@@ -349,7 +349,7 @@ sub quote_for_extended_service {
   );
 
   my $quote = $self->end_quote($chain_head);
-  return wantarray() ? ($quote, $chain_head, @chain) : $quote;
+  return $quote;
 }
 
 sub start_quote {

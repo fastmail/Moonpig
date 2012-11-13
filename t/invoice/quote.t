@@ -137,7 +137,7 @@ test 'inactive chain' => sub {
 
 sub make_and_check_quote {
   my ($self, $ledger) = @_;
-  my ($q, @chain) = $ledger->quote_for_new_service(
+  my $q = $ledger->quote_for_new_service(
     { class => class('Consumer::ByTime::FixedAmountCharge') },
     { xid => "consumer:test:a",
       replacement_plan => [ get => '/consumer-template/quick' ],
@@ -146,7 +146,8 @@ sub make_and_check_quote {
       cost_period => days(7),
     },
     days(15),  # 7 + 2 + 2 + 2 + 2 = 15
-   );
+  );
+  my @chain = ($q->first_consumer, $q->first_consumer->replacement_chain);
   ok ($q->is_quote, "returned a quote");
   ok ($q->is_closed, "quote is closed");
   my @charges = $q->all_charges;
