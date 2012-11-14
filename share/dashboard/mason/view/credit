@@ -13,6 +13,7 @@ $m->redirect('/') unless $credit;
 <& /widget/results,
   results  => {
     'credit-dissolved' => "Credit dissolved!",
+    'credit-refunded'  => "Credit refunded!",
   },
   selector => $credit->{guid},
 &>
