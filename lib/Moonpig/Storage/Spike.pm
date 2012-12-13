@@ -23,6 +23,8 @@ use Moonpig::Types qw(Factory GUID Ledger);
 use Moonpig::Util qw(class class_roles random_short_ident);
 use MooseX::Types::Moose qw(Str);
 use Scalar::Util qw(blessed);
+use Sereal::Decoder;
+use Sereal::Encoder;
 use SQL::Translator;
 use Storable qw(nfreeze thaw);
 use Try::Tiny;
@@ -746,20 +748,6 @@ sub _execute_saves {
   @{ $self->_ledger_queue } = ();
 }
 
-sub __nfreeze_and_gzip {
-  my ($self, $ledger) = @_;
-
-  my $frozen_ledger = nfreeze($ledger);
-  my $guid = $ledger->guid;
-
-  my $buffer;
-  Carp::confess(
-    "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
-  ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$buffer);
-
-  return $buffer
-}
-
 sub _restore_save_packet {
   my ($self, $packet) = @_;
 
@@ -801,6 +789,45 @@ sub __restore_v1_packet {
   return $ledger;
 }
 
+has _sereal_encoder => (
+  is   => 'ro',
+  lazy => 1,
+  init_arg => undef,
+  default  => sub { Sereal::Encoder->new },
+);
+
+has _sereal_decoder => (
+  is   => 'ro',
+  lazy => 1,
+  init_arg => undef,
+  default  => sub { Sereal::Decoder->new },
+);
+
+sub __restore_v2_packet {
+  my ($self, $packet) = @_;
+
+  my ($ledger_blob, $class_blob) = @$packet{qw(frozen_ledger frozen_classes)};
+
+  require Moonpig::DateTime; # XXX does NOT provide Sereal hooks
+
+  if (substr($ledger_blob, 0, 2) eq "\x1F\x8B") {
+    # The gzip marker!
+    my $buffer;
+    Carp::confess(
+      "error gunzipping ledger: $IO::Uncompress::Gunzip::GunzipError"
+    ) unless IO::Uncompress::Gunzip::gunzip(\$ledger_blob, \$buffer);
+
+    $ledger_blob = $buffer;
+  }
+
+  my $class_map = $self->_sereal_decoder->decode($class_blob);
+  my $ledger    = $self->_sereal_decoder->decode($ledger_blob);
+
+  $self->_perform_reblessing($ledger, $class_map);
+
+  return $ledger;
+}
+
 sub _perform_reblessing {
   my ($self, $ledger, $class_map) = @_;
 
@@ -825,10 +852,18 @@ sub _perform_reblessing {
 sub _save_packet_for {
   my ($self, $ledger) = @_;
 
+  my $guid = $ledger->guid;
+  my $frozen_ledger = $self->_sereal_encoder->encode($ledger);
+
+  my $gz_frozen_ledger;
+  Carp::confess(
+    "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
+  ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$gz_frozen_ledger);
+
   return {
-    version   => 1,
-    ledger    => $self->__nfreeze_and_gzip( $ledger ),
-    classes   => nfreeze( class_roles ),
+    version   => 2,
+    ledger    => $gz_frozen_ledger,
+    classes   => $self->_sereal_encoder->encode( class_roles ),
     entity_id => guid_string(),
   };
 }
