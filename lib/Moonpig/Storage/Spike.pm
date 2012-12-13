@@ -763,11 +763,17 @@ sub __nfreeze_and_gzip {
 sub _restore_save_packet {
   my ($self, $packet) = @_;
 
-  if ($packet->{version} == 1) {
-    return $self->__restore_v1_packet($packet);
-  }
+  my $version = $packet->{version};
 
-  Carp::confess("can't restore save packet of version $packet->{version}");
+  Carp::confess("illegal save packet version: $version")
+    unless defined $version and $version =~ /\A[0-9]+\z/;
+
+  my $method = "__restore_v$version\_packet";
+
+  Carp::confess("can't restore save packet of version $version")
+    unless $self->can($method);
+
+  return $self->$method($packet);
 }
 
 sub __restore_v1_packet {
