@@ -760,6 +760,17 @@ sub __nfreeze_and_gzip {
   return $buffer
 }
 
+sub _save_packet_for {
+  my ($self, $ledger) = @_;
+
+  return {
+    version   => 1,
+    ledger    => $self->__nfreeze_and_gzip( $ledger ),
+    classes   => nfreeze( class_roles ),
+    entity_id => guid_string(),
+  };
+}
+
 sub _store_ledger {
   my ($self, $ledger) = @_;
 
@@ -792,18 +803,22 @@ sub _store_ledger {
 
       $ledger->prepare_to_be_saved;
 
-      my $frozen_ledger  = $self->__nfreeze_and_gzip( $ledger );
-      my $frozen_classes = nfreeze( class_roles );
+      my $save_packet = $self->_save_packet_for($ledger);
 
       my $rv = $dbh->do(
         q{
-          UPDATE ledgers SET frozen_ledger = ?, frozen_classes = ?, entity_id = ?
+          UPDATE ledgers SET
+            frozen_ledger = ?,
+            frozen_classes = ?,
+            entity_id = ?,
+            serialization_version = ?
           WHERE guid = ?
         },
         undef,
-        $frozen_ledger,
-        $frozen_classes,
-        guid_string(),
+        $save_packet->{ledger},
+        $save_packet->{classes},
+        $save_packet->{entity_id},
+        $save_packet->{version},
         $guid,
       );
 
@@ -811,11 +826,11 @@ sub _store_ledger {
         # 0E0: no rows affected; we will have to insert -- rjbs, 2011-11-09
 
         # This shouldn't really ever happen -- if it already has a short_ident,
-        # that means you have saved it once, so the UPDATE above should have been
-        # useful.  Still, there is no need to forbid this right now, so let's
-        # just carry on as usual.  We won't keep trying to insert over and over,
-        # though.  If we have an ident and can't insert, we give up. -- rjbs,
-        # 2012-02-14
+        # that means you have saved it once, so the UPDATE above should have
+        # been useful.  Still, there is no need to forbid this right now, so
+        # let's just carry on as usual.  We won't keep trying to insert over
+        # and over, though.  If we have an ident and can't insert, we give up.
+        # -- rjbs, 2012-02-14
         my $existing_ident = $ledger->short_ident;
 
         my $saved = 0;
@@ -828,20 +843,22 @@ sub _store_ledger {
 
               $ledger->set_short_ident($ident) unless $existing_ident;
 
-              $frozen_ledger = $self->__nfreeze_and_gzip( $ledger );
+              my $save_packet = $self->_save_packet_for($ledger);
 
               $dbh->do(
                 q{
                   INSERT INTO ledgers
-                  (guid, ident, serialization_version, frozen_ledger, frozen_classes, entity_id)
-                  VALUES (?, ?, 1, ?, ?, ?)
+                  (guid, ident, serialization_version, frozen_ledger,
+                  frozen_classes, entity_id)
+                  VALUES (?, ?, ?, ?, ?, ?)
                 },
                 undef,
                 $guid,
                 $ident,
-                $frozen_ledger,
-                $frozen_classes,
-                guid_string(),
+                $save_packet->{version},
+                $save_packet->{ledger},
+                $save_packet->{classes},
+                $save_packet->{entity_id},
               );
 
               return 1;
