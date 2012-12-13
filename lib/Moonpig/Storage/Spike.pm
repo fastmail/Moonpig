@@ -8,8 +8,8 @@ use v5.12.0;
 use MooseX::StrictConstructor;
 
 use Carp qw(carp confess croak);
-use Class::Rebless 0.009;
 use Data::GUID qw(guid_string);
+use Data::Visitor::Callback;
 use Digest::MD5 qw(md5_hex);
 use DBI;
 use DBIx::Connector;
@@ -1097,14 +1097,14 @@ sub _retrieve_ledger_from_db {
     $class_for{ $old_class } = $new_class;
   }
 
-  Class::Rebless->custom($ledger, '...', {
-    editor => sub {
-      my ($obj) = @_;
+  Data::Visitor::Callback->new({
+    object => sub {
+      my (undef, $obj) = @_;
       my $class = blessed $obj;
       return unless exists $class_for{ $class };
       bless $obj, $class_for{ $class };
-    },
-  });
+    }
+  })->visit($ledger);
 
   return $ledger;
 }
