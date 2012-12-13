@@ -760,6 +760,62 @@ sub __nfreeze_and_gzip {
   return $buffer
 }
 
+sub _restore_save_packet {
+  my ($self, $packet) = @_;
+
+  if ($packet->{version} == 1) {
+    return $self->__restore_v1_packet($packet);
+  }
+
+  Carp::confess("can't restore save packet of version $packet->{version}");
+}
+
+sub __restore_v1_packet {
+  my ($self, $packet) = @_;
+
+  my ($ledger_blob, $class_blob) = @$packet{qw(frozen_ledger frozen_classes)};
+
+  require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
+
+  if (substr($ledger_blob, 0, 2) eq "\x1F\x8B") {
+    # The gzip marker!
+    my $buffer;
+    Carp::confess(
+      "error gunzipping ledger: $IO::Uncompress::Gunzip::GunzipError"
+    ) unless IO::Uncompress::Gunzip::gunzip(\$ledger_blob, \$buffer);
+
+    $ledger_blob = $buffer;
+  }
+
+  my $class_map = thaw($class_blob);
+  my $ledger    = thaw($ledger_blob);
+
+  $self->_perform_reblessing($ledger, $class_map);
+
+  return $ledger;
+}
+
+sub _perform_reblessing {
+  my ($self, $ledger, $class_map) = @_;
+
+  my %class_for;
+  for my $old_class (keys %$class_map) {
+    my $new_class = class(@{ $class_map->{ $old_class } });
+    next if $new_class eq $old_class;
+
+    $class_for{ $old_class } = $new_class;
+  }
+
+  Data::Visitor::Callback->new({
+    object => sub {
+      my (undef, $obj) = @_;
+      my $class = blessed $obj;
+      return unless exists $class_for{ $class };
+      bless $obj, $class_for{ $class };
+    }
+  })->visit($ledger);
+}
+
 sub _save_packet_for {
   my ($self, $ledger) = @_;
 
@@ -1080,50 +1136,21 @@ sub _retrieve_ledger_from_db {
   my ($self, $guid) = @_;
 
   my $dbh = $self->_conn->dbh;
-  my ($ledger_blob, $class_blob) = $dbh->selectrow_array(
-    q{SELECT frozen_ledger, frozen_classes FROM ledgers WHERE guid = ?},
+  my $save_packet = $dbh->selectrow_hashref(
+    q{SELECT
+      frozen_ledger, frozen_classes, serialization_version, entity_id
+    FROM ledgers WHERE guid = ?},
     undef,
     $guid,
   );
 
-  return unless defined $class_blob or defined $ledger_blob;
+  # rather than use "serialization_version AS version" to avoid finding out
+  # version is a keyword -- rjbs, 2012-12-13
+  $save_packet->{version} = delete $save_packet->{serialization_version};
 
-  Carp::confess("incomplete storage data found for $guid")
-    unless defined $class_blob and defined $ledger_blob;
+  Carp::confess("incomplete storage data found for $guid") unless $save_packet;
 
-  require Moonpig::DateTime; # has a STORABLE_freeze -- rjbs, 2011-03-18
-
-  if (substr($ledger_blob, 0, 2) eq "\x1F\x8B") {
-    # The gzip marker!
-    my $buffer;
-    Carp::confess(
-      "error gunzipping ledger $guid: $IO::Uncompress::Gunzip::GunzipError"
-    ) unless IO::Uncompress::Gunzip::gunzip(\$ledger_blob, \$buffer);
-
-    $ledger_blob = $buffer;
-  }
-
-  my $class_map = thaw($class_blob);
-  my $ledger    = thaw($ledger_blob);
-
-  my %class_for;
-  for my $old_class (keys %$class_map) {
-    my $new_class = class(@{ $class_map->{ $old_class } });
-    next if $new_class eq $old_class;
-
-    $class_for{ $old_class } = $new_class;
-  }
-
-  Data::Visitor::Callback->new({
-    object => sub {
-      my (undef, $obj) = @_;
-      my $class = blessed $obj;
-      return unless exists $class_for{ $class };
-      bless $obj, $class_for{ $class };
-    }
-  })->visit($ledger);
-
-  return $ledger;
+  return $self->_restore_save_packet($save_packet);
 }
 
 sub delete_ledger_by_guid {
