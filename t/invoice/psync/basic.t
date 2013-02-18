@@ -206,6 +206,60 @@ test 'varying charges' => sub {
   };
 };
 
+test 'tiny psync' => sub {
+  my ($self) = @_;
+
+  # $14 / 14 days is psync template
+  #
+  do_with_fresh_ledger(
+    {
+      c => {
+        template => 'psync',
+        replacement_plan => [ get => '/nothing' ],
+
+        # 25¢ per day, so we can decrease the time by 2-3 days and not hit an
+        # extra dollar. -- rjbs, 2013-02-18
+        total_charge_amount => dollars(25),
+        cost_period => days(100),
+        grace_period_duration => days(0),
+      }
+    },
+    sub {
+      my ($ledger) = @_;
+      my $c = $ledger->get_component("c");
+      my ($credit) = $ledger->credit_collection->add({
+        type => 'Simulated',
+        attributes => { amount => dollars(25) }
+      });
+
+      $ledger->name_component("credit", $credit);
+
+      my ($q1);
+
+      subtest 'charge amount goes up by $0.75' => sub {
+        elapse($ledger, 3);
+        $self->assert_n_deliveries(1, "initial invoice");
+        $c->total_charge_amount(dollars(25.75));
+        elapse($ledger);
+        # At this point, 10 days and $9 remain
+        is(($q1) = $ledger->quotes, 1, "psync quote generated...");
+
+        $self->assert_n_deliveries(0, "...but no quote sent");
+      };
+
+      subtest 'charge amount goes up by another $0.75' => sub {
+        elapse($ledger, 3);
+        $c->total_charge_amount(dollars(26.50));
+        elapse($ledger);
+        # At this point, 10 days and $9 remain
+        is(($q1) = $ledger->quotes, 2, "another psync quote generated");
+
+        $self->assert_n_deliveries(1, "...and quote sent");
+      };
+    }
+  );
+};
+
 test "paid and executed" => sub {
   my ($self) = @_;
 

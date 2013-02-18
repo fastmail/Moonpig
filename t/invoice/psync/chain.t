@@ -151,6 +151,10 @@ test 'psync chains' => sub {
     };
 
     subtest "psync quote amounts after some charging" => sub {
+      # This is horrible, but I don't want to spend the time to rework this
+      # test to generate quotes above $1 right now. -- rjbs, 2013-02-18
+      local $Moonpig::Role::Dunner::_minimum_psync_amount = 0;
+
       $_->total_charge_amount(dollars(14)) for $c, $d, $e;
       # Consumer C has $156/14 left of its original $196/14, enough for 11.143 days
       # at the current rate.

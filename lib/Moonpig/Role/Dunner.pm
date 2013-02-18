@@ -223,6 +223,13 @@ sub _send_invoice_email {
   }));
 }
 
+sub _minimum_psync_amount {
+  # This should really be a publicly defined env method.
+  # The package variable is here, for now, to support a hack in
+  # t/invoice/psync/chain.t -- rjbs, 2013-02-18
+  our $_minimum_psync_amount //= Moonpig::Util::dollars(1);
+}
+
 # If there's a quote, it's for the amount of money the consumers need
 # to advance their expire date back to where it was.  If not, then the
 # expire date advanced and we're just sending a notification of that
@@ -246,6 +253,11 @@ sub _send_psync_email {
   #   $info->{new_expiration_date},
   #   to_dollars($quote ? $quote->total_amount : 0),
   # ;
+
+  if ($quote and $quote->total_amount < $self->_minimum_psync_amount) {
+    $Logger->log("declining to send mail; amount too small");
+    return;
+  }
 
   $self->handle_event(event('send-mkit', {
     kit => $quote ? 'psync' : 'psync-notice',
