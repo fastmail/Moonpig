@@ -137,6 +137,39 @@ test 'quote' => sub {
   };
 };
 
+sub _diag_delivery {
+  my ($delivery, $qr) = @_;
+
+  my $email = $delivery->{email};
+  use List::AllUtils qw(max);
+  my @headers = qw(From To Subject Date);
+  my $width = max map {; length } @headers;
+  my @lines;
+  for my $h (@headers) {
+    my @v = $email->header($h);
+    if (@v) {
+      push @lines, map {; sprintf '%*s: %s', -$width, $h, $_ } @v;
+    } else {
+      push @lines,        sprintf '%*s: %s', -$width, $h, '(does not appear)';
+    }
+  }
+
+  diag "+" . "-" x 60 . "+";
+  diag join qq{\n}, @lines;
+
+  if ($qr) {
+    my ($text) = grep { $_->header('Content-Type') =~ qr{text/plain} }
+                 ($email, $email->subparts);
+    if ($text and $text->body_str =~ $qr) {
+      diag "Found: $1";
+    } else {
+      diag "Found nothing.";
+    }
+  }
+
+  return;
+}
+
 test 'varying charges' => sub {
   my ($self) = @_;
 
@@ -437,6 +470,33 @@ test 'reinvoice' => sub {
   );
 
   pass;
+};
+
+test "don't cancel too fast" => sub {
+  my ($self) = @_;
+
+  do_test {
+    my ($ledger, $c) = @_;
+    elapse($ledger, 10);
+    $self->assert_n_deliveries(1, "invoice");
+
+    # At this point, $4 and 4 days remain
+    is($c->unapplied_amount, dollars(4), '$4 remain');
+
+    $c->total_charge_amount(dollars(1400));
+
+    # We originally wanted to last 14 days, and lasted 10.  So we need to cover
+    # the remaining period, or 4/14th of the new total cost:
+    my $expected_charge = dollars(1400) / 14 * 4 # 4/14th of new total cost
+                        - $c->unapplied_amount;  # amount on hand
+    elapse($ledger, 1);
+    $self->assert_n_deliveries(1, "psync notice");
+    ok($c->is_active, "consumer still active");
+    # At this point, $4 and some small fraction of a day remain
+
+    my ($qu) = $ledger->quotes;
+    is($qu->total_amount, $expected_charge, "psync quote issued");
+  };
 };
 
 run_me;

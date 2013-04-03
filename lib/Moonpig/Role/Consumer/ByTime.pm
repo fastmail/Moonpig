@@ -2,7 +2,7 @@ package Moonpig::Role::Consumer::ByTime;
 # ABSTRACT: a consumer that charges steadily as time passes
 
 use Carp qw(confess croak);
-use List::AllUtils qw(all);
+use List::AllUtils qw(all any);
 use Moonpig;
 use Moonpig::DateTime;
 use Moonpig::Util qw(class days event sum sumof);
@@ -208,17 +208,39 @@ around charge_one_day => sub {
     $self->maybe_make_replacement;
   }
 
-  unless ($self->can_make_payment_on( $self->next_charge_date )) {
+  if ($self->can_make_payment_on( $self->next_charge_date )) {
+    return $self->$orig(@args);
+  }
+
+  if (! $self->_has_open_recent_psync_quote(2)) {
+    $self->_maybe_send_psync_quote;
+  }
+
+  if ($self->_has_open_recent_psync_quote) {
     $Logger->log([
-      'expiring consumer %s due to insufficient funds',
+      'would expire consumer %s due to insufficient funds; psync prevents',
       $self->guid,
     ]);
-    $self->expire;
     return;
   }
 
-  $self->$orig(@args);
+  $Logger->log([
+    'expiring consumer %s due to insufficient funds',
+    $self->guid,
+  ]);
+  $self->expire;
+  return;
 };
+
+sub _has_open_recent_psync_quote {
+  my ($self, $extra) = @_;
+  $extra //= 0;
+
+  return unless
+    my @old_quotes = $self->ledger->find_old_psync_quotes($self->xid);
+
+  return any { Moonpig->env->now - $_->created_at < days(7 + $extra) } @old_quotes;
+}
 
 # how much do we charge each time we issue a new charge?
 sub calculate_charge_structs_on {
@@ -421,6 +443,9 @@ sub _maybe_send_psync_quote {
 
   return unless $self->is_active;
   return unless grep(! $_->is_abandoned, $self->all_charges) > 0;
+
+  return if $self->_has_open_recent_psync_quote
+        and not $self->can_make_payment_on( $self->next_charge_date );
 
   my $shortfall = $self->_predicted_shortfall;
   my $had_last_shortfall = $self->has_last_psync_shortfall;
