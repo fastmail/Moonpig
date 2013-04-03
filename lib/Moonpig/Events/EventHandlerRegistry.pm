@@ -104,7 +104,7 @@ sub handle_event {
 
   my $guid = guid_string;
 
-  for my $handler_name (keys %$handlers) {
+  for my $handler_name (sort keys %$handlers) {
     my $handler = $handlers->{ $handler_name };
 
     if ($ENV{MOONPIG_TRACE_EVENTS} && $handler_name ne 'noop') {

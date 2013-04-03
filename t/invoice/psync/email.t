@@ -116,7 +116,7 @@ test 'single consumer' => sub {
       my ($new_date) = $body =~ qr/expected to continue until\s+(\w+ [\d ]\d, \d{4})/;
       is ($new_date, "January 10, 2000", "new expiration date");
       my ($old_date) = $body =~ qr/extend service to\s+(\w+ [\d ]\d, \d{4})/;
-      is ($old_date, "January 15, 2000", "old expiration date");
+      is ($old_date, "January 14, 2000", "old expiration date");
 
       my ($pay_page_url) = $body =~ m{(https://www.pobox.com/pay\?quote=[0-9A-F-]+)};
       my ($q) = $ledger->quotes;
@@ -134,7 +134,7 @@ test 'single consumer' => sub {
       my ($new_date) = $body =~ qr/will now expire on\s+(\w+ [\d ]\d, \d{4})/;
       is ($new_date, "January 22, 2000", "new expiration date");
       my ($old_date) = $body =~ qr/was due to expire after\s+(\w+ [\d ]\d, \d{4})/;
-      is ($old_date, "January 15, 2000", "old expiration date");
+      is ($old_date, "January 14, 2000", "old expiration date");
     };
   };
 };
