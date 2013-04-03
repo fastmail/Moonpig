@@ -137,6 +137,39 @@ test 'quote' => sub {
   };
 };
 
+sub _diag_delivery {
+  my ($delivery, $qr) = @_;
+
+  my $email = $delivery->{email};
+  use List::AllUtils qw(max);
+  my @headers = qw(From To Subject Date);
+  my $width = max map {; length } @headers;
+  my @lines;
+  for my $h (@headers) {
+    my @v = $email->header($h);
+    if (@v) {
+      push @lines, map {; sprintf '%*s: %s', -$width, $h, $_ } @v;
+    } else {
+      push @lines,        sprintf '%*s: %s', -$width, $h, '(does not appear)';
+    }
+  }
+
+  diag "+" . "-" x 60 . "+";
+  diag join qq{\n}, @lines;
+
+  if ($qr) {
+    my ($text) = grep { $_->header('Content-Type') =~ qr{text/plain} }
+                 ($email, $email->subparts);
+    if ($text and $text->body_str =~ $qr) {
+      diag "Found: $1";
+    } else {
+      diag "Found nothing.";
+    }
+  }
+
+  return;
+}
+
 test 'varying charges' => sub {
   my ($self) = @_;
 
