@@ -123,6 +123,7 @@ publish dissolve => {
       from => $object,
       to   => $self,
       amount => $amount,
+      skip_funds_check => 1,
     });
 
     $object->charge_current_invoice({
