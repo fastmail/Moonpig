@@ -37,7 +37,7 @@ R&amp;D first!</strong></p>
 <form action='/post/credit-dissolve' method='post'>
   <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
   <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
-  <input type='submit' value='Dissolve Quote' style='background-color: red' />
+  <input type='submit' value='Dissolve Credit' style='background-color: red' />
 </form>
 
 <table>
