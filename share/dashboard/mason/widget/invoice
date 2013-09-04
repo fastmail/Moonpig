@@ -10,7 +10,7 @@ $invoice
 % }
 <& /widget/results,
   results  => {
-    'quote-executed'    => "Couldn't find that ledger!",
+    'quote-executed'    => "Quote executed!",
     'invoice-abandoned' => "Invoice abandoned!",
   },
   selector => $invoice->{guid},
