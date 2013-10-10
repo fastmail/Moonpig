@@ -1,0 +1,42 @@
+
+Notes on installing Moonpig:
+
+0. We assume you have already installed App::cpanminus.
+
+    You may prefer to install the following stuff to a local lib
+    directory instead of globally; there is quite a lot of it.  To do
+    that, first run:
+
+      cpanm local::lib
+      eval $(perl -Mlocal::lib=path-to-local-lib)
+
+   Subsequent installations will go into the local lib that you have
+   specified, for example $HOME/lib/perl .
+
+1. Install Dist::Zilla from CPAN:
+
+	cpanm Dist::Zilla
+
+2. You will need to obtain from github:
+
+    Moonpig::UserAgent
+
+      https://github.com/rjbs/Moonpig-UserAgent
+
+    Stick
+
+      https://github.com/rjbs/stick
+
+    Install each of these using:
+
+      dzil authordeps | cpanm -q
+      dzil listdeps | cpanm -q
+      dzil install
+
+3. Now do the same for Moonpig:
+
+      dzil authordeps | cpanm -q
+      dzil listdeps | cpanm -q
+      dzil test
+      dzil install
+
