@@ -162,7 +162,7 @@ publish cancel => {
   -http_method => 'post',
 } => sub {
   my ($self) = @_;
-  $_->mark_abandoned for $self->all_charges;
+  $_->mark_abandoned for grep {; ! $_->is_abandoned } $self->all_charges;
   $self->abandon_without_replacement();
 };
 
