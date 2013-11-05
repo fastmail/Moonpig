@@ -83,6 +83,15 @@ has postal_code => (
   predicate => 'has_postal_code',
 );
 
+has twitter_id => (
+  is  => 'ro',
+  isa => subtype(
+    as TrimmedSingleLine,
+    where { ! /[^0-9]/ }
+  ),
+  predicate => 'has_twitter_id',
+);
+
 has email_addresses => (
   isa => EmailAddresses,
   traits   => [ 'Array' ],
@@ -106,8 +115,9 @@ PARTIAL_PACK {
     state        => $self->state,
     country      => $self->country,
     postal_code  => $self->postal_code,
-    email        => [ $self->email_addresses ], # depreate -- rjbs, 2012-04-25
+    email        => [ $self->email_addresses ], # deprecate -- rjbs, 2012-04-25
     email_addresses => [ $self->email_addresses ],
+    twitter_id   => $self->twitter_id,
   };
 };
 
