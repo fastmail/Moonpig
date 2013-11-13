@@ -82,6 +82,9 @@ sub app {
     my $storage = Moonpig->env->storage;
     $storage->reset_connection;
 
+    # See comment in Moonpig/Storage/Spike.pm
+    exit(99) if $storage->_is_corrupted;
+
     my $req = Plack::Request->new($env);
     my @path = split q{/}, $req->path_info;
     shift @path; # get rid of leading "/" part

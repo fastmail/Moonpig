@@ -1020,11 +1020,28 @@ sub _store_ledger {
       { handled => 1 },
     );
 
+    # In some cases, the cache or other memory state becomes corrupted.  We've
+    # called the "The Bug" in the past.  We've never found the root cause, but
+    # the symptom is that when trying to save ledger X, it seems to be trying
+    # to save Y instead.  When this happens, all saves start failing.  This has
+    # the incredibly nasty fallout that attempts to record received payments
+    # fail and users retry them.  There are a number of things that must be
+    # solved here, but the first one is: stop taking requests when the state is
+    # corrupted.  -- rjbs, 2013-11-13
+    $self->_is_corrupted(1);
+
     die $error;
   };
 
   return $ledger;
 }
+
+has _is_corrupted => (
+  is  => 'rw',
+  isa => 'Bool',
+  init_arg => undef,
+  default  => 0,
+);
 
 has _fail_next_save => (
   is  => 'rw',
