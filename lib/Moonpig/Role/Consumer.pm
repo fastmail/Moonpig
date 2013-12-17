@@ -248,8 +248,15 @@ has replacement_plan => (
 sub build_replacement {
   my ($self, $replacement_extra_args) = @_;
 
-  Moonpig::X->throw("can't build replacement: one exists")
-    if $self->has_replacement;
+  if ($self->has_replacement) {
+    Moonpig::X->throw(
+      "can't build replacement: one exists",
+      {
+        consumer_xid  => $self->xid,
+        consumer_guid => $self->guid,
+      },
+    );
+  }
 
   $replacement_extra_args //= {};
 
