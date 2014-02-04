@@ -539,6 +539,13 @@ sub _issue_psync_charge {
     interval => $shortfall
   });
 
+  $Logger->log([
+    "issuing psync charge for shortfall of %dd on consumer %s (%s)",
+    $shortfall_days,
+    $self->guid,
+    $self->xid,
+  ]);
+
   $self->charge_current_invoice({
     extra_tags => [ 'moonpig.psync' ],
     description => sprintf("Shortfall of $shortfall_days %s",
