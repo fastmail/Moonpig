@@ -498,6 +498,7 @@ sub _maybe_send_psync_quote {
 
     $self->_abandon_unpaid_psync_charges;
     $self->reinvoice_initial_charges;
+    my $shortfall = $self->_predicted_shortfall;
     if ($shortfall > 0) {
       $self->_issue_psync_charge();
       $_->_issue_psync_charge() for $self->replacement_chain;
