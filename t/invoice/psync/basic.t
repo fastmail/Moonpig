@@ -373,7 +373,7 @@ test 'reinvoice' => sub {
       };
 
       subtest 'first increase in charge amount' => sub {
-      my $second_invoice_guid;
+        my $second_invoice_guid;
         for (1, 2) {
           $c->total_charge_amount(dollars(16));
           $d->total_charge_amount(dollars(16));
