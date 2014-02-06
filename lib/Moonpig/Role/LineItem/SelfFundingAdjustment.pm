@@ -1,7 +1,7 @@
 package Moonpig::Role::LineItem::SelfFundingAdjustment;
 # ABSTRACT: a magic line item that adjusts its owner's self_funding_credit_amount
 use Moonpig;
-use Moonpig::Types qw(PositiveMillicents);
+use Moonpig::Types qw(NonNegativeMillicents);
 
 use Moose::Role;
 use Moonpig::Behavior::Packable;
@@ -13,7 +13,7 @@ with ('Moonpig::Role::LineItem',
 
 has adjustment_amount => (
   is => 'ro',
-  isa => PositiveMillicents,
+  isa => NonNegativeMillicents,
   required => 1,
 );
 
