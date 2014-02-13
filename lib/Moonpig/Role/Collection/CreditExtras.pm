@@ -17,40 +17,43 @@ sub add {
   my ($self, $arg) = @_;
   my $type = $arg->{type};
 
+  my $ledger = $self->owner;
+
   my @unknown = grep { ! $OK_ADD_ARG{ $_ } } keys %$arg;
   Moonpig::X->throw("unknown arguments: @unknown") if @unknown;
 
   return Moonpig->env->storage->do_rw(sub {
     if ($arg->{quote_guid}) {
-      my $quote = $self->owner->invoice_collection->find_by_guid({
+      my $quote = $ledger->invoice_collection->find_by_guid({
         guid => $arg->{quote_guid},
       });
       $quote->execute;
     }
 
-    my $credit = $self->owner->add_credit(
+    my $credit = $ledger->add_credit(
       class("Credit::$type"),
       $arg->{attributes},
     );
 
+    # XXX: I have a hard time believing these saves are really useful.
+    # -- rjbs, 2012-09-13
+    $ledger->save;
+    $ledger->process_credits;
+    $ledger->save;
+
     if ($arg->{send_receipt}) {
-      $self->owner->handle_event(event('send-mkit', {
+      $ledger->handle_event(event('send-mkit', {
         kit => 'receipt',
         arg => {
           subject => "Payment received",
 
-          to_addresses => [ $self->owner->contact->email_addresses ],
+          to_addresses => [ $ledger->contact->email_addresses ],
           credit       => $credit,
-          ledger       => $self->owner,
+          ledger       => $ledger,
         },
       }));
     }
 
-    # XXX: I have a hard time believing these saves are really useful.
-    # -- rjbs, 2012-09-13
-    $self->owner->save;
-    $self->owner->process_credits;
-    $self->owner->save;
     return $credit;
   });
 };
