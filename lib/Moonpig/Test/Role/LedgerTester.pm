@@ -97,7 +97,9 @@ sub _pay_amount {
 sub pay_amount_due {
   my ($self, $ledger, $expect, $desc) = @_;
 
-  my $suffix = defined $expect ? to_dollars($expect) : undef;
+  my $suffix = defined $expect
+             ? sprintf('$%.2f', to_dollars($expect))
+             : undef;
 
   unless ($ledger->amount_due) {
     if (defined $expect) {
