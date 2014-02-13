@@ -97,9 +97,11 @@ sub _pay_amount {
 sub pay_amount_due {
   my ($self, $ledger, $expect, $desc) = @_;
 
+  my $suffix = defined $expect ? to_dollars($expect) : undef;
+
   unless ($ledger->amount_due) {
     if (defined $expect) {
-      is(0, $expect, $desc // "ledger payoff had expected cost");
+      is(0, $expect, ($desc // "ledger payoff had expected cost") . ": $suffix");
     }
     return;
   }
@@ -120,7 +122,11 @@ sub pay_amount_due {
   my $total = sumof { $_->amount } values %credit;
 
   if (defined $expect) {
-    is($total, $expect, $desc // "ledger payoff had expected cost");
+    is(
+      $total,
+      $expect,
+      ($desc // "ledger payoff had expected cost") . ": $suffix"
+    );
   }
 
   $Logger->log([
