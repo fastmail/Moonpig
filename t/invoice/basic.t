@@ -119,14 +119,13 @@ test 'charge close and send' => sub {
 
     my $invoice = $ledger->get_component("initial invoice");
 
-    my $credit = $ledger->add_credit(
-      class(qw(Credit::Simulated)),
-      {
-        amount => $invoice->total_amount,
-      },
-     );
+    my $credit = $ledger->credit_collection->add({
+      type => 'Simulated',
+      attributes   => { amount => $invoice->total_amount },
+      send_receipt => 1,
+    });
 
-    $ledger->process_credits;
+    my ($delivery) = $self->assert_n_deliveries(1, "the receipt");
 
     ok($invoice->is_paid, "the invoice was marked paid");
 

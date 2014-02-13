@@ -21,7 +21,8 @@
           "subject"     : "//str",
           "ledger"      : "/perl/obj",
           "credit"      : "/perl/obj",
-          "to_addresses": { "type": "//arr", "contents": "//str" }
+          "to_addresses": { "type": "//arr", "contents": "//str" },
+          "invoices"    : { "type": "//arr", "contents": "/perl/obj" }
         }
       }
     }

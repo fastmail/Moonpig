@@ -35,11 +35,19 @@ sub add {
       $arg->{attributes},
     );
 
+    my %invoices_before = map {; $_->guid => $_ } $ledger->payable_invoices;
+
     # XXX: I have a hard time believing these saves are really useful.
     # -- rjbs, 2012-09-13
     $ledger->save;
     $ledger->process_credits;
     $ledger->save;
+
+    my %invoices_after = map {; $_->guid => $_ } $ledger->payable_invoices;
+
+    my %invoices = map  {; $_ => $invoices_before{$_} }
+                   grep {; ! $invoices_after{ $_ } }
+                   keys %invoices_before;
 
     if ($arg->{send_receipt}) {
       $ledger->handle_event(event('send-mkit', {
@@ -50,6 +58,9 @@ sub add {
           to_addresses => [ $ledger->contact->email_addresses ],
           credit       => $credit,
           ledger       => $ledger,
+          invoices     => [
+            sort { $a->created_at <=> $b->created_at } values %invoices
+          ],
         },
       }));
     }
