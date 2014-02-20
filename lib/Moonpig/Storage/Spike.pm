@@ -589,7 +589,19 @@ sub __payloads_for_job_row {
 }
 
 sub iterate_jobs {
-  my ($self, $type, $code) = @_;
+  my $self = shift;
+  my ($type, $arg, $code);
+
+  if (@_ == 2) {
+    ($type, $code) = @_;
+  } elsif (@_ == 3) {
+    ($type, $arg, $code) = @_;
+  } else {
+    Moonpig::X->throw("weird argc to iterate_jobs: " . 0+@_);
+  }
+
+  my $incomplete_sql = $arg->{completed_jobs} ? 'IS NOT NULL' : 'IS NULL';
+
   my $conn = $self->_conn;
 
   # NOTE: not ->txn, because we want each job to be updateable ASAP, rather
@@ -601,11 +613,11 @@ sub iterate_jobs {
 
     if (defined $type) {
       $job_sth = $dbh->prepare(
-        q{
+        qq{
           SELECT *
           FROM jobs
           LEFT JOIN job_receipts ON jobs.id = job_receipts.job_id
-          WHERE type = ? AND termination_state IS NULL
+          WHERE type = ? AND termination_state $incomplete_sql
           ORDER BY created_at
         },
       );
@@ -613,11 +625,11 @@ sub iterate_jobs {
       $job_sth->execute($type);
     } else {
       $job_sth = $dbh->prepare(
-        q{
+        qq{
           SELECT *
           FROM jobs
           LEFT JOIN job_receipts ON jobs.id = job_receipts.job_id
-          WHERE termination_state IS NULL
+          WHERE termination_state $incomplete_sql
           ORDER BY created_at
         },
       );
