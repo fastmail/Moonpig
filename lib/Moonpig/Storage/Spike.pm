@@ -566,7 +566,7 @@ sub __job_callbacks {
         $dbh->do(
           "INSERT INTO job_receipts (job_id, terminated_at, termination_state)
           VALUES (?, ?, ?)",
-          undef, $job_row->{id}, Moonpig->env->now->epoch, 'complete',
+          undef, $job_row->{id}, Moonpig->env->now->epoch, 'done',
         );
       });
     },
