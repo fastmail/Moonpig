@@ -551,7 +551,7 @@ sub __job_callbacks {
         if $self->status eq 'incomplete';
       $spike->_conn->run(sub {
         my $dbh = $_;
-        $dbh->do("DELETE FROM jobs WHERE job_id = ?", undef, $job_row->{id});
+        $dbh->do("DELETE FROM jobs WHERE id = ?", undef, $job_row->{id});
       });
     },
     mark_complete_callback => sub {
