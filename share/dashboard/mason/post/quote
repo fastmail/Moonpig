@@ -15,6 +15,15 @@ my $quote = $m->mp_request(
   { chain_duration => $seconds },
 );
 
+my $credit = $m->mp_request(
+    POST => sprintf(
+      '/ledger/by-guid/%s/invoices/guid/%s/execute',
+      $ledger_guid,
+      $quote->{guid},
+      ),
+    {},
+);
+
 $m->redirect('/ledger/' . $ledger_guid . '?result=quote-generated');
 </%perl>
 </%method>

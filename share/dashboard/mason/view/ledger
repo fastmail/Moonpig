@@ -13,6 +13,8 @@ $ledger_id
   'contact-updated'     => "Contact updated!",
   'credit-added'        => "Credit added!",
   'job-canceled'        => "Job canceled!",
+  'quote-generated'     => "New invoice generated! Make sure to abandon any no
+  longer needed.",
 } &>
 <& /widget/ledger, ledger => $ledger &>
 </&>
