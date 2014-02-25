@@ -127,16 +127,6 @@ test 'charge close and send' => sub {
 
     my ($delivery) = $self->assert_n_deliveries(1, "the receipt");
 
-    # XXX: REMOVE LATER vvv
-    {
-      require Email::Sender::Simple;
-      Email::Sender::Simple->send($delivery->{email}, {
-        to   => [ 'helen@icgroup.com', 'rjbs@icgroup.com' ],
-        from => 'devnull@pobox.com',
-      });
-    }
-    # XXX: REMOVE LATER ^^^
-
     ok($invoice->is_paid, "the invoice was marked paid");
 
     is($credit->unapplied_amount, 0, "the credit has been entirely spent");
