@@ -27,7 +27,7 @@ mc($credit->{amount}) |h %>
   <form action='/post/credit-refund' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
     <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
-    <input type='submit' value='Refund <% mc($credit->{refundable_amount}) |h %>' />
+    <input type='submit' class="btn btn-default" value='Refund <% mc($credit->{refundable_amount}) |h %>' />
   </form>
 % }
 
@@ -37,7 +37,7 @@ R&amp;D first!</strong></p>
 <form action='/post/credit-dissolve' method='post'>
   <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
   <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
-  <input type='submit' value='Dissolve Credit' style='background-color: red' />
+  <input type='submit' value='Dissolve Credit' class="btn btn-danger" />
 </form>
 
 <table>

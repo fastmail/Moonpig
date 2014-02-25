@@ -21,6 +21,6 @@ $extra  => {}
 % for my $key (%$extra) {
   <input type='hidden' name='<% $key |h %>' value='<% $extra->{$key} |h %>' />
 % }
-  <input type='submit' class="btn" value='Go!' />
+  <input type='submit' class="btn btn-default" value='Go!' />
 </form>
 </%method>

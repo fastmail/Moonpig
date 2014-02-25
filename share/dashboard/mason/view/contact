@@ -42,7 +42,7 @@ $ledger_id
   Country: <input name='contact.country' value='<% $ledger->{contact}{country} |h %>' />
   <br />
 
-  <input type='submit' value='Save Contact Info' />
+  <input type='submit' class="btn btn-default" value='Save Contact Info' />
 </form>
 </&>
 </%method>

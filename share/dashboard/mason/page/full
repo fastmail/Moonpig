@@ -45,7 +45,10 @@ $(function () {
 <a href="http://helpspot.pobox.com/admin.php">Tickets</a>
 </li>
 <li>
-<a href="http://atmail.pobox.com/admin.php">Atmail Admin</a>
+<a href="http://trac.pobox.com/">Wiki</a>
+</li>
+<li>
+<a href="https://http://freeside.pobox.com:9443/">Freeside</a>
 </li>
 <li>
 <a href="https://rr-n1-tor.opensrs.net/resellers/">OpenSRS</a>

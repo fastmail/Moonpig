@@ -18,19 +18,19 @@ my $xid = $consumer->{xid};
   <form method='post' action='/post/reinvoice-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' value='Reissue Initial Invoice (totally might fail)' />
+    <input type='submit' class="btn btn-default" value='Reissue Initial Invoice (totally might fail)' />
   </form>
 
   <form method='post' action='/post/cancel-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' value='Cancel Service (do not renew)' />
+    <input type='submit' class="btn btn-default" value='Cancel Service (do not renew)' />
   </form>
 
   <form method='post' action='/post/terminate-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' value='Terminate Service (cancel and deactivate)' />
+    <input type='submit' class="btn btn-default" value='Terminate Service (cancel and deactivate)' />
   </form>
 
   <& /widget/dump, dump => $consumer, what => 'Consumer' &>

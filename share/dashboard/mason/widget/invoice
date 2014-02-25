@@ -22,7 +22,7 @@ $invoice
   <form action='/post/execute-quote' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
     <input type='hidden' name='quote_guid' value='<% $invoice->{guid}|h %>' />
-    <input type='submit' value='Execute Quote' />
+    <input type='submit' class="btn btn-default" value='Execute Quote' />
   </form>
 %   }
 % }
@@ -31,7 +31,7 @@ $invoice
   <form action='/post/invoice-abandon' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $invoice->{ledger_guid}|h %>' />
     <input type='hidden' name='invoice_guid' value='<% $invoice->{guid}|h %>' />
-    <input type='submit' value='Abandon Invoice' />
+    <input type='submit' class="btn btn-default" value='Abandon Invoice' />
   </form>
 % }
 
