@@ -1,0 +1,20 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_guid
+$consumer
+$years
+</%args>
+<%perl>
+my $seconds = $years * 86_400 * 365.25;
+my $quote = $m->mp_request(
+  POST => sprintf(
+    '/ledger/by-guid/%s/consumers/active/%s/quote_for_extended_service',
+    $ledger_guid, $consumer,
+  ),
+  { chain_duration => $seconds },
+);
+
+$m->redirect('/ledger/' . $ledger_guid . '?result=quote-generated');
+</%perl>
+</%method>
