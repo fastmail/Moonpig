@@ -145,17 +145,17 @@ years to open invoice for
     </tr>
     </thead>
     <tbody>
-% # for my $credit (sort { $b->{created_at} cmp $a->{created_at} } @$credits) {
+% for my $credit (sort { $b->{created_at} cmp $a->{created_at} } @$credits) {
     <tr>
-      <td><a href='/ledger/<% #$ledger->{guid} %>/credit/<% #$credit->{guid} %>'>
+      <td><a href='/ledger/<% $ledger->{guid} %>/credit/<% $credit->{guid} %>'>
         (details)
       </a></td>
-      <td><% # $credit->{type} |h %></td>
-      <td><% # $credit->{created_at} |h %></td>
-      <td><% # mc($credit->{amount}) |h %></td>
-      <td><% # mc($credit->{unapplied_amount}) |h %></td>
+      <td><% $credit->{type} |h %></td>
+      <td><% $credit->{created_at} |h %></td>
+      <td><% mc($credit->{amount}) |h %></td>
+      <td><% mc($credit->{unapplied_amount}) |h %></td>
     </tr>
-% # }
+% }
   </tbody>
   </table>
 
