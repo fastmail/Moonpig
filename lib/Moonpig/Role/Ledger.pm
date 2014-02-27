@@ -623,7 +623,7 @@ sub _send_mkit {
     my $ident = $self->has_short_ident ? $self->short_ident : $self->guid;
     $email->header_set('Message-ID' =>
       Email::MessageID->new(
-        user => join(q{.}, $ident, $$, $^T, $counter++),
+        user => join(q{.}, $ident, $$, time, $counter++),
         host => hostname_long(),
       )->in_brackets,
     );
