@@ -1,5 +1,6 @@
 package Moonpig::Role::Discount::RequiredTags;
 # ABSTRACT: a discount that applies only to charges that have particular tags
+
 use Moose::Role;
 
 use namespace::autoclean;

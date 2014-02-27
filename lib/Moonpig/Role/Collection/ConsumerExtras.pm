@@ -1,6 +1,7 @@
 package Moonpig::Role::Collection::ConsumerExtras;
-use Moose::Role;
 # ABSTRACT: extra behavior for a ledger's Consumer collection
+
+use Moose::Role;
 
 use MooseX::Types::Moose qw(Str HashRef);
 use Stick::Publisher 0.20110324;

@@ -1,8 +1,9 @@
 use strict;
 use warnings;
 package Moonpig::Dashboard::Request;
-use base 'HTML::MasonX::Free::Request';
 # ABSTRACT: the Mason request subclass for the Moonpig dashboard
+
+use parent 'HTML::MasonX::Free::Request';
 
 # use HTML::Widget::Factory;
 use CGI::Expand ();
@@ -50,6 +51,7 @@ sub redirect {
 }
 
 package Moonpig::Dashboard::Redirect {
+
   sub throw {
     my $guts = { uri => $_[1] };
     die(bless $guts => $_[0]);

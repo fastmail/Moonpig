@@ -1,6 +1,7 @@
 package Moonpig::Role::LineItem::Active;
-use Moose::Role;
 # ABSTRACT: a line item that does something extra when paid
+
+use Moose::Role;
 with(
   'Moonpig::Role::LineItem',
   'Moonpig::Role::HandlesEvents',

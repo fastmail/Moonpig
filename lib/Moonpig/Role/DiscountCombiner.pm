@@ -1,5 +1,6 @@
 package Moonpig::Role::DiscountCombiner;
 # ABSTRACT: a helper that applies discounts to charge structures
+
 use Moonpig;
 use Moose::Role;
 

@@ -1,5 +1,6 @@
 package Moonpig::Role::Discount::FixedPercentage;
 # ABSTRACT: a percentage discount
+
 use Moose::Role;
 
 use Moonpig;

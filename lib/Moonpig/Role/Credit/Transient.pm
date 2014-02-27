@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::Transient;
 # ABSTRACT: a credit created by inter-ledger transfer
+
 use Moose::Role;
 
 use Moonpig::Types qw(GUID);

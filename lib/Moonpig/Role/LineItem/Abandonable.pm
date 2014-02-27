@@ -1,6 +1,7 @@
 package Moonpig::Role::LineItem::Abandonable;
-use Moose::Role;
 # ABSTRACT: a line item we might scratch out later
+
+use Moose::Role;
 
 with(
   'Moonpig::Role::LineItem',

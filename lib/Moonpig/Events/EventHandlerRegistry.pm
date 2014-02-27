@@ -1,5 +1,6 @@
 package Moonpig::Events::EventHandlerRegistry;
 # ABSTRACT: a registry of handlers, used by other objects to dispatch events
+
 use Moose;
 use MooseX::StrictConstructor;
 

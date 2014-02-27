@@ -1,5 +1,6 @@
 package Moonpig::Role::CanCancel;
 # ABSTRACT: something that can be canceled
+
 use Moose::Role;
 
 use Moonpig::Trait::Copy;

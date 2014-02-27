@@ -1,6 +1,7 @@
 package Moonpig::Ledger::PostTarget;
-use Moose;
 # ABSTRACT: necessary, dumb package for posting to the Ledger collection
+
+use Moose;
 
 with(
   'Stick::Role::PublicResource',

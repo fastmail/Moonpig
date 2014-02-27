@@ -1,5 +1,6 @@
 package Moonpig::Role::Discount;
 # ABSTRACT: a discount for paying for a certain service
+
 use Moonpig;
 use Moonpig::Types qw(Factory Time TimeInterval);
 use Moonpig::Util qw(class);

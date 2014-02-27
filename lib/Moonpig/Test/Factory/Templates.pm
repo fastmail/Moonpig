@@ -1,6 +1,7 @@
 package Moonpig::Test::Factory::Templates;
-use Moose;
 # ABSTRACT: templates for use by the test fixture factory
+
+use Moose;
 
 with 'Moonpig::Role::ConsumerTemplateSet';
 

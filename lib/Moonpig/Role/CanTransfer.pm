@@ -1,5 +1,6 @@
 package Moonpig::Role::CanTransfer;
 # ABSTRACT: something that money can be transferred from / to
+
 use MooseX::Role::Parameterized 0.23;
 use Moonpig;
 use Moonpig::Types qw(TransferCapable);

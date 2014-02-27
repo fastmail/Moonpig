@@ -1,6 +1,7 @@
 package Moonpig::MKits;
-use Moose;
 # ABSTRACT: the access point for Moonpig's message kits
+
+use Moose;
 
 use Carp ();
 use Email::Date::Format qw(email_gmdate);

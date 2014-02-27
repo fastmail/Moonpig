@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer::FixedExpiration;
 # ABSTRACT: a consumer that expires automatically on a particular date
+
 use Moose::Role;
 
 use List::AllUtils qw(all first);

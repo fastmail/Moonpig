@@ -1,5 +1,6 @@
 package Moonpig::Role::CanExpire;
 # ABSTRACT: something that can expire
+
 use Moose::Role;
 
 use Moonpig::Behavior::Packable;

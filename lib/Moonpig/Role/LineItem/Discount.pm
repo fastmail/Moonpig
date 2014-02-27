@@ -1,6 +1,7 @@
 package Moonpig::Role::LineItem::Discount;
-use Moose::Role;
 # ABSTRACT: a charge that requires that its amount is negative
+
+use Moose::Role;
 use Moonpig::Types qw(NegativeMillicents);
 
 use namespace::autoclean;

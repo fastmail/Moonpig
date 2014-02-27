@@ -1,6 +1,7 @@
 package Moonpig::Role::Consumer::InvoiceOnCreation;
-use Moose::Role;
 # ABSTRACT: a consumer that charges the invoice when it's created
+
+use Moose::Role;
 
 use Moonpig::DateTime;
 use Moonpig::Events::Handler::Method;

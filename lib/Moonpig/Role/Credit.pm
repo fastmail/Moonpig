@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit;
 # ABSTRACT: a ledger's credit toward paying invoices
+
 use Moose::Role;
 
 with(

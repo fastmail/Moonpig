@@ -1,5 +1,6 @@
 package Moonpig::Role::Discount::Universal;
 # ABSTRACT: a discount that applies to all charges
+
 use Moose::Role;
 
 with(

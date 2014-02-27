@@ -1,5 +1,6 @@
 package Moonpig::Types;
 # ABSTRACT: type constraints for use with Moonpig
+
 use MooseX::Types -declare => [ qw(
   EmailAddresses
   Ledger Consumer

@@ -1,7 +1,8 @@
 package Moonpig::EMKit::KitReader::SWAK;
+# ABSTRACT: the SWAK kit-reader, but checks Moonpig share_roots
+
 use Moose;
 extends 'Email::MIME::Kit::KitReader::SWAK';
-# ABSTRACT: the SWAK kit-reader, but checks Moonpig share_roots
 
 use Moonpig;
 

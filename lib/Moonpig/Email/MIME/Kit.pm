@@ -1,4 +1,5 @@
 package Moonpig::Email::MIME::Kit;
+
 use Moose;
 extends 'Email::MIME::Kit';
 
@@ -7,6 +8,7 @@ use Email::MIME::Kit 2 ();
 use namespace::autoclean;
 
 package Moonpig::Util::Text::Template {
+
   use parent 'Text::Template';
 
   use Encode ();

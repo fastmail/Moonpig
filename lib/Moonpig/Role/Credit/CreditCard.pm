@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::CreditCard;
 # ABSTRACT: credit received from credit card
+
 use Moose::Role;
 
 use Moonpig::Types qw(TrimmedNonBlankLine);

@@ -1,6 +1,7 @@
 package Moonpig::Role::LineItem::RequiresZeroAmount;
-use Moose::Role;
 # ABSTRACT: a charge that requires that its amount is zero
+
+use Moose::Role;
 use Moonpig::Types qw(ZeroMillicents);
 
 use namespace::autoclean;

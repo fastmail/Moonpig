@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer::ByTime::FixedAmountCharge;
 # ABSTRACT: a consumer that charges steadily as time passes
+
 use Moose::Role;
 
 use Moonpig;

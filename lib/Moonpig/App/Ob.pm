@@ -1,6 +1,7 @@
 package Moonpig::App::Ob;
-use Moose;
 # ABSTRACT: the Moonpig object browser
+
+use Moose;
 
 use Moonpig::App::Ob::Config;
 use Moonpig::App::Ob::Commands;

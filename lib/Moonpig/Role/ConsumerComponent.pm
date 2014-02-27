@@ -1,5 +1,6 @@
 package Moonpig::Role::ConsumerComponent;
 # ABSTRACT: something that is owned by a consumer
+
 use Moose::Role;
 with ("Moonpig::Role::StubBuild");
 

@@ -2,6 +2,7 @@ use strict;
 use warnings;
 package Moonpig::Logger;
 # ABSTRACT: the global Log::Dispatchouli logger for Moonpig
+
 use parent 'Log::Dispatchouli::Global';
 
 use Log::Dispatchouli 2.002 (); # env_prefix

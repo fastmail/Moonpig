@@ -1,5 +1,6 @@
 package Moonpig::Role::HasLineItems;
 # ABSTRACT: something that has a set of line items associated with it
+
 use Moose::Role;
 
 use namespace::autoclean;

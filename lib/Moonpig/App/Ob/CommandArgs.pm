@@ -1,9 +1,11 @@
 package Moonpig::App::Ob::CommandArgs;
-use Moose;
 # ABSTRACT: guts of object browser's individual command execution
+
+use Moose;
 
 {
   package Ob;
+
   use Moonpig::Util '-all';
   use Carp 'croak';
   # Special package for eval expression context
