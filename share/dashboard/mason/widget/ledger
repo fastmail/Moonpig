@@ -10,6 +10,7 @@ $ledger
 </div>
 <div class="col-sm-6">
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
+ <& SELF:discounts, ledger => $ledger &>
 </div>
 </div>
 <hr>
@@ -23,15 +24,6 @@ $ledger
 </div>
 <hr>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
-<hr>
-<div class="row">
-<div class="col-sm-6">
- <& SELF:discounts, ledger => $ledger &>
-</div>
-<div class="col-sm-6">
-  &nbsp; <!-- this space for future expansion -->
-</div>
-</div>
 <hr>
 <div class="row">
 <div class="col-sm-12">
@@ -56,7 +48,7 @@ $ledger
 <h2>Enter Payments</h2>
 <form id="newquote" class="form-inline" method="POST" action="/post/quote">
 <input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
-<p>Add
+<div class="form-group">Add
 <select name="years" class="input-small">
 <option>1</opTion>
 <option>2</option>
@@ -76,17 +68,19 @@ years to open invoice for
 <option value="<% $xid %>"><% $xid %></option>
 % }
 </select>
-</p>
-<div class="form-control"><input type="submit" value="Make Quote" class="btn btn-default"></div>
+</div>
+<input type="submit" value="Make Quote" class="btn btn-default">
 </form>
 
 <div class="row">
 <div class="col-sm-6">
   <h4>Check</h4>
   <form method='post' action='/post/credit'>
-    <label for="credit.attributes.amount">Amount ($)</label> <input type="text" name='credit.attributes.amount' />
-    <label for="credit.attributes.bank_name">Bank name</label> <input type="text" name='credit.attributes.bank_name' />
-    <label for="credit.attributes.check_number">Check &#x2116;</label> <input type="text" name='credit.attributes.check_number' />
+  <div class="form-group">
+    <label for="credit.attributes.amount">Amount ($)</label> <input type="text" class="form-control" name='credit.attributes.amount' />
+    <label for="credit.attributes.bank_name">Bank name</label> <input type="text" class="form-control" name='credit.attributes.bank_name' />
+    <label for="credit.attributes.check_number">Check &#x2116;</label> <input type="text" class="form-control" name='credit.attributes.check_number' />
+  </div>
     <input type='submit' class="btn btn-default" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
@@ -96,9 +90,11 @@ years to open invoice for
 <div class="col-sm-6">
   <h4>PayPal</h4>
   <form method='post' action='/post/credit'>
-    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
-    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' />
-    <label for="credit.attributes.from_address">Email Addr</label> <input name='credit.attributes.from_address' />
+  <div class="form-group">
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
+    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
+    <label for="credit.attributes.from_address">Email Addr</label> <input name='credit.attributes.from_address' type="text" class="form-control" />
+  </div>
     <input type='submit' class="btn btn-default" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='PayPal' />
@@ -110,8 +106,10 @@ years to open invoice for
 <div class="col-sm-6">
   <h4>Credit from Authorize.net</h4>
   <form method='post' action='/post/credit'>
-    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
-    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' />
+  <div class="form-group">
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
+    <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
+  </div>
     <input type='submit' class="btn btn-default" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='CreditCard' />
@@ -122,8 +120,10 @@ years to open invoice for
 
   <h4>Pobox courtesy credit</h4>
   <form method='post' action='/post/credit'>
-    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
-    <label for="credit.attributes.amount">Reason (req)</label> <input name='credit.attributes.reason' />
+  <div class="form-group">
+    <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
+    <label for="credit.attributes.amount">Reason (req)</label> <input name='credit.attributes.reason' type="text" class="form-control" />
+  </div>
     <input type='submit' class="btn btn-default" value='Add Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Courtesy' />

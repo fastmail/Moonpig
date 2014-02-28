@@ -8,7 +8,9 @@ $title
 <head>
 <title><% $title |h %></title>
   <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap-theme.min.css" />
   <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap-responsive.min.css" />
+  <link rel="stylesheet" type="text/css" href="http://www.pobox.com/css/bootstrap/css/bootstrap-pobox.css" />
   <link rel="stylesheet" href="/css/dashboard.css" />
   <script src="http://www.pobox.com/js/jquery-1.7.1.min.js" type="text/javascript"></script>
   <script src="http://www.pobox.com/js/bootstrap.min.js" type="text/javascript"></script>
@@ -27,7 +29,6 @@ $(function () {
 <nav class="navbar navbar-default" role="navigation">
   <div class="container-fluid">
     <div class="navbar-right">
-          <a class="btn navbar-btn btn-inverse pull-right" href="<% $c->uri_for('/home') %>">Go To Login</a>
           <button type="button" class="btn btn-default navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle Navigation</span>
             <span class="icon-bar"></span>
