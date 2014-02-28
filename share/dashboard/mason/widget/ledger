@@ -4,43 +4,43 @@
 $ledger
 </%args>
 
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
   <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
 </div>
-<div class="span6">
+<div class="col-sm-6">
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
 </div>
 </div>
 <hr>
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
  <& SELF:invoices, ledger => $ledger &>
 </div>
-<div class="span6">
+<div class="col-sm-6">
   <& SELF:quotes, ledger => $ledger &>
 </div>
 </div>
 <hr>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
 <hr>
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
  <& SELF:discounts, ledger => $ledger &>
 </div>
-<div class="span6">
+<div class="col-sm-6">
   &nbsp; <!-- this space for future expansion -->
 </div>
 </div>
 <hr>
-<div class="row-fluid">
-<div class="span12">
+<div class="row">
+<div class="col-sm-12">
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 </div>
 </div>
 <hr>
-<div class="row-fluid">
-<div class="span12">
+<div class="row">
+<div class="col-sm-12">
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
 </div>
 </div>
@@ -51,8 +51,8 @@ $ledger
 $credits
 $ledger
 </%args>
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
 <h2>Enter Payments</h2>
 <form id="newquote" class="form-inline" method="POST" action="/post/quote">
 <input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
@@ -80,8 +80,8 @@ years to open invoice for
 <div class="form-control"><input type="submit" value="Make Quote" class="btn btn-default"></div>
 </form>
 
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
   <h4>Check</h4>
   <form method='post' action='/post/credit'>
     <label for="credit.attributes.amount">Amount ($)</label> <input type="text" name='credit.attributes.amount' />
@@ -93,7 +93,7 @@ years to open invoice for
     <input type='hidden' name='credit.send_receipt' value='1' />
   </form>
 </div>
-<div class="span6">
+<div class="col-sm-6">
   <h4>PayPal</h4>
   <form method='post' action='/post/credit'>
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
@@ -106,8 +106,8 @@ years to open invoice for
   </form>
 </div>
 </div>
-<div class="row-fluid">
-<div class="span6">
+<div class="row">
+<div class="col-sm-6">
   <h4>Credit from Authorize.net</h4>
   <form method='post' action='/post/credit'>
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' />
@@ -118,7 +118,7 @@ years to open invoice for
     <input type='hidden' name='credit.send_receipt' value='1' />
   </form>
 </div>
-<div class="span6">
+<div class="col-sm-6">
 
   <h4>Pobox courtesy credit</h4>
   <form method='post' action='/post/credit'>
@@ -132,7 +132,7 @@ years to open invoice for
 </div>
 </div>
 </div>
-<div class="span6">
+<div class="col-sm-6">
   <h2>Payment History</h2>
   <table class="table">
   <thead>

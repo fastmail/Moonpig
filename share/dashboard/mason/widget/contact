@@ -35,6 +35,6 @@ $ledger
 % }
 
   </table>
-  <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn">edit contact</a>
+  <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn btn-default">edit contact</a>
 </div>
 </%method>
