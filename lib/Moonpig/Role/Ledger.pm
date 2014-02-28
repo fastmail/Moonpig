@@ -109,7 +109,7 @@ use namespace::autoclean;
 
 has entity_id => (
   is      => 'rw',
-  isa     => Int,
+  isa     => Str,
   default => 0,
 );
 
