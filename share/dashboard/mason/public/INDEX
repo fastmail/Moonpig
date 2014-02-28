@@ -8,12 +8,9 @@
 </&>
 </%method>
 <%method search-boxes>
-<div class="row">
-<div class="col-sm-6">
 <& /widget/search-box,
   id    => 'ledger',
   label => 'Ledger by GUID',
   action => '/post/find-ledger',
 &>
-</div>
 </%method>
