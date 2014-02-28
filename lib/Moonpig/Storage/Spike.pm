@@ -773,7 +773,9 @@ sub _restore_save_packet {
   Carp::confess("can't restore save packet of version $version")
     unless $self->can($method);
 
-  return $self->$method($packet);
+  my $ledger = $self->$method($packet);
+  $ledger->entity_id($packet->{old_entity_id});
+  return $ledger;
 }
 
 sub __restore_v1_packet {
@@ -872,11 +874,15 @@ sub _save_packet_for {
     "error gzipping ledger $guid: $IO::Compress::Gzip::GzipError"
   ) unless IO::Compress::Gzip::gzip(\$frozen_ledger, \$gz_frozen_ledger);
 
-  return {
+  my $packet = {
     version   => 2,
     ledger    => $gz_frozen_ledger,
     classes   => $self->_sereal_encoder->encode( class_roles ),
-    entity_id => guid_string(),
+
+    old_entity_id => $ledger->entity_id,
+
+    # Temporary, while dealing with old worthless GUID entity ids.
+    new_entity_id => $ledger->entity_id =~ /[^0-9]/ ? 0 : $ledger->entity_id + 1,
   };
 }
 
@@ -898,6 +904,7 @@ sub _store_ledger {
   ]);
 
   my $ident;
+  my $save_packet;
 
   try {
     my $conn = $self->_conn;
@@ -912,7 +919,7 @@ sub _store_ledger {
 
       $ledger->prepare_to_be_saved;
 
-      my $save_packet = $self->_save_packet_for($ledger);
+      $save_packet = $self->_save_packet_for($ledger);
 
       my $rv = $dbh->do(
         q{
@@ -921,14 +928,15 @@ sub _store_ledger {
             frozen_classes = ?,
             entity_id = ?,
             serialization_version = ?
-          WHERE guid = ?
+          WHERE guid = ? AND entity_id = ?
         },
         undef,
         $save_packet->{ledger},
         $save_packet->{classes},
-        $save_packet->{entity_id},
+        $save_packet->{new_entity_id},
         $save_packet->{version},
         $guid,
+        $save_packet->{old_entity_id},
       );
 
       if ($rv and $rv == 0) {
@@ -952,7 +960,7 @@ sub _store_ledger {
 
               $ledger->set_short_ident($ident) unless $existing_ident;
 
-              my $save_packet = $self->_save_packet_for($ledger);
+              $save_packet = $self->_save_packet_for($ledger);
 
               $dbh->do(
                 q{
@@ -967,7 +975,7 @@ sub _store_ledger {
                 $save_packet->{version},
                 $save_packet->{ledger},
                 $save_packet->{classes},
-                $save_packet->{entity_id},
+                $save_packet->{new_entity_id},
               );
 
               return 1;
@@ -1045,6 +1053,7 @@ sub _store_ledger {
     die $error;
   };
 
+  $ledger->entity_id($save_packet->{new_entity_id});
   return $ledger;
 }
 
@@ -1208,7 +1217,8 @@ sub _retrieve_ledger_from_db {
   my $dbh = $self->_conn->dbh;
   return unless my $save_packet = $dbh->selectrow_hashref(
     q{SELECT
-      frozen_ledger, frozen_classes, serialization_version, entity_id
+      frozen_ledger, frozen_classes, serialization_version,
+      entity_id AS old_entity_id
     FROM ledgers WHERE guid = ?},
     undef,
     $guid,

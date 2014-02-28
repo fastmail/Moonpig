@@ -81,7 +81,7 @@ with(
 );
 
 use Moose::Util::TypeConstraints;
-use MooseX::Types::Moose qw(ArrayRef HashRef Str);
+use MooseX::Types::Moose qw(ArrayRef HashRef Str Int);
 
 use Moonpig;
 use Moonpig::Ledger::Accountant;
@@ -106,6 +106,12 @@ use Moonpig::Behavior::Packable;
 use Sub::Install ();
 
 use namespace::autoclean;
+
+has entity_id => (
+  is      => 'rw',
+  isa     => Int,
+  default => 0,
+);
 
 has short_ident => (
   isa    => NonBlankLine,
