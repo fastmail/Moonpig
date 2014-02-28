@@ -1206,7 +1206,7 @@ sub _retrieve_ledger_from_db {
   my ($self, $guid) = @_;
 
   my $dbh = $self->_conn->dbh;
-  my $save_packet = $dbh->selectrow_hashref(
+  return unless my $save_packet = $dbh->selectrow_hashref(
     q{SELECT
       frozen_ledger, frozen_classes, serialization_version, entity_id
     FROM ledgers WHERE guid = ?},
