@@ -14,11 +14,15 @@ Moonpig->env->storage->do_with_each_ledger(
     my @invoices = $ledger->invoices_without_quotes;
     for my $invoice (@invoices) {
       next if $invoice->is_abandoned;
+
+      # Don't even want executed quotes.
+      next if $invoice->does('Moonpig::Role::Invoice::Quote');
+
       next unless grep { $_->description =~ /Shortfall/ } $invoice->all_charges;
-      printf "%s - %s - %s\n",
+      printf "%s - %10s - %s\n",
+        $invoice->created_at,
         $ledger->short_ident,
-        $invoice->guid,
-        $invoice->created_at;
+        $invoice->guid;
     }
   }
 );
