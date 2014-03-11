@@ -385,11 +385,16 @@ test 'reinvoice' => sub {
 
           $ledger->perform_dunning;
 
-          is($ledger->amount_due, dollars(18), 'we now owe $18');
+          # When reinvoicing, the shortfall on $c is ignored, because $d will
+          # reinvoice.  This change made today (2014-03-11) will prevent users
+          # from restoring their old expiration date in cases of reinvoicing,
+          # but will also protect them from normally-optional psync charges
+          # from becoming mandatory in these cases.
+          is($ledger->amount_due, dollars(16), 'we now owe $16');
 
           my @payable = $ledger->payable_invoices;
           is(@payable, 1, "we have one payable invoice");
-          is($payable[0]->total_amount, dollars(18), "...for \$18");
+          is($payable[0]->total_amount, dollars(16), "...for \$16");
 
           if (defined $second_invoice_guid) {
             is(
@@ -421,11 +426,11 @@ test 'reinvoice' => sub {
         $d->total_charge_amount(dollars(20));
         $ledger->heartbeat;
 
-        is($ledger->amount_due, dollars(26), 'we now owe $26');
+        is($ledger->amount_due, dollars(20), 'we now owe $20');
 
         my @payable = $ledger->payable_invoices;
         is(@payable, 1, "we have one payable invoice");
-        is($payable[0]->total_amount, dollars(26), "...for \$26");
+        is($payable[0]->total_amount, dollars(20), "...for \$20");
 
         my @quotes = $ledger->quotes;
         is(@quotes, 0, "no quotes so far");
@@ -460,11 +465,6 @@ test 'reinvoice' => sub {
 
         my @payable = $ledger->payable_invoices;
         is(@payable, 0, "paid off the invoice, it didn't respawn");
-
-        # I'm not really sure I like that we send this message.  I'm pretty
-        # sure it's happening because $c will now live $2-worth longer because
-        # we "have to" charge at least $14 for it. -- rjbs, 2012-08-31
-        $self->assert_n_deliveries(1, "psync down notice");
       };
     },
   );

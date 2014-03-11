@@ -496,13 +496,18 @@ sub _maybe_send_psync_quote {
     return unless $shortfall;
     return if $self->_no_reinvoicing_by_psync;
 
+    # We trust the reinvoicing to replace the current charge (for, say, $7)
+    # with the correct new charge (say $10).  We do this so we don't issue a $3
+    # psync invoice to a customer who hasn't even really paid once yet.  Note
+    # that in this branch we *do not* then attempt to issue psync charges *at
+    # all*.  This means that in the event that there remains a shortfall, it
+    # won't be made up.  There is no opportunity to pay for it.  This is done
+    # because the alternative is to create both an invoice *and* a quote, which
+    # would then be confusing to the recipient.  We can, of course, solve this
+    # problem later and reintroduce psync charges here, if needed.
+    # -- rjbs, 2014-03-11
     $self->_abandon_unpaid_psync_charges;
     $self->reinvoice_initial_charges;
-    my $shortfall = $self->_predicted_shortfall;
-    if ($shortfall > 0) {
-      $self->_issue_psync_charge();
-      $_->_issue_psync_charge() for $self->replacement_chain;
-    }
     $self->ledger->perform_dunning; # is this okay?
 
     return;
