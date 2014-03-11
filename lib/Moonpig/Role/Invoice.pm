@@ -263,6 +263,8 @@ sub isnt_quote { ! $_[0]->is_quote }
 PARTIAL_PACK {
   my ($self) = @_;
 
+  my $replacement = $self->abandoned_in_favor_of;
+
   return ppack({
     ident        => $self->ident,
     total_amount => $self->total_amount,
@@ -272,6 +274,7 @@ PARTIAL_PACK {
     is_quote     => $self->is_quote,
     is_internal  => $self->is_internal,
     abandoned_at => $self->abandoned_at,
+    ($replacement ? (abandoned_in_favor_of => $replacement) : ()),
   });
 };
 
