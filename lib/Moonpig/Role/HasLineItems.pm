@@ -60,9 +60,15 @@ sub _objectify_charge {
   my ($self, $input) = @_;
   return $input if blessed $input;
 
-  my $class = class( $self->charge_role );
+  my %arg   = %$input;
+  my $roles = delete $arg{roles};
 
-  $class->new($input);
+  my $class = class(
+    $self->charge_role,
+    ($roles ? @$roles : ()),
+  );
+
+  $class->new(\%arg);
 }
 
 sub add_charge {
