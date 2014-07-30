@@ -185,6 +185,10 @@ sub _pay_charges {
   my @consumers = grep { $_->is_active || $_->is_expired }
                   map  {; $collection->find_by_guid({ guid => $_ }) } @guids;
 
+  # It is important that we acquire funds before redistributing the 'paid'
+  # event.  In this way, an active line item can immediately put the funds on
+  # its owner to use, confident that the consumer has acquired its funds.
+  # -- rjbs, 2014-07-30
   $_->acquire_funds for @consumers;
 
   $_->handle_event($event) for @items;
