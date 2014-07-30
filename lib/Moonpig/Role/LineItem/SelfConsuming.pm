@@ -17,7 +17,9 @@ sub when_paid {
   $owner->charge_current_journal({
     description => $self->description,
     amount      => $self->amount,
-    skip_funds_check => $owner->allows_overdrafts,
+    skip_funds_check => (
+      $owner->can('allows_overdrafts') ? $owner->allows_overdrafts : 0
+    ),
   });
 }
 

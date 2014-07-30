@@ -33,7 +33,6 @@ test 'zero charge dunning' => sub {
     ok($invoice->is_open, "we didn't close the chargeless invoice");
   });
 
-
   Moonpig->env->storage->do_with_ledger($guid, sub {
     my ($ledger) = @_;
 
@@ -525,6 +524,50 @@ test 'non-ASCII content in email' => sub {
   }
 
   pass("everything ran to completion without dying");
+};
+
+test 'one-time charging' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+
+    my $invoice = $ledger->current_invoice;
+    $ledger->name_component("initial invoice", $invoice);
+    ok($invoice->is_open, "invoice is open!");
+
+    $self->heartbeat_and_send_mail($ledger);
+
+    ok($invoice->is_open, "we didn't close the chargeless invoice");
+  });
+
+  Moonpig->env->storage->do_with_ledger($guid, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->current_invoice;
+
+    my $c = $ledger->get_component('c');
+    $c->charge_current_invoice({
+      description => 'one time charge for bananas',
+      amount      => dollars(45),
+      roles       => [ 'LineItem::SelfConsuming' ],
+    });
+
+    $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
+
+    my @charges = $ledger->get_component('c')->all_charges;
+    is(@charges, 1, "consumer c has one charge, anyway");
+    is($charges[0]->amount, dollars(45), "...for five bucks");
+
+    ok(! $invoice->is_open, "we do close it once there is a charge");
+
+    is($c->unapplied_amount, 0, "nothing avail before paying");
+    my $amount = $self->pay_amount_due($ledger, dollars(45));
+    is($c->unapplied_amount, 0, "nothing avail after paying");
+  });
 };
 
 run_me;
