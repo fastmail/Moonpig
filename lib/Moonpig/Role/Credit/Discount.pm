@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::Discount;
 # ABSTRACT: a credit created because the user got a discount on some service
+
 use Moose::Role;
 
 use Moonpig::Types qw(GUID);

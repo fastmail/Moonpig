@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::PayPal;
 # ABSTRACT: credit received from PayPal
+
 use Moose::Role;
 
 use Moonpig::Types qw(TrimmedNonBlankLine);

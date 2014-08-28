@@ -1,6 +1,7 @@
 package Moonpig::Role::Collection::CreditExtras;
-use Moose::Role;
 # ABSTRACT: extra behavior for a ledger's Credit collection
+
+use Moose::Role;
 
 use Moonpig::Util qw(class event);
 use Stick::Publisher 0.20110324;

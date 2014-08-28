@@ -1,6 +1,7 @@
 package Moonpig::Ledger::Accountant::Transfer;
-use Moose;
 # ABSTRACT: a single transfer between Moonpig objects
+
+use Moose;
 
 use Carp qw(confess croak);
 use MooseX::StrictConstructor;

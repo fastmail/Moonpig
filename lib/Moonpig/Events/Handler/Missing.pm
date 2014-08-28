@@ -1,5 +1,6 @@
 package Moonpig::Events::Handler::Missing;
 # ABSTRACT: an event handler that throws a "handler missing" exception
+
 use Moose;
 with 'Moonpig::Role::EventHandler';
 

@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer::MakesReplacement;
 # ABSTRACT: a consumer that makes a replacement for itself after a while
+
 use Moose::Role;
 use Moonpig::Logger '$Logger';
 use Moonpig::Types qw(TimeInterval);

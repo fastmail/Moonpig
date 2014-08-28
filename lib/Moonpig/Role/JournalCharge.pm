@@ -1,6 +1,7 @@
 package Moonpig::Role::JournalCharge;
-use Moose::Role;
 # ABSTRACT: a charge placed on an journal
+
+use Moose::Role;
 with(
   'Moonpig::Role::LineItem',
   'Moonpig::Role::LineItem::RequiresPositiveAmount',

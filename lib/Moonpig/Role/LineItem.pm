@@ -1,5 +1,6 @@
 package Moonpig::Role::LineItem;
 # ABSTRACT: something that can go in an invoice or a journal
+
 use Moose::Role;
 
 use MooseX::Types::Moose qw(Str);

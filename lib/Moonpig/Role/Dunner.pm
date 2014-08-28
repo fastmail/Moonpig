@@ -1,5 +1,6 @@
 package Moonpig::Role::Dunner;
 # ABSTRACT: something that performs dunning of invoices
+
 use Moose::Role;
 
 use Data::GUID qw(guid_string);

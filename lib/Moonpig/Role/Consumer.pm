@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer;
 # ABSTRACT: something that uses up money
+
 use Moose::Role;
 
 use Carp qw(confess croak);

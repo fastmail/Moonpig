@@ -1,5 +1,6 @@
 package Moonpig::Role::LineItem::SelfConsuming;
 # ABSTRACT: a magic line item that consumes its funds immediately on payment
+
 use Moonpig;
 use Moonpig::Types qw(NonNegativeMillicents);
 

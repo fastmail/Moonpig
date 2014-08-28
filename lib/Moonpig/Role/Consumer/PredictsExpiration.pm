@@ -1,6 +1,7 @@
 package Moonpig::Role::Consumer::PredictsExpiration;
-use Moose::Role;
 # ABSTRACT: a consumer that can predict when it will expire
+
+use Moose::Role;
 
 use namespace::autoclean;
 

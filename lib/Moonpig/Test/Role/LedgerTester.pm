@@ -1,6 +1,7 @@
 package Moonpig::Test::Role::LedgerTester;
-use Test::Routine;
 # ABSTRACT: a test routine that works with ledgers
+
+use Test::Routine;
 
 with(
   'Moonpig::Test::Role::UsesStorage',

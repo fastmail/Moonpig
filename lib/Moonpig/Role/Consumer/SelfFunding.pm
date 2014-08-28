@@ -1,5 +1,6 @@
 package Moonpig::Role::Consumer::SelfFunding;
 # ABSTRACT: a consumer that pays its own initial charges
+
 use Moose::Role;
 
 use List::AllUtils qw(max);

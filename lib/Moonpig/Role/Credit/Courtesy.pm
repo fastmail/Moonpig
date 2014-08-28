@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::Courtesy;
 # ABSTRACT: credit added by staff for a specific reason
+
 use Moose::Role;
 
 use namespace::autoclean;

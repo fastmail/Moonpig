@@ -1,5 +1,6 @@
 package Moonpig::Role::HasTagset;
 # ABSTRACT: a charge in a charge tree
+
 use Moonpig::Types qw(Tag);
 use MooseX::Role::Parameterized;
 use MooseX::Types::Moose qw(Str ArrayRef);

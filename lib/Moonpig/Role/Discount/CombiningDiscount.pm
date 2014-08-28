@@ -1,5 +1,6 @@
 package Moonpig::Role::Discount::CombiningDiscount;
 # ABSTRACT: a discount that can combine its discount with another
+
 use Moose::Role;
 
 use Moonpig::Types qw(NonBlankLine);

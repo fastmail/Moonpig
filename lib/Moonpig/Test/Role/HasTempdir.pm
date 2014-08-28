@@ -1,6 +1,7 @@
 package Moonpig::Test::Role::HasTempdir;
-use Test::Routine;
 # ABSTRACT: a test routine with a new tempdir for each test
+
+use Test::Routine;
 
 use File::Temp qw(tempdir);
 

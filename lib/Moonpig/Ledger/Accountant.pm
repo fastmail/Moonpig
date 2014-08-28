@@ -1,6 +1,7 @@
 package Moonpig::Ledger::Accountant;
-use Moose;
 # ABSTRACT: a ledger's transfer-tracking subsystem
+
+use Moose;
 
 use Carp qw(confess croak);
 use Moonpig::TransferUtil ();

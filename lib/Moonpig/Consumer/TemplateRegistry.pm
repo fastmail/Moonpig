@@ -1,6 +1,7 @@
 package Moonpig::Consumer::TemplateRegistry;
-use Moose;
 # ABSTRACT: the environment's global consumer template set registry
+
+use Moose;
 
 use MooseX::StrictConstructor;
 

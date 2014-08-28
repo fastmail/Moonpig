@@ -1,6 +1,7 @@
 package Moonpig::Test::Role::UsesStorage;
-use Test::Routine;
 # ABSTRACT: a test routine that provides fresh storage per test
+
+use Test::Routine;
 
 with(
   'Moonpig::Test::Role::HasTempdir',

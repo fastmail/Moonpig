@@ -1,6 +1,7 @@
 package Moonpig::Role::InvoiceCharge;
-use Moose::Role;
 # ABSTRACT: a charge placed on an invoice
+
+use Moose::Role;
 
 with(
   'Moonpig::Role::LineItem',

@@ -1,6 +1,7 @@
 package Moonpig::Role::Collection::DebitExtras;
-use Moose::Role;
 # ABSTRACT: extra behavior for a ledger's Debit collection
+
+use Moose::Role;
 
 use Stick::Publisher 0.20110324;
 use Stick::Publisher::Publish 0.20110504;

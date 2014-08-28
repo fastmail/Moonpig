@@ -1,6 +1,7 @@
 package Moonpig::Role::Debit::WriteOff;
-use Moose::Role;
 # ABSTRACT: a debit reflecting money lost through charge reversal, etc.
+
+use Moose::Role;
 
 use namespace::autoclean;
 

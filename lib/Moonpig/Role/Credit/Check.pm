@@ -1,5 +1,6 @@
 package Moonpig::Role::Credit::Check;
 # ABSTRACT: credit received by check
+
 use Moose::Role;
 
 use namespace::autoclean;

@@ -1,5 +1,6 @@
 package Moonpig::Storage::Spike;
 # ABSTRACT: Basic implementation of Moonpig persistent storage
+
 use Moose;
 with 'Moonpig::Role::Storage';
 

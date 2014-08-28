@@ -1,5 +1,6 @@
 package Moonpig::Role::Debit;
 # ABSTRACT: a representation of a loss of credit
+
 use Moose::Role;
 
 with(

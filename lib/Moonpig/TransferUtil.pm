@@ -3,7 +3,7 @@ use warnings;
 package Moonpig::TransferUtil;
 # ABSTRACT: helper routines for dealing with transfers
 
-use base 'Exporter';
+use parent 'Exporter';
 our @EXPORT_OK = qw(
   is_transfer_capable
   transfer_types
