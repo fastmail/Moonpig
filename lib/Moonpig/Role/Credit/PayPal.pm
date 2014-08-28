@@ -11,7 +11,7 @@ with 'Moonpig::Role::Credit::Refundable::ViaCustSrv';
 sub as_string {
   my ($self) = @_;
   return sprintf 'PayPal payment <%s> from %s',
-    $self->check_number,
+    $self->transaction_id,
     $self->bank_name;
 }
 
