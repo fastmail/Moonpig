@@ -12,7 +12,7 @@ sub as_string {
   my ($self) = @_;
   return sprintf 'PayPal payment <%s> from %s',
     $self->transaction_id,
-    $self->bank_name;
+    $self->from_address;
 }
 
 has transaction_id => (
