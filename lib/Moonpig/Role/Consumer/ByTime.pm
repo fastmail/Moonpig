@@ -355,16 +355,8 @@ sub _replacement_chain_expiration_date {
          $self->_replacement_chain_lifetime($opts));
 }
 
-sub _replacement_chain_lifetime {
-  my ($self, $_opts) = @_;
-  my $opts = { %$_opts };
-  $opts->{include_unpaid_charges} //= 0;
-
-  my @chain = $self->replacement_chain;
-
-  unless (all { $_->does('Moonpig::Role::Consumer::ByTime') } @chain) {
-    Moonpig::X->throw("replacement in chain cannot predict expiration");
-  }
+my $LIFETIME_CHECK = sub {
+  my ($opt) = @_;
 
   # XXX 20120605 mjd We shouldn't be ignoring the partial charge
   # period here, which rounds down; we should be rounding UP to the
@@ -372,14 +364,32 @@ sub _replacement_chain_lifetime {
   # expiration date, and each consumer won't be activating its
   # successor until it expires, which occurs at the *end* of the last
   # paid charge period.
-  return (sumof {
-           $_->_estimated_remaining_funded_lifetime({
-             amount => $_->expected_funds({
-               include_unpaid_charges => $opts->{include_unpaid_charges},
-              }),
-             ignore_partial_charge_periods => 1,
-           })
-         } @chain);
+  $_->can('__bytime_estimated_lifetime')
+    ? $_->__bytime_estimated_lifetime
+    : $_->_estimated_remaining_funded_lifetime({
+        amount => $_->expected_funds({
+          include_unpaid_charges => $opt->{include_unpaid_charges},
+        }),
+        ignore_partial_charge_periods => 1,
+      });
+};
+
+sub _replacement_chain_lifetime {
+  my ($self, $_opt) = @_;
+  my $opt = { %$_opt };
+  $opt->{include_unpaid_charges} //= 0;
+
+  my @chain = $self->replacement_chain;
+
+  unless (
+    all { $_->does('Moonpig::Role::Consumer::ByTime')
+      ||  $_->can('__bytime_estimated_lifetime')
+    } @chain
+  ) {
+    Moonpig::X->throw("replacement in chain cannot predict expiration");
+  }
+
+  return (sumof { $LIFETIME_CHECK->($opt) } @chain);
 };
 
 # Given an amount of money, estimate how long the money will last
