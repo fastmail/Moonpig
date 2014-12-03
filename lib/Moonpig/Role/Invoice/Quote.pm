@@ -182,7 +182,9 @@ PARTIAL_PACK {
 
   return {
     executed_at => $self->executed_at,
-  };
+    quote_expiration_time => $self->quote_expiration_time,
+    quote_has_expired     => $self->quote_has_expired,
+  }
 };
 
 1;
