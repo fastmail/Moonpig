@@ -6,8 +6,14 @@ $ledger_guid
 <%perl>
 my $contact_arg = CGI::Expand->expand_hash($r->parameters)->{contact};
 
-delete $contact_arg->{$_}
-  for grep {; ! length $contact_arg->{$_} } keys %$contact_arg;
+for my $key (keys %$contact_arg) {
+  my $value = $contact_arg->{$key};
+  unless (ref $value or defined $value && length $value) {
+    delete $contact_arg->{$key};
+    next;
+  }
+  $contact_arg->{$key} = Encode::decode('utf-8', $value) unless ref $value;
+}
 
 my $contact = $m->mp_request(
   PUT => sprintf(

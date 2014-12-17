@@ -7,7 +7,7 @@ $ledger_id
 % $m->redirect('/') unless $ledger;
 <&| /page/full, title => "Moonpig Ledger $ledger->{ident} Contact" &>
 
-<form action='/post/contact' method='POST'>
+<form action='/post/contact' method='POST' accept-charset='UTF-8'>
   <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
 
   First name: <input name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
