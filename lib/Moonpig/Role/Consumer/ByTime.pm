@@ -425,6 +425,7 @@ sub _estimated_remaining_funded_lifetime {
       ident => "can't compute funded lifetime of zero-cost consumer",
       payload => {
         consumer_guid => $self->guid,
+        consumer_xid  => $self->xid,
         ledger_guid   => $self->ledger->guid,
       },
     });
