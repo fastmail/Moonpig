@@ -167,6 +167,15 @@ publish cancel => {
   $self->abandon_without_replacement();
 };
 
+publish resend => {
+  -http_method => 'post',
+} => sub {
+  my ($self) = @_;
+
+  $self->ledger->_send_invoice_email([ $self ]);
+  return true; # XXX Is this right? -- rjbs, 2015-04-28
+};
+
 implicit_event_handlers {
   return {
     'paid' => {
