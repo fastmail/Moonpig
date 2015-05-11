@@ -14,6 +14,7 @@ sub expiration_date;
 has expiration_date => (
   is  => 'ro',
   isa => Time,
+  coerce => 1,
   required => 1,
 );
 
