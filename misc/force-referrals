@@ -1,0 +1,40 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Moonpig::Util qw(dollars);
+use Pobox::Moonpig::Env;
+use Pobox::Moonpig::TemplateSet;
+
+my @client_ids = qw(
+);
+
+for my $client_id (@client_ids) {
+  my $xid  = "pobox:bg:$client_id";
+  my $guid = Moonpig->env->storage->ledger_guid_active_for_xid($xid);
+
+  die "no ledger for xid $xid\n" unless $guid;
+
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guid,
+    sub {
+      my ($ledger) = @_;
+
+      my ($consumer) = $ledger->active_consumer_for_xid($xid);
+
+      warn "$client_id -- \n";
+      warn $consumer->replacement_chain_expiration_date . "\n";
+
+      my $last = $consumer;
+      $last = $last->replacement while $last->replacement;
+      $last->build_and_install_replacement;
+
+      warn $consumer->replacement_chain_expiration_date . "\n";
+
+      $last = $last->replacement while $last->replacement;
+
+      die "not a reward" unless $last->does('Pobox::Moonpig::Consumer::ReferralReward');
+      # die "DO NOT COMMIT\n";
+    }
+  );
+}
