@@ -1167,6 +1167,21 @@ sub ledger_guids_for_xid {
   return @$guids;
 }
 
+sub ledger_guid_active_for_xid {
+  my ($self, $xid) = @_;
+
+  my $dbh = $self->_conn->dbh;
+
+  my $guids = $dbh->selectcol_arrayref(
+    q{SELECT ledger_guid FROM xid_ledgers WHERE xid = ?},
+    undef,
+    $xid,
+  );
+
+  return unless @$guids;
+  return $guids->[0];
+}
+
 sub retrieve_ledger_for_ident {
   my ($self, $ident) = @_;
 
