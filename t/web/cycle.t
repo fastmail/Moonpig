@@ -158,7 +158,7 @@ test "single payment" => sub {
       amount           => $price,
       created_at       => $date_re,
       guid             => $guid_re,
-      type             => "Credit::Simulated",
+      type             => "Simulated",
       unapplied_amount => dollars(0),
     }),
   );

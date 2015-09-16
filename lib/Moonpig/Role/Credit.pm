@@ -95,7 +95,7 @@ sub unapplied_amount {
 sub type {
   my ($self) = @_;
   my $type = ref($self) || $self;
-  $type =~ s/^(\w|::)+::Credit/Credit/;
+  $type =~ s/^(\w|::)+::Credit:://;
   return $type;
 }
 
