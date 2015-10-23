@@ -415,7 +415,8 @@ sub do_with_each_ledger {
   my @guids = $self->ledger_guids;
   for my $i (0 .. $#guids) {
     local ${^Progress} = [ $i, scalar(@guids) ]; # progress meter
-    $self->do_with_ledgers($opts, [ $guids[$i] ], $code);
+    my $rv = $self->do_with_ledgers($opts, [ $guids[$i] ], $code);
+    last if $rv && $rv == $Moonpig::Storage::LAST;
   }
 }
 

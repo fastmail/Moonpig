@@ -16,6 +16,8 @@ use Carp ();
 
 my $env;
 
+{ no warnings 'once'; $Moonpig::Storage::LAST = []; }
+
 sub set_env {
   my ($self, $new_env) = @_;
   if ($env) {
