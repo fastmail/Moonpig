@@ -87,6 +87,7 @@ schema:
         serialization_version: { name: serialization_version, data_type: int unsigned, is_nullable: 0 }
         frozen_ledger: { name: frozen_ledger, data_type: longblob, is_nullable: 0 }
         frozen_classes: { name: frozen_classes, data_type: longblob, is_nullable: 0 }
+        archived_at: { name: archived_at, datatype: integer }
       constraints:
         - type: UNIQUE
           fields: [ ident ]
@@ -1110,7 +1111,9 @@ sub ledger_guids {
   my ($self) = @_;
   my $dbh = $self->_conn->dbh;
 
-  my $guids = $dbh->selectcol_arrayref(q{SELECT DISTINCT guid FROM ledgers});
+  my $guids = $dbh->selectcol_arrayref(
+    q{SELECT DISTINCT guid FROM ledgers WHERE archived_at IS NULL},
+  );
   return @$guids;
 }
 
