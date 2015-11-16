@@ -136,7 +136,9 @@ sub _autopay_invoices {
   my $invoice_total  = sumof { $_->total_amount } @unpaid_invoices;
   my $balance_needed = $invoice_total - $credit_on_hand;
 
-  $self->_charge_for_autopay({ amount => $balance_needed });
+  if ($self->_charge_for_autopay({ amount => $balance_needed })) {
+    $self->process_credits;
+  }
 
   return;
 }
