@@ -432,7 +432,7 @@ sub _generate_chargecollection_methods {
       my $things = $self->$reader;
       return if $self->$has_current_thing;
 
-      Class::MOP::load_class($class);
+      Class::Load::load_class($class);
 
       my $thing = $class->new({
         ledger => $self,
