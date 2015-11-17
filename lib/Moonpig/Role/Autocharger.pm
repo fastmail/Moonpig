@@ -15,5 +15,4 @@ with(
 
 requires 'charge_into_credit';
 
-
 1;
