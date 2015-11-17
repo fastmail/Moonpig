@@ -39,4 +39,6 @@ sub charge_into_credit {
   );
 }
 
+sub _class_subroute { ... }
+
 1;

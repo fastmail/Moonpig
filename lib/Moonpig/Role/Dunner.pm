@@ -11,6 +11,7 @@ use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
 use Moose::Util::TypeConstraints qw(role_type);
+use MooseX::Types::Moose qw(Str HashRef);
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Try::Tiny;
@@ -174,12 +175,25 @@ sub setup_autocharger_from_template {
   return $obj;
 }
 
+publish _setup_autocharger => {
+  -http_method => 'post', -path => 'setup-autocharger',
+  template      => Str,
+  template_args => HashRef,
+} => sub {
+  my ($self) = @_;
+  $self->handle_event( event('heartbeat') );
+};
+
 has autocharger => (
   is  => 'ro',
   isa => role_type('Moonpig::Role::Autocharger'),
   writer  => '_set_autocharger',
   clearer => '_delete_autocharger',
 );
+
+publish _get_autocharger => { -path => 'autocharger', -http_method => 'get' } => sub {
+  $_[0]->autocharger;
+};
 
 sub _invoice_xid_summary {
   my ($self, $invoices) = @_;

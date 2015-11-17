@@ -7,10 +7,10 @@ with(
   'Moonpig::Role::HasCreatedAt',
   'Moonpig::Role::LedgerComponent',
   'Moonpig::Role::StubBuild',
-  # 'Stick::Role::PublicResource',
-  # 'Stick::Role::PublicResource::GetSelf',
-  # 'Stick::Role::Routable::ClassAndInstance',
-  # 'Stick::Role::Routable::AutoInstance',
+  'Stick::Role::PublicResource',
+  'Stick::Role::PublicResource::GetSelf',
+  'Stick::Role::Routable::ClassAndInstance',
+  'Stick::Role::Routable::AutoInstance',
 );
 
 requires 'charge_into_credit';
