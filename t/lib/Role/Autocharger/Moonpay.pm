@@ -3,7 +3,7 @@ use Moose::Role;
 
 with 'Moonpig::Role::Autocharger';
 
-use Moonpig::Types qw(PositiveMillicents);
+use Moonpig::Types qw(NonNegativeMillicents PositiveMillicents);
 use Moonpig::Util qw(class dollars);
 
 has amount_available => (
@@ -15,7 +15,7 @@ has amount_available => (
 has minimum_charge_amount => (
   is => 'ro',
   isa => PositiveMillicents,
-  default => 0,
+  default => dollars(1),
 );
 
 sub charge_into_credit {
@@ -27,9 +27,13 @@ sub charge_into_credit {
   return unless $amount >= $self->minimum_charge_amount;
 
   my $on_hand = $self->amount_available;
-  return unless $amount <= $self->amount_available;
+  $on_hand -= $amount;
 
-  my $credit = $ledger->add_credit(
+  return unless $on_hand >= 0;
+
+  $self->amount_available($on_hand);
+
+  my $credit = $self->ledger->add_credit(
     class(qw(Credit::Simulated)),
     { amount => $amount },
   );

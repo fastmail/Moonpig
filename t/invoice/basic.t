@@ -621,5 +621,62 @@ test 'one-time charging' => sub {
   });
 };
 
+test 'autopayment' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+
+    my $invoice = $ledger->current_invoice;
+    $ledger->name_component("initial invoice", $invoice);
+    ok($invoice->is_open, "invoice is open!");
+
+    $self->heartbeat_and_send_mail($ledger);
+
+    ok($invoice->is_open, "we didn't close the chargeless invoice");
+  });
+
+  Moonpig->env->storage->do_with_ledger($guid, sub {
+    my ($ledger) = @_;
+
+    my $invoice = $ledger->get_component("initial invoice");
+    $invoice->add_charge(
+      class(qw(InvoiceCharge))->new({
+        description => 'test charge (maintenance)',
+        amount      => dollars(5),
+        consumer    => $ledger->get_component('c'),
+      }),
+    );
+
+    $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
+
+    my @charges = $ledger->get_component('c')->all_charges;
+    is(@charges, 1, "consumer c has one charge, anyway");
+    is($charges[0]->amount, dollars(5), "...for five bucks");
+
+    ok(! $invoice->is_open, "we do close it once there is a charge");
+
+    is($ledger->amount_due, dollars(5), "...we still owe five bucks");
+
+    $ledger->setup_autocharger_from_template(moonpay => {
+      amount_available => dollars(11),
+    });
+
+    Moonpig->env->elapse_time( days(9) );
+
+    $self->heartbeat_and_send_mail($ledger);
+    $self->assert_n_deliveries(1, "invoice");
+
+    is($ledger->amount_due, dollars(0), "...we autopaid");
+
+    my ($credit) = $ledger->credits;
+    is($credit->amount, dollars(5), "...with a single five-dollar credit");
+    is($ledger->autocharger->amount_available, dollars(6), "...six bucks left");
+  });
+};
+
 run_me;
 done_testing;

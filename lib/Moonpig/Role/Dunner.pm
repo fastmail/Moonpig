@@ -165,6 +165,7 @@ sub setup_autocharger_from_template {
     if @$template_roles and $template_class;
 
   my $obj = ($template_class || class(qw(Autocharger), @$template_roles))->new({
+    ledger => $self,
     %$template_arg,
     %$arg,
   });

@@ -77,6 +77,16 @@ sub register_object {
   return;
 }
 
+around autocharger_template => sub {
+  if ($_[2] eq 'moonpay') {
+    return {
+      roles => [ qw( =t::lib::Role::Autocharger::Moonpay ) ],
+    };
+  }
+
+  super;
+};
+
 sub storage_class {
   require Moonpig::Storage::Spike;
   'Moonpig::Storage::Spike';
