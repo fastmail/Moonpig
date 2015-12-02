@@ -43,7 +43,7 @@ sub charge {
   { my $FAIL = "";
     for my $reqd (qw(from to amount description tags consumer)) {
       $FAIL .= __PACKAGE__ . "::charge missing required '$reqd' argument"
-        unless $args->{$reqd};
+        unless defined $args->{$reqd};
     }
     croak $FAIL if $FAIL;
   }
