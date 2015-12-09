@@ -8,7 +8,7 @@ with(
 );
 
 use Moonpig::Logger '$Logger';
-use Moonpig::Util qw(class datetime sum sumof to_dollars);
+use Moonpig::Util qw(class datetime days sum sumof to_dollars);
 use Test::More;
 
 use namespace::clean;
