@@ -142,4 +142,24 @@ sub pay_amount_due {
   return $total;
 }
 
+# Wait until something happens
+# (or, if supplied, until the current time is after $until)
+sub wait_until {
+  my ($self, $ledger, $predicate, $until, $step) = @_;
+  $step //= days(1);
+
+  my $elapsed = 0;
+  until ($predicate->()) {
+    return if defined($until) && Moonpig->env->now >= $until;
+    Moonpig->env->elapse_time($step);
+
+    $self->heartbeat_and_send_mail($ledger);
+    $elapsed++;
+  }
+
+  my $days = $elapsed * $step / days(1);
+  note "Predicate true after $days days (now " . Moonpig->env->now->iso . ")";
+  return 1;
+}
+
 1;
