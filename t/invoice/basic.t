@@ -134,6 +134,57 @@ test 'charge close and send' => sub {
   pass("everything ran to completion without dying");
 };
 
+test 'do not mark too many invoices paid' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger({ y1 => { template => 'yearly' }}, sub {
+    my ($ledger) = @_;
+    $guid = $ledger->guid;
+
+    my $invoice_1 = $ledger->current_invoice;
+    $invoice_1->mark_closed;
+    is($invoice_1->total_amount, dollars(100), "first invoice: 100 bucks");
+
+    Moonpig->env->elapse_time( 3600 );
+
+    my $invoice_2 = $ledger->current_invoice;
+
+    isnt($invoice_1->guid, $invoice_2->guid, "we made a new invoice");
+
+    my $y2 = $ledger->add_consumer_from_template(
+      yearly => { xid => "test:consumer:c" }
+    );
+
+    $invoice_2->mark_closed;
+    is($invoice_2->total_amount, dollars(100), "second invoice: 100 bucks");
+
+    $self->heartbeat_and_send_mail($ledger);
+    my ($delivery) = $self->assert_n_deliveries(1, "the invoices sent as mail");
+
+    is($ledger->amount_due, dollars(200), "total due: 200 bucks");
+
+    ok( ! $invoice_1->is_paid, "invoice 1: not paid");
+    ok( ! $invoice_2->is_paid, "invoice 2: not paid");
+
+    $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      {
+        amount => dollars(100)
+      },
+    );
+
+    is($ledger->amount_due, dollars(100), "pay 100 bucks, total due: 100 bucks");
+
+    $ledger->process_credits;
+
+    ok(   $invoice_1->is_paid, "invoice 1: paid");
+    ok( ! $invoice_2->is_paid, "invoice 2: not paid");
+
+    is($ledger->amount_due, dollars(100), "pay 100 bucks, total due: 100 bucks");
+  });
+};
+
 test 'send with balance on hand' => sub {
   my ($self) = @_;
   my $guid;

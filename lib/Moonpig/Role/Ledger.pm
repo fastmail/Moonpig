@@ -551,12 +551,10 @@ sub process_credits {
 
   my @credits = $self->credits;
 
-  my $available = $self->amount_available;
-
   for my $invoice (
     sort { $a->created_at <=> $b->created_at } $self->payable_invoices
   ) {
-    last if $invoice->total_amount > $available;
+    last if $invoice->total_amount > $self->amount_available;
 
     $invoice->mark_paid;
     $invoice->handle_event(event('paid'));
