@@ -250,7 +250,9 @@ sub calculate_charge_structs_on {
 
   my @charge_structs = $self->charge_structs_on( $date );
 
-  $_->{amount} /= $n_periods for @charge_structs;
+  for (@charge_structs) {
+    $_->{amount} = int($_->{amount} / $n_periods);
+  }
 
   return @charge_structs;
 }
