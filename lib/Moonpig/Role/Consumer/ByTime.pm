@@ -80,12 +80,21 @@ around copy_attr_hash__ => sub {
 
 sub _new_proration_period {
   my ($self) = @_;
-  return $self->is_active
+  my $period = $self->is_active
     ? $self->_estimated_remaining_funded_lifetime({
         amount => $self->unapplied_amount, # XXX ???
         ignore_partial_charge_periods => 0,
       })
     : $self->proration_period;
+
+  return $period if $period <= $self->cost_period;
+
+  return $self->cost_period
+    if $period - $self->cost_period <= $self->charge_frequency;
+
+  # This will be doomed to fail in the BUILD because proration period will
+  # exceed cost period.
+  return $period;
 }
 
 after BUILD => sub {
