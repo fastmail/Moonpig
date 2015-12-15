@@ -97,8 +97,8 @@ test 'setup sanity checks' => sub {
 
 sub close_enough {
   my ($a, $b, $msg) = @_;
-  note "Is $a close to $b ?";
-  ok(abs($a - $b) <= 1, $msg);
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  ok(abs($a - $b) <= 1, $msg) or diag "  want: $b +/- 1\n", "  have: $a";
 }
 
 test 'psync chains' => sub {
