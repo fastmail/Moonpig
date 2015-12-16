@@ -96,9 +96,17 @@ test 'setup sanity checks' => sub {
 };
 
 sub close_enough {
-  my ($a, $b, $msg) = @_;
+  my ($a, $b, $var, $msg);
+
+  if (@_ > 3) {
+    ($a, $b, $var, $msg) = @_;
+  } else {
+    ($a, $b, $msg) = @_;
+    $var = 1;
+  }
+
   local $Test::Builder::Level = $Test::Builder::Level + 1;
-  ok(abs($a - $b) <= 1, $msg) or diag "  want: $b +/- 1\n", "  have: $a";
+  ok(abs($a - $b) <= $var, $msg) or diag "  want: $b +/- $var\n", "  have: $a";
 }
 
 test 'psync chains' => sub {
