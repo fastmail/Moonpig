@@ -174,7 +174,7 @@ test 'psync chains' => sub {
       $c->_maybe_send_psync_quote();
       is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
       is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
-      close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
+      close_enough ($qu->total_amount, dollars(12/14), 999, "psync total amount");
       $self->assert_n_deliveries(1, "psync quote");
     };
 
