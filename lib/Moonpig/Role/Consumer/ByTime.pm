@@ -297,7 +297,7 @@ publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
               : $self->initial_invoice_charge_structs;
 
   my $total = sumof {; $_->{amount} } @structs;
-  return $total * ($interval / $self->cost_period);
+  return int($total * ($interval / $self->cost_period));
 };
 
 sub can_make_payment_on {
@@ -563,7 +563,7 @@ sub _issue_psync_charge {
   my ($self) = @_;
   my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
-  my $amount = int $self->estimate_cost_for_interval({
+  my $amount = $self->estimate_cost_for_interval({
     interval => $shortfall
   });
 
