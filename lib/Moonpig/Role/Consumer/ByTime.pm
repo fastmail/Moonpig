@@ -80,12 +80,21 @@ around copy_attr_hash__ => sub {
 
 sub _new_proration_period {
   my ($self) = @_;
-  return $self->is_active
+  my $period = $self->is_active
     ? $self->_estimated_remaining_funded_lifetime({
         amount => $self->unapplied_amount, # XXX ???
         ignore_partial_charge_periods => 0,
       })
     : $self->proration_period;
+
+  return $period if $period <= $self->cost_period;
+
+  return $self->cost_period
+    if $period - $self->cost_period <= $self->charge_frequency;
+
+  # This will be doomed to fail in the BUILD because proration period will
+  # exceed cost period.
+  return $period;
 }
 
 after BUILD => sub {
@@ -250,7 +259,9 @@ sub calculate_charge_structs_on {
 
   my @charge_structs = $self->charge_structs_on( $date );
 
-  $_->{amount} /= $n_periods for @charge_structs;
+  for (@charge_structs) {
+    $_->{amount} = int($_->{amount} / $n_periods);
+  }
 
   return @charge_structs;
 }
@@ -286,7 +297,7 @@ publish estimate_cost_for_interval => { interval => TimeInterval } => sub {
               : $self->initial_invoice_charge_structs;
 
   my $total = sumof {; $_->{amount} } @structs;
-  return $total * ($interval / $self->cost_period);
+  return int($total * ($interval / $self->cost_period));
 };
 
 sub can_make_payment_on {
@@ -552,9 +563,17 @@ sub _issue_psync_charge {
   my ($self) = @_;
   my $shortfall = $self->_predicted_shortfall;
   my $shortfall_days = ceil($shortfall / days(1));
-  my $amount = int $self->estimate_cost_for_interval({
+  my $amount = $self->estimate_cost_for_interval({
     interval => $shortfall
   });
+
+  # XXX We have conventionally considered millicents to be sort of an opaque
+  # unit, and only used the name literally in specific configurations.  So,
+  # this is cheating by rounding up to the nearest actual cent.  Cheat cheat
+  # cheat. -- rjbs, 2015-12-15
+  if ($amount % 1000) {
+    $amount = $amount - $amount % 1000 + 1000;
+  }
 
   $Logger->log([
     "issuing psync charge for shortfall of %dd on consumer %s (%s)",

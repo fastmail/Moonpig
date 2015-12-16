@@ -96,9 +96,17 @@ test 'setup sanity checks' => sub {
 };
 
 sub close_enough {
-  my ($a, $b, $msg) = @_;
-  note "Is $a close to $b ?";
-  ok(abs($a - $b) <= 1, $msg);
+  my ($a, $b, $var, $msg);
+
+  if (@_ > 3) {
+    ($a, $b, $var, $msg) = @_;
+  } else {
+    ($a, $b, $msg) = @_;
+    $var = 1;
+  }
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  ok(abs($a - $b) <= $var, $msg) or diag "  want: $b +/- $var\n", "  have: $a";
 }
 
 test 'psync chains' => sub {
@@ -118,7 +126,7 @@ test 'psync chains' => sub {
       # leaving a shortfall of 14 - 196/20 = 42/10 days.
 
       for ($c, $d, $e) {
-        is(
+        close_enough(
           $_->_predicted_shortfall,
           days(4.2),
           "extra charge -> shortfall 4.2 days"
@@ -166,7 +174,7 @@ test 'psync chains' => sub {
       $c->_maybe_send_psync_quote();
       is(my (undef, $qu) = $ledger->quotes, 2, "psync quote generated");
       is (my (@ch) = $qu->all_charges, 1, "one charge on psync quote");
-      close_enough ($qu->total_amount, dollars(12/14), "psync total amount");
+      close_enough ($qu->total_amount, dollars(12/14), 999, "psync total amount");
       $self->assert_n_deliveries(1, "psync quote");
     };
 
