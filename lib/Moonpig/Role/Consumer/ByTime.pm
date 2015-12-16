@@ -567,6 +567,14 @@ sub _issue_psync_charge {
     interval => $shortfall
   });
 
+  # XXX We have conventionally considered millicents to be sort of an opaque
+  # unit, and only used the name literally in specific configurations.  So,
+  # this is cheating by rounding up to the nearest actual cent.  Cheat cheat
+  # cheat. -- rjbs, 2015-12-15
+  if ($amount % 1000) {
+    $amount = $amount - $amount % 1000 + 1000;
+  }
+
   $Logger->log([
     "issuing psync charge for shortfall of %dd on consumer %s (%s)",
     $shortfall_days,
