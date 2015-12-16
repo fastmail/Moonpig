@@ -118,7 +118,7 @@ test 'psync chains' => sub {
       # leaving a shortfall of 14 - 196/20 = 42/10 days.
 
       for ($c, $d, $e) {
-        is(
+        close_enough(
           $_->_predicted_shortfall,
           days(4.2),
           "extra charge -> shortfall 4.2 days"
