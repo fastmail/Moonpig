@@ -6,6 +6,7 @@ use Moose::Role;
 with(
   'Moonpig::Role::LineItem',
   'Moonpig::Role::LineItem::RequiresZeroAmount',
+  'Moonpig::Role::LineItem::Abandonable',
 );
 
 use namespace::autoclean;
