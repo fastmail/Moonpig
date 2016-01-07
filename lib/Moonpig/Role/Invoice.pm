@@ -201,7 +201,7 @@ sub _pay_charges {
   # -- rjbs, 2014-07-30
   $_->acquire_funds for @consumers;
 
-  $_->handle_event($event) for @items;
+  $_->handle_event($event) for grep {; $_->can('handle_event') } @items;
 }
 
 sub __execute_charges_for {
@@ -216,7 +216,7 @@ sub __execute_charges_for {
     unless $self->is_closed;
 
   my @charges =
-    grep { ! $_->is_executed && ! $_->is_abandoned }
+    grep { $_->can('is_executed') && ! $_->is_executed && ! $_->is_abandoned }
     grep { $_->owner_guid eq $consumer->guid } $self->all_charges;
 
   # Try to apply non-refundable credit first.  Within that, go for smaller
