@@ -146,6 +146,9 @@ sub pay_amount_due {
 # (or, if supplied, until the current time is after $until)
 sub wait_until {
   my ($self, $ledger, $predicate, $until, $step) = @_;
+
+  $until = Moonpig->env->now + days($until) if $until && ! ref $until;
+
   $step //= days(1);
 
   my $elapsed = 0;
