@@ -8,6 +8,7 @@ use Moonpig::Util qw(days);
 use Moose::Role;
 use Stick::Publisher;
 use Stick::Publisher::Publish;
+use Stick::Util qw(true false);
 use MooseX::SetOnce;
 use Moose::Util::TypeConstraints qw(union);
 
@@ -184,6 +185,7 @@ PARTIAL_PACK {
     executed_at => $self->executed_at,
     quote_expiration_time => $self->quote_expiration_time,
     quote_has_expired     => $self->quote_has_expired,
+    is_psync_quote => $self->is_psync_quote ? true() : false(),
   }
 };
 
