@@ -1,0 +1,28 @@
+#!perl
+use 5.14.1;
+
+use Moonpig;
+use Moonpig::Util qw(dollars);
+use Pobox::Moonpig::Env;
+
+my $guid = 'E79A95BA-9DF2-11E1-BC6D-510C77C542B6';
+# my $xid  = 'pobox:bg:65650459';
+
+Moonpig->env->storage->do_rw_with_ledger(
+  $guid,
+  sub {
+    my ($ledger) = @_;
+
+    my $consumer = $ledger->active_consumer_for_xid('pobox:bg:16027831');
+
+    say $consumer->replacement_chain_expiration_date;
+
+    my @chain = $consumer->replacement_chain;
+    die "wtf" unless @chain >= 2;
+    $chain[-2]->replacement(undef);
+
+    say $consumer->replacement_chain_expiration_date;
+    die "DO NOT COMMIT\n";
+  }
+);
+
