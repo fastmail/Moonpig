@@ -78,13 +78,15 @@ sub register_object {
 }
 
 around autocharger_template => sub {
-  if ($_[2] eq 'moonpay') {
+  my ($orig, $env, $name) = @_;
+
+  if ($name eq 'moonpay') {
     return {
       roles => [ qw( =t::lib::Role::Autocharger::Moonpay ) ],
     };
   }
 
-  super;
+  $env->$orig($name);
 };
 
 sub storage_class {
