@@ -108,6 +108,10 @@ has consumer_template_registry => (
   },
 );
 
+sub autocharger_template {
+  return;
+}
+
 sub _class_subroute {
   Moonpig::X->throw("cannot route through Moonpig environment class");
 }

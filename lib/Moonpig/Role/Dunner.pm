@@ -10,6 +10,8 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
+use Moose::Util::TypeConstraints qw(role_type);
+use MooseX::Types::Moose qw(Str HashRef);
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Try::Tiny;
@@ -128,6 +130,9 @@ sub _autopay_invoices {
   # If that worked, we're done!
   return unless $self->payable_invoices;
 
+  # We can't autopay, so don't bother trying.
+  return unless my $autocharger = $self->autocharger;
+
   my @unpaid_invoices = grep { ! $_->is_paid } @$invoices;
 
   # Oh no, there are invoices left to pay!  How much will it take to pay it all
@@ -136,16 +141,59 @@ sub _autopay_invoices {
   my $invoice_total  = sumof { $_->total_amount } @unpaid_invoices;
   my $balance_needed = $invoice_total - $credit_on_hand;
 
-  $self->_charge_for_autopay({ amount => $balance_needed });
+  if ($autocharger->charge_into_credit({ amount => $balance_needed })) {
+    $self->process_credits;
+  }
 
   return;
 }
 
-sub _charge_for_autopay {
-  my ($self, $arg) = @_;
-  # XXX: do stuff -- rjbs, 2012-01-02
-  return;
+# This is basically exactly the code of Ledger->add_consumer_from_template
+sub setup_autocharger_from_template {
+  my ($self, $template, $arg) = @_;
+  $arg ||= {};
+
+  $template = Moonpig->env->autocharger_template($template)
+    unless ref $template;
+
+  Moonpig::X->throw("unknown autocharger template") unless $template;
+
+  my $template_roles = $template->{roles} || [];
+  my $template_class = $template->{class};
+  my $template_arg   = $template->{arg}   || {};
+
+  Moonpig::X->throw("autocharger template supplied class and roles")
+    if @$template_roles and $template_class;
+
+  my $obj = ($template_class || class(qw(Autocharger), @$template_roles))->new({
+    ledger => $self,
+    %$template_arg,
+    %$arg,
+  });
+
+  $self->_set_autocharger($obj);
+  return $obj;
 }
+
+publish _setup_autocharger => {
+  -http_method => 'post', -path => 'setup-autocharger',
+  template      => Str,
+  template_args => HashRef,
+} => sub {
+  my ($self) = @_;
+  $self->handle_event( event('heartbeat') );
+};
+
+has autocharger => (
+  is  => 'ro',
+  isa => role_type('Moonpig::Role::Autocharger'),
+  writer  => '_set_autocharger',
+  clearer => '_delete_autocharger',
+);
+
+publish _get_autocharger => { -path => 'autocharger', -http_method => 'get' } => sub {
+  $_[0]->autocharger;
+};
 
 sub _invoice_xid_summary {
   my ($self, $invoices) = @_;

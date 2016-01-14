@@ -325,7 +325,7 @@ sub build_consumer {
     croak "Arguments for consumer '$name' have both 'class' and 'template'\n"
       if $template;
 
-    Class::MOP::load_class($class);
+    Class::Load::load_class($class);
     $consumer = $stuff->{ledger}->add_consumer(
       $class,
       { xid => "test:consumer:$name",

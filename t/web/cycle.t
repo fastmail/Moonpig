@@ -31,11 +31,6 @@ my $ua = Moonpig::UserAgent->new({ base_uri => "http://localhost:5001" });
 my $json = JSON->new;
 my $app = Moonpig::Web::App->app;
 
-my $x_username = 'testuser';
-my $u_xid = username_xid($x_username);
-my $a_xid = "test:account:1";
-my $ledger_path = "/ledger/by-xid/$u_xid";
-
 my $guid_re = re('^[A-F0-9]{8}(-[A-F0-9]{4}){3}-[A-F0-9]{12}$');
 my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');
 
@@ -45,23 +40,28 @@ sub setup_account {
   my ($self) = @_;
   my %rv;
 
-  my $signup_info =
-    {
-      contact => {
-        first_name => "Fred",
-        last_name  => "Flooney",
-        phone_book => { home => '12345678' },
-        email_addresses => [ 'textuser@example.com' ],
-        address_lines   => [ '1313 Mockingbird Ln.' ],
-        city            => 'Wagstaff',
-        country         => 'USA',
-      },
-      consumers => {
-        $u_xid => {
-          template => 'username'
-         },
-      },
-    };
+  my $i = 1;
+  my $x_username = 'testuser-' . $i++;
+  my $u_xid = username_xid($x_username);
+  my $a_xid = "test:account:$i";
+  my $ledger_path = "/ledger/by-xid/$u_xid";
+
+  my $signup_info = {
+    contact => {
+      first_name => "Fred",
+      last_name  => "Flooney",
+      phone_book => { home => '12345678' },
+      email_addresses => [ 'textuser@example.com' ],
+      address_lines   => [ '1313 Mockingbird Ln.' ],
+      city            => 'Wagstaff',
+      country         => 'USA',
+    },
+    consumers => {
+      $u_xid => {
+        template => 'username'
+       },
+    },
+  };
 
   test_psgi app => $app,
     client => sub {
@@ -99,7 +99,7 @@ sub setup_account {
         $result;
       };
 
-      $self->elapse(1);
+      $self->elapse(1, $rv{ledger_guid});
       $self->assert_n_deliveries(1, "invoice");
 
       my $invoices = $ua->mp_get("$ledger_path/invoices/payable")->{items};
@@ -137,14 +137,13 @@ sub setup_account {
   return \%rv;
 }
 
-
 test "single payment" => sub {
   my ($self) = @_;
 
-  my $v1 = $self->setup_account;
+  my $rv = $self->setup_account;
 
   my $credit = $ua->mp_post(
-    "$ledger_path/credits",
+    "/ledger/by-guid/$rv->{ledger_guid}/credits",
     {
       type => 'Simulated',
       attributes => {
@@ -164,12 +163,64 @@ test "single payment" => sub {
   );
 };
 
+test "setup autocharger" => sub {
+  my ($self) = @_;
+
+  my $rv = $self->setup_account;
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, dollars(20), "we start off owing 20 bucks");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    is($autocharger, undef, "no autocharger yet");
+  }
+
+  my $autocharger = $ua->mp_post(
+    "/ledger/by-guid/$rv->{ledger_guid}/setup-autocharger",
+    {
+      template => 'moonpay',
+      template_args => {
+        amount_available => dollars(21),
+      },
+    },
+  );
+
+  Moonpig->env->storage->do_with_ledger(
+    $rv->{ledger_guid},
+    sub {
+      my ($ledger) = @_;
+      $ledger->setup_autocharger_from_template(moonpay => {
+        amount_available => dollars(21),
+      });
+    },
+  );
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    cmp_deeply(
+      $autocharger,
+      superhashof({ ledger_guid => $rv->{ledger_guid} }),
+      "...autocharger created via POST",
+    );
+  }
+
+  $self->elapse(9, $rv->{ledger_guid});
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, 0, "once we have an autocharger, we autopay");
+  }
+};
+
 sub elapse {
-  my ($self, $days) = @_;
+  my ($self, $days, $ledger_guid) = @_;
   $days ||= 1;
   for (1 .. $days) {
-    $ua->mp_get("/advance_clock/86400");
-    $ua->mp_post("$ledger_path/heartbeat", {});
+    $ua->mp_get("/advance-clock/86400");
+    $ua->mp_post("/ledger/by-guid/$ledger_guid/heartbeat", {});
   }
 }
 
