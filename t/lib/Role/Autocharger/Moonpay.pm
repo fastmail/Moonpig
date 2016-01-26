@@ -3,6 +3,7 @@ use Moose::Role;
 
 with 'Moonpig::Role::Autocharger';
 
+use Moonpig::Behavior::Packable;
 use Moonpig::Types qw(NonNegativeMillicents PositiveMillicents);
 use Moonpig::Util qw(class dollars);
 
@@ -40,5 +41,11 @@ sub charge_into_credit {
 }
 
 sub _class_subroute { ... }
+
+PARTIAL_PACK {
+  return {
+    amount_available => $_[0]->amount_available,
+  }
+};
 
 1;
