@@ -197,6 +197,21 @@ publish _get_autocharger => { -path => 'autocharger', -http_method => 'get' } =>
   $_[0]->autocharger;
 };
 
+publish autocharge_amount_due => {
+  -http_method => 'post',
+  -path   => 'autocharge-amount-due',
+} => sub {
+  my ($self) = @_;
+
+  my $due = $self->amount_due;
+  return {} unless $due > 0;
+
+  return {} unless my @invoices = $self->payable_invoices;
+  return {} unless my $credit = $self->_autopay_invoices(\@invoices);
+
+  return $credit;
+};
+
 sub _invoice_xid_summary {
   my ($self, $invoices) = @_;
   return unless @$invoices;
