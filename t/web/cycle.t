@@ -36,12 +36,13 @@ my $date_re = re('^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$');
 
 my $price = dollars(20);
 
+my $i = 0;
 sub setup_account {
   my ($self) = @_;
   my %rv;
 
-  my $i = 1;
-  my $x_username = 'testuser-' . $i++;
+  $i++;
+  my $x_username = 'testuser-' . $i;
   my $u_xid = username_xid($x_username);
   my $a_xid = "test:account:$i";
   my $ledger_path = "/ledger/by-xid/$u_xid";
