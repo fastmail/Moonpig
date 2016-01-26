@@ -141,11 +141,13 @@ sub _autopay_invoices {
   my $invoice_total  = sumof { $_->total_amount } @unpaid_invoices;
   my $balance_needed = $invoice_total - $credit_on_hand;
 
-  if ($autocharger->charge_into_credit({ amount => $balance_needed })) {
+  my $credit = $autocharger->charge_into_credit({ amount => $balance_needed });
+
+  if ($credit) {
     $self->process_credits;
   }
 
-  return;
+  return $credit;
 }
 
 # This is basically exactly the code of Ledger->add_consumer_from_template
