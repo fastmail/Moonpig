@@ -90,6 +90,10 @@ sub setup_account {
             charge_amount => $price,
             replacement_lead_time     => days(2),
             charge_frequency => days(1),
+            grace_period_duration => days(7),
+
+            # 5 is just too short when we need to dun twice
+            cost_period => days(10),
           },
         };
 
@@ -179,6 +183,68 @@ test "setup autocharger" => sub {
     is($autocharger, undef, "no autocharger yet");
   }
 
+  {
+    my $autocharger = $ua->mp_post(
+      "/ledger/by-guid/$rv->{ledger_guid}/setup-autocharger",
+      {
+        template => 'moonpay',
+        template_args => {
+          amount_available => dollars(21),
+        },
+      },
+    );
+
+    is($autocharger->{amount_available}, dollars(21), "21 bucks in charger");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    cmp_deeply(
+      $autocharger,
+      superhashof({ ledger_guid => $rv->{ledger_guid} }),
+      "...autocharger created via POST",
+    );
+
+    is($autocharger->{amount_available}, dollars(21), "21 bucks in charger");
+  }
+
+  # Gotta get to next dunning, 3d later. -- rjbs, 2016-01-26
+  $self->elapse(4, $rv->{ledger_guid});
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, 0, "once we have an autocharger, we autopay");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($autocharger->{amount_available}, dollars(1), "1 buck in charger");
+  }
+
+  $self->assert_n_deliveries(1, "invoice for replacement service");
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, 0, "once we have an autocharger, we autopay");
+  }
+};
+
+test "use autocharge by hand" => sub {
+  my ($self) = @_;
+
+  my $rv = $self->setup_account;
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, dollars(20), "we start off owing 20 bucks");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    is($autocharger, undef, "no autocharger yet");
+  }
+
   my $autocharger = $ua->mp_post(
     "/ledger/by-guid/$rv->{ledger_guid}/setup-autocharger",
     {
@@ -189,16 +255,6 @@ test "setup autocharger" => sub {
     },
   );
 
-  Moonpig->env->storage->do_with_ledger(
-    $rv->{ledger_guid},
-    sub {
-      my ($ledger) = @_;
-      $ledger->setup_autocharger_from_template(moonpay => {
-        amount_available => dollars(21),
-      });
-    },
-  );
-
   {
     my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
     cmp_deeply(
@@ -206,13 +262,25 @@ test "setup autocharger" => sub {
       superhashof({ ledger_guid => $rv->{ledger_guid} }),
       "...autocharger created via POST",
     );
+    is($autocharger->{amount_available}, dollars(21), "21 bucks in charger");
   }
 
-  $self->elapse(9, $rv->{ledger_guid});
+  {
+    my $credit_pack = $ua->mp_post(
+      "/ledger/by-guid/$rv->{ledger_guid}/autocharge-amount-due",
+      {},
+    );
+    is($credit_pack->{amount}, dollars(20));
+  }
 
   {
     my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
-    is($ledger->{amount_due}, 0, "once we have an autocharger, we autopay");
+    is($ledger->{amount_due}, 0, "we can trigger autopay by hand");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    is($autocharger->{amount_available}, dollars(1), "1 buck in charger");
   }
 };
 
