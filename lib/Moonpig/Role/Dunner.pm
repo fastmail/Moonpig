@@ -182,8 +182,8 @@ publish _setup_autocharger => {
   template      => Str,
   template_args => HashRef,
 } => sub {
-  my ($self) = @_;
-  $self->handle_event( event('heartbeat') );
+  my ($self, $arg) = @_;
+  $self->setup_autocharger_from_template($arg->{template}, $arg->{template_args});
 };
 
 has autocharger => (
