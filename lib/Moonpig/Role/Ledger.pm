@@ -836,7 +836,7 @@ sub queue_email {
 
   $self->queue_job('send-email', {
     email => $email->as_string,
-    env   => JSON->new->ascii->encode($env),
+    env   => Moonpig::Util::json()->encode($env),
   });
 }
 

@@ -8,8 +8,8 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 use Email::MIME;
-use JSON;
 use Email::Sender::Transport::Test;
+use Moonpig::Util;
 
 has email_sender => (
   is   => 'ro',
@@ -28,7 +28,7 @@ sub process_email_queue {
     my ($job) = @_;
     my $email = Email::MIME->new($job->payload('email'));
 
-    my $env = JSON->new->decode( $job->payload('env') );
+    my $env = Moonpig::Util::json()->decode( $job->payload('env') );
     $self->send_email($email, $env);
     $job->mark_complete;
     $count++;

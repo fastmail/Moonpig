@@ -5,12 +5,13 @@ package Moonpig::Web::App;
 
 use JSON;
 use Moonpig;
+use Moonpig::Util;
 use Stick::Util 0.20110525 qw(json_pack);
 use Try::Tiny;
 
 use Plack::Request;
 
-my $JSON = JSON->new->ascii(1)->convert_blessed(1)->allow_blessed(1);
+my $JSON = Moonpig::Util::json();
 
 sub test_routes {
   my ($path, $storage) = @_;

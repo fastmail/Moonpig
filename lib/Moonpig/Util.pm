@@ -1,4 +1,4 @@
-use strict;
+use 5.14.0;
 use warnings;
 package Moonpig::Util;
 # ABSTRACT: essential extra helper functions for Moonpig
@@ -184,7 +184,8 @@ sub sumof (&@) {
 sub percent { $_[0] / 100 }
 
 sub json {
-  JSON->new->ascii(1)->convert_blessed(1)->allow_blessed;
+  state $JSON = JSON->new->ascii(1)->convert_blessed(1)->allow_blessed;
+  return $JSON;
 }
 
 1;
