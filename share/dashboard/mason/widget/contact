@@ -4,8 +4,8 @@
 $contact
 $ledger
 </%args>
-% my @address_lines   = @{ $contact->{address} };
-% my @email_addresses = @{ $contact->{email} };
+% my @address_lines   = @{ $contact->{address_lines} };
+% my @email_addresses = @{ $contact->{email_addresses} };
 <div class='contact'>
   <h2>Ledger Contact</h2>
   <table class="table table-bordered table-condensed">

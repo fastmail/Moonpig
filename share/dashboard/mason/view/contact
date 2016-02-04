@@ -24,10 +24,10 @@ $ledger_id
   <br />
 % }
 
-  Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email}[0] |h %>' />
+  Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email_addresses}[0] |h %>' />
   <br />
 
-  Address: <input name='contact.address_lines.0' value='<% $ledger->{contact}{address}[0] |h %>' />
+  Address: <input name='contact.address_lines.0' value='<% $ledger->{contact}{address_lines}[0] |h %>' />
   <br />
 
   City: <input name='contact.city' value='<% $ledger->{contact}{city} |h %>' />
