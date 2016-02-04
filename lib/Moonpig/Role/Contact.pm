@@ -110,13 +110,11 @@ PARTIAL_PACK {
     last_name    => $self->last_name,
     organization => $self->organization,
     phone_book   => $self->phone_book,
-    address      => [ $self->address_lines ], # deprecate -- rjbs, 2012-04-25
     address_lines=> [ $self->address_lines ],
     city         => $self->city,
     state        => $self->state,
     country      => $self->country,
     postal_code  => $self->postal_code,
-    email        => [ $self->email_addresses ], # deprecate -- rjbs, 2012-04-25
     email_addresses => [ $self->email_addresses ],
     twitter_id   => $self->twitter_id,
   };
