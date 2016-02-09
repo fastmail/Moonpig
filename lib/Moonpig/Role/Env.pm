@@ -38,6 +38,8 @@ has _global_share_from_env => (
   },
 );
 
+sub dunner_maybe_forgive_debts {}
+
 requires 'default_dunning_frequency';
 
 requires 'extra_share_roots';

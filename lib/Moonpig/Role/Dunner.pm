@@ -112,6 +112,17 @@ sub perform_dunning {
 
   $_->mark_closed for grep { $_->is_open } @invoices;
 
+  # This hook is here so that Moonpig installs can issue courtesy credits for
+  # things like 1mc charges or $0.30 charges that would be all eaten up by
+  # credit card fees. -- rjbs, 2016-02-09
+  #
+  # This should really be a method on the Dunner/Ledger, but we don't have
+  # per-install Ledger roles, meaning we can't just add a method to Dunner and
+  # have the Pobox (or whatever) Moonpig install add advice to that method.
+  # So, we do this.  We can fix the design later, if we want. -- rjbs,
+  # 2016-02-09
+  Moonpig->env->dunner_maybe_forgive_debts($self);
+
   # Now we have an array of closed, unpaid invoices.  Before we send anything
   # to the poor guy who is on the hook for these, let's see if we can pay any
   # with existing credits, or charge him whatever we need to, to pay this.
