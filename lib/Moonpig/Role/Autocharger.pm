@@ -13,6 +13,7 @@ with(
   'Stick::Role::Routable::AutoInstance',
 );
 
+# named args: { amount => mc }
 requires 'charge_into_credit';
 
 1;
