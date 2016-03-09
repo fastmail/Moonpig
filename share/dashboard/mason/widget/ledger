@@ -108,7 +108,7 @@ to open invoice for
 </div>
 <div class="row">
 <div class="col-sm-6">
-  <h4>Credit from Authorize.net</h4>
+  <h4>Credit Card Charge</h4>
   <form method='post' action='/post/credit'>
   <div class="form-group">
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
