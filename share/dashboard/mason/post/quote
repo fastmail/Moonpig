@@ -3,10 +3,15 @@
 <%args>
 $ledger_guid
 $consumer
-$years
+$units
+$how_many
 </%args>
 <%perl>
-my $seconds = $years * 86_400 * 365.25;
+my $days = $units eq 'years'  ? 365.25
+         : $units eq 'months' ? 30
+         : die "unknown units: $units";
+
+my $seconds = $how_many * $days * 86_400;
 my $quote = $m->mp_request(
   POST => sprintf(
     '/ledger/by-guid/%s/consumers/active/%s/quote_for_extended_service',
