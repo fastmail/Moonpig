@@ -32,6 +32,7 @@ sub charge { ... }
 
 publish oneoff_issue_charge => {
   -path => 'oneoff-issue-charge',
+  -http_method => 'post',
   amount      => PositiveMillicents,
   description => TrimmedNonBlankLine,
 } => sub {
