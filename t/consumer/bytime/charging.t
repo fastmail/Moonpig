@@ -258,9 +258,11 @@ test "variable charge" => sub {
     my $days = uniq @$schedule;
 
     subtest "heartbeat schedule: $name" => sub {
-      my $stuff;
+      my $ledger_guid;
+      my $consumer_guid;
+
       Moonpig->env->storage->do_rw(sub {
-        $stuff = build(
+        my $stuff = build(
           consumer => {
             class => class('Consumer::ByTime', '=ChargeTodaysDate'),
             extra_charge_tags => ["test"],
@@ -270,32 +272,45 @@ test "variable charge" => sub {
           }
         );
 
-        my $credit = $stuff->{ledger}->add_credit(
-          class('Credit::Simulated'),
-          { amount => dollars(101) },
-        );
-
-        $stuff->{ledger}->perform_dunning;
+        $ledger_guid = $stuff->{ledger}->guid;
+        $consumer_guid = $stuff->{consumer}->guid;
 
         Moonpig->env->save_ledger($stuff->{ledger});
       });
 
-      $stuff->{consumer}->clear_grace_until;
+      Moonpig->env->storage->do_with_ledger(
+        $ledger_guid,
+        sub {
+          my $ledger = shift;
+          my $consumer = $ledger->consumer_collection->find_by_guid({
+            guid => $consumer_guid,
+          });
 
-      for my $day (@$schedule) {
-        my $tick_time = Moonpig::DateTime->new(
-          year => 2000, month => 1, day => $day
-        );
+          my $credit = $ledger->add_credit(
+            class('Credit::Simulated'),
+            { amount => dollars(101) },
+          );
 
-        Moonpig->env->stop_clock_at($tick_time);
+          $ledger->perform_dunning;
 
-        $self->heartbeat_and_send_mail($stuff->{ledger});
-      }
+          $consumer->clear_grace_until;
 
-      # We should be charging across five days, no matter the pattern, starting
-      # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
-      is($stuff->{consumer}->unapplied_amount, dollars(86),
-         '$15 charged by charging the date');
+          for my $day (@$schedule) {
+            my $tick_time = Moonpig::DateTime->new(
+              year => 2000, month => 1, day => $day
+            );
+
+            Moonpig->env->stop_clock_at($tick_time);
+
+            $self->heartbeat_and_send_mail($ledger);
+          }
+
+          # We should be charging across five days, no matter the pattern, starting
+          # on Jan 1, through Jan 5.  That's 1+2+3+4+5 = 15
+          is($consumer->unapplied_amount, dollars(86),
+             '$15 charged by charging the date');
+        }
+      );
 
       # Right now, we send psync notices.  We'd like to separate psync from
       # ByTime, but it's not trivial to do just this minute, so we'll make the

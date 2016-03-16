@@ -203,6 +203,8 @@ test "irreplaceable" => sub {
           }
         );
 
+        Moonpig->env->save_ledger($stuff->{ledger});
+
         my $ledger = $stuff->{ledger};
 
         $self->heartbeat_and_send_mail($ledger);
