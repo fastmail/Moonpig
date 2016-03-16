@@ -17,6 +17,15 @@ sub templates {
   my $b5g1_xid = "consumer:5y:test";
 
   return {
+    oneoff => sub {
+      my ($name) = @_;
+      return {
+        roles => [ 'Consumer::OneOff' ],
+        arg => {
+          replacement_plan => [ get => '/nothing' ],
+         },
+       }
+    },
     dummy => sub {
       my ($name) = @_;
       return {
