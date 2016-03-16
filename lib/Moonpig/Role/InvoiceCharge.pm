@@ -32,6 +32,34 @@ implicit_event_handlers {
   }
 };
 
+sub acquire_funds {
+  my ($self, $credits) = @_;
+
+  my $still_need = $self->amount;
+
+  CREDIT: for my $credit (@$credits) {
+    my $to_xfer = $credit->unapplied_amount >= $still_need
+                ? $still_need
+                : $credit->unapplied_amount;
+
+    next CREDIT unless $to_xfer;
+
+    $self->ledger->accountant->create_transfer({
+      type => 'consumer_funding',
+      from => $credit,
+      to   => $self->owner,
+      amount => $to_xfer,
+    });
+
+    $still_need -= $to_xfer;
+
+    last CREDIT if $still_need == 0;
+  }
+
+  $self->__set_executed_at( Moonpig->env->now );
+  return;
+}
+
 PARTIAL_PACK {
   my ($self) = @_;
 

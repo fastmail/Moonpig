@@ -227,26 +227,7 @@ sub __execute_charges_for {
                 $ledger->credits;
 
   for my $charge (@charges) {
-    my $still_need = $charge->amount;
-    CREDIT: for my $credit (@credits) {
-      my $to_xfer = $credit->unapplied_amount >= $still_need
-                  ? $still_need
-                  : $credit->unapplied_amount;
-
-      next CREDIT unless $to_xfer;
-
-      $ledger->accountant->create_transfer({
-        type => 'consumer_funding',
-        from => $credit,
-        to   => $consumer,
-        amount => $to_xfer,
-      });
-      $still_need -= $to_xfer;
-
-      last CREDIT if $still_need == 0;
-    }
-
-    $charge->__set_executed_at( Moonpig->env->now );
+    $charge->acquire_funds(\@credits);
   }
 }
 
