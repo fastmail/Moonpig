@@ -29,11 +29,13 @@ $ledger
     <tr><th>Phone (<% $key |h %>)</th><td><% $contact->{phone_book}{$key} |h %></td></tr>
 % }
 
-    <tr><th rowspan='<% 0 + @email_addresses %>'>Email</th><td><% shift @email_addresses |h %></td></tr>
+    <tr><th rowspan='<% 0 + @email_addresses %>'>Email</th><td><% shift @email_addresses |h %>
+    
 % for my $email (@email_addresses) {
-    <tr><th></th><td><% $email |h %></td></tr>
+    <% $email |h %><br />
 % }
 
+    </td></tr>
   </table>
   <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn btn-default">edit contact</a>
 </div>

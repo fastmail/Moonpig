@@ -1,4 +1,4 @@
-%# vim:set ft=mason:
+%# vim</label>set ft=mason</label>
 <%method main>
 <%args>
 $ledger_id
@@ -10,39 +10,63 @@ $ledger_id
 <form action='/post/contact' method='POST' accept-charset='UTF-8'>
   <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
 
-  First name: <input name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>First name</label><input type="text" class="form-control" name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
+  </div>
+<div class="col-sm-6">
+  <label>Last name</label> <input type="text" class="form-control" name='contact.last_name' value='<% $ledger->{contact}{last_name} |h %>' />
+  </div>
+  </div>
 
-  Last name: <input name='contact.last_name' value='<% $ledger->{contact}{last_name} |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>Organization</label> <input type="text" class="form-control" name='contact.organization' value='<% $ledger->{contact}{organization} |h %>' />
+  </div>
+</div>
 
-  Organization: <input name='contact.organization' value='<% $ledger->{contact}{organization} |h %>' />
-  <br />
-
+<div class="row">
 % for my $key (keys %{ $ledger->{contact}{phone_book} }) {
-  Phone number (<% $key |h %>): <input name='contact.phone_book.<% $key |h %>' value='<% $ledger->{contact}{phone_book}{$key} |h %>' />
-  <br />
+<div class="col-sm-6">
+  <label>Phone number (<% $key |h %>)</label> <input type="text" class="form-control" name='contact.phone_book.<% $key |h %>' value='<% $ledger->{contact}{phone_book}{$key} |h %>' />
+  </div>
 % }
+</div>
 
-  Email: <input name='contact.email_addresses.0' value='<% $ledger->{contact}{email_addresses}[0] |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>Email</label> <input type="text" class="form-control" name='contact.email_addresses.0' value='<% $ledger->{contact}{email_addresses}[0] |h %>' />
+  </div>
+</div>
 
-  Address: <input name='contact.address_lines.0' value='<% $ledger->{contact}{address_lines}[0] |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>Address</label> <input type="text" class="form-control" name='contact.address_lines.0' value='<% $ledger->{contact}{address_lines}[0] |h %>' />
+  </div>
+</div>
 
-  City: <input name='contact.city' value='<% $ledger->{contact}{city} |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>City</label> <input type="text" class="form-control" name='contact.city' value='<% $ledger->{contact}{city} |h %>' />
+  </div>
 
-  State: <input name='contact.state' value='<% $ledger->{contact}{state} |h %>' />
-  <br />
+<div class="col-sm-6">
+  <label>State</label> <input type="text" class="form-control" name='contact.state' value='<% $ledger->{contact}{state} |h %>' />
+  </div>
+</div>
 
-  Postal Code: <input name='contact.postal_code' value='<% $ledger->{contact}{postal_code} |h %>' />
-  <br />
+<div class="row">
+<div class="col-sm-6">
+  <label>Postal Code</label> <input type="text" class="form-control" name='contact.postal_code' value='<% $ledger->{contact}{postal_code} |h %>' />
+  </div>
 
-  Country: <input name='contact.country' value='<% $ledger->{contact}{country} |h %>' />
-  <br />
-
+<div class="col-sm-6">
+  <label>Country</label> <input type="text" class="form-control" name='contact.country' value='<% $ledger->{contact}{country} |h %>' />
+  </div>
+</div>
   <input type='submit' class="btn btn-default" value='Save Contact Info' />
 </form>
+</div>
+</div>
 </&>
 </%method>
