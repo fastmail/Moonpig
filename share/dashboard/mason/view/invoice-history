@@ -5,7 +5,8 @@ $ledger_id
 </%args>
 % my $invoices = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices");
 % $m->redirect('/') unless $invoices;
-<&| /page/full, title => "Moonpig Ledger Invoice History" &>
+<&| /page/full, title => "Moonpig Ledger Invoice History", ledger_id =>
+$ledger_id &>
 
 <& /widget/last-response, label => 'HTTP Response for Invoices Collection' &>
 

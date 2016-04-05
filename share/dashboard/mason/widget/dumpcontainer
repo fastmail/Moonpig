@@ -5,8 +5,8 @@ $label
 $header_id => undef
 </%args>
 % $header_id = "dumpcontainer-" . guid_string unless defined $header_id;
-<div class='dumpcontainer'>
-<h2 id='<% $header_id |h %>'><% $label |h %></h2>
+<div class='dumpcontainer mini-hero'>
+<h4 id='<% $header_id |h %>'><% $label |h %></h4>
 <% $m->content %>
 </div>
 </%method>

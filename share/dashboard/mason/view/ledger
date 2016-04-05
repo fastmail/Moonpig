@@ -5,7 +5,9 @@ $ledger_id
 </%args>
 % my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 % $m->redirect('/') unless $ledger;
-<&| /page/full, title => "Moonpig Ledger " . $ledger->{ident} &>
+<&| /page/full, 
+  title => $ledger->{contact}->{first_name} . " " . $ledger->{contact}->{last_name} . " - Moonpig",
+  header => "Moonpig Ledger " . $ledger->{ident} &>
 <& /widget/results, results => {
   'consumer-canceled'   => "Consumer canceled!",
   'consumer-reinvoiced' => "Consumer reinvoiced!",

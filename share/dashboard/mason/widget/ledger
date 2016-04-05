@@ -46,36 +46,6 @@ $ledger
 <div class="row">
 <div class="col-sm-6">
 <h2>Enter Payments</h2>
-<form id="newquote" class="form-inline" method="POST" action="/post/quote">
-<input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
-<div class="form-group">Add
-<select name="how_many" class="input-small">
-<option>1</opTion>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
-<select name="units" class="input-small">
-<option>years</option>
-<option>months</option>
-</select>
-to open invoice for
-<select id="consumer" name="consumer">
-% my $active_consumers = $ledger->{active_xids};
-% for my $xid (sort keys %$active_consumers) { 
-<option value="<% $xid %>"><% $xid %></option>
-% }
-</select>
-</div>
-<input type="submit" value="Make Quote" class="btn btn-default">
-</form>
-
 <div class="row">
 <div class="col-sm-6">
   <h4>Check</h4>
@@ -215,7 +185,11 @@ $consumer
 <%args>
 $ledger
 </%args>
-  <h2>Unpaid Invoices</h2>
+  <h2>Unpaid Invoices <small>
+    <a href='/ledger/<% $ledger->{guid} |h %>/invoices'>
+      View All Invoices
+    </a>
+    </small></h2>
 % my $invoices = $ledger->{unpaid_invoices}{items};
 % my $total     = sumof(sub{ $_->{total_amount} }, @$invoices);
 % my $total_due = $ledger->{amount_due};
@@ -245,11 +219,6 @@ $ledger
     </tr>
   </table>
 
-  <div>
-    <a class="btn btn-default" href='/ledger/<% $ledger->{guid} |h %>/invoices'>
-      view all invoices
-    </a>
-  </div>
 </%method>
 
 <%method discounts>
@@ -281,6 +250,36 @@ $ledger
 % my @quotes = @{ $quotes->{items} };
 <div class='invoices'>
   <h2>Quotes</h2>
+<form id="newquote" class="form-inline" method="POST" action="/post/quote">
+<input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
+<div class="form-group">Add
+<select name="how_many" class="input-small form-control">
+<option>1</opTion>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+<select name="units" class="input-small form-control">
+<option>years</option>
+<option>months</option>
+</select>
+to open invoice for
+<select id="consumer" name="consumer" class="form-control">
+% my $active_consumers = $ledger->{active_xids};
+% for my $xid (sort keys %$active_consumers) { 
+<option value="<% $xid %>"><% $xid %></option>
+% }
+</select>
+</div>
+<input type="submit" value="Make Quote" class="btn btn-default">
+</form>
+
   <table class="table">
   <thead>
     <tr>

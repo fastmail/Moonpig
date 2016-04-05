@@ -2,19 +2,10 @@
   text-decoration: line-through;
 }
 
-.dumpcontainer {
-  background-color: #fed;
-  border: 1px black dashed;
-  padding: 0 .5em;
-  margin-bottom: .5em;
-}
-
 .dump {
   font-family: monospace;
-  border: thin black solid;
   padding: 1em;
   margin: 0 0 .5em 0;
-  background-color: #edc;
   white-space: pre;
 }
 

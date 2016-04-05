@@ -2,6 +2,8 @@
 <%method main>
 <%args>
 $title
+$header => undef
+$ledger_id => undef
 </%args>
 <!DOCTYPE html>
 <html>
@@ -18,7 +20,7 @@ $title
 <script>
 $(function () {
   $('div.dump').hide();
-  $(".dumpcontainer h2").click(function () {
+  $(".dumpcontainer h4").click(function () {
     $(this).parent().find('div.dump').slideToggle();
   });
 });
@@ -62,8 +64,14 @@ $(function () {
       </div>
   </nav>
 <div class="container-fluid">
+% if ($ledger_id) {
+<ol class="breadcrumb">
+<li><a href="/">Moonpig</a></li>
+<li><a href="/ledger/<% $ledger_id %>">Customer Ledger</a></li>
+</ol>
+% }
 <div class="page-header">
-  <h1><% $title |h %></h1>
+  <h1><% $header || $title |h %></h1>
 </div>
 <% $m->content %>
 </div>

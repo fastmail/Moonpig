@@ -5,12 +5,13 @@ $ledger_id
 </%args>
 % my $ledger = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) );
 % $m->redirect('/') unless $ledger;
-<&| /page/full, title => "Moonpig Ledger $ledger->{ident} Contact" &>
+<&| /page/full, title => "Moonpig Ledger $ledger->{ident} Contact",
+  ledger_id=> $ledger_id &>
 
 <form action='/post/contact' method='POST' accept-charset='UTF-8'>
   <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
 
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
   <label>First name</label><input type="text" class="form-control" name='contact.first_name' value='<% $ledger->{contact}{first_name} |h %>' />
   </div>
@@ -19,13 +20,16 @@ $ledger_id
   </div>
   </div>
 
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
   <label>Organization</label> <input type="text" class="form-control" name='contact.organization' value='<% $ledger->{contact}{organization} |h %>' />
   </div>
+<div class="col-sm-6">
+  <label>Email</label> <input type="text" class="form-control" name='contact.email_addresses.0' value='<% $ledger->{contact}{email_addresses}[0] |h %>' />
+  </div>
 </div>
 
-<div class="row">
+<div class="row spacer">
 % for my $key (keys %{ $ledger->{contact}{phone_book} }) {
 <div class="col-sm-6">
   <label>Phone number (<% $key |h %>)</label> <input type="text" class="form-control" name='contact.phone_book.<% $key |h %>' value='<% $ledger->{contact}{phone_book}{$key} |h %>' />
@@ -33,19 +37,14 @@ $ledger_id
 % }
 </div>
 
-<div class="row">
-<div class="col-sm-6">
-  <label>Email</label> <input type="text" class="form-control" name='contact.email_addresses.0' value='<% $ledger->{contact}{email_addresses}[0] |h %>' />
-  </div>
-</div>
 
-<div class="row">
-<div class="col-sm-6">
+<div class="row spacer">
+<div class="col-sm-12">
   <label>Address</label> <input type="text" class="form-control" name='contact.address_lines.0' value='<% $ledger->{contact}{address_lines}[0] |h %>' />
   </div>
 </div>
 
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
   <label>City</label> <input type="text" class="form-control" name='contact.city' value='<% $ledger->{contact}{city} |h %>' />
   </div>
@@ -55,7 +54,7 @@ $ledger_id
   </div>
 </div>
 
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
   <label>Postal Code</label> <input type="text" class="form-control" name='contact.postal_code' value='<% $ledger->{contact}{postal_code} |h %>' />
   </div>
@@ -64,7 +63,11 @@ $ledger_id
   <label>Country</label> <input type="text" class="form-control" name='contact.country' value='<% $ledger->{contact}{country} |h %>' />
   </div>
 </div>
-  <input type='submit' class="btn btn-default" value='Save Contact Info' />
+
+  <div class="spacer">
+<input type='submit' class="btn btn-default" value='Save Contact Info' />
+</div>
+</div>
 </form>
 </div>
 </div>

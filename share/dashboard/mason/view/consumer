@@ -12,27 +12,37 @@ $m->redirect('/') unless $consumer;
 my $xid = $consumer->{xid};
 </%perl>
 
-<&| /page/full, title => "Moonpig Consumer $consumer_guid" &>
-  <div>Consumer for resource: <% $xid |h %></div>
+<&| /page/full, 
+  title => $consumer_guid . " - Moonpig",
+  header => "Consumer " . $consumer_guid,
+  ledger => $ledger &>
 
-  <form method='post' action='/post/reinvoice-consumer'>
+<h3>Consumer for resource: <% $xid |h %></h3>
+
+<div class="row">
+<div class="col-sm-4">
+<form method='post' action='/post/reinvoice-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
     <input type='submit' class="btn btn-default" value='Reissue Initial Invoice (totally might fail)' />
   </form>
-
+</div>
+<div class="col-sm-4">
   <form method='post' action='/post/cancel-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' class="btn btn-default" value='Cancel Service (do not renew)' />
+    <input type='submit' class="btn btn-warning" value='Cancel Service (do not renew)' />
   </form>
-
+</div>
+<div class="col-sm-4">
   <form method='post' action='/post/terminate-consumer'>
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='consumer_guid' value='<% $consumer_guid |h %>' />
-    <input type='submit' class="btn btn-default" value='Terminate Service (cancel and deactivate)' />
+    <input type='submit' class="btn btn-danger" value='Terminate Service (cancel and deactivate)' />
   </form>
-
+</div>
+</div>
+<div class="spacer"></div>
   <& /widget/dump, dump => $consumer, what => 'Consumer' &>
 
   <& SELF:chain, xid => $xid, guid => $consumer_guid &>
@@ -51,18 +61,18 @@ $guid
 % for my $consumer (@$chain) {
   <div>
     <h3>consumer <% $consumer->{guid} |h %></h3>
-    <table>
-      <tr><th>Created:  </th><td><% $consumer->{created_at} |h %></td></tr>
+    <table class="table">
+      <tr><th>Created  </th><td><% $consumer->{created_at} |h %></td></tr>
 %   if ($consumer->{activated_at}) {
-      <tr><th>Activated:</th><td><% $consumer->{activated_at} |h %></td></tr>
+      <tr><th>Activated</th><td><% $consumer->{activated_at} |h %></td></tr>
 %   }
-      <tr><th>Funds:    </th><td><% mc($consumer->{unapplied_amount}//0) |h %></td></tr>
+      <tr><th>Funds    </th><td><% mc($consumer->{unapplied_amount}//0) |h %></td></tr>
 %   for my $inv (@{ $consumer->{charges} }) {
       <tr><th colspan='2'>Invoice <% $inv->{invoice} %></th></tr>
 %     for my $chg (@{ $inv->{charges} }) {
         <tr><th colspan='2'>-- <% $chg->{description} |h %></th></tr>
-        <tr><th>Amount:</th><td><% mc($chg->{amount}) %></td></tr>
-        <tr><th>Executed:</th><td><% $chg->{executed_at} // 'never' |h %></td></tr>
+        <tr><th>Amount</th><td><% mc($chg->{amount}) %></td></tr>
+        <tr><th>Executed</th><td><% $chg->{executed_at} // 'never' |h %></td></tr>
 %     }
 %   }
     </table>

@@ -7,7 +7,9 @@ $ledger
 % my @address_lines   = @{ $contact->{address_lines} };
 % my @email_addresses = @{ $contact->{email_addresses} };
 <div class='contact'>
-  <h2>Ledger Contact</h2>
+  <h2>Ledger Contact
+  <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn btn-sm btn-default">edit contact</a>
+  </h2>
   <table class="table table-bordered table-condensed">
     <tr><th>Name</th><td>
       <% $contact->{first_name} |h %>
@@ -37,6 +39,5 @@ $ledger
 
     </td></tr>
   </table>
-  <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn btn-default">edit contact</a>
 </div>
 </%method>
