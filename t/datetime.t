@@ -81,4 +81,10 @@ is($birthday->iso, $iso, '->iso formatter works');
 
 is($birthday->TO_JSON, $birthday->iso, "->TO_JSON is just ->iso");
 
+my $trunc = $birthday->truncated(to => 'day');
+
+is($trunc->iso, '1978-07-20 00:00:00', 'truncated to day');
+
+is($birthday->iso, $iso, '...original unaffected');
+
 done_testing;

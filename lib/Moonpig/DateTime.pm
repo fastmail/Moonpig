@@ -73,6 +73,15 @@ for my $mutator (qw(
   });
 }
 
+sub truncated {
+  my ($self, @rest) = @_;
+  my $clone = $self->clone;
+  bless $clone, 'DateTime';
+  $clone->truncate(@rest);
+  bless $clone, __PACKAGE__;
+  return $clone;
+}
+
 sub interval_factory { return $_[1] }
 
 sub _to_sec {
