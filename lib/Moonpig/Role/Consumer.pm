@@ -804,8 +804,8 @@ publish _replacement_chain_summary => {
 } => sub {
   my ($self, $arg) = @_;
 
-  Moonpig::X->throw("can't get replacement chain summary of inactive consumer")
-    unless $self->is_active;
+  #Moonpig::X->throw("can't get replacement chain summary of inactive consumer")
+  #  unless $self->is_active;
 
   my @hunks;
   for my $consumer ($self, $self->replacement_chain) {
