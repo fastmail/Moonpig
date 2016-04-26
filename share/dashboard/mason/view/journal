@@ -12,10 +12,11 @@ die "can't get activity" unless $activity;
 <&| /page/full, title => "Moonpig Ledger $ledger_id: Journal Activity" &>
 
 <table>
-  <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
+  <tr><th>Date</th><th>Consumer</th><th>Description</th><th>Amount</th></tr>
 % for my $row (@{ $activity->{items} }) {
   <tr>
     <td><% $row->{date} %></td>
+    <td><% $row->{consumer_guid} %></td>
     <td><% $row->{description} |h %></td>
     <td><% mc($row->{amount}) %></td>
   </tr>

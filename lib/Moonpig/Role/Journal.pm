@@ -91,7 +91,8 @@ publish _recent_activity => {
       map {; {
         date   => $_->date,
         amount => $_->amount,
-        description => $_->description,
+        description   => $_->description,
+        consumer_guid => $_->owner_guid,
       } } reverse @items
     ],
   };
