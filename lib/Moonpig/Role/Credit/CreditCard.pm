@@ -7,7 +7,7 @@ use Moonpig::Types qw(TrimmedNonBlankLine);
 
 use namespace::autoclean;
 
-with 'Moonpig::Role::Credit::Refundable::ViaCustSrv';
+with 'Moonpig::Role::Credit::Refundable::ViaPinstripe';
 
 sub as_string {
   my ($self) = @_;
