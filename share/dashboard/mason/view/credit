@@ -25,7 +25,7 @@ $m->redirect('/') unless $credit;
 <p>This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
 mc($credit->{amount}) |h %>, received at <% $credit->{created_at} | h %>.</p>
 </div>
-% if ($credit->{refundable_amount}) {
+% if ($credit->{refundable_amount} || $credit->{unapplied_amount}) {
 <div class="col-sm-4">
 <h4>Refund</h4>
   <p>You can refund the unapplied value of the credit.</p>
