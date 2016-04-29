@@ -8,25 +8,25 @@ $ledger
 % my @email_addresses = @{ $contact->{email_addresses} };
 <div class='contact'>
   <h2>Ledger Contact
-  <a href='/ledger/<% $ledger->{guid} |h %>/contact' class="btn btn-sm btn-default">edit contact</a>
+  <small><a href='/ledger/<% $ledger->{guid} |h %>/contact'>Edit</a></small>
   </h2>
-  <table class="table table-bordered table-condensed">
+  <table class="table table-striped">
     <tr><th>Name</th><td>
       <% $contact->{first_name} |h %>
       <% $contact->{last_name} |h %>
     </td></tr>
     <tr><th>Organization</th><td><% $contact->{organization} // '' |h %></td></tr>
 
-    <tr><th rowspan='<% 0 + @address_lines %>'>Address</th><td><% shift @address_lines |h %></td></tr>
+    <tr><th>Address</th><td><% shift @address_lines |h %><br />
 % for my $line (@address_lines) {
-    <tr><th></th><td><% $line |h %></td></tr>
+    <% $line |h %><br />
 % }
 
-    <tr><th>City</th><td><% $contact->{city} |h %></td></tr>
-    <tr><th>State/Region</th><td><% $contact->{state} // '' |h %></td></tr>
-    <tr><th>Postal Code</th><td><% $contact->{postal_code} // '' |h %></td></tr>
-    <tr><th>Country</th><td><% $contact->{country} |h %></td></tr>
-
+    <% $contact->{city} |h %>, <% $contact->{state} // '-' |h %> <% $contact->{postal_code} // '-' |h %>
+    <br />
+    <% $contact->{country} |h %>
+    </td></tr>
+</td></tr>
 % for my $key (keys %{ $contact->{phone_book} }) {
     <tr><th>Phone (<% $key |h %>)</th><td><% $contact->{phone_book}{$key} |h %></td></tr>
 % }

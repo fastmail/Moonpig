@@ -15,7 +15,7 @@ my $xid = $consumer->{xid};
 <&| /page/full, 
   title => $consumer_guid . " - Moonpig",
   header => "Consumer " . $consumer_guid,
-  ledger => $ledger &>
+  ledger_id => $ledger_id &>
 
 <h3>Consumer for resource: <% $xid |h %></h3>
 

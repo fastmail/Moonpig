@@ -13,8 +13,7 @@ $ledger
  <& SELF:discounts, ledger => $ledger &>
 </div>
 </div>
-<hr>
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
  <& SELF:invoices, ledger => $ledger &>
 </div>
@@ -22,16 +21,14 @@ $ledger
   <& SELF:quotes, ledger => $ledger &>
 </div>
 </div>
-<hr>
   <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items} &>
 <hr>
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-12">
   <& SELF:jobs, jobs => $ledger->{jobs}{items} &>
 </div>
 </div>
-<hr>
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-12">
   <& /widget/dump, dump => $ledger, what => 'Ledger' &>
 </div>
@@ -43,7 +40,7 @@ $ledger
 $credits
 $ledger
 </%args>
-<div class="row">
+<div class="row spacer">
 <div class="col-sm-6">
 <h2>Enter Payments</h2>
 <div class="row">
@@ -55,7 +52,7 @@ $ledger
     <label for="credit.attributes.bank_name">Bank name</label> <input type="text" class="form-control" name='credit.attributes.bank_name' />
     <label for="credit.attributes.check_number">Check &#x2116;</label> <input type="text" class="form-control" name='credit.attributes.check_number' />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Credit' />
+    <input type='submit' class="btn btn-default" value='Add Check' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
     <input type='hidden' name='credit.send_receipt' value='1' />
@@ -69,7 +66,7 @@ $ledger
     <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
     <label for="credit.attributes.from_address">Email Addr</label> <input name='credit.attributes.from_address' type="text" class="form-control" />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Credit' />
+    <input type='submit' class="btn btn-default" value='Add PayPal' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='PayPal' />
     <input type='hidden' name='credit.send_receipt' value='1' />
@@ -84,7 +81,7 @@ $ledger
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
     <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Credit' />
+    <input type='submit' class="btn btn-default" value='Add Credit Card' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='CreditCard' />
     <input type='hidden' name='credit.send_receipt' value='1' />
@@ -92,13 +89,13 @@ $ledger
 </div>
 <div class="col-sm-6">
 
-  <h4>Pobox courtesy credit</h4>
+  <h4>Pobox Courtesy Credit</h4>
   <form method='post' action='/post/credit'>
   <div class="form-group">
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
     <label for="credit.attributes.amount">Reason (req)</label> <input name='credit.attributes.reason' type="text" class="form-control" />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Credit' />
+    <input type='submit' class="btn btn-default" value='Add Courtesy Credit' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Courtesy' />
     <input type='hidden' name='credit.send_receipt' value='0' />
@@ -108,7 +105,7 @@ $ledger
 </div>
 <div class="col-sm-6">
   <h2>Payment History</h2>
-  <table class="table">
+  <table class="table table-striped">
   <thead>
     <tr>
       <th>&nbsp;</th>
@@ -133,9 +130,11 @@ $ledger
   </tbody>
   </table>
 
-  <div><b>Refundable funds: <% mc($ledger->{amount_available}) %></b></div>
-  <div><b>Amount due: <% mc($ledger->{amount_due}) %></b></div>
-  <div><a href='/ledger/<% $ledger->{guid} %>/journal-activity'>View Journal Activity</a></div>
+  <dl class="dl-horizontal">
+  <dt>Refundable funds</dt><dd><% mc($ledger->{amount_available}) %></dd>
+  <dt>Amount due</dt><dd><% mc($ledger->{amount_due}) %></dd>
+  <dt><a href='/ledger/<% $ledger->{guid} %>/journal-activity'>View Journal Activity</a></dt>
+  </dl>
 </div>
 </div>
 </%method>
@@ -164,7 +163,7 @@ $ledger
 $active_consumers
 </%args>
   <h2>Active Consumers</h2>
-    <table class="table table-condensed">
+    <table class="table">
 % for my $xid (sort keys %$active_consumers) {
 %   my $consumer = $active_consumers->{$xid};
     <& SELF:active-consumer-rows, xid => $xid, consumer => $consumer &>
@@ -187,7 +186,7 @@ $ledger
 </%args>
   <h2>Unpaid Invoices <small>
     <a href='/ledger/<% $ledger->{guid} |h %>/invoices'>
-      View All Invoices
+      View All
     </a>
     </small></h2>
 % my $invoices = $ledger->{unpaid_invoices}{items};
@@ -225,7 +224,7 @@ $ledger
 <%args>
 $ledger
 </%args>
-  <h2>Discounts</h2>
+  <h3>Discounts</h3>
 % my $discounts = $ledger->{discounts}{items};
   <table class="table">
     <thead>
@@ -250,35 +249,6 @@ $ledger
 % my @quotes = @{ $quotes->{items} };
 <div class='invoices'>
   <h2>Quotes</h2>
-<form id="newquote" class="form-inline" method="POST" action="/post/quote">
-<input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
-<div class="form-group">Add
-<select name="how_many" class="input-small form-control">
-<option>1</opTion>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
-<select name="units" class="input-small form-control">
-<option>years</option>
-<option>months</option>
-</select>
-to open invoice for
-<select id="consumer" name="consumer" class="form-control">
-% my $active_consumers = $ledger->{active_xids};
-% for my $xid (sort keys %$active_consumers) { 
-<option value="<% $xid %>"><% $xid %></option>
-% }
-</select>
-</div>
-<input type="submit" value="Make Quote" class="btn btn-default">
-</form>
 
   <table class="table">
   <thead>
@@ -297,5 +267,34 @@ to open invoice for
     </tr>
 % }
   </table>
+<form id="newquote" class="form-inline" method="POST" action="/post/quote">
+<input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
+<div class="form-group">Add
+<select name="how_many" class="input-sm form-control">
+<option>1</opTion>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+<select name="units" class="input-sm form-control">
+<option>years</option>
+<option>months</option>
+</select>
+to open invoice for
+<select id="consumer" name="consumer" class="input-sm form-control">
+% my $active_consumers = $ledger->{active_xids};
+% for my $xid (sort keys %$active_consumers) { 
+<option value="<% $xid %>"><% $xid %></option>
+% }
+</select>
+</div>
+<input type="submit" value="Make Quote" class="btn btn-default btn-sm">
+</form>
 </div>
 </%method>

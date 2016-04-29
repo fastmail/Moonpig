@@ -18,29 +18,39 @@ $m->redirect('/') unless $credit;
   selector => $credit->{guid},
 &>
 
-<&| /page/full, title => "Moonpig Credit $credit_guid" &>
-This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
-mc($credit->{amount}) |h %>
-
+<&| /page/full, title => "Moonpig Credit $credit_guid", ledger_id => $ledger_id &>
+<div class="row">
+<div class="col-sm-4">
+<h4>Credit Type</h4>
+<p>This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
+mc($credit->{amount}) |h %>, received at <% $credit->{created_at} | h %>.</p>
+</div>
 % if ($credit->{refundable_amount}) {
-  <p><strong>You can refund some of this credit.</strong></p>
+<div class="col-sm-4">
+<h4>Refund</h4>
+  <p>You can refund the unapplied value of the credit.</p>
   <form action='/post/credit-refund' method='post'>
     <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
     <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
     <input type='submit' class="btn btn-default" value='Refund <% mc($credit->{refundable_amount}) |h %>' />
   </form>
+  </div>
 % }
-
-<p><strong>In case of emergency</strong>, you can drain a credit of all its
-value.  The customer will be charged again.  <strong>Consider talking to
-R&amp;D first!</strong></p>
+<div class="col-sm-4">
+<h4>Drain Value (emergencies only)</h4>
+<p>You can drain a credit of all its
+value.  <strong>The customer will be charged again.  </strong>Talk to
+R&amp;D first!</p>
 <form action='/post/credit-dissolve' method='post'>
   <input type='hidden' name='ledger_guid' value='<% $credit->{ledger_guid}|h %>' />
   <input type='hidden' name='credit_guid' value='<% $credit->{guid}|h %>' />
   <input type='submit' value='Dissolve Credit' class="btn btn-danger" />
 </form>
+</div>
+</div>
 
-<table>
+<div class="spacer">
+<table class="table">
   <tr><th>GUID</th>             <td><% $credit->{guid} |h %></td></tr>
   <tr><th>Type</th>             <td><% $credit->{type} |h %></td></tr>
   <tr><th>Created at</th>       <td><% $credit->{created_at} |h %></td></tr>

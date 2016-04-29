@@ -48,10 +48,7 @@ $(function () {
 <a href="http://moonpig.icgroup.com:3060/">Billing</a>
 </li>
 <li>
-<a href="http://helpspot.pobox.com/admin.php">Tickets</a>
-</li>
-<li>
-<a href="http://trac.pobox.com/">Wiki</a>
+<a href="http://icgroup.helpspot.com/admin.php">Tickets</a>
 </li>
 <li>
 <a href="https://http://freeside.pobox.com:9443/">Freeside</a>
