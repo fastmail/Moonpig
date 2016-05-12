@@ -5,7 +5,7 @@ for submitting payment. Please note that credit card charges will appear as
 as "FastMail Pty Ltd AU".
 
 For details on the invoices where your payment was applied, please see
-your invoice history at <https://www.pobox.com/invoice>.
+your invoice history online.
 
 {{
   my $x = 0;
@@ -23,4 +23,3 @@ your invoice history at <https://www.pobox.com/invoice>.
   return '';
 }}
 
-Thank you for using Pobox!
