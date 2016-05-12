@@ -636,6 +636,26 @@ sub _send_mkit {
   $self->queue_email($email, { to => $to, from => $from });
 }
 
+sub send_receipt {
+  my ($self, $arg) = @_;
+  my $credit   = $arg->{credit};
+  my $invoices = $arg->{invoices};
+
+  $self->handle_event(event('send-mkit', {
+    kit => 'receipt',
+    arg => {
+      subject => "Payment received",
+
+      to_addresses => [ $self->contact->email_addresses ],
+      credit       => $credit,
+      ledger       => $self,
+      invoices     => [
+        sort { $a->created_at <=> $b->created_at } @$invoices
+      ],
+    },
+  }));
+}
+
 # {
 #   xid => [ consumer_guid, ... ],
 #   ...

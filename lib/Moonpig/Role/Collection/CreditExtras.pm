@@ -51,19 +51,10 @@ sub add {
                    keys %invoices_before;
 
     if ($arg->{send_receipt}) {
-      $ledger->handle_event(event('send-mkit', {
-        kit => 'receipt',
-        arg => {
-          subject => "Payment received",
-
-          to_addresses => [ $ledger->contact->email_addresses ],
-          credit       => $credit,
-          ledger       => $ledger,
-          invoices     => [
-            sort { $a->created_at <=> $b->created_at } values %invoices
-          ],
-        },
-      }));
+      $ledger->send_receipt({
+        credit   => $credit,
+        invoices => [ values %invoices ],
+      });
     }
 
     return $credit;
