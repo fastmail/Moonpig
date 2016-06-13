@@ -148,7 +148,9 @@ sub _autopay_invoices {
 
   # Oh no, there are invoices left to pay!  How much will it take to pay it all
   # off?
-  my $credit_on_hand = sumof { $_->unapplied_amount } $self->credits;
+  # We're not, here, charging for over-earmarked amounts.  I'm not sure if
+  # that's a bug or a feature. -- rjbs, 2016-06-13
+  my $credit_on_hand = $self->amount_available;
   my $invoice_total  = sumof { $_->total_amount } @unpaid_invoices;
   my $balance_needed = $invoice_total - $credit_on_hand;
 

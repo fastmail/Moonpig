@@ -659,6 +659,30 @@ test 'autopayment' => sub {
 
     ok(! $invoice->is_open, "we do close it once there is a charge");
 
+    my $buck = $ledger->add_credit(
+      class(qw(Credit::Simulated)),
+      {
+        amount => dollars(1)
+      },
+    );
+
+    # The original implementation of autopay assumed you owed (invoiced amount
+    # minus unused credits), which ignored earmarks.  That means that a $1
+    # credit that was unapplied but earmarked would mean you didn't charge the
+    # full amount when autocharging.  Instead, you'd charge $x - $1, and then
+    # later charge the last dollar when the earmarked charge got used.  Stupid!
+    # This is now fixed, and this is the test. I was too lazy to actually
+    # carefully orchestrate the "credit on hand but earmarked" situation
+    # naturally.  -- rjbs, 2016-06-13
+    my $class = ref $ledger;
+    {
+      package TestLedger;
+      use Moonpig::Util 'dollars';
+      our @ISA = $class;
+      sub amount_earmarked { dollars(1) }
+    }
+    bless $ledger, 'TestLedger';
+
     is($ledger->amount_due, dollars(5), "...we still owe five bucks");
 
     $ledger->setup_autocharger_from_template(moonpay => {
@@ -672,7 +696,7 @@ test 'autopayment' => sub {
 
     is($ledger->amount_due, dollars(0), "...we autopaid");
 
-    my ($credit) = $ledger->credits;
+    my ($credit) = grep { $_->guid ne $buck->guid } $ledger->credits;
     is($credit->amount, dollars(5), "...with a single five-dollar credit");
     is($ledger->autocharger->amount_available, dollars(6), "...six bucks left");
   });
