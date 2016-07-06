@@ -202,6 +202,16 @@ publish _setup_autocharger => {
   $self->setup_autocharger_from_template($arg->{template}, $arg->{template_args});
 };
 
+publish _clear_autocharger => {
+  -http_method => 'post', 
+  -path => 'clear-autocharger',
+} => sub {
+  my ($self, $arg) = @_;
+  $self->_delete_autocharger;
+};
+
+
+
 has autocharger => (
   is  => 'ro',
   isa => role_type('Moonpig::Role::Autocharger'),
