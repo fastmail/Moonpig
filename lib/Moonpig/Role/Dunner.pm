@@ -203,14 +203,13 @@ publish _setup_autocharger => {
 };
 
 publish _clear_autocharger => {
-  -http_method => 'post', 
+  -http_method => 'post',
   -path => 'clear-autocharger',
 } => sub {
   my ($self, $arg) = @_;
   $self->_delete_autocharger;
+  return $self;
 };
-
-
 
 has autocharger => (
   is  => 'ro',
