@@ -160,6 +160,12 @@ sub _autopay_invoices {
   });
 
   if ($credit) {
+    $Logger->log([
+      "created credit %s<%s> for %s via autopayment",
+      $credit->type,
+      $credit->guid,
+      $credit->amount,
+    ]);
     $self->process_credits;
   }
 
