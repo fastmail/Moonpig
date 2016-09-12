@@ -26,6 +26,12 @@ use Moonpig::Types qw(PositiveMillicents Time TimeInterval TrimmedNonBlankLine);
 
 use namespace::autoclean;
 
+has consumes_funds => (
+  is  => 'ro',
+  isa => 'Bool',
+  default => 0,
+);
+
 # This consumer never charges unless specifically told to. -- rjbs, 2016-03-16
 around maybe_charge => sub { };
 sub charge { ... }
@@ -62,7 +68,18 @@ sub build_invoice_charge {
   around acquire_funds => sub {
     my ($orig, $self, @arg) = @_;
 
-    $self->__set_executed_at( Moonpig->env->now );
+    my $owner = $self->owner;
+
+    if ($owner->consumes_funds) {
+      $self->$orig(@arg);
+      $owner->charge_current_journal({
+        amount      => $self->amount,
+        description => $self->description,
+      });
+    } else {
+      $self->__set_executed_at( Moonpig->env->now );
+    }
+
     $self->owner->expire;
   };
 }
