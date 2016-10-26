@@ -14,6 +14,21 @@ $ledger_id &>
   <a href='./invoice-events'>View invoice/credit event history</a>
 </p>
 
+<ul class="nav nav-pills">
+<li role="presentation" class="active"><a href="#"
+onclick="$('.invoice').show()">View All</a></li>
+<li role="presentation"><a href="#"
+onclick="$('.invoice').hide();$('.open').show();">Open</a></li>
+<li role="presentation"><a href="#"
+onclick="$('.invoice').hide();$('.paid').show();">Paid</a></li>
+<li role="presentation"><a href="#"
+onclick="$('.invoice').hide();$('.quote').show();">Quote</a></li>
+<li role="presentation"><a href="#"
+onclick="$('.invoice').hide();$('.abandoned').show();">Abandoned</a></li>
+<li role="presentation"><a href="#"
+onclick="$('.invoice').hide();$('.internal').show();">Internal</a></li>
+</ul>
+
 % for my $invoice (@{ $invoices->{items} }) {
 %   $invoice = $m->mp_request(GET => $m->mp_ledger_path($ledger_id) . "/invoices/guid/$invoice->{guid}");
   <& /widget/invoice, invoice => $invoice &>

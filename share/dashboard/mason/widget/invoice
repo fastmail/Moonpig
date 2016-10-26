@@ -3,7 +3,16 @@
 <%args>
 $invoice
 </%args>
-<div class='invoice<% $invoice->{is_internal} ? ' internal' : '' %>' style='border:thin black solid'>
+<%perl>
+my $type = $invoice->{is_internal} ? "internal" :
+             $invoice->{is_quote} ? "quote" :
+             "";
+my $action = $invoice->{abandoned_at} ? "abandoned" :
+               $invoice->{is_paid} ? "paid" :
+               "open";
+</%perl>
+
+<div class='invoice <% $type %> <% $action %>' style='border:thin black solid'>
   <h3<% $invoice->{abandoned_at} ? " class='abandoned'" : '' %>>Invoice <% $invoice->{ident} %><% $invoice->{is_internal} ? ' (internal)' : '' %><% $invoice->{abandoned_at} ? ' (abandoned)' : '' %></h3>
 % if ($invoice->{paid_at}) {
   <h4>PAID</h4>
