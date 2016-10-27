@@ -8,7 +8,7 @@ my $type = $invoice->{is_internal} ? "internal" :
              $invoice->{is_quote} ? "quote" :
              "";
 my $action = $invoice->{abandoned_at} ? "abandoned" :
-               $invoice->{is_paid} ? "paid" :
+               $invoice->{paid_at} ? "paid" :
                "open";
 </%perl>
 
