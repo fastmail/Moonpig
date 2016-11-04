@@ -6,6 +6,7 @@ use Moose::Role;
 use Data::GUID qw(guid_string);
 use List::AllUtils 'any';
 use Moonpig;
+use Moonpig::Behavior::Packable;
 use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
@@ -222,6 +223,7 @@ has autocharger => (
   isa => role_type('Moonpig::Role::Autocharger'),
   writer  => '_set_autocharger',
   clearer => '_delete_autocharger',
+  predicate => 'has_autocharger',
 );
 
 publish _get_autocharger => { -path => 'autocharger', -http_method => 'get' } => sub {
@@ -373,5 +375,13 @@ sub _send_psync_email {
     },
   }));
 }
+
+PARTIAL_PACK {
+  my ($self) = @_;
+
+  return {
+    ($self->has_autocharger ? (autocharger => $self->autocharger) : ()),
+  };
+};
 
 1;
