@@ -15,6 +15,7 @@ use Moose::Util::TypeConstraints qw(role_type);
 use MooseX::Types::Moose qw(Str HashRef);
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
+use Stick::Util qw(ppack);
 use Try::Tiny;
 
 use namespace::autoclean;
@@ -380,7 +381,7 @@ PARTIAL_PACK {
   my ($self) = @_;
 
   return {
-    ($self->has_autocharger ? (autocharger => $self->autocharger) : ()),
+    ($self->has_autocharger ? (autocharger => ppack($self->autocharger)) : ()),
   };
 };
 
