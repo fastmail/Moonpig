@@ -21,7 +21,7 @@ $ledger
   <& SELF:quotes, ledger => $ledger &>
 </div>
 </div>
-  <& SELF:credits, ledger => $ledger, credits => $ledger->{icredits}{items},
+  <& SELF:credits, ledger => $ledger, credits => $ledger->{credits}{items},
   autocharger => $ledger->{autocharger} &>
 <hr>
 <div class="row spacer">
@@ -108,8 +108,7 @@ $autocharger => undef
 <div class="col-sm-6">
   <h2>Payment History</h2>
 % if ($autocharger) {
-<div class="alert alert-info">This customer auto-charges to an X card expiring
-Y</div>
+<div class="alert alert-info">This customer auto-charges to <% $autocharger->{source_ident} %></div>
 % }
   <table class="table table-striped">
   <thead>
