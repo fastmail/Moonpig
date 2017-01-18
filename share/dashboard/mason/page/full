@@ -51,7 +51,7 @@ $(function () {
 <a href="http://icgroup.helpspot.com/admin.php">Tickets</a>
 </li>
 <li>
-<a href="https://http://freeside.pobox.com:9443/">Freeside</a>
+<a href="https://freeside.pobox.com:9443/">Freeside</a>
 </li>
 <li>
 <a href="https://rr-n1-tor.opensrs.net/resellers/">OpenSRS</a>
