@@ -130,7 +130,7 @@ test 'single consumer' => sub {
       # We now have $7.50 and have used up 6 days
       my ($delivery) = $self->assert_n_deliveries(1, "the psync notice");
       my $body = body($delivery);
-      like($body, qr/your account price has decreased/i, "this is the nonpayment notice");
+      like($body, qr/your account price has changed/i, "this is the nonpayment notice");
       my ($new_date) = $body =~ qr/will now expire on\s+(\w+ [\d ]\d, \d{4})/;
       is ($new_date, "January 22, 2000", "new expiration date");
       my ($old_date) = $body =~ qr/was due to expire after\s+(\w+ [\d ]\d, \d{4})/;
