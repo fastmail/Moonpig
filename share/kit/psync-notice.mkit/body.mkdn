@@ -2,15 +2,14 @@
    $SHHH = "" }}
 
 You've recently updated your {{ $consumer->description }}.
-Due to those changes, your account price has decreased.
+Due to those changes, your account price has changed.
 
-Your account was due to expire after {{ $old_expiration_date->strftime($date_format) }}.  Because of the lower
+Your account was due to expire after {{ $old_expiration_date->strftime($date_format) }}.  Because of the new
 rate, it will now expire on {{ $new_expiration_date->strftime($date_format) }} instead.
 
-If you did not recently change anything on your account, you may be 
-receiving a credit due to a recent policy change on addresses. Please
-see http://blog.pobox.com/2012/10/get-more-from-pobox-with-personal.html
-for more information.
+If you did *not* recently change anything on your account, you may be seeing the
+effect of a past change on a prepaid payment. We are happy to assist you in
+identifying what has changed.
 
 This message is for your information only. You need take no further
 action.
