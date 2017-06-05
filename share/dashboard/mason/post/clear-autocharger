@@ -1,0 +1,13 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_guid
+</%args>
+
+<%perl>
+$m->mp_request(
+  POST => "/ledger/by-guid/$ledger_guid/clear-autocharger", {}
+);
+$m->redirect('/ledger/' . $ledger_guid . '?result=autocharger-cleared');
+</%perl>
+</%method>

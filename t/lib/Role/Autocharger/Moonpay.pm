@@ -7,6 +7,12 @@ use Moonpig::Behavior::Packable;
 use Moonpig::Types qw(NonNegativeMillicents PositiveMillicents);
 use Moonpig::Util qw(class dollars);
 
+has source_ident => (
+  is => 'rw',
+  isa => 'Str',
+  default => "something or other",
+);
+
 has amount_available => (
   is  => 'rw',
   isa => NonNegativeMillicents,
@@ -45,6 +51,7 @@ sub _class_subroute { ... }
 PARTIAL_PACK {
   return {
     amount_available => $_[0]->amount_available,
+    source_ident     => $_[0]->source_ident,
   }
 };
 
