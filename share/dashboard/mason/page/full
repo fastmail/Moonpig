@@ -39,7 +39,7 @@ $(function () {
         </div>
 
 <div class="navbar-header navbar-brand">
-      <a href="/home">
+      <a href="/">
        <img src="//www.pobox.com/images/logo.png" class="png" id="logo" alt="Pobox Logo"></a>
       </div>
     <div class="navbar-left collapse navbar-collapse">
