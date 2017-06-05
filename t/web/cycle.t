@@ -284,6 +284,52 @@ test "use autocharge by hand" => sub {
   }
 };
 
+test "clear autocharger" => sub {
+  my ($self) = @_;
+
+  my $rv = $self->setup_account;
+
+  {
+    my $ledger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}");
+    is($ledger->{amount_due}, dollars(20), "we start off owing 20 bucks");
+  }
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    is($autocharger, undef, "no autocharger yet");
+  }
+
+  my $autocharger = $ua->mp_post(
+    "/ledger/by-guid/$rv->{ledger_guid}/setup-autocharger",
+    {
+      template => 'moonpay',
+      template_args => {
+        amount_available => dollars(21),
+      },
+    },
+  );
+
+  {
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    cmp_deeply(
+      $autocharger,
+      superhashof({ ledger_guid => $rv->{ledger_guid} }),
+      "...autocharger created via POST",
+    );
+    is($autocharger->{amount_available}, dollars(21), "21 bucks in charger");
+  }
+
+  {
+    $ua->mp_post(
+      "/ledger/by-guid/$rv->{ledger_guid}/clear-autocharger",
+      {},
+    );
+
+    my $autocharger = $ua->mp_get("/ledger/by-guid/$rv->{ledger_guid}/autocharger");
+    is($autocharger, undef, "autocharger destroyed by clear-autocharger");
+  }
+};
+
 sub elapse {
   my ($self, $days, $ledger_guid) = @_;
   $days ||= 1;
