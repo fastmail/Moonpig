@@ -642,6 +642,7 @@ sub all_charges_by_invoice {
 
   my @data;
   for my $invoice (
+    sort {$a->created_at <=> $b->created_at }
     grep { ! $_->is_closed || $_->closed_at >= $self->created_at }
     $self->ledger->invoices_without_quotes
   ) {

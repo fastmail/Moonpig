@@ -137,10 +137,23 @@ sub _previous_n_ancestors {
 }
 
 around expected_funds => sub {
-  my ($orig, $self, @rest) = @_;
+  my ($orig, $self, $arg) = @_;
 
-  my $subtotal = $self->$orig(@rest);
-  return $subtotal + $self->self_funding_credit_amount;
+  my $subtotal = $self->$orig($arg);
+
+  # Include self-funding amt if we ask for unpaid charges explicitly.
+  return $subtotal + $self->self_funding_credit_amount
+    if $arg->{include_unpaid_charges};
+
+  # Include self-funding amt if parent is paid.
+  my ($parent) = $self->_previous_n_ancestors(1);
+  my ($first_invoice) = $parent->relevant_invoices;
+
+  return $subtotal + $self->self_funding_credit_amount
+    if $first_invoice->is_paid;
+
+  # Otherwise, don't include self-funding amount.
+  return $subtotal;
 };
 
 PARTIAL_PACK {
