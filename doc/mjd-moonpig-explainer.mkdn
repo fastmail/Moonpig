@@ -1,0 +1,1110 @@
+# Moonpig: a billing system that doesn't suck
+
+(This is from a blog post by MJD, who suggested it should be in the /doc
+folder. The original is at <http://blog.plover.com/prog/Moonpig.html>.)
+
+Tue, 17 Dec 2013
+
+I'm in Amsterdam now, because Booking.com brought me out to tell them about
+Moonpig, the billing and accounting system that Rik Signes and I wrote. The
+talk was mostly a rehash of one I gave a Pittsburgh Perl Workshop a couple of
+months ago, but I think it's of general interest.
+
+The assumption behind the talk is that nobody wants to hear about how the
+billing system actually works, because most people either have their own
+billing system already or else don't need one at all. I think I could do a
+good three-hour talk about the internals of Moonpig, and it would be very
+interesting to the right group of people, but it would be a small group. So
+instead I have _this_ talk, which lasts less than an hour. The takeaway from
+this talk is a list of several basic design decisions that Rik and I made
+while building Moonpig which weren't obviously good ideas at the time, but
+which turned out well in hindsight. That part I think everyone can learn
+from. You may not ever need to write a billing system, but chances are at
+some point you'll consider using an ORM, and it might be useful to have a
+voice in your head that says “Dominus says it might be better to do
+something completely different instead. I wonder if this is one of those
+times?”
+
+So because I think the talk was pretty good, and it's fresh in my mind
+right now, I'm going to try to write it down. [The talk slides are
+here](http://perl.plover.com/yak/Moonpig/) if you want to see them. The
+talk is mostly structured around a long list of things that suck, and how
+we tried to design Moonpig to eliminate, avoid, or at least mitigate these
+things.
+
+- Times and time zones suck
+- Floating-point arithmetic sucks
+- It sucks to fix your mangled data after an automated process fails
+- Testing a yearlong sequence of events sucks
+- It sucks to have your automated test accidentally send a bunch of bogus invoices to the customers
+- Rounding errors suck
+- Relational databases usually suck
+- Modeling objects in the RDB really really sucks
+- Perl's garbage collection sucks
+- OO inheritance sucks
+
+Moonpig, however, does not suck.
+
+Sometimes I see other people fuck up a project over and over, and I say “I
+could do that better”, and then I get a chance to try, and I discover it
+was a lot harder than I thought, I realize that those people who tried
+before are not as stupid as as I believed.
+
+That did not happen this time. Moonpig is a really good billing system. It
+is not that hard to get right. Those other guys really were as stupid as I
+thought they were.
+
+### Brief explanation of IC Group
+
+When I tell people I was working for IC Group, they frown; they haven't heard
+of it. But quite often when I say that IC Group runs
+[pobox.com](http://pobox.com/), those same people smile and say “Oh,
+_pobox_!”.
+
+ICG is a first wave dot-com. In the late nineties, people would often have
+email through their employer or their school, and then they would switch jobs
+or graduate and their email address would go away. The basic idea of pobox was
+that for a small fee, something like $15 per year, you could get a pobox.com
+address that would forward all your mail to your real email address. Then when
+you changed jobs or schools you could just tell pobox to change the forwarding
+record, and your friends would continue to send email to the same pobox.com
+address as before. Later, ICG offered mail storage, web mail, and, through
+[listbox.com](http://listbox.com/), mailing list management and bulk email
+delivery.
+
+Moonpig was named years and years before the project to write it was started.
+ICG had a billing and accounting system already, a terrible one. ICG employees
+would sometimes talk about the hypothetical future accounting system that
+would solve all the problems of the current one. This accounting system was
+called Moonpig because it seemed clear that it would never actually be
+written, until pigs could fly.
+
+And in fact Moonpig wouldn't have been written, except that the existing
+system severely constrained the sort of pricing structures and deals that
+could actually be executed, and so had to go. Even then the first choice was
+to outsource the billing and accounting functions to some company that
+specialized in such things. The Moonpig project was only started as a last
+resort after ICG's president had tried for 18 months to find someone to take
+over the billing and collecting. She was unsuccessful. A billing provider
+would seem perfect and then turn out to have some bizarre shortcoming that
+rendered it unsuitable for ICG's needs. The one I remember was the one that
+did everything we wanted, except it would not handle checks. “Don't worry,”
+they said. “It's 2010\. Nobody pays by check any more.”
+
+Well, as it happened, many of our customers, including some of the largest
+institutional ones, had not gotten this memo, and did in fact pay by check.
+
+So with some reluctance, she gave up and asked Rik and me to write a
+replacement billing and accounting system.
+
+As I mentioned, I had always wanted to do this. I had very clear ideas, dating
+back many years, about mistakes I would _not_ make, were I ever called upon to
+write a billing system.
+
+For example, I have many times received a threatening notice of this sort:
+
+> Your account is currently past due! Pay the outstanding balance of $0.00 or
+> we will be forced to refer your account for collection.
+
+What I believe happened here is: some idiot programmer knows that money
+amounts are formatted with decimal points, so decides to denominate the money
+with floats. The amount I paid rounds off a little differently than the amount
+I actually owed, and the result after subtraction is all roundoff error, and
+leaves me with a nominal debt on the order of 2^{-64} dollars.
+
+So I have said to myself many times “If I'm ever asked to write a billing
+system, it's not going to use any fucking floats.” And at the meeting at which
+the CEO told me and Rik that we would write it, those were nearly the first
+words out of my mouth: No fucking floats.
+
+### Moonpig conceptual architecture
+
+I will try to keep this as short as possible, including only as much as is
+absolutely required to understand the more interesting and generally
+applicable material later.
+
+#### Pobox and Listbox accounts
+
+ICG has two basic use cases. One is Pobox addresses and mailboxes, where the
+customer pays us a certain amount of money to forward (or store) their mail
+for a certain amount of time, typically a year. The other is Listbox mailing
+lists, where the customer pays us a certain amount to attempt a certain
+number of bulk email deliveries on their behalf.
+
+#### The basic model is simple…
+
+The life cycle for a typical service looks like this: The customer pays us
+some money: a flat fee for a Pobox account, or a larger or smaller pile for
+Listbox bulk mailing services, depending on how much mail they need us to
+send. We deliver service for a while. At some point the funds in the
+customer's account start to run low. That's when we send them an invoice for
+an extension of the service. If they pay, we go back and continue to provide
+service and the process repeats; if not, we stop providing the service.
+
+#### ...just like all basic models
+
+But on top of this basic model there are about 10,019 special cases:
+
+* Customers might cancel their service early.
+
+* Pobox has a long-standing deal where you get a sixth year free if you pay
+  for five years of service up front.
+
+* Sometimes a customer with only email forwarding ($20 per year) wants to
+  upgrade their account to one that does storage and provides webmail access
+  ($50 per year), or vice-versa, in the middle of a year. What to do in this
+  case? Business rules dictate that they can apply their current balance to
+  the new service, and it should be properly pro-rated. So if I have 64 days
+  of $50-per-year service remaining, and I downgrade to the $20-per-year
+  service, I now have 160 days of service left.
+
+Well, that wasn't too bad, except that we should let the customer know the
+new expiration date. And also, if their service will now expire sooner
+than it would have, we should give them a chance to pay to extend the
+service back to the old date, and deal properly with their payment or
+nonpayment.
+
+Also something has to be done about any 6th free year that I might
+have had. We don't want someone to sign up for 5 years of $50-per-year
+service, get the sixth year free, then downgrade their account and
+either get a full free year of $50-per-year service or get a full free
+year of $20-per-year service after only !!\frac{20}{50}!! of five full
+years.
+
+- Sometimes customers do get refunds.
+
+- Sometimes we screw up and give people a credit for free service,
+  as an apology. Unlike regular credits, these are not refundable!
+
+- Some customers get gratis accounts. The other cofounder of ICG
+  used to hand these out at parties.
+
+- There are a number of cases for coupons and discounts. For
+  example, if you refer a friend who signs up, you get some sort of
+  credit. Non-profit institutions get some sort of discount off the
+  regular rates. Customers who pay for many accounts get some sort
+  of bulk discount. I forget the details.
+
+- Most customers get their service cut off if they don't pay.
+  Certain large and longstanding customers should not be treated so
+  peremptorily, and are allowed to run a deficit.
+
+- And so to infinity and beyond.
+
+#### Ledgers and Consumers
+
+The Moonpig data store is mostly organized as a huge pile of **ledgers**. Each
+represents a single customer or account. It contains some contact information,
+a record of all the transactions associated with that customer, a history of
+all the invoices ever sent to that customer, and so forth.
+
+A ledger also contains some **consumer** objects. Each consumer represents
+some service that we have promised to perform in exchange for money. The
+consumer has methods in it that you can call to say “I just performed a
+certain amount of service; please charge accordingly”. It has methods for
+calculating how much money has been allotted to it, how much it has left, how
+fast it is consuming its funds, how long it expects to last, and when it
+expects to run out of money. And it has methods for constructing its own
+replacement and for handing over control to that replacement when necessary.
+
+#### Heartbeats
+
+Every day, a cron job sends a **heartbeat** event to each ledger. The ledger
+doesn't do anything with the heartbeat itself; its job is to propagate the
+event to all of its sub-components. Most of those, in turn, ignore the
+heartbeat event entirely.
+
+But consumers do handle heartbeats. The consumer will wake up and calculate
+how much longer it expects to live. (For Pobox consumers, this is simple
+arithmetic; for mailing-list consumers, it guesses based on how much mail has
+been sent recently.) If it notices that it is going to run out of money soon,
+it creates a successor that can take over when it is gone. The successor
+immediately sends the customer an invoice: “Hey, your service is running out,
+do you want to renew?”
+
+Eventually the consumer _does_ run out of money. At that time it hands
+over responsibility to its replacement. If it has no replacement, it will
+expire, and the last thing it does before it expires is terminate the
+service.
+
+### Things that suck: manual repairs
+
+Somewhere is a machine that runs a daily cron job to heartbeat each ledger.
+What if one day, that machine is down, as they sometimes are, and the cron job
+never runs?
+
+Or what if the machine crashes while the cron job is running, and the cron job
+only has time to heartbeat 3,672 of the 10,981 ledgers in the system?
+
+In a perfect world, every component would be able to depend on exactly one
+heartbeat arriving every day. We don't live in that world. So it was an
+ironclad rule in Moonpig development that anything that handles heartbeat
+events must be prepared to deal with missing heartbeats, duplicate heartbeats,
+or anything else that could screw up.
+
+When a consumer gets a heartbeat, it must _not_ cheerfully say "Oh, it's the
+dawn of a new day! I'll charge for a day's worth of service!". It must look at
+the current date and at its own charge record and decide on _that_ basis
+whether it's time to charge for a day's worth of service.
+
+Now the answers to those questions of a few paragraphs earlier are quite
+simple. What if the machine is down and the cron job never runs? What to do?
+
+A perfectly acceptable response here is: Do nothing. The job will run the next
+day, and at that time everything will be up to date. Some customers whose
+service should have been terminated today will have it terminated tomorrow
+instead; they will have received a free day of service. This is an acceptable
+loss. Some customers who should have received invoices today will receive them
+tomorrow. The invoices, although generated and sent a day late, will
+nevertheless show the right dates and amounts. This is also an acceptable
+outcome.
+
+What if the cron job crashes after heartbeating 3,672 of 10,981 ledgers?
+Again, an acceptable response is to do nothing. The next day's heartbeat will
+bring the remaining 7,309 ledgers up to date, after which everything will be
+as it should. And an even better response is available: simply rerun the job.
+3,672 of the ledgers will receive the same event twice, and will ignore it the
+second time.
+
+Contrast this with the world in which heartbeats were (mistakenly) assumed to
+be reliable. In this world, the programming staff must determine precisely
+which ledgers received the event before the crash, either by trawling through
+the log files or by grovelling over the ledger data. Then someone has to hack
+up a program to send the heartbeats to just the 7,309 ledgers that still need
+it. And there is a stiff deadline: they have to get it done before tomorrow's
+heartbeat issues!
+
+Making everything robust in the face of heartbeat failure is a little more
+work up front, but that cost is recouped the first time something goes wrong
+with the heartbeat process, when instead of panicking you smile and open
+another beer. Let _N_ be the number of failures and manual repairs that are
+required before someone has had enough and makes the heartbeat handling code
+robust. I hypothesize that you can tell a lot about an organization from the
+value of _N_.
+
+Here's an example of the sort of code that is required. The non-robust version
+of the code would look something like this:
+
+```
+sub charge {
+    my ($self, $event) = @_;
+    $self->charge_one_day();
+}
+```
+
+The code, implemented by a role called
+`Moonpig::Role::Consumer::ChargesPeriodically`, actually looks something like
+this:
+
+```
+has last_charge_date => ( ... );
+
+
+sub charge {
+  my ($self, $event) = @_;
+
+  my $now = Moonpig->env->now;
+
+  CHARGE: until ($self->next_charge_date->follows($now)) {
+    my $next = $self->next_charge_date;
+    $self->charge_one_day();
+    $self->last_charge_date($next);
+    if ($self->is_expired) {
+      $self->replacement->handle_event($event) if $self->replacement;
+      last CHARGE;
+    }
+  }
+}
+```
+
+The `last_charge_date` member records the last time the consumer
+actually issued a charge.  The `next_charge_date` method consults this
+value and returns the next day on which the consumer _should_ issue a
+charge—not necessarily the following day, since the consumer might issue
+weekly or monthly charges.  The consumer will issue charge after charge until
+the `next_charge_date` is the future, when it will stop.  It runs the
+`until` loop, using `charge_one_day` to issue another charge
+each time through, and updating `last_charge_date` each time, until the
+`next_charge_date` is in the future.
+
+The one tricky part here the `if` block.  This is because the consumer
+might run out of money before the loop completes.  In that case it passes the
+heartbeat event on to its successor (`replacement`) and quits the loop.
+The replacement will run its own loop for the remaining period.
+
+### Things that suck: real-time testing
+
+A customer pays us $20\. This will cover their service for 365 days. The
+business rules say that they should receive their first invoice 30 days before
+the current service expires; that is, after 335 days. How are we going to test
+that the invoice is in fact sent precisely 335 days later?
+
+Well, put like that, the answer is obvious: Your testing system must somehow
+mock the time. But obvious as this is, I have seen many many tests that made
+some method call and then did `sleep 60`, waiting and hoping that the
+event they were looking for would have occurred by then, reporting a false
+positive if the system was slow, and making everyone that much less likely to
+actually run the tests.
+
+I've also seen a lot of tests that crossed their fingers and hoped that a
+certain block of code would execute between two ticks of the clock, and that
+failed nondeterministically when that didn't happen.
+
+So another ironclad law of Moonpig design was that no object is ever allowed
+to call the `time()` function to find out what time it actually is.
+Instead, to get the current time, the object must call
+`Moonpig->env->now`.
+
+The tests run in a test environment. In the test environment,
+`Moonpig->env` returns a `Moonpig::Env::Test` object, which
+contains a fake clock. It has a `stop_clock` method that stops the
+clock, and an `elapse_time` method that forces the clock forward a
+certain amount. If you need to check that something happens after 40 days, you
+can call `Moonpig->env->elapse_time(86_400 * 40)`, or, more likely:
+
+```
+for (1..40) {
+  Moonpig->env->elapse_time(86_400);
+  $test_ledger->heartbeat;
+}
+```
+
+In the production environment, the environment object still has a `now`
+method, but one that returns the true current time from the system clock.
+Trying to stop the clock in the production environment is a fatal error.
+
+Similarly, no Moonpig object ever interacts directly with the database;
+instead it must always go through the mediator returned by
+`Moonpig->env->storage`. In tests, this can be a fake storage object or
+whatever is needed. It's shocking how many tests I've seen that begin by
+allocating a new MySQL instance and executing a huge pile of DDL. Folks, this
+is not how you write a test.
+
+Again, no Moonpig object ever posts email. It asks
+`Moonpig->env->email_sender` to post the email on its behalf. In tests, this
+uses the CPAN `Email::Sender::Transport` suite, and the test code can
+interrogate the `email_sender` to see exactly what emails would have been
+sent.
+
+We never did anything that required filesystem access, but if we had, there
+would have been a `Moonpig->env->fs` for opening and writing files.
+
+The `Moonpig->env` object makes this easy to get right, and hard to screw up.
+Any code that acts on the outside world becomes a red flag: Why isn't this
+going through the environment object? How are we going to test it?
+
+### Things that suck: floating-point numbers
+
+I've already complained about how I loathe floating-point numbers. I just want
+to add that although there are probably use cases for floating-point
+arithmetic, I don't actually know what they are. I've had a pretty long and
+varied programming career so far, and legitimate uses for floating point
+numbers seem very few. They are really complicated, and fraught with traps; I
+say this as a mathematical expert with a much stronger mathematical background
+than most programmers.
+
+The law we adopted for Moonpig was that all money amounts are **integers**.
+Each money amount is an integral number of “millicents”, abbreviated “m¢”,
+worth !!\frac1{1000}!! of a cent, which in turn is !!\frac1{100}!! of a U.S.
+dollar. Fractional millicents are not allowed. Division must be rounded to the
+appropriate number of millicents, usually in the customer's favor, although in
+practice it doesn't matter much, because the amounts are so small.
+
+For example, a $20-per-year Pobox account actually bills
+$$\$\left\lfloor\frac{20,00,000}{365}\right\rfloor = 5479$$ m¢ each day. (5464
+in leap years.)
+
+Since you don't want to clutter up the test code with a bunch of numbers like
+1000000 ($10), there are two utterly trivial utility subroutines:
+
+```
+sub cents   { $_[0] * 1000       }
+sub dollars { $_[0] * 1000 * 100 }
+```
+
+Now $10 can be written `dollars(10)`.
+
+Had we dealt with floating-point numbers, it would have been tempting to write
+test code that looked like this:
+
+`cmp_ok(abs($actual_amount - $expected_amount), "<", $EPSILON, …);`
+
+That's because with floats, it's so hard to be sure that you won't end up with
+a leftover !!2^{-64}!! or something, so you write all the tests to ignore
+small discrepancies. This can lead to overlooking certain real errors that
+happen to result in small discrepancies. With integer amounts, these
+discrepancies have nowhere to hide. It sometimes happened that we would write
+some test and the money amount at the end would be wrong by 2m¢. Had we been
+using floats, we might have shrugged and attributed this to incomprehensible
+roundoff error. But with integers, that is a difference of 2, and you cannot
+shrug it off. There is no incomprehensible roundoff error. All the
+calculations are exact, and if some integer is off by 2 it is for a reason.
+These tiny discrepancies usually pointed to serious design or implementation
+errors. (In contrast, when a test would show a gigantic discrepancy of a
+million or more m¢, the bug was always quite easy to find and fix.)
+
+There are still roundoff errors; they are unavoidable. For example, a consumer
+for a $20-per-year Pobox account bills only 365·5479m¢ = 1999835m¢ per year,
+an error in the customer's favor of 165m¢ per account; after 12,121 years
+the customer will have accumulated enough error to pay for an extra year of
+service. For a business of ICG's size, this loss was deemed acceptable. For
+a larger business, it could be significant. (Imagine 6,000,000 customers
+times 165m¢ each; that's $9,900.) In such a case I would keep the same
+approach but denominate everything in micro-cents instead.
+
+Happily, Moonpig did not have to deal with multiple currencies. That would
+have added tremendous complexity to the financial calculations, and I am not
+confident that Rik and I could have gotten it right in the time available.
+
+### Things that suck: dates and times
+
+Dates and times are terribly complicated, partly because the astronomical
+motions they model are complicated, and mostly because the world's bureaucrats
+keep putting their fingers in. It's been suggested recently that you can
+identify whether someone is a programmer by asking if they have an opinion on
+time zones. A programmer will get very red in the face and pound their fist on
+the table.
+
+After I wrote that sentence, I then wrote 1,056 words about the right way to
+think about date and time calculations, which I'll spare you, for now. I'm
+going to try to keep this from turning into an article about all the ways
+people screw up date and time calculations, by skipping the arguments and just
+stating the main points:
+
+1. Date-time values are a kind of _number_, and should be considered as such.
+   In particular:
+   1. Date-time values inside a program should be _immutable_
+   2. There should be a single canonical representation of date-time values
+      in the program, and it should be chosen for _ease of calculation_.
+2. If the program does have to deal with date-time values in some other
+   representation, it should convert them to the canonical representation as
+   soon as possible, or from the canonical representation as late as
+   possible, and in any event should avoid letting non-canonical values
+   percolate around the program.
+
+The canonical representation we chose was `DateTime` objects in UTC
+time. Requiring that the program deal only with UTC eliminates many stupid
+questions about time zones and DST corrections, and simplifies all the rest as
+much as they can be simplified. It also avoids [`DateTime`'s
+unnecessarily convoluted handling of time
+zones](http://blog.plover.com/prog/perl/datetime-floating.html).
+
+We held our noses when we chose to use `DateTime`. It has my grudging
+approval, with a large side helping of qualifications. The internal parts of
+it are okay, but [the methods it provides are almost never what you actually
+want to use](http://blog.plover.com/prog/perl/DateTime-Moonpig.html). For
+example, it provides a set of mutators. But, as per item 1 above, date-time
+values are numbers and ought to be immutable. [Rik has a good story about a
+horrible bug](http://rjbs.manxome.org/rubric/entry/1929) that was caused when
+he accidentally called the `->subtract` method on some widely-shared
+`DateTime` value and so mutated it, causing an unexpected change in the
+behavior of widely-separated parts of the program that consulted it afterward.
+
+So instead of using raw `DateTime`, we wrapped it in a derived class
+called `Moonpig::DateTime`. This removed the mutators and also made a
+couple of other convenient changes that I will shortly describe.
+
+#### Things that really really suck: `DateTime::Duration`
+
+If you have a pair of `DateTime` objects and you want to know how much
+time separates the two instants that they represent, you have several choices,
+most of which will return a `DateTime::Duration` object. All those
+choices are wrong, because `DateTime::Duration` objects are useless.
+They are a kind of [Roach
+Motel](https://en.wikipedia.org/wiki/Roach_Motel_%28insect_trap%29) for date
+and time information: Data checks into them, but doesn't check out. I am not
+going to discuss that here, because if I did it would take over the article,
+but I will show the simple example I showed in the talk:
+
+```
+my $then = DateTime->new( month => 4, day => 2, year => 1969,
+                          hour => 0, minute => 0, second => 0);
+my $now = DateTime->now();
+my $elapsed = $now - $then;
+print $elapsed->in_units('seconds'), "\n";
+```
+
+You might think, from looking at this code, that it might print the number of
+seconds that elapsed between 1969-04-02 00:00:00 (in some unspecified time
+zone!) and the current moment. You would be mistaken; you have failed to
+reckon with the `$elapsed` object, which is a
+`DateTime::Duration`. Computing this object seems reasonable, but as
+far as I know once you have it there is nothing to do but throw it away and
+start over, because there is no way to extract from it the elapsed amount of
+time, or indeed anything else of value. In any event, the `print` here
+does _not_ print the correct number of seconds. Instead it prints `ME CAGO
+EN LA LECHE`, which I have discovered is Spanish for “I shit in the milk”.
+
+So much for `DateTime::Duration`. When _a_ and _b_ are
+`Moonpig::DateTime` objects, _a_-_b_ returns the number of seconds that
+have elapsed between the two times; it is that simple. You can divide it by
+86,400 to get the number of days.
+
+Other arithmetic is similarly overloaded: If _i_ is a number, then _a_+_i_ and
+_a_-_i_ are the times obtained by adding or subtracting _i_ seconds to _a_,
+respectively.
+
+(C programmers should note the analogy with pointer arithmetic; C's pointers,
+and date-time values—also temperatures—are examples of a mathematical structure
+called an *[affine space](https://en.wikipedia.org/wiki/Affine_space)*, and
+study of the theory of affine spaces tells you just what rules these objects
+should obey. I hope to discuss this at length another time.)
+
+Going along with this arithmetic are a family of trivial convenience
+functions, such as:
+
+```
+sub hours { $_[0] * 3600  } sub days  { $_[0] * 86400 }
+```
+
+so that you can use `$a + days(7)` to find the time 7 days after
+`$a`. Programmers at the Amsterdam talk were worried about this: what
+about leap seconds? And they are correct: the name `days` is not quite
+honest, because it promises, but does not deliver, exactly 7 days. It can't,
+because the definition of the day varies widely from place to place and time
+to time, and not only can't you know how long 7 days unless you know _where_
+it is, but it doesn't even make sense to ask. That is all right. You just have
+to be aware, when you add `days(7)`, the resulting time might not be
+the same time of day 7 days later. (Indeed, if the local date and time laws
+are sufficiently bizarre, it could in principle be completely wrong. But since
+`Moonpig::DateTime` objects are always reckoned in UTC, it is never
+more than one second wrong.)
+
+Anyway, I was afraid that `Moonpig::DateTime` would turn out to be a
+leaky abstraction, producing pleasantly easy and correct results thirty times
+out of thirty-one, and annoyingly wrong or bizarre results the other time. But
+I was surprised: it never caused a problem, or at least none has come to
+light. I am working on releasing this module to CPAN, under the name
+`DateTime::Moonpig`. [ Addendum: [`DateTime::Moonpig` is now
+available on CPAN](https://metacpan.org/pod/DateTime::Moonpig). ]
+
+### Things that suck: mutable data
+
+I left this out of the talk, by mistake, but this is a good place to mention
+it: mutable data is often a bad idea. In the billing system we wanted to avoid
+it for accountability reasons: We never wanted the customer service agent to
+be in the position of being unable to explain to the customer why we thought
+they owed us $28.39 instead of the $28.37 they claimed they owed; we never
+wanted ourselves to be in the position of trying to track down a billing
+system bug only to find that the trail had been erased.
+
+One of the maxims Rik and I repeated freqently was that the moving finger
+writes, and, having writ, moves on. Moonpig is full of methods with names like
+`is_expired`, `is_superseded`, `is_canceled`, `is_closed`, `is_obsolete`,
+`is_abandoned` and so forth, representing entities that have been replaced by
+other entities but which are retained as part of the historical record.
+
+For example, a consumer has a successor, to which it will hand off
+responsibility when its own funds are exhausted; if the customer changes their
+mind about their future service, this successor might be replaced with a
+different one, or replaced with none. This doesn't delete or destroy the old
+successor. Instead it marks the old successor as "superseded", simultaneously
+recording the supersession time, and pushes the new successor (or `undef`, if
+none) onto the end of the target consumer's `replacement_history` array. When
+you ask for the _current_ successor, you are getting the final element of this
+array. This pattern appeared in several places. In a particularly simple
+example, a ledger was required to contain a `Contact` object with contact
+information for the customer to which it pertained. But the `Contact` wasn't
+simply this:
+
+```
+has contact => ( is => 'rw', isa => role_type( 'Moonpig::Role::Contact' ), required => 1,);
+```
+
+Instead, it was an array; "replacing" the contact actually pushed the new
+contact onto the end of the array, from which the `contact` accessor
+returned the final element:
+
+```
+has contact_history => (
+  is   => 'ro',
+  isa  => ArrayRef[ role_type( 'Moonpig::Role::Contact' ) ],
+  required => 1,
+  traits   => [ 'Array' ],
+  handles  => {
+    contact         => [ get => -1 ],
+    replace_contact => 'push',
+  },
+);
+```
+
+Similarly, what happens if we send the customer an invoice for three services,
+and they inform customer service that they want to continue two of the
+services but cancel the third? We need to throw away the old invoice, which
+will never be paid, and issue a new one. The old invoice remains in the
+system, marked "abandoned", with a pointer to the new invoice.
+
+### Things that suck: relational databases
+
+Why do we use relational databases, anyway? Is it because they cleanly and
+clearly model the data we want to store? No, it's because they are lightning
+fast.
+
+When your data truly is relational, a nice flat rectangle of records, each
+with all the same fields, RDBs are terrific. But Moonpig doesn't have much
+relational data. It basic datum is the Ledger, which has a bunch of disparate
+subcomponents, principally a heterogeneous collection of Consumer objects. And
+I would guess that most programs don't deal in relational data; Like Moonpig,
+they deal in some sort of object network.
+
+Nevertheless we try to represent this data relationally, because we have a
+relational database, and when you have a hammer, you go around hammering
+everything with it, whether or not that thing needs hammering.
+
+When the object model is mature and locked down, modeling the objects
+relationally can be made to work. But when the object model is evolving, it is
+a disaster. Your relational database schema changes every time the object
+model changes, and then you have to find some way to migrate the existing data
+forward from the old schema. Or worse, and more likely, you become reluctant
+to let the object model evolve, because reflecting that evolution in the RDB
+is so painful. The RDB becomes a ball and chain locked to your program's
+ankle, preventing it from going where it needs to go. Every change is
+difficult and painful, so you avoid change. This is the opposite of the way to
+design a good program. A program should be light and airy, its object model
+like a string of pearls.
+
+In theory the mapping between the RDB and the objects is transparent, and is
+taken care of seamlessly by an ORM layer. That would be an awesome world to
+live in, but we don't live in it and we may never.
+
+#### Things that really really suck: ORM software
+
+Right now the principal value of ORM software seems to be if your program is
+too fast and you need it to be slower; the ORM is really good at that. Since
+speed was the only benefit the RDB was providing in the first place, you have
+just attached two large, complex, inflexible systems to your program and
+gotten nothing in return.
+
+Watching the ORM try to model the objects is somewhere between hilariously
+pathetic and crushingly miserable. Perl's `DBIx::Class`, to the extent
+it succeeds, succeeds because it doesn't even _try_ to model the objects in
+the database. Instead it presents you with objects that represent database
+rows. This isn't because a row needs to be modeled as an object—database rows
+have no interesting behavior to speak of—but because the object is an access
+point for methods that generate SQL. `DBIx::Class` is not for modeling
+objects, but for generating SQL. I only realized this recently, and angrily
+shouted it at the `DBIx::Class` experts, expecting my denunciation to
+be met with rage and denial. But they just smiled with amusement. “Yes,” said
+the `DBIx::Class` experts on more than one occasion, “that is exactly
+correct.” Well then.
+
+So Rik and I believe that for most (or maybe all) projects, trying to store
+the objects in an RDB, with an ORM layer mediating between the program and the
+RDB, is a bad, bad move. We determined to do something else. We eventually
+brewed our own object store, and this is the part of the project of which I'm
+least proud, not because the object store itself was a bad idea, but because I
+believe we probably made every possible mistake that could be made, even the
+ones that everyone writing an object store should already know not to make.
+
+For example, the object store has a method, `retrieve_ledger`, which
+takes a ledger's ID number, reads the saved ledger data from the disk, and
+returns a live `Ledger` object. But it must make sure that every such
+call returns not just a `Ledger` object with the right data, but _the
+same_ object. Otherwise two parts of the program will have different objects
+to represent the same data, one part will modify its object, and the other
+part, looking at a different object, will not see the change it should see. It
+took us a while to figure out problems like this; we really did not know what
+we were doing.
+
+What we should have done, instead of building our own object store, was use
+_someone else's_ object store.
+[KiokuDB](http://search.cpan.org/~doy/KiokuDB-0.56/lib/KiokuDB.pm) is
+frequently mentioned in this context. After I first gave this talk people asked
+“But why didn't you use KiokuDB?” or, on hearing what we did do, said “That
+sounds a lot like KiokuDB”. I had to get Rik to remind me why we _didn't_ use
+KiokuDB. We had considered it, and decided to do our own not for technical but
+for political reasons. The CEO, having made the unpleasant decision to have me
+and Rik write a new billing system, wanted to see some progress. If she had
+asked us after the first week what we had accomplished, and we had said “Well,
+we spent a week figuring out KiokuDB,” her head might have exploded. Instead,
+we were able to say “We got the object store about three-quarters finished”. In
+the long run it was _probably_ more expensive to do it ourselves, and the
+result was _certainly_ not as good. But in the short run it kept the customer
+happy, and that is the most important thing; I say this entirely in earnest,
+without either sarcasm or bitterness.
+
+(On the other hand, when I ran this article by Rik, he pointed out that
+KiokuDB had later become essentially unmaintained, and that had we used it he
+would have had to become the principal maintainer of a large, complex system
+which which he did not help design or implement. The Moonpig object store may
+be technically inferior, but Rik was with it from the beginning and
+understands it thoroughly.)
+
+#### Our object store
+
+All that said, here is how our object store worked. The bottom layer was an
+ordinary relational database with a single table. During the test phase this
+database was [SQLite](http://www.sqlite.org/), and in production it was IC
+Group's pre-existing MySQL instance. The table had two fields: a GUID
+(globally-unique identifier) on one side, and on the other side a copy of the
+corresponding `Ledger` object, serialized with Perl's `Storable`
+module. To retrieve a ledger, you look it up in the table by GUID. To retrieve
+a list of all the ledgers, you just query the GUID field. That covers the two
+main use-cases, which are customer service looking up a customer's account
+history, and running the daily heartbeat job. A subsidiary table mapped IC
+Group's customer account numbers to ledger GUIDs, so that the storage engine
+could look up a particular customer's ledger starting from their account
+number. (Account numbers are actually associated with _Consumers_. Once you
+have the right ledger a simple method call to the ledger will retrieve the
+consumer object, but finding the right ledger requires a table.) There were a
+couple of other tables of that sort, but overall it was a small thing.
+
+There are some fine points to consider. For example, you can choose whether to
+store just the object data, or the code as well. The choice is clear: you must
+store only the data, not the code. Otherwise, you would have to update all the
+stored objects every time you made a code change such as a bug fix. It should
+be clear that this would have discouraged bug fixes, and that had we gone this
+way the project would have ended as a pile of smoking rubble. Since the code
+is not stored in the database, the object store must be responsible, whenever
+it loads an object, for making sure that the correct class for that object
+actually exists. The solution for this was that along with every object is
+stored a list of all the roles that it must perform. At object load time, if
+the object's class doesn't exist yet, the object store retrieves this list of
+roles (stored in a third column, parallel to the object data) and uses the
+`MooseX::ClassCompositor` module to create a new class that does those
+roles. `MooseX::ClassCompositor` was something Rik wrote for the
+purpose, but it seems generally useful for such applications.
+
+Every once in a while you may make an upward-incompatible change to the object
+format. Renaming an object field is such a change, since the field must be
+renamed in all existing objects, but adding a new field isn't, unless the
+field is mandatory. When this happened—much less often than you might
+expect—we wrote a little job to update all the stored objects. This occurred
+only seven times over the life of the project; the update programs are all
+very short.
+
+We did also make some changes to the way the objects themselves were stored:
+Booking.Com's [`Sereal`](https://metacpan.org/pod/Sereal) module was
+released while the project was going on, and we switched to use it in place of
+`Storable`. Also one customer's `Ledger` object grew too big to
+store in the database field, which could have been a serious problem, but we
+were able to defer dealing with the problem by using `gzip` to compress
+the serialized data before storing it.
+
+#### The relational database provides transactions
+
+The use of the RDB engine for the underlying storage got us MySQL's
+implementation of transactions and atomicity guarantees, which we trusted.
+This gave us a firm foundation on which to build the higher functions; without
+those guarantees you have nothing, and it is impossible to build a reliable
+system. But since they are there, we could build a higher-level transactional
+system on top of them.
+
+For example, we used an opportunistic locking scheme to prevent race
+conditions while updating a single ledger. For performance reasons you
+typically don't want to force all updates to be done through a single process
+(although it can be made to work; see Rochkind's <cite>Advanced Unix
+Programming</cite>). In an optimistic locking scheme, you store a version
+number with each record. Suppose you are the low-level storage manager and you
+get a request to update a ledger with a certain ID. Instead of doing this:
+
+```
+update ledger set serialized_data = …
+  where ledger_id = _789_
+```
+
+You do this:
+
+```
+update ledger set serialized_data = … ,
+                  version = 4
+  where ledger_id = _789_ and version = 3
+```
+
+and you check the return value from the SQL to see how many records were
+actually updated. The answer must be 0 or 1\. If it is 1, all is well and you
+report the successful update back to your caller. But if it is 0, that means
+that some other process got there first and updated the same ledger, changing
+its version number from the 3 you were expecting to something bigger. Your
+changes are now in limbo; they were applied to a version of the object that is
+no longer current, so you throw an exception.
+
+But is the exception safe? What if the caller had previously made changes to
+the database that should have been rolled back when the ledger failed to save?
+No problem! We had exposed the RDB transactions to the caller, so when the
+caller requested that a transaction be begun, we propagated that request into
+the RDB layer. When the exception aborted the caller's transaction, all the
+previous work we had done on its behalf was aborted back to the start of the
+RDB transaction, just as one wanted. The caller even had the option to catch
+the exception without allowing it to abort the RDB transaction, and to retry
+the failed operation.
+
+#### Drawbacks of the object store
+
+The major drawback of the object store was that it was very difficult to
+aggregate data across ledgers: to do it you have to thaw each ledger, one at a
+time, and traverse its object structure looking for the data you want to
+aggregate. We planned that when this became important, we could have a method
+on the `Ledger` or its sub-objects which, when called, would store
+relevant numeric data into the right place in a conventional RDB table, where
+it would then be available for the usual SELECT and GROUP BY operations. The
+storage engine would call this whenever it wrote a modified `Ledger`
+back to the object store. The RDB tables would then be a read-only view of the
+parts of the data that were needed for building reports.
+
+A related problem is some kinds of data really are relational and to store
+them in object form is extremely inefficient. The RDB has a terrible impedance
+mismatch for most kinds of object-oriented programming, but not for _all_
+kinds. The main example that comes to mind is that every ledger contains a
+transaction log of every transaction it has ever performed: when a consumer
+deducts its 5479 m¢, that's a transaction, and every day each consumer adds
+one to the ledger. The transaction log for a large ledger with many consumers
+can grow rapidly.
+
+We planned from the first that this transaction data would someday move out of
+the ledger entirely into a single table in the RDB, access to which would be
+mediated by a separate object, called an `Accountant`. At present, the
+`Accountant` is there, but it stores the transaction data inside itself
+instead of in an external table.
+
+The design of the object store was greatly simplified by the fact that all the
+data was divided into disjoint ledgers, and that only ledgers could be stored
+or retrieved. A minor limitation of this design was that there was no way for
+an object to contain a pointer to a `Ledger` object, either its own or
+some other one. Such a pointer would have spoiled <a
+name="perl-gc-sucks">Perl's lousy garbage collection</a>, so we weren't going
+to do it anyway. In practice, the few places in the code that needed to refer
+to another ledger just store the ledger's GUID instead and looked it up when
+it was needed. In fact every significant _object_ was given its own GUID,
+which was then used as needed. [This was Rik's strategy, and it was a good
+one.](http://blog.plover.com/IT/GUID.html) I was surprised to find how often
+it was useful to have a simple, reliable identifier for every object, and how
+much time I had formerly spent on programming problems that would have been
+trivially solved if objects had had GUIDs.
+
+#### The object store was a success
+
+In all, I think the object store technique worked well and was a smart choice
+that went strongly against prevailing practice. I would recommend the
+technique for similar projects, except for the part where we wrote the object
+store ourselves instead of using one that had been written already. Had we
+tried to use an ORM backed by a relational database, I think the project would
+have taken at least a third longer; had we tried to use an RDB without any
+ORM, I think we would not have finished at all.
+
+### Things that suck: multiple inheritance
+
+After I had been using `Moose` for a couple of years, including the
+Moonpig project, Rik asked me what I thought of it. I was lukewarm. It
+introduces a lot of convenience for common operations, but also hides a lot of
+complexity under the hood, and the complexity does not always stay
+well-hidden. It is very big and very slow to start up. On the whole, I said, I
+could take it or leave it.
+
+“Oh,” I added. “Except for Roles. Roles are _awesome_.” I had a long section
+in the talk about what is good about Roles, but I moved it out to a separate
+talk, so I am going to take that as a hint about what I should do here. As
+with my theory of dates and times, I will present only the thesis, and save
+the arguments for another post:
+
+1.  Object-oriented programming is centered around objects, which are
+    encapsulated groups of related data, and around methods, which are opaque
+    functions for operating on particular kinds of objects.
+2.  OOP does not mandate any particular theory of inheritance, either single
+    or multiple, class-based or prototype based, etc., and indeed, while all
+    OOP systems have objects and methods that are pretty much the same, each
+    has an inheritance system all its own.
+3.  Over the past 30 years of OOP, many theories of inheritance have been
+    tried, and all of them have had serious problems.
+4.  If there were no alternative to inheritance, we would have to struggle on
+    with inheritance. However, Roles _are_ a good alternative to inheritance:
+    *   Every problem solved by inheritance is solved at least as well by
+        Roles.
+    *   Many problems not solved at all by inheritance are solved by Roles.
+    *   Many problems introduced by inheritance do not arise when using Roles.
+    *   Roles introduce some of their own problems, but none of them are as
+        bad as the problems introduced by inheritance.
+5.  It's time to give up on inheritance. It was worth a try; we tried it as
+hard as we could for thirty years or more. It didn't work.
+6.  I'm going to repeat that: **Inheritance doesn't work. It's time to give up
+on it.**
+
+**Moonpig doesn't use any inheritance** (except that
+`Moonpig::DateTime` inherits from `DateTime`, which we didn't
+control). Every class in Moonpig is composed from Roles. This wasn't because
+it was our policy to avoid inheritance. It's because Roles did everything we
+needed, usually in simple and straightforward ways.
+
+I plan to write more extensively on this later on.
+
+This section is the end of the things I want to excoriate. Note the transition
+from multiple inheritance, which was a tremendous waste of everyone's time, to
+Roles, which in my opinion are a tremendous success, the Right Thing, and gosh
+if only Smalltalk-80 had gotten this right in the first place look how much
+  trouble we all would have saved.
+
+### Things that are GOOD: web RPC APIs
+
+Moonpig has a web API. Moonpig applications, such as the customer service
+dashboard, or the heartbeat job, invoke Moonpig functions through the API. The
+API is built using a system, developed in parallel with Moonpig, called Stick.
+(It was so-called because IC Group had tried before to develop a simple web
+API system, but none had been good enough to stick. This one, we hoped, would
+stick.)
+
+The basic principle of Stick is _distributed routing_, which allows an object
+to have a URI, and to delegate control of the URIs underneath it to other
+objects.
+
+To participate in the web API, an object must compose the
+`Stick::Role::Routable` role, which requires that it provide a `_subroute`
+method. The method is called with an array containing the path components of a
+URI. The `_subroute` method examines the array, or at least the first few
+elements, and decides whether it will handle the route.  To refuse, it can
+throw an exception, or just return an undefined value, which will turn into a
+404 error in the web protocol. If it does handle the path, it removes the part
+it handled from the array, and returns another object that will handle the
+rest, or, if there is nothing left, a public resource of some sort. In the
+former case the routing process continues, with the remaining route components
+passed to the `_subroute` method of the next object.
+
+If the route is used up, the last object in the chain is checked to make sure
+it composes the `Stick::Role::PublicResource` role. This is to prevent
+accidentally exposing an object in the web API when it should be private.
+Stick then invokes one final method on the public resource, either
+`resource_get`, `resource_post`, or similar. Stick collects the
+return value from this method, serializes it and sends it over the network as
+the response.
+
+So for example, suppose a ledger wants to provide access to its consumers. It
+might implement `_subroute` like this:
+
+```
+sub _subroute {
+  my ($self, $route) = @_;
+  if ($route->[0] eq "consumer") {
+    shift @$route;
+    my $consumer_id = shift @$route;
+    return $self->find_consumer( id => $consumer_id );
+  } else {
+    return;   # 404
+  }
+}
+```
+
+
+Then if _/path/to/ledger_ is any URI that leads to a certain
+ledger, _/path/to/ledger/consumer/12435_ will be a valid URI for
+the specified ledger's consumer with ID 12345. A request to
+_/path/to/ledger/FOOP/de/DOOP_ will yield a 404 error, as will a
+request to _/path/to/ledger/consumer/98765_ whenever
+_findconsumer(id => 98765)_ returns undefined.
+
+A common pattern is to have a path that invokes a method on the target object.
+For example, suppose the ledger objects are already addressable at certain
+URIs, and one would like to expose in the API the ability to tell a ledger to
+handle a heartbeat event. In Stick, this is incredibly easy to implement:
+
+```
+publish heartbeat => { -http_method => 'post' } => sub {
+  my ($self) = @_;
+  $self->handle_event( event('heartbeat') );
+};
+```
+
+This creates an ordinary method, called `heartbeat`, which can be
+called in the usual way, but which is also invoked whenever an HTTP POST
+request arrives at the appropriate URI, the appropriate URI being anything of
+the form `/_path_/_to_/_ledger_/heartbeat`.
+
+The default case for `publish` is that the method is expected to be
+GET; in this case one can omit mentioning it:
+
+```
+publish amount_due => sub {
+  my ($self) = @_;
+  ...
+  return abs($due - $avail);
+};
+```
+
+More complicated published methods may receive arguments; Stick takes care of
+deserializing them, and checking that their types are correct, before invoking
+the published method. This is the ledger's method for updating its contact
+information:
+
+```
+publish _replace_contact => {
+  -path        => 'contact',
+  -http_method => 'put',
+  attributes   => HashRef,
+} => sub {
+  my ($self, $arg) = @_;
+  my $contact = class('Contact')->new($arg->{attributes});
+  $self->replace_contact($contact);
+
+  return $contact;
+};
+```
+
+Although the method is named `_replace_contact`, is is available in the
+web API via a PUT request to `/_path_/_to_/_ledger_/contact`, rather
+than one to `/_path_/_to_/_ledger_/_replace_contact`. If the contact
+information supplied in the HTTP request data is accepted by
+`class('Contact')->new`, the ledger's contact is updated.
+(`class('Contact')` is a utility method that returns the name of the
+class that represents a contact. This is probably just the string
+`Moonpig::Class::Contact`.)
+
+In some cases the ledger has an entire family of sub-objects. For example, a
+ledger may have many consumers. In this case it's also equipped with a
+"collection" object that manages the consumers. The ledger can use the
+collection object as a convenient way to look up its consumers when it needs
+them, but the collection object also provides routing: If the ledger gets a
+request for a route that begins `/consumers`, it strips off
+`/consumers` and returns its consumer collection object, which handles
+further paths such as `/guid/_XXXX_` and `/xid/_1234_` by
+locating and returning the appropriate consumer.
+
+The collection object is a repository for all sorts of convenient behavior.
+For example, if one composes the `Stick::Role::Collection::Mutable`
+role onto it, it gains support for POST requests to `…/consumers/add`,
+handled appropriately.
+
+Adding a new API method to any object is trivial, just a matter of adding a
+new published method. Unpublished methods are not accessible through the web
+API.
+
+After I wrote this talk I wished I had written a talk about Stick instead. I'm
+still hoping to write one and present it at YAPC in Orlando this summer.
+
+### Things that are GOOD: Object-oriented testing
+
+Unit tests often have a lot of repeated code, to set up test instances or run
+the same set of checks under several different conditions. Rik's
+`Test::Routine` makes a test program into a class. The class is
+instantiated, and the tests are methods that are run on the test object
+instance. Test methods can invoke one another. The test object's attributes
+are available to the test methods, so they're a good place to put test data.
+The object's initializer can set up the required test data. Tests can easily
+load and run other tests, all in the usual ways. If you like OO-style
+programming, you'll like all the same things about building tests with
+`Test::Routine`.
+
+### Things that are GOOD: Free software
+
+All this stuff is available for free under open licenses:
+
+*   [`Test::Routine`](https://metacpan.org/module/Test::Routine)
+*   [Stick](https://github.com/rjbs/stick)
+*   [Moonpig](https://github.com/pobox/Moonpig)
+*   [`DateTime::Moonpig`](https://metacpan.org/module/DateTime::Moonpig)
+
+(This has been a really long article. Thanks for sticking with me. Headers in
+the article all have named anchors, in case you want to refer someone to a
+particular section.)
+
+(I suppose there is a fair chance that this will wind up on Hacker News, and I
+know how much the kids at Hacker News love to dress up and play CEO and Scary
+Corporate Lawyer, and will enjoy posting dire tut-tuttings about whether my
+disclosure of ICG's secrets is actionable, and how reluctant they would be to
+hire anyone who tells such stories about his previous employers. So I may as
+well spoil their fun by mentioning that I received the approval of ICG's CEO
+before I posted this.)
+
+[ Addendum: [A detailed description of
+`DateTime::Moonpig`](http://blog.plover.com/prog/perl/DateTime-Moonpig.html)
+is now available. ]
+
+[ Addendum 20140208: Jesper Andersen has written [an account of a surprisingly
+similar system](https://medium.com/p/76e83c706b74) that he wrote in Erlang. ]
