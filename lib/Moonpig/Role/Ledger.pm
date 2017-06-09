@@ -914,13 +914,33 @@ publish invoice_history_events => {
   for my $invoice (
     grep {; $_->is_closed && ! $_->is_abandoned } $self->invoices
   ) {
-    push @events, {
-      event  => 'invoice.invoiced',
-      date   => $invoice->closed_at,
-      guid   => $invoice->guid,
-      ident  => $invoice->ident,
-      amount => $invoice->total_amount,
-    };
+    if ($invoice->is_quote && ! $invoice->is_executed) {
+      push @events, {
+        event  => 'quote.created',
+        date   => $invoice->created_at,
+        guid   => $invoice->guid,
+        ident  => $invoice->ident,
+        amount => $invoice->total_amount,
+      };
+    }
+
+    if ($invoice->is_executed) {
+      push @events, {
+        event  => 'quote.executed',
+        date   => $invoice->executed_at,
+        guid   => $invoice->guid,
+        ident  => $invoice->ident,
+        amount => $invoice->total_amount,
+      };
+    } elsif ($invoice->isnt_quote) {
+      push @events, {
+        event  => 'invoice.invoiced',
+        date   => $invoice->closed_at,
+        guid   => $invoice->guid,
+        ident  => $invoice->ident,
+        amount => $invoice->total_amount,
+      };
+    }
 
     if ($invoice->is_paid) {
       push @events, {

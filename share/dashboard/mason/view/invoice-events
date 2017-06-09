@@ -20,6 +20,9 @@ $ledger_id
 %     if ($event->{event} eq 'invoice.invoiced') {
       for <% mc($event->{amount}) %>
 %     }
+%   } elsif ($event->{event} =~ /^quote/) {
+      Quote <a href='./invoice/<% $event->{guid} %>'><% $event->{ident} %></a>
+      for <% mc($event->{amount}) %>
 %   } elsif ($event->{event} eq 'credit.paid') {
       <% $event->{credit_type} |h %> Credit
       <a href='./credit/<% $event->{guid} %>'><% $event->{guid} %></a>
