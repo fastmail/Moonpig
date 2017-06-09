@@ -251,7 +251,7 @@ $ledger
 </%args>
 % my $quotes = $m->mp_request(GET => "/ledger/by-guid/$ledger->{guid}/invoices/quotes");
 % return unless $quotes;
-% my @quotes = @{ $quotes->{items} };
+% my @quotes = grep {; ! $_->{abandoned_at} && ! $_->{quote_has_expired} } @{ $quotes->{items} };
 <div class='invoices'>
   <h2>Quotes</h2>
 
