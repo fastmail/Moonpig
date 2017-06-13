@@ -9,6 +9,7 @@ $ledger_id
   title => $ledger->{contact}->{first_name} . " " . $ledger->{contact}->{last_name} . " - Moonpig",
   header => "Moonpig Ledger " . $ledger->{ident} &>
 <& /widget/results, results => {
+  'autocharger-cleared' => "Autocharger cleared!",
   'consumer-canceled'   => "Consumer canceled!",
   'consumer-reinvoiced' => "Consumer reinvoiced!",
   'consumer-terminated' => "Consumer terminated!",
