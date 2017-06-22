@@ -924,7 +924,7 @@ publish invoice_history_events => {
       };
     }
 
-    if ($invoice->is_executed) {
+    if ($invoice->can('is_executed') && $invoice->is_executed) {
       push @events, {
         event  => 'quote.executed',
         date   => $invoice->executed_at,
@@ -978,7 +978,8 @@ publish invoice_history_events => {
   # better display sense, even if the two things are within 1 second and 1
   # transaction -- rjbs, 2012-10-08
   state $cmp = Sort::ByExample->cmp([
-    qw(invoice.invoiced dunning credit.paid invoice.paid)
+    qw(invoice.invoiced quote.created quote.executed
+       dunning credit.paid invoice.paid)
   ]);
   @events = sort { $a->{date} <=> $b->{date}
                 || $cmp->($a->{event}, $b->{event}) } @events;
