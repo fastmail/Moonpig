@@ -23,6 +23,12 @@ $(function () {
   $(".dumpcontainer h4").click(function () {
     $(this).parent().find('div.dump').slideToggle();
   });
+
+  $('form').submit(function() {
+    $('input:text').each(function() {
+      $(this).val( $.trim($(this).val()) );
+    });
+  });
 });
 </script>
 
