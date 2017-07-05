@@ -1,0 +1,4 @@
+We recently tried to charge your stored credit card ending in {{ $card_num }}
+for the amount of {{ sprintf '$%0.2f', Moonpig::Util::to_dollars($amount); }}.
+This payment was unsuccesful; please log in to your account and update
+your credit card information.
