@@ -1,4 +1,4 @@
 <!-- CONTENT -->
 
 -- 
-Copyright (C) IC Group, Inc. 1995-2015. All Rights Reserved.
+Copyright (C) FastMail Pty Ltd 2017. All Rights Reserved.
