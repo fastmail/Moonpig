@@ -40,6 +40,8 @@ use Sub::Exporter -setup => [ qw(
   percent
 
   sum sumof
+
+  same_day_next_month
 ) ];
 
 my $COMPOSITOR = MooseX::ClassCompositor->new({
@@ -186,6 +188,41 @@ sub percent { $_[0] / 100 }
 sub json {
   state $JSON = JSON->new->ascii(1)->convert_blessed(1)->allow_blessed;
   return $JSON;
+}
+
+# Get the same day of the month one month from now. If the current day
+# is the 29th, 30th, or 31st, get the first day of month two months
+# from now instead. This way we can bill on a consistent schedule.
+sub same_day_next_month {
+  my $now = shift || Moonpig->env->now;
+
+  # These may not exist next month, so we'll skip to the 1st day of
+  # the following month
+  if ($now->day =~ /^(?:29|30|31)\z/) {
+    # Get to the first
+    my $start_of_month = $now->truncated(to => 'month');
+
+    # Go two months ahead (which is really only 1 month + a few days
+    # ahead of now. We add 5 days because if our month has 31 days
+    # and the next month has 31 days, + months(2) won't actually
+    # get us where we want to be!
+    my $then = $start_of_month + months(2) + days(5);
+
+    # Get back to the first of that month
+    return $then->truncated(to => 'month');
+  } else {
+    my $day = $now->day;
+
+    my $next = $now + months(1);
+
+    # Maybe we only went ahead 30 days on a 31 day month. Ugh.
+    if ($next->month == $now->month) {
+      $next = $next + days(5);
+    }
+
+    # Get us to the same day
+    return $next->truncated(to => 'month') + (days($day) - days(1));
+  }
 }
 
 1;
