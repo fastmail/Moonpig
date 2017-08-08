@@ -4,6 +4,7 @@ package Moonpig::MKits;
 use Moose;
 
 use Carp ();
+use Digest::MD5 ();
 use Email::Date::Format qw(email_gmdate);
 use File::ShareDir;
 use File::Spec;
@@ -80,6 +81,8 @@ sub assemble_kit {
   if ( Moonpig->env->does('Moonpig::Role::Env::WithMockedTime') ) {
     $email->header_set(Date => email_gmdate( Moonpig->env->now->epoch ) );
   }
+
+  $email->header_set('Moonpig-MKit' => Digest::MD5::md5_hex($kitname));
 
   return $email;
 }

@@ -99,6 +99,12 @@ test 'charge close and send' => sub {
     "the email we went is an invoice email",
    );
 
+  is(
+    $email->header('Moonpig-MKit'),
+    Digest::MD5::md5_hex('invoice'),
+    "the message indicates its source template",
+  );
+
   {
     my $msg_id = $email->header('Message-ID') =~ s/\A<|>\z//gr;
     my ($local, $domain) = split /\@/, $msg_id;
