@@ -42,6 +42,7 @@ use Sub::Exporter -setup => [ qw(
   sum sumof
 
   same_day_next_month
+  same_day_of_month_next_year
 ) ];
 
 my $COMPOSITOR = MooseX::ClassCompositor->new({
@@ -223,6 +224,20 @@ sub same_day_next_month {
     # Get us to the same day
     return $next->truncated(to => 'month') + (days($day) - days(1));
   }
+}
+
+# Get the same day of the month one year from now. If the current day
+# is the 29th, 30th, or 31st, get the first day of month one year and
+# two months from now instead. This way we can bill on a consistent
+# schedule
+sub same_day_of_month_next_year {
+  my $now = shift || Moonpig->env->now;
+
+  for (1..12) {
+    $now = same_day_next_month($now);
+  }
+
+  return $now;
 }
 
 1;

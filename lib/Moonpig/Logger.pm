@@ -14,6 +14,14 @@ sub logger_globref {
 
 sub default_logger_class { 'Moonpig::Logger::_Logger' }
 
+sub default_logger_args {
+  return {
+    ident     => 'moonpig',
+    facility  => 'daemon',
+    to_stderr => $_[0]->default_logger_class->env_value('STDERR') ? 1 : 0,
+  }
+}
+
 {
   package
     Moonpig::Logger::_Logger;
