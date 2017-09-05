@@ -3,7 +3,7 @@ package Moonpig::Role::Contact;
 
 use Moose::Role;
 
-use Moonpig::Types qw(EmailAddresses TrimmedSingleLine);
+use Moonpig::Types qw(EmailAddresses TrimmedSingleLine AddressLines);
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Moose qw(ArrayRef HashRef);
 
@@ -52,15 +52,13 @@ has phone_book => (
 );
 
 has address_lines => (
-  isa => subtype(
-    as ArrayRef[ TrimmedSingleLine ],
-    where { @$_ > 0 and @$_ <= 2 }
-  ),
+  isa => AddressLines,
   traits   => [ 'Array' ],
   handles  => {
     address_lines => 'elements',
   },
   required => 1,
+  coerce => 1,
 );
 
 has [ qw(city country) ] => (

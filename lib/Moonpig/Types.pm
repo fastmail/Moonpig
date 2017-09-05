@@ -25,6 +25,7 @@ use MooseX::Types -declare => [ qw(
 
   SingleLine TrimmedSingleLine
   NonBlankLine TrimmedNonBlankLine
+  AddressLines
 
   Tag TagSet
 
@@ -133,6 +134,20 @@ subtype TrimmedNonBlankLine, as NonBlankLine, where { /\A\H/ && /\S\z/ };
 coerce TrimmedNonBlankLine,
   from NonBlankLine,
   via { s/(?:\A\h*)|(\s*\z)//gr };
+
+subtype AddressLines,
+  as ArrayRef[ TrimmedSingleLine ],
+  where {  @$_ > 0 and @$_ <= 2 };
+
+coerce AddressLines,
+  from ArrayRef[ Str ],
+  via {
+    [
+      grep { $_ ne '' }
+      map { s/(?:\A\h*)|(\s*\z)//gr }
+      @$_
+    ]
+  };
 
 ################################################################
 #

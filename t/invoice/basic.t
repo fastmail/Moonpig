@@ -617,6 +617,72 @@ test 'non-ASCII content in email' => sub {
   pass("everything ran to completion without dying");
 };
 
+test 'contact info coercion' => sub {
+  my ($self) = @_;
+  my $guid;
+
+  do_with_fresh_ledger(
+    {
+      c => { template => 'dummy' },
+
+      ledger => {
+        contact => class('Contact')->new({
+          first_name      => 'Thelonious',
+          last_name       => 'Monk',
+          phone_book      => { home => 1234567890 },
+          email_addresses => [ 'sphere@example.com' ],
+          address_lines   => [ '   123 E. 42nd St ', ' Apt. Underground' ],
+          city            => 'New York',
+          country         => 'USA',
+        }),
+      },
+    },
+    sub {
+      my ($ledger) = @_;
+      my $contact = $ledger->contact_history->[0];
+
+      is(
+        $contact->{address_lines}->[0],
+        '123 E. 42nd St',
+        'trimmed leading/trailing space from address lines'
+      );
+
+      is(
+        $contact->{address_lines}->[1],
+        'Apt. Underground',
+        'trimmed leading/trailing space from address lines'
+      );
+
+      $ledger->_replace_contact({
+        attributes => {
+          first_name      => 'Nellie',
+          last_name       => 'Monk',
+          phone_book      => { home => 1234567890 },
+          email_addresses => [ 'crepuscule@example.com' ],
+          address_lines   => [ '123 E. 42nd St', '' ],
+          city            => 'New York',
+          country         => 'USA',
+        },
+      });
+
+      my $new_contact = $ledger->contact_history->[-1];
+      is(
+        $new_contact->{first_name},
+        'Nellie',
+        'replaced a contact'
+      );
+
+      is(
+        $new_contact->{address_lines}->[1],
+        undef,
+        'deleted blank address lines'
+      );
+    }
+  );
+
+  pass("everything ran to completion without dying");
+};
+
 test 'one-time charging' => sub {
   my ($self) = @_;
   my $guid;
