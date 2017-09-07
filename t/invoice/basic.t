@@ -88,11 +88,24 @@ test 'charge close and send' => sub {
 
     is($invoice->total_amount, dollars(15), "invoice line items tally up");
 
+    no warnings 'redefine';
+    local *Moonpig::MKits::assemble_kit = sub {
+      my ($self, $kitname, $arg) = @_;
+
+      my $kit = $self->_kit_for($kitname, $arg);
+      my $email = $kit->assemble($arg);
+      $email->header_set(From => 'set-from@example.com');
+      $email->header_set(To   => 'set-to@example.com');
+
+      return $email;
+    };
+
     $self->heartbeat_and_send_mail($ledger);
   });
 
   my ($delivery) = $self->assert_n_deliveries(1, "the invoice");
   my $email = $delivery->{email};
+
   like(
     $email->header('subject'),
     qr{payment is due}i,
@@ -103,6 +116,12 @@ test 'charge close and send' => sub {
     $email->header('Moonpig-MKit'),
     Digest::MD5::md5_hex('invoice'),
     "the message indicates its source template",
+  );
+
+  is_deeply(
+    $delivery->{envelope},
+    { from => 'set-from@example.com', to => [ 'set-to@example.com' ] },
+    'envelope comes from headers when not given',
   );
 
   {
@@ -195,9 +214,13 @@ test 'send with balance on hand' => sub {
   my ($self) = @_;
   my $guid;
 
+  my @addrs;
+
   do_with_fresh_ledger({ c => { template => 'dummy' }}, sub {
     my ($ledger) = @_;
     $guid = $ledger->guid;
+
+    @addrs = $ledger->contact->email_addresses;
 
     my $invoice = $ledger->current_invoice;
     $ledger->name_component("initial invoice", $invoice);
@@ -225,7 +248,18 @@ test 'send with balance on hand' => sub {
   });
 
   my ($delivery) = $self->assert_n_deliveries(1, "the invoice");
+
+  is_deeply(
+    $delivery->{envelope},
+    {
+      from => Moonpig->env->from_email_address_mailbox,
+      to   => \@addrs,
+    },
+    'envelope comes from headers when not given',
+  );
+
   my $email = $delivery->{email};
+
   like(
     $email->header('subject'),
     qr{payment is due}i,

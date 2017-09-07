@@ -7,6 +7,7 @@ use Carp qw(confess croak);
 use Moose::Role;
 
 use Email::MessageID;
+use List::AllUtils ();
 use Sort::ByExample ();
 use Sys::Hostname::Long;
 
@@ -609,16 +610,43 @@ sub amount_overearmarked {
   return $earmarked - $unapplied;
 }
 
+# Stolen from Email::Sender::Util -- rjbs, 2017-09-07
+sub _recipients_from_email {
+  my ($self, $email) = @_;
+
+  my @to = List::AllUtils::uniq(
+           map { $_->address }
+           map { Email::Address->parse($_) }
+           map { $email->header($_) }
+           qw(to cc bcc));
+
+  return \@to;
+}
+
+# Stolen from Email::Sender::Util -- rjbs, 2017-09-07
+sub _sender_from_email {
+  my ($self, $email) = @_;
+
+  my ($sender) = map { $_->address }
+                 map { Email::Address->parse($_) }
+                 scalar $email->header('from');
+
+  return $sender;
+}
+
 sub _send_mkit {
   my ($self, $event, $arg) = @_;
-
-  my $to   = $event->payload->{envelope_recipients} // [ $self->contact->email_addresses ];
-  my $from = $event->payload->{envelope_sender} // Moonpig->env->from_email_address_mailbox;
 
   my $email = Moonpig->env->mkits->assemble_kit(
     $event->payload->{kit},
     $event->payload->{arg},
   );
+
+  my $to   = $event->payload->{envelope_recipients}
+          // $self->_recipients_from_email($email);
+  my $from = $event->payload->{envelope_sender}
+          // $self->_sender_from_email($email)
+          // Moonpig->env->from_email_address_mailbox;
 
   {
     state $counter = 0;
