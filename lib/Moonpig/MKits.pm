@@ -4,8 +4,6 @@ package Moonpig::MKits;
 use Moose;
 
 use Carp ();
-use Digest::MD5 ();
-use Email::Date::Format qw(email_gmdate);
 use File::ShareDir;
 use File::Spec;
 use Moonpig::Email::MIME::Kit;
@@ -59,14 +57,17 @@ sub _kit_for {
   my ($self, $kitname, $arg) = @_;
 
   $kitname = $self->_kitname_for($kitname, $arg);
-  $kitname .= '.mkit';
+  my $kitdir = "$kitname.mkit";
 
   my @path = map {; File::Spec->catdir($_, 'kit' ) } Moonpig->env->share_roots;
 
   for my $root (@path) {
-    my $kit = File::Spec->catdir($root, $kitname);
+    my $kit = File::Spec->catdir($root, $kitdir);
     next unless -d $kit;
-    return Moonpig::Email::MIME::Kit->new({ source => $kit });
+    return Moonpig::Email::MIME::Kit->new({
+      kitname => $kitname,
+      source  => $kit,
+    });
   }
 
   Carp::confess "unknown mkit <$kitname>";
@@ -76,15 +77,7 @@ sub assemble_kit {
   my ($self, $kitname, $arg) = @_;
 
   my $kit = $self->_kit_for($kitname, $arg);
-  my $email = $kit->assemble($arg);
-
-  if ( Moonpig->env->does('Moonpig::Role::Env::WithMockedTime') ) {
-    $email->header_set(Date => email_gmdate( Moonpig->env->now->epoch ) );
-  }
-
-  $email->header_set('Moonpig-MKit' => Digest::MD5::md5_hex($kitname));
-
-  return $email;
+  return $kit->assemble($arg);
 }
 
 1;

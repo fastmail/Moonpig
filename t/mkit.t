@@ -1,6 +1,13 @@
-use strict;
-use warnings;
+use Test::Routine;
 use Test::More;
+use Test::Routine::Util;
+
+use t::lib::Logger;
+use t::lib::TestEnv;
+
+with(
+  'Moonpig::Test::Role::LedgerTester',
+);
 
 ### THIS TEST VIOLATES ENCAPSULATION
 ### BECAUSE DOING THAT IS A LOT EASIER
@@ -9,40 +16,55 @@ use Test::More;
 ###                  -- rjbs, 2011-12-07
 use Moonpig::MKits;
 
-{
-  my $mkits = Moonpig::MKits->new;
-  my $kitname = $mkits->_kitname_for(invoice => {});
-  is($kitname, 'invoice', "no overrides");
-}
-
-{
-  my $mkits = Moonpig::MKits->new;
+test "basic mkit overrides" => sub {
   {
-    $mkits->add_override('*' => sub { return });
+    my $mkits = Moonpig::MKits->new;
     my $kitname = $mkits->_kitname_for(invoice => {});
-    is($kitname, 'invoice', "global return() override");
+    is($kitname, 'invoice', "no overrides");
   }
 
   {
-    $mkits->add_override('*' => sub { return 'zooch' });
-    my $kitname = $mkits->_kitname_for(invoice => {});
-    is($kitname, 'zooch', "global return(q{zooch}) override");
-  }
-}
+    my $mkits = Moonpig::MKits->new;
+    {
+      $mkits->add_override('*' => sub { return });
+      my $kitname = $mkits->_kitname_for(invoice => {});
+      is($kitname, 'invoice', "global return() override");
+    }
 
-{
-  my $mkits = Moonpig::MKits->new;
+    {
+      $mkits->add_override('*' => sub { return 'generic' });
+      my $kitname = $mkits->_kitname_for(invoice => {});
+      is($kitname, 'generic', "global return(q{generic}) override");
+
+      my $email = $mkits->assemble_kit(invoice => {
+        subject       => "Test",
+        to_addresses  => [ q{example@example.com} ],
+        body          => "This should be generic.\n",
+      });
+
+      is(
+        $email->header('Moonpig-MKit'),
+        Digest::MD5::md5_hex('generic'),
+        "we respect override in setting Moonpig-MKit",
+      );
+    }
+  }
+
   {
-    $mkits->add_override('glort' => sub { return 'zooch' });
-    my $kitname = $mkits->_kitname_for(invoice => {});
-    is($kitname, 'invoice', "override for other name ignored");
-  }
+    my $mkits = Moonpig::MKits->new;
+    {
+      $mkits->add_override('glort' => sub { return 'zooch' });
+      my $kitname = $mkits->_kitname_for(invoice => {});
+      is($kitname, 'invoice', "override for other name ignored");
+    }
 
-  {
-    $mkits->add_override('invoice' => sub { return 'bling' });
-    my $kitname = $mkits->_kitname_for(invoice => {});
-    is($kitname, 'bling', "override for this name matched");
+    {
+      $mkits->add_override('invoice' => sub { return 'bling' });
+      my $kitname = $mkits->_kitname_for(invoice => {});
+      is($kitname, 'bling', "override for this name matched");
+    }
   }
-}
+};
 
+run_me;
 done_testing;
