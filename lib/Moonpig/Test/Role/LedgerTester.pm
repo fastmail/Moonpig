@@ -11,6 +11,10 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class datetime days sum sumof to_dollars);
 use Test::More;
 
+use Email::MIME;
+use Email::Abstract;
+use Safe::Isa;
+
 use namespace::clean;
 
 around run_test => sub {
@@ -67,8 +71,59 @@ sub assert_n_deliveries {
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
   is(@deliveries, $n, $desc);
+
+  if (my $want = $ENV{MOONPIG_SHOW_DELIVERIES}) {
+    my $i = 0;
+
+    if ($want eq '1') {
+      for my $entry (@deliveries) {
+        my $email = $entry->{email};
+
+        my $html = $self->find_email_part($email, 'text/html');
+        my $text = $self->find_email_part($email, 'text/plain');
+
+        diag "Message " . $i++;
+        diag "HTML:\n" . $html->body_str if $html;
+        diag "TEXT:\n" . $text->body_str if $text;
+      }
+    } else {
+      for my $entry (@deliveries) {
+        my $email = $entry->{email};
+
+        my $part = $self->find_email_part($email, $want);
+
+        diag "Message " . $i++;
+        diag "$want:\n" . $part->body_str if $part;
+      }
+    }
+  }
+
   return @deliveries;
 }
+
+sub find_email_part {
+  my ($self, $email, $want) = @_;
+
+  unless ($email->$_isa('Email::MIME')) {
+    $email = Email::Abstract->new($email)->cast('Email::MIME');
+  }
+
+  my $type = lc( $email->header('content-type') || 'text/plain' );
+  $type =~ s/;.*\z//;
+
+  return $email if (  ref $want && $type =~ $want)
+                or (! ref $want && $type eq lc $want);
+
+  my @sub = $email->subparts;
+  @sub = reverse @sub if $type eq 'multipart/alternative';
+  for my $part (@sub) {
+    my $found = $self->find_email_part($part, $want);
+    return $found if $found;
+  }
+
+  return;
+}
+
 
 sub pay_invoices {
   my ($self, $invoices) = @_;
