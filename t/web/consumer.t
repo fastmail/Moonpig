@@ -69,6 +69,20 @@ sub setup_account {
         $result->{guid};
       };
 
+      Moonpig->env->storage->do_rw(sub {
+        my $ledger = Moonpig->env->storage
+          ->retrieve_ledger_for_guid($rv{ledger_guid});
+
+        my @abandoned = grep {;
+          $_->is_abandoned }
+        $ledger->invoice_collection->all;
+        is(
+          @abandoned,
+          0,
+          'no abandoned invoices after setting up a new ledger'
+        );
+      });
+
       $rv{account_guid} = do {
         my $account_info = {
           template      => 'fauxboxtest',

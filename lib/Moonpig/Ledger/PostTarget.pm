@@ -109,11 +109,11 @@ sub resource_post {
       }
     }
 
-    # Close the invoice manually, since otherwise the consumer we just
-    # created will be unable to see the charges on the invoice and
-    # might incorrectly think it has a funding shortfall; see
-    # Consumer::ByTime::_send_psync_quote 20120425 mjd
-    $ledger->current_invoice->mark_closed;
+    # Close the invoice manually (if there is one), since otherwise the
+    # consumer we just created will be unable to see the charges on the
+    # invoice and might incorrectly think it has a funding shortfall;
+    # see Consumer::ByTime::_send_psync_quote 20120425 mjd
+    $ledger->current_invoice->mark_closed if $ledger->has_current_invoice;
     $ledger->heartbeat;
 
     if ($arg{old_payment_info}) {
