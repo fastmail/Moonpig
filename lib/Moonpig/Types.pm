@@ -137,7 +137,7 @@ coerce TrimmedNonBlankLine,
 
 subtype AddressLines,
   as ArrayRef[ TrimmedSingleLine ],
-  where {  @$_ > 0 and @$_ <= 2 };
+  where {  @$_ > 0 };
 
 coerce AddressLines,
   from ArrayRef[ Str ],
