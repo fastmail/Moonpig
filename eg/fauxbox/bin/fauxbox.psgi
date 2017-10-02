@@ -5,6 +5,8 @@ use warnings;
 use lib 'lib';
 use lib 'eg/fauxbox/lib';
 
+$ENV{MOONPIG_TESTING} = 1;
+
 unless (exists $ENV{FAUXBOX_STORAGE_ROOT}) {
   $ENV{FAUXBOX_STORAGE_ROOT} = 'eg/fauxbox/var';
 }

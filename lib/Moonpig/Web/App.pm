@@ -96,8 +96,7 @@ sub app {
                     : 'do_rw';
 
       return $storage->$do_method(sub {
-        # XXX: IF WE ARE IN TESTING MODE -- rjbs, 2011-03-30
-        if (1) {
+        if ($ENV{MOONPIG_TESTING}) {
           my $res = test_routes(\@path, $storage);
           return $res if $res;
         }

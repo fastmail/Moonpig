@@ -11,4 +11,6 @@ use Test::File::ShareDir 0.003001 -share => {
 
 use Moonpig::Env::Test;
 
+$ENV{MOONPIG_TESTING} = 1;
+
 1;

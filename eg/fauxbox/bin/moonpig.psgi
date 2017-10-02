@@ -5,6 +5,8 @@ use warnings;
 use lib 'lib';
 use lib 'eg/fauxbox/lib';
 
+$ENV{MOONPIG_TESTING} = 1;
+
 use Log::Dispatch::Null;
 use Term::ANSIColor;
 
