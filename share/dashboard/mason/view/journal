@@ -7,20 +7,23 @@ $ledger_id
 my $activity = $m->mp_request(
   GET => $m->mp_ledger_path($ledger_id) . "/journals/last/recent-activity"
 );
-die "can't get activity" unless $activity;
 </%perl>
 <&| /page/full, title => "Moonpig Ledger $ledger_id: Journal Activity" &>
 
+% if ($activity) {
 <table>
   <tr><th>Date</th><th>Consumer</th><th>Description</th><th>Amount</th></tr>
-% for my $row (@{ $activity->{items} }) {
+%   for my $row (@{ $activity->{items} }) {
   <tr>
     <td><% $row->{date} %></td>
     <td><% $row->{consumer_guid} %></td>
     <td><% $row->{description} |h %></td>
     <td><% mc($row->{amount}) %></td>
   </tr>
-% }
+%   }
 </table>
+% } else {
+There is no journal activity yet.
+% }
 </&>
 </%method>
