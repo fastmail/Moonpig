@@ -77,6 +77,9 @@ with(
   'Stick::Role::HasCollection' => {
     item => 'job',
     is => 'ro',
+    collection_roles => [
+                          'Stick::Role::Collection::CanFilter',
+                          ],
    },
   'Stick::Role::PublicResource::GetSelf',
 );
