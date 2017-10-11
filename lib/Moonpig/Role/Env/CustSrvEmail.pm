@@ -22,7 +22,6 @@ sub file_customer_service_request {
     $self->customer_service_mkit_name,
     {
       to_addresses => [ $self->customer_service_to_email_address->as_string ],
-      subject => 'Customer Service Request',
       payload => $payload,
       ledger  => $ledger,
     },

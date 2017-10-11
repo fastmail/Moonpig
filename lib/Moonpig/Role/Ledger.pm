@@ -675,8 +675,6 @@ sub send_receipt {
   $self->handle_event(event('send-mkit', {
     kit => 'receipt',
     arg => {
-      subject => "Payment received",
-
       to_addresses => [ $self->contact->email_addresses ],
       credit       => $credit,
       ledger       => $self,

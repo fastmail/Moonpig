@@ -5,7 +5,7 @@
     "charset": "utf-8"
   },
   "header": [
-    { "Subject": "{{ $subject }}" },
+    { "Subject": "Customer Service Request" },
     { "To":      "{{ join q{,}, @to_addresses }}" },
     { "From":    "{{ Moonpig->env->customer_service_from_email_address->as_string }}" }
   ],
@@ -15,7 +15,6 @@
       "schema": {
         "type": "//rec",
         "required": {
-          "subject"     : "//str",
           "payload"     : { "type": "//rec", "rest": "//any" },
           "to_addresses": { "type": "//arr", "contents": "//str" }
         },

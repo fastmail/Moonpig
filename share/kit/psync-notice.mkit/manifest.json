@@ -8,7 +8,7 @@
     }
   ],
   "header": [
-    { "Subject": "{{$subject}}" },
+    { "Subject": "Your expiration date has changed" },
     { "To":      "{{ join q{,}, @to_addresses }}" },
     { "From":    "{{ Moonpig->env->default_from_email_address->as_string }}" }
   ],
@@ -20,7 +20,6 @@
         "required": {
           "consumer"    : "/perl/obj",
           "ledger"      : "/perl/obj",
-          "subject"     : "//str",
           "to_addresses": { "type": "//arr", "contents": "//str" },
           "old_expiration_date"       : "/perl/obj",
           "new_expiration_date"       : "/perl/obj"
