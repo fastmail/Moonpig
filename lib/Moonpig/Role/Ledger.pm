@@ -911,6 +911,8 @@ sub prepare_to_be_saved {
   Moonpig::X->throw("can't save a ledger with open quote as current invoice")
     if $self->has_current_invoice and $self->current_invoice->is_quote;
 
+  Moonpig::X->throw("fake crash") if $ENV{MOONPIG_CRASH_SAVING_LEDGER};
+
   $_->_clear_event_handler_registry for ($self, $self->consumers);
 }
 

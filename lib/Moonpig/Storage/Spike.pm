@@ -338,7 +338,7 @@ sub __with_update_mode {
   # were used by only that transaction, but eh, that's too much
   # trouble. So instead, we just hold them all until the final
   # transaction ends and flush them all then. mjd 2011-11-14
-  my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache });
+  my $popper = $self->_push_update_mode($mode, sub { $self->_flush_ledger_cache; $self->_flush_ledger_queue; });
 
   my $rv = try {
     $code->();
@@ -457,6 +457,12 @@ has _ledger_queue => (
   init_arg => undef,
   default  => sub {  []  },
 );
+
+sub _flush_ledger_queue {
+  my $self = shift;
+
+  @{ $self->_ledger_queue } = ();
+}
 
 sub queue_job {
   my ($self, $ledger, $arg) = @_;

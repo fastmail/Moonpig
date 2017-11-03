@@ -347,5 +347,109 @@ test "cache clearing" => sub {
   );
 };
 
+test "crash saving ledger doesn't leave it lying around" => sub {
+  my ($self) = @_;
+
+  my $xid = 'yoyodyne:account:' . guid_string;
+  my $xid2 = 'yoyodyne:account:' . guid_string;
+
+  my $pid = fork;
+  Carp::croak("error forking") unless defined $pid;
+
+  if ($pid) {
+    wait;
+    if ($?) {
+      my %waitpid = (
+        status => $?,
+        exit   => $? >> 8,
+        signal => $? & 127,
+        core   => $? & 128,
+      );
+      die("error with child: " . Dumper(\%waitpid));
+    }
+  } else {
+    do_with_fresh_ledger(
+      {
+        consumer => {
+          template => 'demo-service',
+          xid       => $xid,
+        }
+      },
+      sub {
+        my ($ledger) = @_;
+        $ledger->save;
+      }
+    );
+    do_with_fresh_ledger(
+      {
+        consumer => {
+          template => 'demo-service',
+          xid       => $xid2,
+        }
+      },
+      sub {
+        my ($ledger) = @_;
+        $ledger->save;
+      }
+    );
+    exit(0);
+  }
+
+  my @guids = Moonpig->env->storage->ledger_guids;
+
+  is(@guids, 2, "we have stored two guids");
+
+  # Fun time, let's break first guid
+  {
+    local $ENV{MOONPIG_CRASH_SAVING_LEDGER} = 1;
+
+    eval {
+      Moonpig->env->storage->do_rw_with_ledger(
+        $guids[0],
+        sub {},
+      );
+    };
+  }
+
+  is(
+    @{ Moonpig->env->storage->_ledger_queue },
+    0,
+    'no items in ledger queue'
+  );
+
+  # Now save it in another process so if we try to
+  # save it we get a conflict
+  my $pid2 = fork;
+  Carp::croak("error forking") unless defined $pid2;
+
+  if ($pid2) {
+    wait;
+    if ($?) {
+      my %waitpid = (
+        status => $?,
+        exit   => $? >> 8,
+        signal => $? & 127,
+        core   => $? & 128,
+      );
+      die("error with child: " . Dumper(\%waitpid));
+    }
+  } else {
+      Moonpig->env->storage->do_rw_with_ledger(
+        $guids[0],
+        sub {},
+      );
+    exit(0);
+  }
+
+  # Now lets save second ledger. Should not retry
+  # first
+  Moonpig->env->storage->do_rw_with_ledger(
+    $guids[1],
+    sub {},
+  );
+
+  pass('we lived');
+};
+
 run_me;
 done_testing;
