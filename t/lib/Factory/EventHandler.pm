@@ -2,6 +2,7 @@ package t::lib::Factory::EventHandler;
 use Moose::Role;
 
 use String::RewritePrefix;
+use Class::Load ();
 
 use namespace::autoclean;
 

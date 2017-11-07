@@ -10,6 +10,7 @@ use Data::GUID qw(guid_string);
 use Scalar::Util qw(blessed);
 
 use Moonpig::Util -all;
+use Class::Load ();
 
 use Sub::Exporter -setup => {
   exports => [ qw(build build_consumers build_ledger do_with_fresh_ledger do_ro_with_fresh_ledger) ],

@@ -10,6 +10,7 @@ use Email::MessageID;
 use List::AllUtils ();
 use Sort::ByExample ();
 use Sys::Hostname::Long;
+use Class::Load ();
 
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
