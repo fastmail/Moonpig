@@ -20,6 +20,7 @@ use Plack::Request;
 use Router::Dumb;
 use Router::Dumb::Helper::FileMapper;
 use Router::Dumb::Helper::RouteFile;
+use Moonpig::Logger '$Logger';
 use Try::Tiny;
 
 use namespace::autoclean;
@@ -158,6 +159,11 @@ builder {
     "Plack::Middleware::Static",
     path => qr{^/(images|js|css)/},
     root => $core_root->subdir(qw(static)),
+  );
+
+  enable(
+    "Plack::Middleware::AccessLog",
+    logger => sub { $Logger->log([ '%s', shift ]); },
   );
 
   mount "/moonpig" => Plack::App::Proxy->new(
