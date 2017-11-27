@@ -167,7 +167,7 @@ builder {
 
   enable(
     "Plack::Middleware::AccessLog",
-    logger => sub { $Logger->log([ '%s', shift ]); },
+    logger => sub { $Logger->log($_[0]) },
   );
 
   mount "/moonpig" => Plack::App::Proxy->new(
