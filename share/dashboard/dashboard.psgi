@@ -20,8 +20,12 @@ use Plack::Request;
 use Router::Dumb;
 use Router::Dumb::Helper::FileMapper;
 use Router::Dumb::Helper::RouteFile;
-use Moonpig::Logger '$Logger';
 use Try::Tiny;
+
+use Moonpig::Logger '$Logger' => { init => {
+  ident    => 'moonpig-dashboard',
+  facility => 'local6',
+} };
 
 use namespace::autoclean;
 
