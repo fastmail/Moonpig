@@ -13,6 +13,8 @@ use Moonpig::Logger '$Logger';
 use Moonpig::Trait::Copy;
 use POSIX qw(ceil);
 
+use Moonpig::Behavior::Packable;
+
 require Stick::Publisher;
 Stick::Publisher->VERSION(0.20110324);
 use Stick::Publisher::Publish 0.20110324;
@@ -589,5 +591,11 @@ sub _issue_psync_charge {
     amount => $amount,
   }) if $amount > 0;
 }
+
+PARTIAL_PACK {
+  return {
+    $_[0]->has_grace_until ? (grace_until => $_[0]->grace_until) : (),
+  };
+};
 
 1;
