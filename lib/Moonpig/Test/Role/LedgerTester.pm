@@ -3,11 +3,12 @@ package Moonpig::Test::Role::LedgerTester;
 
 use Test::Routine;
 
+use Moonpig::Logger::Test '$Logger';
+
 with(
   'Moonpig::Test::Role::UsesStorage',
 );
 
-use Moonpig::Logger '$Logger';
 use Moonpig::Util qw(class datetime days sum sumof to_dollars);
 use Test::More;
 
