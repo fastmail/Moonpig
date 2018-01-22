@@ -12,7 +12,7 @@ use t::lib::TestEnv;
 use t::lib::ConsumerTemplateSet::Test;
 
 use Moonpig::Test::Factory qw(build);
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 
 my ($Ledger, $Consumer);
 has hold => (

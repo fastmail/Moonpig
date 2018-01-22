@@ -1,7 +1,7 @@
 use Test::Routine;
 
 use t::lib::TestEnv;
-use t::lib::Logger '$Logger';
+use Moonpig::Logger::Test '$Logger';
 
 use Carp qw(confess croak);
 use DateTime;

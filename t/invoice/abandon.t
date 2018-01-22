@@ -12,7 +12,7 @@ with(
   'Moonpig::Test::Role::LedgerTester',
 );
 
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 before run_test => sub {

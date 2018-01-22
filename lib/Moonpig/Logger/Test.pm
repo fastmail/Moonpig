@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-package t::lib::Logger;
+package Moonpig::Logger::Test;
 use base 'Moonpig::Logger';
 
 use Moonpig::Logger '$Logger' => { init => {

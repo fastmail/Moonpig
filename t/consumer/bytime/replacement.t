@@ -11,7 +11,7 @@ use Test::Routine;
 
 use t::lib::TestEnv;
 use t::lib::ConsumerTemplateSet::Test;
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 use t::lib::Class::EventHandler::Test;
 use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 

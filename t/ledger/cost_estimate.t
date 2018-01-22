@@ -10,7 +10,7 @@ with(
   'Moonpig::Test::Role::LedgerTester',
 );
 
-use t::lib::Logger '$Logger';
+use Moonpig::Logger::Test '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use Moonpig::Util qw(class days dollars event);

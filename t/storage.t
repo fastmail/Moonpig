@@ -11,7 +11,7 @@ with(
 );
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
-use t::lib::Logger '$Logger';
+use Moonpig::Logger::Test '$Logger';
 
 use Data::Dumper qw(Dumper);
 use Data::GUID qw(guid_string);

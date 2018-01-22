@@ -6,7 +6,7 @@ use t::lib::TestEnv;
 
 with('Moonpig::Test::Role::LedgerTester');
 
-use t::lib::Logger '$Logger';
+use Moonpig::Logger::Test '$Logger';
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 
 use Data::GUID qw(guid_string);

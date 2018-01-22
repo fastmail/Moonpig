@@ -12,7 +12,7 @@ use Test::More;
 use Test::Routine::Util;
 use Test::Routine;
 
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 use Moonpig::Test::Factory qw(build do_with_fresh_ledger);
 
 with(

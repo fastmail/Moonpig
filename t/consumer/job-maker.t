@@ -7,7 +7,7 @@ use Test::More;
 use Test::Routine::Util;
 
 use t::lib::TestEnv;
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 
 use Moonpig::Test::Factory qw(do_with_fresh_ledger);
 

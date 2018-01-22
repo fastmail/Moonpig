@@ -2,7 +2,7 @@ use Test::Routine;
 use Test::More;
 use Test::Routine::Util;
 
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 use t::lib::TestEnv;
 
 with(

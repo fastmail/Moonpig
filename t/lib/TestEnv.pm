@@ -3,7 +3,7 @@ use warnings;
 
 package t::lib::TestEnv;
 
-use t::lib::Logger;
+use Moonpig::Logger::Test;
 
 use Test::File::ShareDir 0.003001 -share => {
   -dist => { 'Moonpig' => 'share' }
