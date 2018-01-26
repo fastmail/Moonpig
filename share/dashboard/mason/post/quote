@@ -5,6 +5,7 @@ $ledger_guid
 $consumer
 $units
 $how_many
+$execute
 </%args>
 <%perl>
 my $days = $units eq 'years'  ? 365.25
@@ -20,14 +21,17 @@ my $quote = $m->mp_request(
   { chain_duration => $seconds },
 );
 
-my $credit = $m->mp_request(
+if ($execute eq 'yes')  {
+  my $q = $m->mp_request(
     POST => sprintf(
       '/ledger/by-guid/%s/invoices/guid/%s/execute',
       $ledger_guid,
       $quote->{guid},
-      ),
+    ),
     {},
-);
+  );
+  $m->redirect('/ledger/' . $ledger_guid . '?result=invoice-generated');
+}
 
 $m->redirect('/ledger/' . $ledger_guid . '?result=quote-generated');
 </%perl>

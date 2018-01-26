@@ -279,7 +279,8 @@ $ledger
     </tr>
 % }
   </table>
-<form id="newquote" class="form-inline" method="POST" action="/post/quote">
+<form id="newquote" method="POST" action="/post/quote">
+<div class="form-inline">
 <input type="hidden" name="ledger_guid" value="<% $ledger->{guid} %>">
 <div class="form-group">Add
 <select name="how_many" class="input-sm form-control">
@@ -298,15 +299,23 @@ $ledger
 <option>years</option>
 <option>months</option>
 </select>
-to open invoice for
+to open quote for
 <select id="consumer" name="consumer" class="input-sm form-control">
 % my $active_consumers = $ledger->{active_xids};
-% for my $xid (sort keys %$active_consumers) { 
+% for my $xid (sort keys %$active_consumers) {
 <option value="<% $xid %>"><% $xid %></option>
 % }
 </select>
+<select id="execute" name="execute" class="input-sm form-control">
+<option value="no" selected="selected">Do not execute</option>
+<option value="yes">Execute</option>
+</select>
 </div>
+</div>
+<br>
+<div class='form-inline'>
 <input type="submit" value="Make Quote" class="btn btn-default btn-sm">
+</div>
 </form>
 </div>
 </%method>
