@@ -133,8 +133,18 @@ around BUILDARGS => sub {
 # List of this consumer's replacement, replacement's replacement, etc.
 sub replacement_chain {
   my ($self) = @_;
-  return $self->has_replacement
-    ? ($self->replacement, $self->replacement->replacement_chain) : ();
+
+  return unless $self->has_replacement;
+
+  my $next = $self->replacement;
+
+  my @chain;
+  while ($next) {
+    push @chain, $next;
+    $next = $next->replacement;
+  }
+
+  return @chain;
 }
 
 sub replacement_chain_end {
