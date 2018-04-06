@@ -10,6 +10,7 @@ use Stick::Util 0.20110525 qw(json_pack);
 use Try::Tiny;
 
 use Plack::Request;
+use Moonpig::Logger '$Logger';
 
 my $JSON = Moonpig::Util::json();
 
@@ -96,6 +97,9 @@ sub app {
                     : 'do_rw';
 
       return $storage->$do_method(sub {
+        local $Logger = $Logger->proxy;
+        $Logger->{_mp_proxied} = 1;
+
         if ($ENV{MOONPIG_TESTING}) {
           my $res = test_routes(\@path, $storage);
           return $res if $res;

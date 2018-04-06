@@ -812,17 +812,35 @@ sub _class_subroute {
 
   if ($path->[0] eq 'by-xid') {
     my (undef, $xid) = splice @$path, 0, 2;
-    return Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($xid);
+    my $l = Moonpig->env->storage->retrieve_ledger_unambiguous_for_xid($xid);
+    if ($l && $Logger->{_mp_proxied}) {
+      my $guid = $l->guid;
+
+      $Logger = $Logger->proxy({ proxy_prefix => "lg<$guid>: " });
+    }
+    return $l;
   }
 
   if ($path->[0] eq 'by-guid') {
     my (undef, $guid) = splice @$path, 0, 2;
-    return Moonpig->env->storage->retrieve_ledger_for_guid($guid);
+    my $l = Moonpig->env->storage->retrieve_ledger_for_guid($guid);
+    if ($l && $Logger->{_mp_proxied}) {
+      my $guid = $l->guid;
+
+      $Logger = $Logger->proxy({ proxy_prefix => "lg<$guid>: " });
+    }
+    return $l;
   }
 
   if ($path->[0] eq 'by-ident') {
     my (undef, $ident) = splice @$path, 0, 2;
-    return Moonpig->env->storage->retrieve_ledger_for_ident($ident);
+    my $l = Moonpig->env->storage->retrieve_ledger_for_ident($ident);
+    if ($l && $Logger->{_mp_proxied}) {
+      my $guid = $l->guid;
+
+      $Logger = $Logger->proxy({ proxy_prefix => "lg<$guid>: " });
+    }
+    return $l;
   }
 
   return;
