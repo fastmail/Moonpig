@@ -377,6 +377,8 @@ sub do_with_ledgers {
       push @ledgers, $ledger;
     }
 
+    local $Logger = $Logger->proxy({ proxy_prefix => "lgs<@$guids>: " });
+
     $rv = $self->txn(sub {
       my $rv = $code->(@ledgers);
       unless ($ro) {
