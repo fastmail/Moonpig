@@ -1049,6 +1049,9 @@ sub _store_ledger {
       { handled => 1 },
     );
 
+    # Update: "The bug" has been fixed as of 4e6a98b but let's keep this
+    # protection here. -- alh, 2018-04-06
+
     # In some cases, the cache or other memory state becomes corrupted.  We've
     # called the "The Bug" in the past.  We've never found the root cause, but
     # the symptom is that when trying to save ledger X, it seems to be trying
