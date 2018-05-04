@@ -53,6 +53,9 @@ R&amp;D first!</p>
 <table class="table">
   <tr><th>GUID</th>             <td><% $credit->{guid} |h %></td></tr>
   <tr><th>Type</th>             <td><% $credit->{type} |h %></td></tr>
+% if ($credit->{reason}) {
+  <tr><th>Reason</th>           <td><% $credit->{reason} |h %></td></tr>
+% }
   <tr><th>Created at</th>       <td><% $credit->{created_at} |h %></td></tr>
   <tr><th>Total amount</th>     <td><% mc($credit->{amount}) |h %></td></tr>
   <tr><th>Unapplied amount</th> <td><% mc($credit->{unapplied_amount}) |h %></td></tr>
