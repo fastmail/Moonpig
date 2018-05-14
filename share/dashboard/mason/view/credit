@@ -25,7 +25,7 @@ $m->redirect('/') unless $credit;
 <p>This is a [<tt><% $credit->{type} |h %></tt>] credit for <%
 mc($credit->{amount}) |h %>, received at <% $credit->{created_at} | h %>.</p>
 </div>
-% if ($credit->{refundable_amount} || $credit->{unapplied_amount}) {
+% if ($credit->{is_refundable}) {
 <div class="col-sm-4">
 <h4>Refund</h4>
   <p>You can refund the unapplied value of the credit.</p>
@@ -59,7 +59,9 @@ R&amp;D first!</p>
   <tr><th>Created at</th>       <td><% $credit->{created_at} |h %></td></tr>
   <tr><th>Total amount</th>     <td><% mc($credit->{amount}) |h %></td></tr>
   <tr><th>Unapplied amount</th> <td><% mc($credit->{unapplied_amount}) |h %></td></tr>
+% if ($credit->{is_refundable}) {
   <tr><th>Refundable amount</th><td><% mc($credit->{refundable_amount}) |h %></td></tr>
+% }
 </table>
 
   <& /widget/dump, dump => $credit, what => 'Credit' &>

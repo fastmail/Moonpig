@@ -164,6 +164,9 @@ publish _extended_info => {
   my ($self) = @_;
 
   my $pack = $self->STICK_PACK;
+
+  $pack->{is_refundable} = $self->is_refundable;
+
   $pack->{refundable_amount} = min(
     $self->unapplied_amount,
     $self->ledger->amount_available,
