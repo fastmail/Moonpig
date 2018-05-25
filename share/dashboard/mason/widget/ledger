@@ -9,6 +9,12 @@ $ledger
   <& /widget/contact, ledger => $ledger, contact => $ledger->{contact} &>
 </div>
 <div class="col-sm-6">
+
+<form method="post" action="/post/heartbeat">
+  <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
+  <input type="submit" class="btn btn-default pull-right" value="Heartbeat this ledger" />
+</form>
+
   <& SELF:active-consumers, ledger => $ledger, active_consumers => $ledger->{active_xids} &>
  <& SELF:discounts, ledger => $ledger &>
 </div>

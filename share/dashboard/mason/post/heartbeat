@@ -1,0 +1,14 @@
+%# vim:set ft=mason:
+<%method main>
+<%args>
+$ledger_guid
+</%args>
+<%perl>
+my $hb = $m->mp_request(
+  POST => sprintf('/ledger/by-guid/%s/heartbeat', $ledger_guid),
+  {},
+);
+
+$m->redirect('/ledger/' . $ledger_guid . '?result=ledger-heartbeat');
+</%perl>
+</%method>

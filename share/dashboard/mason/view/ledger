@@ -17,7 +17,8 @@ $ledger_id
   'credit-added'        => "Credit added!",
   'job-canceled'        => "Job canceled!",
   'quote-generated'     => "Quote created!",
-  'invoice-generated'     => "Invoice created!",
+  'invoice-generated'   => "Invoice created!",
+  'ledger-heartbeat'    => "Ledger heartbeat!",
 } &>
 <& /widget/ledger, ledger => $ledger &>
 </&>
