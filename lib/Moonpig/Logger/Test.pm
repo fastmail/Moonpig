@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 package Moonpig::Logger::Test;
+
 use base 'Moonpig::Logger';
 
 use Moonpig::Logger '$Logger' => { init => {
