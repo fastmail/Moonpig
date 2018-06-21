@@ -59,7 +59,6 @@ sub build_invoice_charge {
 
 {
   package Moonpig::Role::InvoiceCharge::OneOff;
-  BEGIN { $INC{'Moonpig/Role/InvoiceCharge/OneOff.pm'} = 1 } # perl :-/
 
   use Moose::Role;
   with qw(Moonpig::Role::InvoiceCharge);
