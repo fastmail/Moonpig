@@ -818,7 +818,10 @@ has _sereal_encoder => (
   is   => 'ro',
   lazy => 1,
   init_arg => undef,
-  default  => sub { Sereal::Encoder->new },
+  default  => sub {
+    # ...during transition period...
+    return Sereal::Encoder->new({ protocol_version => 1 });
+  },
 );
 
 has _sereal_decoder => (
