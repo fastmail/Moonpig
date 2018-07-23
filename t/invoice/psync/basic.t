@@ -499,5 +499,54 @@ test "don't cancel too fast" => sub {
   };
 };
 
+test 'pay psync quote with autocharger' => sub {
+  my ($self) = @_;
+
+  do_test {
+    my ($ledger, $c) = @_;
+
+    subtest "do not send psync quotes until rate changes" => sub {
+      is($c->_predicted_shortfall, 0, "initially no predicted shortfall");
+      elapse($ledger);
+      is(scalar($ledger->quotes), 0, "no quotes yet");
+      elapse($ledger);
+      is(scalar($ledger->quotes), 0, "no quotes yet");
+
+      $self->assert_n_deliveries(1, "the invoice");
+    };
+
+    # At this point, 12 days and $12 remain
+    elapse($ledger);
+
+    # Have $14-$3 = $11; now spending $2/day => lifetime = 5.5d
+    # remaining lifetime should have been 14-3 = 11d.
+    # To top up the account, need to get $1 per remaining day = $11
+    $c->total_charge_amount(dollars(28));
+    is($c->_predicted_shortfall, days(5.5), "double charge -> shortfall 5.5d");
+    elapse($ledger) until $ledger->quotes;
+
+    is(my ($qu) = $ledger->quotes, 1, "psync quote generated");
+    ok($qu->is_closed, "quote is closed");
+    ok($qu->is_psync_quote, "quote is a psync quote");
+
+    $ledger->setup_autocharger_from_template(moonpay => {
+      amount_available => dollars(100),
+    });
+
+    my @payable = $ledger->payable_invoices;
+    is(@payable, 0, "we have no payable invoices");
+
+    my $credit = $ledger->autocharge_amount_due({
+      quote_guid => $qu->guid,
+    });
+
+    is($credit->{amount}, dollars(11), 'we paid our psync quote');
+
+    ok(! $ledger->quotes, 'ledger has no more quotes');
+
+    $self->assert_n_deliveries(1, "mail sent");
+  };
+};
+
 run_me;
 done_testing;

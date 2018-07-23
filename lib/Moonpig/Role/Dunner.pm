@@ -12,7 +12,7 @@ use Moonpig::Util qw(class event);
 use Moonpig::Types qw(TimeInterval);
 use Moonpig::Util qw(days sumof);
 use Moose::Util::TypeConstraints qw(role_type);
-use MooseX::Types::Moose qw(Str HashRef);
+use MooseX::Types::Moose qw(Str HashRef Maybe);
 use Stick::Publisher 0.307;
 use Stick::Publisher::Publish 0.307;
 use Stick::Util qw(ppack);
@@ -233,9 +233,18 @@ publish _get_autocharger => { -path => 'autocharger', -http_method => 'get' } =>
 
 publish autocharge_amount_due => {
   -http_method => 'post',
-  -path   => 'autocharge-amount-due',
+  -path        => 'autocharge-amount-due',
+  quote_guid   => Maybe[Str],
 } => sub {
-  my ($self) = @_;
+  my ($self, $arg) = @_;
+
+  # Allow paying psync quotes with autocharger
+  if ($arg->{quote_guid}) {
+    my $quote = $self->invoice_collection->find_by_guid({
+      guid => $arg->{quote_guid},
+    });
+    $quote->execute;
+  }
 
   my $due = $self->amount_due;
   return {} unless $due > 0;
