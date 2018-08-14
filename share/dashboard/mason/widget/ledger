@@ -60,7 +60,7 @@ $autocharger => undef
     <label for="credit.attributes.bank_name">Bank name</label> <input type="text" class="form-control" name='credit.attributes.bank_name' />
     <label for="credit.attributes.check_number">Check &#x2116;</label> <input type="text" class="form-control" name='credit.attributes.check_number' />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Check' />
+    <input type='submit' class="btn btn-default" value='Record Check Payment' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='Check' />
     <input type='hidden' name='credit.send_receipt' value='1' />
@@ -74,7 +74,7 @@ $autocharger => undef
     <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
     <label for="credit.attributes.from_address">Email Addr</label> <input name='credit.attributes.from_address' type="text" class="form-control" />
   </div>
-    <input type='submit' class="btn btn-default" value='Add PayPal' />
+    <input type='submit' class="btn btn-default" value='Record PayPal Payment' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='PayPal' />
     <input type='hidden' name='credit.send_receipt' value='1' />
@@ -89,7 +89,7 @@ $autocharger => undef
     <label for="credit.attributes.amount">Amount ($)</label> <input name='credit.attributes.amount' type="text" class="form-control" />
     <label for="credit.attributes.transaction_id">Transaction</label> <input name='credit.attributes.transaction_id' type="text" class="form-control" />
   </div>
-    <input type='submit' class="btn btn-default" value='Add Credit Card' />
+    <input type='submit' class="btn btn-default" value='Record Credit Card Payment' />
     <input type='hidden' name='ledger_guid' value='<% $ledger->{guid} |h %>' />
     <input type='hidden' name='credit.type' value='CreditCard' />
     <input type='hidden' name='credit.send_receipt' value='1' />
